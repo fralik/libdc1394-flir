@@ -438,6 +438,7 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                                  int num_dma_buffers,
                                  dc1394_cameracapture *camera)
 {
+  int *myPort;
 
     if (_dc1394_basic_format7_setup(handle,node, channel, mode,
                             speed, bytes_per_packet,
@@ -445,6 +446,9 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
     {
         return DC1394_FAILURE;
     }
+
+    myPort = raw1394_get_userdata(handle);
+    camera->port = *myPort;
 
     if (_dc1394_dma_basic_setup(channel,num_dma_buffers, camera) == DC1394_FAILURE)
     {
