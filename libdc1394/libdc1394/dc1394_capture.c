@@ -45,6 +45,7 @@ int _dc1394_all_captured;
 /* variables to handle multiple cameras using a single fd. */
 int *_dc1394_dma_fd = NULL;
 int *_dc1394_num_using_fd = NULL;
+int _dc1394_dma_extra_buf = 0;
 
 /**********************/
 /* Internal functions */
@@ -272,6 +273,7 @@ _dc1394_dma_basic_setup(int channel,
 	camera->dma_fd = _dc1394_dma_fd[camera->port];
 
     _dc1394_num_using_fd[camera->port]++;
+	_dc1394_dma_extra_buf = 0;
     vmmap.sync_tag= 1;
     vmmap.nb_buffers= num_dma_buffers;
     vmmap.flags= VIDEO1394_SYNC_FRAMES;
@@ -621,7 +623,7 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 {
     struct video1394_wait vwait;
     int i;
-    int cb, extra_buf;
+    int cb;
     int j;
 
     for (i= 0; i < num; i++)
@@ -631,47 +633,53 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
         vwait.buffer= cb;
         cams[i].dma_last_buffer = cb;
 
-        if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
-        {
-            printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",
-                   __FILE__);
-            cams[i].dma_last_buffer++;
-            return DC1394_FAILURE;
-        }
-
-        /* get the number of buffers by which we are behind */
-        extra_buf= vwait.buffer;
-
-        /* if all buffers are behind, requeue them all and wait for
-           a freshly captured buffer */
-        if (extra_buf == cams[i].num_dma_buffers - 1) 
-        {
-
-            /* requeue all buffers */
-            for (j= 0; j < cams[i].num_dma_buffers; j++) 
-            {
-                vwait.buffer= (cb + j) % cams[i].num_dma_buffers;
-
-                if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER,
-                          &vwait) < 0)
-                {
-                    printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER failed in "
-                           "multi capture!\n", __FILE__);
-                }
-
-            }
-
-            /* wait for a newly captured buffer */
-            vwait.buffer = cb;
-            if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
-            {
-                printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",
-                   __FILE__);
-                cams[i].dma_last_buffer++;
-                return DC1394_FAILURE;
-            }
-        }
-
+		if (_dc1394_dma_extra_buf == 0) {
+			if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
+			{
+				printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",
+					   __FILE__);
+				cams[i].dma_last_buffer++;
+				return DC1394_FAILURE;
+			}
+	
+			/* get the number of buffers by which we are behind */
+			_dc1394_dma_extra_buf = vwait.buffer;
+			if (_dc1394_dma_extra_buf > 0)
+				printf("libdc1394: extra video1394 buffers: %d\n", _dc1394_dma_extra_buf);
+	
+			/* if all buffers are behind, requeue them all and wait for
+			   a freshly captured buffer */
+			if (_dc1394_dma_extra_buf == cams[i].num_dma_buffers - 1) 
+			{
+	
+				/* requeue all buffers */
+				for (j= 0; j < cams[i].num_dma_buffers; j++) 
+				{
+					vwait.buffer= (cb + j) % cams[i].num_dma_buffers;
+	
+					if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER,
+							  &vwait) < 0)
+					{
+						printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER failed in "
+							   "multi capture!\n", __FILE__);
+					}
+	
+				}
+	
+				/* wait for a newly captured buffer */
+				vwait.buffer = cb;
+				if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
+				{
+					printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",
+					   __FILE__);
+					cams[i].dma_last_buffer++;
+					return DC1394_FAILURE;
+				}
+				_dc1394_dma_extra_buf = vwait.buffer;
+			}
+		} else
+			_dc1394_dma_extra_buf--;
+	
 		cams[i].filltime = vwait.filltime;
         cams[i].capture_buffer= (int*)(cams[i].dma_ring_buffer +
                                        (cams[i].dma_last_buffer) *
