@@ -21,7 +21,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <stdlib.h>
-
+ 
 #include "dc1394_control.h"
 #include "dc1394_internal.h"
 #include "config.h"

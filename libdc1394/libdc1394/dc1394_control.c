@@ -54,7 +54,7 @@
 
 
 /********************/
-/* Base ROM offsets */
+/* Base ROM offsets */ 
 /********************/
 
 #define ROM_BUS_INFO_BLOCK             0x400U
