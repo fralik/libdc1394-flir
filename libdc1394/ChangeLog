@@ -234,3 +234,7 @@ Wed Aug  7 17:08:31 2002 <ddouxchamps@users.sf.net>
 Tue Aug 20 10:40:12 2002 <ddouxchamps@users.sf.net>
     * added support for Point Grey cameras, which support IIDC with
       a little tweak (modifications in dc1394_is_camera).
+
+Thu Aug 22 10:10:00 2002 <ddouxchamps@users.sf.net>
+    * Updated support for PointGrey cameras (added the 0x800002
+      software revision code)

@@ -949,7 +949,8 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
     if ((quadval == 0x000100UL) || 
 	(quadval == 0x000101UL) ||
 	(quadval == 0x000102UL) ||
-	((quadval == 0x000114UL) && ptgrey))
+	((quadval == 0x000114UL) && ptgrey) ||
+	((quadval == 0x800002UL) && ptgrey))
     {
         *value= DC1394_TRUE;
     }
