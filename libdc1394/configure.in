@@ -7,10 +7,12 @@ AM_CONFIG_HEADER(src/config.h)
 AC_PROG_CC
 AM_PROG_LIBTOOL
 
-AC_CHECK_LIB(raw1394, raw1394_get_handle,
-             AC_DEFINE(LIBRAW1394_OLD) AC_DEFINE(HAVE_LIBRAW1394),
-             AC_CHECK_LIB(raw1394, raw1394_new_handle,
-                          AC_DEFINE(HAVE_LIBRAW1394),
+# Check for the new version of libraw1394 first since they might have both
+# installed and we want to use the newest version
+AC_CHECK_LIB(raw1394, raw1394_new_handle,
+             AC_DEFINE(HAVE_LIBRAW1394),
+             AC_CHECK_LIB(raw1394, raw1394_get_handle,
+                          AC_DEFINE(LIBRAW1394_OLD) AC_DEFINE(HAVE_LIBRAW1394),
                           AC_MSG_ERROR(No version of libraw1394 found!)))
 
 AC_HEADER_STDC
