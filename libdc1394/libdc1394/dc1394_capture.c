@@ -664,9 +664,8 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 				return DC1394_FAILURE;*/
                                 if ((policy==VIDEO1394_POLL) && (errno == EINTR))
 				  {                       
-				    // when no frames is present, return a failure. IMHO A better value
-				    // should be returned (e.g. DC1394_NOFRAME)
-				    return DC1394_FAILURE;
+				    // when no frames is present, say so.
+				    return DC1394_NO_FRAME;
 				  }
 				else
 				  {

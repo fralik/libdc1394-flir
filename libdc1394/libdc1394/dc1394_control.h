@@ -201,6 +201,7 @@ enum
 /* Return values for visible functions*/
 #define DC1394_SUCCESS               1
 #define DC1394_FAILURE              -1
+#define DC1394_NO_FRAME             -2
 #define DC1394_NO_CAMERA            0xffff
 
 /* Parameter flags for dc1394_setup_format7_capture() */
