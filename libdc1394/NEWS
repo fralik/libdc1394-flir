@@ -80,3 +80,4 @@ Version 0.9.4:
 Version 1.0.0:
 - few bug fixes
 - removed extra buffering (COMPATIBILITY BREAK)
+- raw1394 capture fixed

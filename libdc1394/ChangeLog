@@ -477,3 +477,4 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2004-09-13 Damien <ddouxchamps@users.sf.net>
     * Corrected library version
+    * Remove 1.31 changes that I committed by mistake
