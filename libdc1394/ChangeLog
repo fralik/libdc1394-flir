@@ -124,3 +124,11 @@ Thu Apr 12 12:52:30 2001   <GordPeters@smarttech.com>
 	* Exposed dc1394_feature_desc (feature description array).
 	* Created dc1394_internal.h for definitions internal to the library
 	* Moved some definitions from dc1394_control.h to dc1394_internal.h
+
+Mon Apr 16 11:56:17 2001   <GordPeters@smarttech.com>
+
+	* Fixed feature counting for loops in dc1394_control.c (Dan Dennedy)
+	* Fixed get/set_trigger_mode functions in dc1394_control.c to work with
+	  new enumerations (Damien Douxchamps)
+	* Fixed color coding ID functions in dc1394_format7.c to conform to new
+	  enumerations (Damien Douxchamps)
