@@ -266,4 +266,5 @@ Thu Oct 22 15:10:00 2002 <ddouxchamps@users.sf.net>
     * added "dc1394bool_t abs_control" to "dc1394_feature_info" struct
     * fixed, cleaned-up and finalized the absolute control code
 
-	
+Fri Oct 23 17:19:00 2002 <ddouxchamps@users.sf.net>
+    * fixed missing <<16 shift in dc394_get_format7_unit_position

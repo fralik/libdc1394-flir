@@ -1017,8 +1017,8 @@ dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_UNIT_POSITION_INQ,
                                          &value);
-        *horizontal_pos= (unsigned int) ( value & 0xFFFF0000UL );
-        *vertical_pos= (unsigned int) ( value & 0x0000FFFFUL );
+        *horizontal_pos = (unsigned int) (( value & 0xFFFF0000UL )>>16);
+        *vertical_pos   = (unsigned int) ( value & 0x0000FFFFUL );
     }
 
     return retval;
