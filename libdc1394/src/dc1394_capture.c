@@ -199,7 +199,7 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
 *********************************/
 
 /*************************************************************
- dc1394_setup_camera
+ dc1394_setup_capture
 
  Sets up both the camera and the cameracapture structure
  to be used other places.
@@ -208,9 +208,9 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
 **************************************************************/
 int 
 dc1394_setup_capture(raw1394handle_t handle, nodeid_t node, 
-                    int channel, int format, int mode, 
-                    int speed, int frame_rate, 
-                    dc1394_cameracapture * camera) 
+                     int channel, int format, int mode, 
+                     int speed, int frame_rate, 
+                     dc1394_cameracapture * camera) 
 {
 
     if (_dc1394_basic_setup(handle,node, channel, format, mode, 
@@ -579,20 +579,3 @@ dc1394_dma_done_with_buffer(dc1394_cameracapture *camera)
 
     return DC1394_SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
