@@ -638,12 +638,14 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 
     for (i= 0; i < num; i++)
     {
-        vwait.channel = cams[i].channel;
         cb = (cams[i].dma_last_buffer + 1) % cams[i].num_dma_buffers;
-        vwait.buffer = cb;
         cams[i].dma_last_buffer = cb;
 
-		if (cams[i].dma_extra_count == 0) {
+		if (cams[i].dma_extra_count == 0)
+		{
+			vwait.channel = cams[i].channel;
+			vwait.buffer = cb;
+
 			if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
 			{
 				printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",

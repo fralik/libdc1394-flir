@@ -10,12 +10,14 @@
 **    muliple cameras on one card, or multiple cameras on multiple cards.
 **
 ** TODO:
-**    - Better error handling.
 **    - Option to tile displays instead vertical stacking.
 **
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.2  2002/07/24 02:22:40  ddennedy
+**  cleanup, add drop frame support to dc1394_multiview
+**
 **  Revision 1.1  2002/07/22 02:57:02  ddennedy
 **  added examples/dc1394_multiview to test/demonstrate dma multicapture over multiple ports
 **
@@ -41,6 +43,13 @@
 #include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
 
+
+/* uncomment the following to drop frames to prevent delays */
+#define DROP_FRAMES
+#define MAX_PORTS 4
+#define MAX_CAMERAS 8
+#define NUM_BUFFERS 4
+
 /* ok the following constant should be by right included thru in Xvlib.h */
 #ifndef XV_YV12
 #define XV_YV12 0x32315659
@@ -54,14 +63,12 @@
 #define XV_UYVY 0x59565955
 #endif
 
-#define MAX_PORTS 4
-#define MAX_CAMERAS 8
 
 /* declarations for libdc1394 */
 int numPorts = MAX_PORTS;
 raw1394handle_t handles[MAX_PORTS];
 int numCameras = 0;
-dc1394_cameracapture cameras[MAX_CAMERAS*MAX_PORTS];
+dc1394_cameracapture cameras[MAX_CAMERAS];
 nodeid_t *camera_nodes;
 dc1394_feature_set features;
 
@@ -90,7 +97,7 @@ int freeze=0;
 int average=0;
 int fps;
 int res;
-unsigned char *frame_buffer;
+unsigned char *frame_buffer=NULL;
 
 
 static struct option long_options[]={
@@ -266,7 +273,7 @@ void QueryXv()
 {
 	int num_adaptors;
 	int num_formats;
-	XvImageFormatValues *formats;
+	XvImageFormatValues *formats=NULL;
 	int i,j;
 	char xv_name[5];
 	
@@ -299,9 +306,12 @@ void cleanup(void) {
 	}
 	for (i=0; i < numPorts; i++)
 		raw1394_destroy_handle(handles[i]);
-	XUnmapWindow(display,window);
-	XFlush(display);
-	free( frame_buffer);
+	if ((void *)window != NULL)
+		XUnmapWindow(display,window);
+	if (display != NULL)
+		XFlush(display);
+	if (frame_buffer != NULL)
+		free( frame_buffer );
 }
 
 
@@ -375,6 +385,7 @@ int main(int argc,char *argv[])
 		if (handles[p]==NULL) {
 			perror("Unable to aquire a raw1394 handle\n");
 			perror("did you load the drivers?\n");
+			cleanup();
 			exit(-1);
 		}
 
@@ -397,22 +408,20 @@ int main(int argc,char *argv[])
 										 &channel, &speed) != DC1394_SUCCESS) 
 			{
 				printf("unable to get the iso channel number\n");
-				dc1394_dma_release_camera(handles[p],&cameras[numCameras]);
-				raw1394_destroy_handle(handles[p]);
+				cleanup();
 				exit(-1);
 			}
 			 
 			if (dc1394_dma_setup_capture(handles[p], cameras[numCameras].node, i+1 /*channel*/,
 									FORMAT_VGA_NONCOMPRESSED, res,
-									SPEED_400, fps, 8 /*num buffers*/,
+									SPEED_400, fps, NUM_BUFFERS,
 									device_name, &cameras[numCameras]) != DC1394_SUCCESS) 
 			{
 				fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 					   __LINE__,__FILE__);
 				perror("that the video mode,framerate and format are supported\n");
 				printf("is one supported by your camera\n");
-				dc1394_dma_release_camera(handles[p], &cameras[numCameras]);
-				raw1394_destroy_handle(handles[p]);
+				cleanup();
 				exit(-1);
 			}
 		
@@ -421,8 +430,7 @@ int main(int argc,char *argv[])
 			if (dc1394_start_iso_transmission(handles[p], cameras[numCameras].node) !=DC1394_SUCCESS) 
 			{
 				perror("unable to start camera iso transmission\n");
-				dc1394_dma_release_camera(handles[p], &cameras[numCameras]);
-				raw1394_destroy_handle(handles[p]);
+				cleanup();
 				exit(-1);
 			}
 			numCameras++;
@@ -432,7 +440,7 @@ int main(int argc,char *argv[])
 	fflush(stdout);
 	if (numCameras < 1) {
 		perror("no cameras found :(\n");
-		raw1394_destroy_handle(handles[p]);
+		cleanup();
 		exit(-1);
 	}
 
@@ -455,13 +463,17 @@ int main(int argc,char *argv[])
 	if(display==NULL)
 	{
 		fprintf(stderr,"Could not open display \"%s\"\n",getenv("DISPLAY"));
+		cleanup();
 		exit(-1);
 	}
 	
 	QueryXv();
 	
 	if ( adaptor < 0 )
+	{
+		cleanup();
 		exit(-1);
+	}
 	
 	width=device_width;
 	height=device_height * numCameras;
@@ -544,13 +556,20 @@ int main(int argc,char *argv[])
 							break;
 						}
 					break;
-				default:
 				}
 			} /* XPending */
 
 			for (i = 0; i < numCameras; i++)
+			{
 				dc1394_dma_done_with_buffer(&cameras[i]);
-
+#ifdef DROP_FRAMES
+				while (cameras[i].dma_extra_count > 0) {
+					dc1394_dma_single_capture( &cameras[i] );
+					dc1394_dma_done_with_buffer( &cameras[i] );
+				}
+#endif
+			}
+		
 		} /* while not interrupted */
 
 	exit(0);
