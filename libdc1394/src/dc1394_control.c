@@ -2513,7 +2513,7 @@ dc1394_auto_on_off(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    if (!(curval & 0x01000000UL))
+    if (value && !(curval & 0x01000000UL))
     {
         int retval;
 
