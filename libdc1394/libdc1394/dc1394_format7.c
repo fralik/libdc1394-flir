@@ -290,7 +290,35 @@ _dc1394_v130_errflag2(raw1394handle_t handle, nodeid_t node, int mode)
 
   return DC1394_SUCCESS;
 }
-  
+
+/*=================================================================================*
+ * The following function returns the bytes per pixel for a defined color coding.  *
+ *=================================================================================*/
+
+float
+_Format7BytePerPixel(int color_coding)
+{
+  switch (color_coding)
+    {
+    case COLOR_FORMAT7_MONO8: return 1.0;
+      break;
+    case COLOR_FORMAT7_YUV411: return 1.5;
+      break;
+    case COLOR_FORMAT7_YUV422: return 2.0;
+      break;
+    case COLOR_FORMAT7_YUV444: return 3.0;
+      break;
+    case COLOR_FORMAT7_RGB8: return 3.0;
+      break;
+    case COLOR_FORMAT7_MONO16: return 2.0;
+      break;
+    case COLOR_FORMAT7_RGB16: return 6.0;
+      break;
+    default: return (-1);
+    }
+}
+
+ 
 /*======================================================================*/
 /*! 
  *   see documentation of dc1394_setup_format7_capture() in
@@ -311,6 +339,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   unsigned int recom_bpp;
   int packets_per_frame;
   int version;
+  int color_coding;
 
   if (dc1394_get_iso_status(handle, node, &is_iso_on) != DC1394_SUCCESS)
       return DC1394_FAILURE;
@@ -513,12 +542,31 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       camera->quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
     }
     else {
-      if (dc1394_query_format7_total_bytes( handle, node, mode, &camera->quadlets_per_frame)!= DC1394_SUCCESS)
+      // For other specs revisions, we use a trick to determine the total bytes.
+      // We don't use the total_bytes register in 1.20 as it has been interpreted in
+      // different ways by manufacturers. Thanks to Martin Gramatke for pointing this trick out.
+      if (dc1394_query_format7_color_coding_id(handle, node, mode, &color_coding)!=DC1394_SUCCESS)
+	{
+	  printf("(%s) Unable to get format 7 color coding for mode %d \n", __FILE__, mode);
+	  return DC1394_FAILURE;
+	}
+      else
+	{
+	  //fprintf(stderr,"color coding: %d\n",color_coding);
+	  packets_per_frame = ((int)(width * height * _Format7BytePerPixel(color_coding)) +
+			       bytes_per_packet -1) / bytes_per_packet;
+	  camera->quadlets_per_frame=(packets_per_frame*bytes_per_packet)/4;
+	}
+      /*
+      if (dc1394_query_format7_total_bytes(handle, node, mode,
+                                           &camera->quadlets_per_frame)!= DC1394_SUCCESS)
 	{
 	  printf("(%s) Unable to get format 7 total bytes per frame %d \n", __FILE__, mode);
 	  return DC1394_FAILURE;
 	}
       camera->quadlets_per_frame/=4;
+      */
+      //fprintf(stderr,"quadlets per frame: %d\n",camera->quadlets_per_frame);
     }
   }
   if (camera->quadlets_per_frame<=0)
