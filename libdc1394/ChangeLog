@@ -171,15 +171,15 @@ Fri Nov 23 15:48:00 2001 <douxchamps@ieee.org>
 	  dc1394_(get/set)_trigger_on_off
 
 Thu Jan 31 23:38:28 2002 <dan@dennedy.org>
-        * dc1394_control.h: added dma_device_member to struct 
-          dc1394_cameracapture. This enables support for mutliple
-          host adapters as well as the new video1394 devfs names.
-        * dc1394_capture.c: _dc1394_dma_basic_setup() uses 
-          above struct member to open video1394 device. If the
-          char pointer is null, then it defaults to "/dev/video1394"
-          for backwards compatibility.
-        * kernel-video1394.h: synchronize with video1394.h changes made
-          Oct 21 and included in kernel 2.4.17!!
+    * dc1394_control.h: added dma_device_member to struct 
+      dc1394_cameracapture. This enables support for mutliple
+      host adapters as well as the new video1394 devfs names.
+    * dc1394_capture.c: _dc1394_dma_basic_setup() uses 
+      above struct member to open video1394 device. If the
+      char pointer is null, then it defaults to "/dev/video1394"
+      for backwards compatibility.
+    * kernel-video1394.h: synchronize with video1394.h changes made
+      Oct 21 and included in kernel 2.4.17!!
 
 Fri Mar 15 14:43:31 2002 <douxchamps@ieee.org> 
 	* dc1394_control.h: updated format7 functions
@@ -192,3 +192,12 @@ Mon Mar 18 14:43:31 2002 <douxchamps@ieee.org>
 	was the argument.
 	* dc1394_control.c: fixed quadlet-per-packet for format_0, mode_4,
 	15fps (was 280, should have been 480)
+
+Mon March 26 0:41:50 2002 <dan@dennedy.org>
+	* Applied David Moore's <david@startbox.com> patch to avoid getting
+      old captures with dma_multi_capture.
+	* Applied John Stanley's <stanley@peak.org> patch to use multiple
+      cameras on mutliple ports (hosts).
+      NOTE: the new dc1394_destroy_handle() in dc1394_control.h
+      NOTE: the dma device file defaults to the video1394 devfs default
+      naming convention when not specified: /dev/video1394/<port>

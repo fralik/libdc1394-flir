@@ -32,6 +32,7 @@
 #include "kernel-video1394.h"
 
 #define NUM_ISO_CHANNELS 64
+#define MAX_NUM_PORTS 8
 
 /*Variables used for simultaneous capture of video from muliple cameras*/
 int * _dc1394_buffer[NUM_ISO_CHANNELS];
@@ -42,8 +43,8 @@ int _dc1394_quadlets_per_packet[NUM_ISO_CHANNELS];
 int _dc1394_all_captured;
 
 /* variables to handle multiple cameras using a single fd. */
-int _dc1394_dma_fd= 0;
-int _dc1394_num_using_fd= 0;
+int *_dc1394_dma_fd = NULL;
+int *_dc1394_num_using_fd = NULL;
 
 /**********************/
 /* Internal functions */
@@ -239,22 +240,38 @@ _dc1394_dma_basic_setup(int channel,
     struct video1394_mmap vmmap;
     struct video1394_wait vwait;
     int i;
+    char *device;
 
-    if (camera->dma_device_file == NULL) 
-		camera->dma_device_file = "/dev/video1394";
-	
-	if (_dc1394_num_using_fd == 0)
-    {
-
-        if ( (_dc1394_dma_fd= open(camera->dma_device_file,O_RDONLY)) < 0 )
-        {
-            printf("(%s) unable to open video1394 device!\n", __FILE__);
-            return DC1394_FAILURE;
-        }
-
+    if (camera->dma_device_file == NULL) {
+		device = malloc(32);
+		sprintf( device, "/dev/video1394/%d", camera->port );
+		camera->dma_device_file = device;
     }
 
-    _dc1394_num_using_fd++;
+    /* using_fd counter array NULL if not used yet -- initialize */
+    if( NULL == _dc1394_num_using_fd ) {
+	_dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(int) );
+	_dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(int) );
+    }
+	
+    if (_dc1394_num_using_fd[camera->port] == 0)
+    {
+
+        if ( (camera->dma_fd = open(camera->dma_device_file,O_RDONLY)) < 0 )
+        {
+            printf("(%s) unable to open video1394 device %s\n", 
+		__FILE__,
+		camera->dma_device_file);
+	    perror( __FILE__ );
+            return DC1394_FAILURE;
+        }
+        _dc1394_dma_fd[camera->port] = camera->dma_fd;
+
+    }
+    else
+	camera->dma_fd = _dc1394_dma_fd[camera->port];
+
+    _dc1394_num_using_fd[camera->port]++;
     vmmap.sync_tag= 1;
     vmmap.nb_buffers= num_dma_buffers;
     vmmap.flags= VIDEO1394_SYNC_FRAMES;
@@ -262,7 +279,7 @@ _dc1394_dma_basic_setup(int channel,
     vmmap.channel= channel;
 
     /* tell the video1394 system that we want to listen to the given channel */
-    if (ioctl(_dc1394_dma_fd, VIDEO1394_LISTEN_CHANNEL, &vmmap) < 0)
+    if (ioctl(camera->dma_fd, VIDEO1394_LISTEN_CHANNEL, &vmmap) < 0)
     {
         printf("(%s) VIDEO1394_LISTEN_CHANNEL ioctl failed!\n", __FILE__);
         return DC1394_FAILURE;
@@ -278,11 +295,11 @@ _dc1394_dma_basic_setup(int channel,
     {
         vwait.buffer= i;
 
-        if (ioctl(_dc1394_dma_fd,VIDEO1394_LISTEN_QUEUE_BUFFER,&vwait) < 0)
+        if (ioctl(camera->dma_fd,VIDEO1394_LISTEN_QUEUE_BUFFER,&vwait) < 0)
         {
             printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER ioctl failed!\n",
                    __FILE__);
-            ioctl(_dc1394_dma_fd, VIDEO1394_UNLISTEN_CHANNEL,
+            ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL,
                   &(vwait.channel));
             return DC1394_FAILURE;
         }
@@ -290,7 +307,7 @@ _dc1394_dma_basic_setup(int channel,
     }
 
     camera->dma_ring_buffer= mmap(0, vmmap.nb_buffers * vmmap.buf_size,
-                           PROT_READ,MAP_SHARED, _dc1394_dma_fd, 0);
+                           PROT_READ,MAP_SHARED, camera->dma_fd, 0);
 
     if (camera->dma_ring_buffer == (unsigned char *)(-1))
     {
@@ -303,7 +320,7 @@ _dc1394_dma_basic_setup(int channel,
     /* makesure the ring buffer was allocated */
     if (camera->dma_ring_buffer == (unsigned char*)-1) {
         printf("(%s) mmap failed!\n", __FILE__);
-        ioctl(_dc1394_dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
+        ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
         return DC1394_FAILURE;
     }
 
@@ -497,11 +514,17 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                          int speed, int frame_rate,
                          int num_dma_buffers, dc1394_cameracapture *camera)
 {
+ 
+	int *myPort;
+ 
     if( format == FORMAT_SCALABLE_IMAGE_SIZE)
     {
       fprintf( stderr, "Wrong function: Use dc1394_dma_setup_format7_capture()\n");
       return DC1394_FAILURE;
     }
+
+	myPort = raw1394_get_userdata( handle );
+	camera->port = *myPort;
 
     if (_dc1394_basic_setup(handle,node, channel, format, mode,
                             speed,frame_rate, camera) == DC1394_FAILURE)
@@ -533,15 +556,15 @@ dc1394_dma_release_camera(raw1394handle_t handle,
 
     if (camera->dma_ring_buffer)
     {
-        munmap(camera->dma_ring_buffer,camera->dma_buffer_size);
+        munmap((void*)camera->dma_ring_buffer,camera->dma_buffer_size);
     }
 
-    _dc1394_num_using_fd--;
+    _dc1394_num_using_fd[camera->port]--;
 
-    if (_dc1394_num_using_fd == 0)
+    if (_dc1394_num_using_fd[camera->port] == 0)
     {
 
-        while (close(_dc1394_dma_fd) != 0)
+        while (close(camera->dma_fd) != 0)
         {
             printf("(%s) waiting for dma_fd to close\n", __FILE__);
             sleep(1);
@@ -561,7 +584,7 @@ int
 dc1394_dma_unlisten(raw1394handle_t handle, dc1394_cameracapture *camera)
 {
 
-    if (ioctl(_dc1394_dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &(camera->channel))
+    if (ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &(camera->channel))
         < 0)
     {
         return DC1394_FAILURE;
@@ -606,9 +629,9 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
         vwait.channel= cams[i].channel;
         cb= (cams[i].dma_last_buffer + 1) % cams[i].num_dma_buffers;
         vwait.buffer= cb;
-        //cams[i].dma_last_buffer = cb;
+        cams[i].dma_last_buffer = cb;
 
-        if (ioctl(_dc1394_dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
+        if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
         {
             printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",
                    __FILE__);
@@ -616,18 +639,20 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
             return DC1394_FAILURE;
         }
 
-        /* we want to return the most recent buffer, so skip the old 
-           ones */
+        /* get the number of buffers by which we are behind */
         extra_buf= vwait.buffer;
 
-        if (extra_buf) 
+        /* if all buffers are behind, requeue them all and wait for
+           a freshly captured buffer */
+        if (extra_buf == cams[i].num_dma_buffers - 1) 
         {
 
-            for (j= 0; j < extra_buf; j++) 
+            /* requeue all buffers */
+            for (j= 0; j < cams[i].num_dma_buffers; j++) 
             {
                 vwait.buffer= (cb + j) % cams[i].num_dma_buffers;
 
-                if (ioctl(_dc1394_dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER,
+                if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER,
                           &vwait) < 0)
                 {
                     printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER failed in "
@@ -636,9 +661,18 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 
             }
 
+            /* wait for a newly captured buffer */
+            vwait.buffer = cb;
+            if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
+            {
+                printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",
+                   __FILE__);
+                cams[i].dma_last_buffer++;
+                return DC1394_FAILURE;
+            }
         }
 
-        cams[i].dma_last_buffer= (cb + extra_buf) % cams[i].num_dma_buffers;
+		cams[i].filltime = vwait.filltime;
         cams[i].capture_buffer= (int*)(cams[i].dma_ring_buffer +
                                        (cams[i].dma_last_buffer) *
                                        cams[i].dma_frame_size);
@@ -664,7 +698,7 @@ dc1394_dma_done_with_buffer(dc1394_cameracapture *camera)
     vwait.channel= camera->channel;
     vwait.buffer= camera->dma_last_buffer;
 
-    if (ioctl(_dc1394_dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
+    if (ioctl(camera->dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
     {
         printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER failed in "
                "done with buffer!\n", __FILE__);

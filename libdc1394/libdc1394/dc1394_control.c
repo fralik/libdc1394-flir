@@ -842,6 +842,7 @@ raw1394handle_t
 dc1394_create_handle(int port) 
 {
     raw1394handle_t handle;
+    int *myPort = malloc(sizeof(int));
 
 #ifdef LIBRAW1394_OLD
     if (!(handle= raw1394_get_handle()))
@@ -863,9 +864,25 @@ dc1394_create_handle(int port)
         return NULL;
     }
 
+    *myPort = port;
+    raw1394_set_userdata( handle, myPort );
+
     return handle;
 }
 
+int
+dc1394_destroy_handle( raw1394handle_t handle )
+{
+int *myPort;
+
+	myPort = raw1394_get_userdata( handle );
+	if(myPort) 
+		free(myPort);
+	if( handle != NULL ) 
+		raw1394_destroy_handle(handle);
+
+	return DC1394_SUCCESS;
+}
 
 int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)

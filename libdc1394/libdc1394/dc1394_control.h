@@ -240,6 +240,9 @@ typedef struct __dc1394_cam_cap_struct
     int num_dma_buffers;
     int dma_last_buffer;
     const char * dma_device_file;
+    int dma_fd;
+    int port;
+    struct timeval filltime;
 } dc1394_cameracapture ;
 
 typedef struct __dc1394_misc_info
@@ -352,6 +355,14 @@ dc1394_print_feature_set(dc1394_feature_set *features);
 *****************************************************/
 raw1394handle_t 
 dc1394_create_handle(int port);
+
+/***************************************************
+ dc1394_destroy_handle
+
+ Destroy the handle, including the userdata 
+***************************************************/
+int
+dc1394_destroy_handle(raw1394handle_t handle);
 
 
 /*****************************************************
