@@ -1359,6 +1359,9 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
 					      &feature->abs_min, &feature->abs_max);
 	dc1394_query_absolute_feature_value(handle, node, orig_fid,
 					    &feature->abs_value);
+	dc1394_query_absolute_control(handle, node, orig_fid,
+				      &feature->abs_control);
+	//fprintf(stderr,"%d %d\n",feature->absolute_capable,feature->abs_control);
       }
 
     return DC1394_SUCCESS;
@@ -2801,13 +2804,13 @@ dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
 }
 
 int
-dc1394_has_absolute_setting(raw1394handle_t handle, nodeid_t node,
-			    unsigned int feature, dc1394bool_t *value)
+dc1394_query_absolute_control(raw1394handle_t handle, nodeid_t node,
+			      unsigned int feature, dc1394bool_t *value)
 {
     octlet_t offset;
     quadlet_t quadval;
 
-    FEATURE_TO_INQUIRY_OFFSET(feature, offset);
+    FEATURE_TO_VALUE_OFFSET(feature, offset);
 
     if (GetCameraControlRegister(handle, node, offset, &quadval) < 0)
     {
@@ -2832,6 +2835,7 @@ dc1394_absolute_setting_on_off(raw1394handle_t handle, nodeid_t node,
 {
     octlet_t offset;
     quadlet_t curval;
+    int retval;
 
     FEATURE_TO_VALUE_OFFSET(feature, offset);
 
@@ -2840,13 +2844,44 @@ dc1394_absolute_setting_on_off(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    if (!(curval & 0x40000000UL))
-    {
-        int retval;
-
+    if (value && !(curval & 0x40000000UL))
+      {
         curval|= 0x40000000UL;
         retval= SetCameraControlRegister(handle, node, offset, curval);
         return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+      }
+    else if (!value && (curval & 0x40000000UL))
+      {
+        curval&= 0xBFFFFFFFUL;
+        retval= SetCameraControlRegister(handle, node, offset, curval);
+        return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+      }
+
+    return DC1394_SUCCESS;
+}
+
+
+int
+dc1394_has_absolute_control(raw1394handle_t handle, nodeid_t node,
+			    unsigned int feature, dc1394bool_t *value)
+{
+    octlet_t offset;
+    quadlet_t quadval;
+
+    FEATURE_TO_INQUIRY_OFFSET(feature, offset);
+
+    if (GetCameraControlRegister(handle, node, offset, &quadval) < 0)
+    {
+        return DC1394_FAILURE;
+    }
+
+    if (quadval & 0x40000000UL)
+    {
+        *value= DC1394_TRUE;
+    }
+    else
+    {
+        *value= DC1394_FALSE;
     }
 
     return DC1394_SUCCESS;

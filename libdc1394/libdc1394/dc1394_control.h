@@ -288,7 +288,8 @@ typedef struct __dc1394_feature_info_struct
     int BU_value;
     int RV_value;
     int target_value;
-    
+
+    dc1394bool_t abs_control;
     float abs_value;
     float abs_max;
     float abs_min;
@@ -1086,15 +1087,19 @@ dc1394_query_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
 
 int
 dc1394_set_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
-				  int feature, float *value);
+				  int feature, float value);
 
 int
-dc1394_has_absolute_setting(raw1394handle_t handle, nodeid_t node,
+dc1394_query_absolute_control(raw1394handle_t handle, nodeid_t node,
 			    unsigned int feature, dc1394bool_t *value);
 
 int
 dc1394_absolute_setting_on_off(raw1394handle_t handle, nodeid_t node,
 			       unsigned int feature, unsigned int value);
+
+int
+dc1394_has_absolute_control(raw1394handle_t handle, nodeid_t node,
+			    unsigned int feature, dc1394bool_t *value);
 
 #ifdef __cplusplus
 }

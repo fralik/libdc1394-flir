@@ -246,7 +246,7 @@ Thu Sep 03 10:45:00 2002 <ddouxchamps@users.sf.net>
 Thu Sep 09 12:00:00 2002 <ddouxchamps@users.sf.net>
     * more v1.30 handshake update
 
-Fri Sep 10-11 12:00:00 2002 <ddouxchamps@users.sf.net>
+Fri Sep 10 11 12:00:00 2002 <ddouxchamps@users.sf.net>
     * even more v1.30 handshake update (now with proper error handling)
 
 Sun Sep 22 17:30:00 2002 <ddouxchamps@users.sf.net>
@@ -259,5 +259,11 @@ Fri Sep 27 13:00:00 2002 <ddouxchamps@users.sf.net>
     * more v1.30 handshake update to handle backward compatibility
       with v1.20
 
-Fri Oct 22 15:10:00 2002 <ddouxchamps@users.sf.net>
+Tue Oct 22 15:10:00 2002 <ddouxchamps@users.sf.net>
     * applied Christophe Achard patch, with some modifications.
+
+Thu Oct 22 15:10:00 2002 <ddouxchamps@users.sf.net>
+    * added "dc1394bool_t abs_control" to "dc1394_feature_info" struct
+    * fixed, cleaned-up and finalized the absolute control code
+
+	

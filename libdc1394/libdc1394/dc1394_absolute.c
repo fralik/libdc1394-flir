@@ -255,10 +255,10 @@ dc1394_query_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
 
 int
 dc1394_set_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
-				  int feature, float* value)
+				  int feature, float value)
 {
     if (SetCameraAbsoluteRegister(handle, node, feature, REG_CAMERA_ABS_VALUE,
-				  (quadlet_t*)value) != DC1394_SUCCESS)
+				  (quadlet_t*)&value) != DC1394_SUCCESS)
       {
 	printf("(%s) Absolute value setting failure \n", __FILE__);
 	return DC1394_FAILURE;
