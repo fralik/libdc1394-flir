@@ -915,6 +915,7 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 
     offset+= ((quadval & 0xFFFFFFUL) * 4) + 4;
     usleep(1000);
+    //fprintf(stderr,"  0x%x\n",offset);
 
     /* get the unit_spec_ID (should be 0x00A02D for 1394 digital camera) */
     if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
