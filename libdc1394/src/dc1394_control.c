@@ -34,8 +34,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include "config.h"
 #include "dc1394_control.h"
-#include <video1394.h>
+#include "kernel-video1394.h"
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
@@ -47,12 +48,11 @@
 #include <sys/mman.h>
 #include <errno.h>
 
-//#define CONFIG_ROM_BASE                0xFFFFF0000000ULL
-//#define CCR_BASE                       0xFFFFF0F00000ULL
 
 /********************/
 /* Base ROM offsets */
 /********************/
+
 #define ROM_BUS_INFO_BLOCK             0x400U
 #define ROM_ROOT_DIRECTORY             0x414U
 
@@ -107,17 +107,13 @@
 #define REG_CAMERA_CAPTURE_SIZE	       0x8C0U
 #define REG_CAMERA_CAPTURE_QUALITY     0x8C4U 
 
-//#define ON_VALUE                       0x80000000UL
-//#define OFF_VALUE                      0x00000000UL
-
-
-//#define CAMERA_READ_OK  0x20000
-//#define CAMERA_WRITE_OK 0x1000f
 
 /**************************/
 /*  constant definitions  */
 /**************************/
-const char * dc1394_feature_desc[NUM_FEATURES] = {
+
+const char * dc1394_feature_desc[NUM_FEATURES] =
+{
     "Brightness",
     "Exposure",
     "Sharpness",
@@ -175,27 +171,6 @@ const int quadlets_per_packet_format_2[36] =
 };
   
 
-    
-
-//#define SHOW_ERRORS
-
-/* Maximum number of write/read retries */
-//#define MAX_RETRIES                    20
-/* A hard compiled factor that makes sure async read and writes don't happen too fast*/
-//#define SLOW_DOWN 20
-
-/* transaction acknowldegements (this should be in the raw1394 headers) */
-//#define ACK_COMPLETE   0x0001U
-//#define ACK_PENDING    0x0002U
-//#define ACK_LOCAL      0x0010U
-
-/*Response codes (this should be in the raw1394 headers) */
-//not currently used
-//#define RESP_COMPLETE    0x0000U
-//#define RESP_SONY_HACK   0x000fU
-
-
-
 /**********************/
 /* Internal functions */
 /**********************/
@@ -203,6 +178,7 @@ const int quadlets_per_packet_format_2[36] =
 int
 _dc1394_get_wh_from_format(int format, int mode, int *w, int *h) 
 {
+
     switch(format) 
     {
     case FORMAT_VGA_NONCOMPRESSED:
@@ -258,6 +234,7 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
     default:
         return DC1394_FAILURE;
     }
+
 }
 	
 
@@ -269,9 +246,10 @@ per packet
 int 
 _dc1394_get_quadlets_per_packet(int format,int mode, int frame_rate) 
 {
-    if (((-1<mode) && (mode<NUM_MODES)) && 
-        ((-1<frame_rate) && frame_rate<NUM_FRAMERATES)) 
+    if ( ((-1 < mode) && (mode < NUM_MODES)) && 
+         ((-1 < frame_rate) && (frame_rate < NUM_FRAMERATES)) ) 
     {
+
         switch(format) 
         {
         case FORMAT_VGA_NONCOMPRESSED:
@@ -282,15 +260,17 @@ _dc1394_get_quadlets_per_packet(int format,int mode, int frame_rate)
             return quadlets_per_packet_format_2[6*mode+frame_rate];
         default:
             printf("(%s) Quadlets per packet unkown for format %d!\n",
-                   __FILE__,format);
-            return -1;
+                   __FILE__, format);
         }
-    } else 
+
+    }
+    else
     {
-        printf("(%s) Invalid framerate (%d) or mode (%d)!\n",__FILE__,
-               frame_rate,format);
-        return -1;
-    }      
+        printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__,
+               frame_rate, format);
+    }
+
+    return -1;
 }
 
 /*****************************************************
@@ -307,115 +287,73 @@ _dc1394_quadlets_from_format(int format, int mode)
         switch(mode) 
         {
         case MODE_160x120_YUV444:
-            return 14400; //160x120*3/4
+            return 14400;   //160x120*3/4
         case MODE_320x240_YUV422:
-            return 38400;//320x240/2
+            return 38400;   //320x240/2
         case MODE_640x480_YUV411:
-            return 115200;//640x480x12/32
+            return 115200;  //640x480x12/32
         case MODE_640x480_YUV422:
-            return 153600;//640x480/2
+            return 153600;  //640x480/2
         case MODE_640x480_RGB:
-            return 230400;//640x480x3/4
+            return 230400;  //640x480x3/4
         case MODE_640x480_MONO:
-            return 76800;//640x480/4
+            return 76800;   //640x480/4
         default:
-            printf("(%s) Improper mode specified: %d\n",__FILE__,mode);
+            printf("(%s) Improper mode specified: %d\n", __FILE__, mode);
             return -1; 
         }
     case FORMAT_SVGA_NONCOMPRESSED_1: 
         switch(mode) 
         {
         case 0:
-            return 240000;//800x600/2
+            return 240000;  //800x600/2
         case 1:
-            return 360000;//800x600x3/4
+            return 360000;  //800x600x3/4
         case 2:
-            return 120000;//800x600/4
+            return 120000;  //800x600/4
         case 3:
-            return 393216;//1024x768/2
+            return 393216;  //1024x768/2
         case 4:
-            return 589824;//1024x768x3/4
+            return 589824;  //1024x768x3/4
         case 5:
-            return 196608;//1024x768/4
+            return 196608;  //1024x768/4
         default:
-            printf("(%s) Improper mode specified: %d\n",__FILE__,mode);
+            printf("(%s) Improper mode specified: %d\n", __FILE__, mode);
             return -1;
         }
     case FORMAT_SVGA_NONCOMPRESSED_2:
         switch (mode) 
         {
         case 0:
-            return 61440;//1280x960/2
+            return 61440;   //1280x960/2
         case 1:
-            return 921600;//1280x960x3/4
+            return 921600;  //1280x960x3/4
         case 2:
-            return 307200;//1280x960/4
+            return 307200;  //1280x960/4
         case 3:
-            return 960000;//1600x1200/2
+            return 960000;  //1600x1200/2
         case 4:
-            return 1440000;//1600x1200x3/4
+            return 1440000; //1600x1200x3/4
         case 5:
-            return 480000;//1600x1200/4
+            return 480000;  //1600x1200/4
         default:
-            printf("(%s) Improper mode specified: %d\n",__FILE__,mode);
+            printf("(%s) Improper mode specified: %d\n", __FILE__, mode);
             return -1;
         }
     case FORMAT_STILL_IMAGE:
-        printf("(%s) Don't know how many quadlets per frame for FORMAT_STILL_IMAGE mode:%d\n",__FILE__,mode);
+        printf("(%s) Don't know how many quadlets per frame for "
+               "FORMAT_STILL_IMAGE mode:%d\n", __FILE__, mode);
         return -1;
     case FORMAT_SCALABLE_IMAGE_SIZE:
-        printf("(%s) Don't know how many quadlets per frame for FORMAT_SCALABLE_IMAGE mode:%d\n",__FILE__,mode);
+        printf("(%s) Don't know how many quadlets per frame for "
+               "FORMAT_SCALABLE_IMAGE mode:%d\n", __FILE__, mode);
         return -1;
     default:
-        printf("(%s) Improper format specified: %d\n",__FILE__,format);
+        printf("(%s) Improper format specified: %d\n", __FILE__, format);
         return -1;
     }
+
     return -1;
-}
-
-int 
-_dc1394_read_check(raw1394handle_t handle)
-{
-    raw1394_errcode_t err= raw1394_get_errcode(handle);
-    int ack= raw1394_get_ack(err);
-    int rcode= raw1394_get_rcode(err);
-
-#ifdef SHOW_ERRORS
-    printf("read ack of %x rcode of %x\n", ack, rcode);
-#endif
-
-    if (((ack==ACK_PENDING)||(ack==ACK_LOCAL)) && (rcode==RESP_COMPLETE)) 
-    {
-        return DC1394_SUCCESS; 
-    }
-    else 
-    {
-        return DC1394_FAILURE;
-    }
-
-}
-
-int 
-_dc1394_write_check(raw1394handle_t handle)
-{
-    raw1394_errcode_t err= raw1394_get_errcode(handle);
-    int ack= raw1394_get_ack(err);
-    int rcode= raw1394_get_rcode(err);
-
-#ifdef SHOW_ERRORS
-    printf("write ack of %x rcode of %x\n", ack, rcode);
-#endif
-
-    if (((ack==ACK_PENDING)||(ack==ACK_LOCAL)||(ack==ACK_COMPLETE)) && 
-        ((rcode==RESP_COMPLETE)|| (rcode==RESP_SONY_HACK)) ) 
-    {
-        return DC1394_SUCCESS;
-    }
-    else 
-    {
-        return DC1394_FAILURE;
-    }
-
 }
 
 static int
@@ -429,16 +367,37 @@ GetCameraROMValue(raw1394handle_t handle, nodeid_t node,
         retval= raw1394_read(handle, 0xffc0 | node, CONFIG_ROM_BASE + offset,
                              4, value);
 
+#ifdef LIBRAW1394_OLD
+        if (retval >= 0)
+        {
+            int ack= retval >> 16;
+            int rcode= retval & 0xffff;
+
+#ifdef SHOW_ERRORS
+            printf("ROM read ack of %x rcode of %x\n", ack, rcode);
+#endif
+
+            if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL)) &&
+                 (rcode == RESP_COMPLETE) )
+            { 
+                /* conditionally byte swap the value */
+                *value= ntohl(*value); 
+                return 0;
+            }
+
+        }
+#else
         if (!retval)
         {
-            /* conditionally byte swap the value (addition by PDJ) */
-            *value= ntohl(*value);  
-            return retval; 
+            /* conditionally byte swap the value */
+            *value= ntohl(*value);
+            return retval;
         }
         else if (errno != EAGAIN)
         {
             return retval;
         }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
 
         usleep(SLOW_DOWN);
     }
@@ -459,6 +418,26 @@ GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
         retval= raw1394_read(handle, 0xffc0 | node, CCR_BASE + offset,
                              4, value);
 
+#ifdef LIBRAW1394_OLD
+        if (retval >= 0)
+        {
+            int ack= retval >> 16;
+            int rcode= retval & 0xffff;
+
+#ifdef SHOW_ERRORS
+            printf("CCR read ack of %x rcode of %x\n", ack, rcode);
+#endif
+
+            if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL)) &&
+                 (rcode == RESP_COMPLETE) )
+            { 
+                /* conditionally byte swap the value */
+                *value= ntohl(*value); 
+                return 0;
+            }
+
+        }
+#else
         if (!retval)
         {
             /* conditionally byte swap the value (addition by PDJ) */
@@ -469,6 +448,7 @@ GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
         {
             return retval;
         }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
 
         usleep(SLOW_DOWN);
     }
@@ -492,10 +472,31 @@ SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
         retval= raw1394_write(handle, 0xffc0 | node, CCR_BASE + offset, 4,
                               &value);
 
+#ifdef LIBRAW1394_OLD
+        if (retval >= 0)
+        {
+            int ack= retval >> 16;
+            int rcode= retval & 0xffff;
+
+#ifdef SHOW_ERRORS
+            printf("CCR write ack of %x rcode of %x\n", ack, rcode);
+#endif
+
+            if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL) ||
+                  (ack == ACK_COMPLETE)) &&
+                 ((rcode == RESP_COMPLETE) || (rcode == RESP_SONY_HACK)) ) 
+            {
+                return 0;
+            }
+            
+            
+        }
+#else
         if (!retval || (errno != EAGAIN))
         {
             return retval;
         }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
 
         usleep(SLOW_DOWN);
     }
@@ -726,7 +727,11 @@ dc1394_create_handle(int port)
 {
     raw1394handle_t handle;
 
-    if (!(handle= raw1394_new_handle())) 
+#ifdef LIBRAW1394_OLD
+    if (!(handle= raw1394_get_handle()))
+#else
+    if (!(handle= raw1394_new_handle()))
+#endif
     {
         printf("(%s) Couldn't get raw1394 handle!\n",__FILE__);
         return NULL;
