@@ -1075,7 +1075,6 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         usleep(1000);
     }
     offset+= ((value[0] & 0xFFFFFFUL) * 4) - 4;
-    printf("unit directory offset = 0x%08x\n", offset);
     value[0] = 0;
 
     /* now get the unit dependent directory offset */
