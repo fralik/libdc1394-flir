@@ -246,11 +246,15 @@ Thu Sep 03 10:45:00 2002 <ddouxchamps@users.sf.net>
 Thu Sep 09 12:00:00 2002 <ddouxchamps@users.sf.net>
     * more v1.30 handshake update
 
-Thu Sep 10-11 12:00:00 2002 <ddouxchamps@users.sf.net>
+Fri Sep 10-11 12:00:00 2002 <ddouxchamps@users.sf.net>
     * even more v1.30 handshake update (now with proper error handling)
 
-Thu Sep 22 17:30:00 2002 <ddouxchamps@users.sf.net>
+Sun Sep 22 17:30:00 2002 <ddouxchamps@users.sf.net>
     * added absolute feature setting functions. This is a first hack. 
 
-Thu Sep 23 10:10:00 2002 <ddouxchamps@users.sf.net>
+Mon Sep 23 10:10:00 2002 <ddouxchamps@users.sf.net>
     * debugged absolute settings. Tested for shutter without problems.
+
+Fri Sep 27 13:00:00 2002 <ddouxchamps@users.sf.net>
+    * more v1.30 handshake update to handle backward compatibility
+      with v1.20

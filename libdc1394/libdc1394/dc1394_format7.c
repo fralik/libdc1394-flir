@@ -191,14 +191,27 @@ _dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
 {
   int setting_1, err_flag1, err_flag2, v130handshake;
   int exit_loop;
+  quadlet_t value;
 
-  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
-					 &setting_1, &err_flag1, &err_flag2)
-      != DC1394_SUCCESS)
-    {
-      printf("(%s) Unable to read value setting register.\n", __FILE__);
-      return DC1394_FAILURE;
+  if (dc1394_get_sw_version(handle, node, &value) != DC1394_SUCCESS) {
+    printf("(%s) Unable to read software revision\n", __FILE__);
+    return DC1394_FAILURE;
+  }
+  else {
+    if (value == 0x000102) { // if version is 1.30.
+      // We don't use > because 114 is for ptgrey cameras which are not 1.30 but 1.20
+      if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					     &setting_1, &err_flag1, &err_flag2)
+	  != DC1394_SUCCESS) {
+	printf("(%s) Unable to read value setting register.\n", __FILE__);
+	return DC1394_FAILURE;
+      }
     }
+    else {
+      v130handshake=0;
+    }
+  }
+      
   
   if (v130handshake==1)
     {
