@@ -533,11 +533,23 @@ GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
                          octlet_t offset, quadlet_t *value)
 {
     int retval, retry= MAX_RETRIES;
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+
+    /* get the ccr_base address if not yet retrieved */
+    if (camera != NULL && camera->ccr_base == 0)
+    {
+        dc1394_camerainfo info;
+        if ( dc1394_get_camera_info(handle, node, &info) == DC1394_FAILURE )
+            return -1;
+    }
+    else if (camera == NULL)
+        return -1;
 
     /* retry a few times if necessary (addition by PDJ) */
     while(retry--) 
     {
-        retval= raw1394_read(handle, 0xffc0 | node, CCR_BASE + offset,
+        retval= raw1394_read(handle, 0xffc0 | node, camera->ccr_base + offset,
                              4, value);
 
 #ifdef LIBRAW1394_OLD
@@ -584,6 +596,18 @@ SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
                          octlet_t offset, quadlet_t value)
 {
     int retval, retry= MAX_RETRIES;
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+
+    /* get the ccr_base address if not yet retrieved */
+    if (camera != NULL && camera->ccr_base == 0)
+    {
+        dc1394_camerainfo info;
+        if ( dc1394_get_camera_info(handle, node, &info) == DC1394_FAILURE )
+            return -1;
+    }
+    else if (camera == NULL)
+        return -1;
 
     /* conditionally byte swap the value (addition by PDJ) */
     value= htonl(value);
@@ -591,7 +615,7 @@ SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
     /* retry a few times if necessary */
     while(retry--)
     {
-        retval= raw1394_write(handle, 0xffc0 | node, CCR_BASE + offset, 4,
+        retval= raw1394_write(handle, 0xffc0 | node, camera->ccr_base + offset, 4,
                               &value);
 
 #ifdef LIBRAW1394_OLD
@@ -877,7 +901,8 @@ raw1394handle_t
 dc1394_create_handle(int port) 
 {
     raw1394handle_t handle;
-    int *myPort = malloc(sizeof(int));
+    dc1394_camerahandle *camera = malloc(sizeof(dc1394_camerahandle));
+    memset(camera, 0, sizeof(dc1394_camerahandle));
 
 #ifdef LIBRAW1394_OLD
     if (!(handle= raw1394_get_handle()))
@@ -899,8 +924,8 @@ dc1394_create_handle(int port)
         return NULL;
     }
 
-    *myPort = port;
-    raw1394_set_userdata( handle, myPort );
+    camera->port = port;
+    raw1394_set_userdata( handle, (void*) camera );
 
     return handle;
 }
@@ -908,11 +933,11 @@ dc1394_create_handle(int port)
 int
 dc1394_destroy_handle( raw1394handle_t handle )
 {
-int *myPort;
+    dc1394_camerahandle *camera;
 
-    myPort = raw1394_get_userdata( handle );
-    if(myPort) 
-        free(myPort);
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+    if(camera) 
+        free(camera);
     if( handle != NULL )
         raw1394_destroy_handle(handle);
 
@@ -998,30 +1023,40 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 int
 dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value)
 {
-    octlet_t offset;
-    octlet_t ud_offset = 0;
-    quadlet_t quadval = 0;
-
-    /* get the unit_directory offset */
-    offset= ROM_ROOT_DIRECTORY;
-    if (GetConfigROMTaggedRegister(handle, node, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+    
+    if (camera != NULL && camera->sw_version != 0)
+    {
+        *value = camera->sw_version;
     }
-    else {
-      ud_offset=(quadval & 0xFFFFFFUL)*4+offset;
+    else
+    {
+        octlet_t offset;
+        octlet_t ud_offset = 0;
+        quadlet_t quadval = 0;
+    
+        /* get the unit_directory offset */
+        offset= ROM_ROOT_DIRECTORY;
+        if (GetConfigROMTaggedRegister(handle, node, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
+          *value= DC1394_FALSE;
+          return DC1394_FAILURE;
+        }
+        else {
+          ud_offset=(quadval & 0xFFFFFFUL)*4+offset;
+        }
+      
+        /* get the unit_sw_version  */
+        offset = ud_offset;
+        if (GetConfigROMTaggedRegister(handle, node, 0x13, &offset, &quadval)!=DC1394_SUCCESS) {
+          *value= DC1394_FALSE;
+          return DC1394_FAILURE;
+        }
+        else {
+          quadval&=0xFFFFFFUL;
+        }
     }
-  
-    /* get the unit_sw_version  */
-    offset = ud_offset;
-    if (GetConfigROMTaggedRegister(handle, node, 0x13, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
-    }
-    else {
-      quadval&=0xFFFFFFUL;
-      return DC1394_SUCCESS;
-    }
+    return DC1394_SUCCESS;
 }
 
 void
@@ -1050,6 +1085,8 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
     quadlet_t value[2], quadval;
     unsigned int count;
     octlet_t ud_offset, udd_offset;
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
 
     if ( (retval= dc1394_is_camera(handle, node, &iscamera)) !=
          DC1394_SUCCESS )
@@ -1104,95 +1141,84 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
       return DC1394_FAILURE;
     }
     else {
-      info->ccr_offset=(quadval & 0xFFFFFFUL)*4+offset;
+      info->ccr_offset= (octlet_t)(quadval & 0xFFFFFFUL)*4;
+        if (camera != NULL)
+          camera->ccr_base = CONFIG_ROM_BASE + info->ccr_offset;
     }
 
-    /* get the vendor_name_leaf offset */
+    /* get the vendor_name_leaf offset (optional) */
     offset= udd_offset;
-    if (GetConfigROMTaggedRegister(handle, node, 0x81, &offset, &quadval)!=DC1394_SUCCESS) {
-      return DC1394_FAILURE;
-    }
-    else {
+    info->vendor[0] = '\0';
+    if (GetConfigROMTaggedRegister(handle, node, 0x81, &offset, &quadval)==DC1394_SUCCESS) {
       offset=(quadval & 0xFFFFFFUL)*4+offset;
-    }
 
-    /* read in the length of the vendor name */
-    if (GetCameraROMValue(handle, node, offset, value) < 0)
-    {
+      /* read in the length of the vendor name */
+      if (GetCameraROMValue(handle, node, offset, value) < 0)
+      {
         return DC1394_FAILURE;
-    }
+      }
 
-    len= (int)((value[0] >> 16) & 0xFFFFUL)*4-8; /* Tim Evers corrected length value */ 
+      len= (int)((value[0] >> 16) & 0xFFFFUL)*4-8; /* Tim Evers corrected length value */ 
 
-    if (len > MAX_CHARS)
-    {
-        len= MAX_CHARS;
-    }
+      if (len > MAX_CHARS)
+      {
+          len= MAX_CHARS;
+      }
+      offset+= 12;
+      count= 0;
 
-    offset+= 12;
-    count= 0;
-
-    /* grab the vendor name */
-    while (len > 0)
-    {
-
+      /* grab the vendor name */
+      while (len > 0)
+      {
         if (GetCameraROMValue(handle, node, offset+count, value) < 0)
         {
             return DC1394_FAILURE;
         }
-
         info->vendor[count++]= (value[0] >> 24);
         info->vendor[count++]= (value[0] >> 16) & 0xFFUL;
         info->vendor[count++]= (value[0] >> 8) & 0xFFUL;
         info->vendor[count++]= value[0] & 0xFFUL;
         len-= 4;
+      }
+      info->vendor[count]= '\0';
     }
 
-    info->vendor[count]= '\0';
-
-    /* get the model_name_leaf offset */
+    /* get the model_name_leaf offset (optional) */
     offset= udd_offset;
-    if (GetConfigROMTaggedRegister(handle, node, 0x82, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
-    }
-    else {
+    info->model[0] = '\0';
+    if (GetConfigROMTaggedRegister(handle, node, 0x82, &offset, &quadval)==DC1394_SUCCESS) {
       offset=(quadval & 0xFFFFFFUL)*4+offset;
-    }
 
-    /* read in the length of the model name */
-    if (GetCameraROMValue(handle, node, offset, value) < 0)
-    {
+      /* read in the length of the model name */
+      if (GetCameraROMValue(handle, node, offset, value) < 0)
+      {
         return DC1394_FAILURE;
-    }
+      }
 
-    len= (int)((value[0] >> 16) & 0xFFFFUL)*4-8; /* Tim Evers corrected length value */ 
+      len= (int)((value[0] >> 16) & 0xFFFFUL)*4-8; /* Tim Evers corrected length value */ 
 
-    if (len > MAX_CHARS)
-    {
-        len= MAX_CHARS;
-    }
+      if (len > MAX_CHARS)
+      {
+          len= MAX_CHARS;
+      }
+      offset+= 12;
+      count= 0;
 
-    offset+= 12;
-    count= 0;
-
-    /* grab the model name */
-    while (len > 0)
-    {
-
+      /* grab the model name */
+      while (len > 0)
+      {
         if (GetCameraROMValue(handle, node, offset+count, value) < 0)
         {
             return DC1394_FAILURE;
         }
-
         info->model[count++]= (value[0] >> 24);
         info->model[count++]= (value[0] >> 16) & 0xFFUL;
         info->model[count++]= (value[0] >> 8) & 0xFFUL;
         info->model[count++]= value[0] & 0xFFUL;
         len-= 4;
+      }
+      info->model[count]= '\0';
     }
-
-    info->model[count]= '\0';
 
     return DC1394_SUCCESS;
 }

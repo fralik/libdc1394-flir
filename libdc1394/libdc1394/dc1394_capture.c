@@ -30,6 +30,7 @@
 #include "config.h"
 #include "dc1394_control.h"
 #include "kernel-video1394.h"
+#include "dc1394_internal.h"
 
 #define NUM_ISO_CHANNELS 64
 #define MAX_NUM_PORTS 8
@@ -532,7 +533,8 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
 						 dc1394_cameracapture *camera)
 {
  
-	int *myPort;
+    dc1394_camerahandle *camera_handle;
+    camera_handle = (dc1394_camerahandle*) raw1394_get_userdata( handle );
  
     if( format == FORMAT_SCALABLE_IMAGE_SIZE)
     {
@@ -540,10 +542,9 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
       return DC1394_FAILURE;
     }
 
-	myPort = raw1394_get_userdata( handle );
-	camera->port = *myPort;
-	camera->dma_device_file = dma_device_file;
-	camera->drop_frames = drop_frames;
+    camera->port = camera_handle->port;
+    camera->dma_device_file = dma_device_file;
+    camera->drop_frames = drop_frames;
 
     if (_dc1394_basic_setup(handle,node, channel, format, mode,
                             speed,frame_rate, camera) == DC1394_FAILURE)

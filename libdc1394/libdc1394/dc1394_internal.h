@@ -28,7 +28,6 @@
 
 /* Definitions which application developers shouldn't care about */
 #define CONFIG_ROM_BASE             0xFFFFF0000000ULL
-#define CCR_BASE                    0xFFFFF0F00000ULL
 
 #define ON_VALUE                    0x80000000UL
 #define OFF_VALUE                   0x00000000UL
@@ -58,4 +57,13 @@ GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
 int
 _dc1394_dma_basic_setup(int channel, int num_dma_buffers,
                         dc1394_cameracapture *camera);
+						
+						
+typedef struct __dc1394_camerahandle
+{
+	int       port;
+	octlet_t  ccr_base;
+	quadlet_t sw_version;
+} dc1394_camerahandle;
+						
 #endif /* _DC1394_INTERNAL_H */
