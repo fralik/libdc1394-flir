@@ -223,6 +223,92 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
     return DC1394_SUCCESS;
 }
 
+
+/*****************************************************
+ dc1394_dma_basic_setup
+
+ This sets up the dma for the given camera
+
+******************************************************/
+int
+_dc1394_dma_basic_setup(int channel,
+                        int num_dma_buffers,
+                        dc1394_cameracapture *camera)
+{
+
+    struct video1394_mmap vmmap;
+    struct video1394_wait vwait;
+    int i;
+
+    if (_dc1394_num_using_fd == 0)
+    {
+
+        if ( (_dc1394_dma_fd= open("/dev/video1394",O_RDONLY)) < 0 )
+        {
+            printf("(%s) unable to open video1394 device!\n", __FILE__);
+            return DC1394_FAILURE;
+        }
+
+    }
+
+    _dc1394_num_using_fd++;
+    vmmap.sync_tag= 1;
+    vmmap.nb_buffers= num_dma_buffers;
+    vmmap.flags= VIDEO1394_SYNC_FRAMES;
+    vmmap.buf_size= camera->quadlets_per_frame * 4; //number of bytes needed
+    vmmap.channel= channel;
+
+    /* tell the video1394 system that we want to listen to the given channel */
+    if (ioctl(_dc1394_dma_fd, VIDEO1394_LISTEN_CHANNEL, &vmmap) < 0)
+    {
+        printf("(%s) VIDEO1394_LISTEN_CHANNEL ioctl failed!\n", __FILE__);
+        return DC1394_FAILURE;
+    }
+
+    camera->dma_frame_size= vmmap.buf_size;
+    camera->num_dma_buffers= vmmap.nb_buffers;
+    camera->dma_last_buffer= -1;
+    vwait.channel= channel;
+
+    /* QUEUE the buffers */
+    for (i= 0; i < vmmap.nb_buffers; i++)
+    {
+        vwait.buffer= i;
+
+        if (ioctl(_dc1394_dma_fd,VIDEO1394_LISTEN_QUEUE_BUFFER,&vwait) < 0)
+        {
+            printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER ioctl failed!\n",
+                   __FILE__);
+            ioctl(_dc1394_dma_fd, VIDEO1394_UNLISTEN_CHANNEL,
+                  &(vwait.channel));
+            return DC1394_FAILURE;
+        }
+
+    }
+
+    camera->dma_ring_buffer= mmap(0, vmmap.nb_buffers * vmmap.buf_size,
+                           PROT_READ,MAP_SHARED, _dc1394_dma_fd, 0);
+
+    if (camera->dma_ring_buffer == (unsigned char *)(-1))
+    {
+        printf("mmap failed!\n");
+        return DC1394_FAILURE;
+    }
+
+    camera->dma_buffer_size= vmmap.buf_size * vmmap.nb_buffers;
+
+    /* makesure the ring buffer was allocated */
+    if (camera->dma_ring_buffer == (unsigned char*)-1) {
+        printf("(%s) mmap failed!\n", __FILE__);
+        ioctl(_dc1394_dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
+        return DC1394_FAILURE;
+    }
+
+    return DC1394_SUCCESS;
+}
+
+
+
 /********************************
  libraw Capture Functions
 
@@ -396,100 +482,38 @@ dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams,
 ***********************************/
 
 /*****************************************************
- dc1394_dma_setup_camera
+ dc1394_dma_setup_capture
 
- This sets up the given camera to capture images using 
+ This sets up the given camera to capture images using
  the dma engine.  Should be much faster than the above
  routines
 ******************************************************/
 int
 dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                          int channel, int format, int mode,
-                         int speed, int frame_rate, 
-                         int num_dma_buffers, dc1394_cameracapture *camera) 
+                         int speed, int frame_rate,
+                         int num_dma_buffers, dc1394_cameracapture *camera)
 {
-    struct video1394_mmap vmmap;
-    struct video1394_wait vwait;
-    int i;
-
     if( format == FORMAT_SCALABLE_IMAGE_SIZE)
     {
-      fprintf( stderr, "Format 7 DMA capture not yet supported!\n");
+      fprintf( stderr, "Wrong function: Use dc1394_dma_setup_format7_capture()\n");
       return DC1394_FAILURE;
     }
-    
-    if (_dc1394_basic_setup(handle,node, channel, format, mode, 
+
+    if (_dc1394_basic_setup(handle,node, channel, format, mode,
                             speed,frame_rate, camera) == DC1394_FAILURE)
     {
         return DC1394_FAILURE;
     }
 
-    if (_dc1394_num_using_fd == 0)
+    if (_dc1394_dma_basic_setup (node, num_dma_buffers, camera) == DC1394_FAILURE)
     {
-
-        if ( (_dc1394_dma_fd= open("/dev/video1394",O_RDONLY)) < 0 )
-        {
-            printf("(%s) unable to open video1394 device!\n", __FILE__);
-            return DC1394_FAILURE;
-        }
-
-    }
-
-    _dc1394_num_using_fd++;
-    vmmap.sync_tag= 1;
-    vmmap.nb_buffers= num_dma_buffers;
-    vmmap.flags= VIDEO1394_SYNC_FRAMES;
-    vmmap.buf_size= camera->quadlets_per_frame * 4; //number of bytes needed
-    vmmap.channel= channel;
-
-    /* tell the video1394 system that we want to listen to the given channel */
-    if (ioctl(_dc1394_dma_fd, VIDEO1394_LISTEN_CHANNEL, &vmmap) < 0)
-    {
-        printf("(%s) VIDEO1394_LISTEN_CHANNEL ioctl failed!\n", __FILE__);
-        return DC1394_FAILURE;
-    }
-
-    camera->dma_frame_size= vmmap.buf_size;
-    camera->num_dma_buffers= vmmap.nb_buffers;
-    camera->dma_last_buffer= -1;
-    vwait.channel= channel;
-
-    /* QUEUE the buffers */
-    for (i= 0; i < vmmap.nb_buffers; i++)
-    {
-        vwait.buffer= i;
-
-        if (ioctl(_dc1394_dma_fd,VIDEO1394_LISTEN_QUEUE_BUFFER,&vwait) < 0)
-        {
-            printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER ioctl failed!\n",
-                   __FILE__); 
-            ioctl(_dc1394_dma_fd, VIDEO1394_UNLISTEN_CHANNEL,
-                  &(vwait.channel));
-            return DC1394_FAILURE;
-        }
-
-    }
-
-    camera->dma_ring_buffer= mmap(0, vmmap.nb_buffers * vmmap.buf_size,
-                           PROT_READ,MAP_SHARED, _dc1394_dma_fd, 0);
-
-    if (camera->dma_ring_buffer == (unsigned char *)(-1))
-    {
-        printf("mmap failed!\n");
-        return DC1394_FAILURE;
-    }
-
-    camera->dma_buffer_size= vmmap.buf_size * vmmap.nb_buffers;
-    
-    /* makesure the ring buffer was allocated */
-    if (camera->dma_ring_buffer == (unsigned char*)-1) {
-        printf("(%s) mmap failed!\n", __FILE__);
-        ioctl(_dc1394_dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
         return DC1394_FAILURE;
     }
 
     return DC1394_SUCCESS;
 }
+
 
 /*****************************************************
  dc1394_dma_release_camera
