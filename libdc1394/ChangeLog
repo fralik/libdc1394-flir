@@ -512,4 +512,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-02-13 Damien <ddouxchamps@users.sf.net>
     * Version 1.1.0
 
-	
+2005-02-28 Damien <ddouxchamps@users.sf.net>
+    * fixed definition of IIDC_VERSION_MIN (thx to D. Bahadir for spotting this)

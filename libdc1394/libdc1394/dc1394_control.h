@@ -243,7 +243,7 @@ enum
   IIDC_VERSION_1_38,
   IIDC_VERSION_1_39
 };
-#define IIDC_VERSION_MIN                 IIDC_VERSION_1_02
+#define IIDC_VERSION_MIN                 IIDC_VERSION_1_04
 #define IIDC_VERSION_MAX                 IIDC_VERSION_1_39
 #define NUM_IIDC_VERSION                (IIDC_VERSION_MAX - IIDC_VERSION_MIN + 1)
 
