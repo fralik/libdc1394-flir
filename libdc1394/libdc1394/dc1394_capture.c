@@ -660,21 +660,17 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 
 			/* get the number of buffers by which we are behind */
 			cams[i].dma_extra_count = vwait.buffer;
-	
-            /* copy the extra frames into internal buffer */
-            for (j = cams[i].dma_extra_count-1; j >= 0; j++)
-            {
-                /* advance the ringbuffer cursor */
-                cb = (cams[i].dma_last_buffer + 1) % cams[i].num_dma_buffers;
-                cams[i].dma_last_buffer = cb;
 
+            /* copy the extra frames into internal buffer */
+            for (j = cams[i].dma_extra_count-1; j >= 0; j--)
+            {
+                cb = (cb+1) % cams[i].num_dma_buffers;
                 memcpy( (cams[i].dma_extra_buffer + j * cams[i].dma_frame_size),
-                        (cams[i].dma_ring_buffer + cams[i].dma_last_buffer *
-                                               cams[i].dma_frame_size),
+                        (cams[i].dma_ring_buffer + cb * cams[i].dma_frame_size),
                         cams[i].dma_frame_size );
             }
-            
-		} else {
+
+        } else {
             /* point to an internal extra buffer */
             cams[i].capture_buffer = (int*)(cams[i].dma_extra_buffer + 
                                             (cams[i].dma_extra_count-1) *
@@ -699,7 +695,7 @@ dc1394_dma_done_with_buffer(dc1394_cameracapture *camera)
     
     struct video1394_wait vwait;
     
-    if (camera->dma_last_buffer == -1 || camera->dma_extra_count > 0)
+    if (camera->dma_last_buffer == -1)
         return DC1394_SUCCESS;
 
     vwait.channel= camera->channel;
