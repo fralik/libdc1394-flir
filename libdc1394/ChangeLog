@@ -166,10 +166,12 @@ Mon Sept 24 22:36:12 2001 <dan@dennedy.org>
 	* added examples/Makefile.am
 	* examples build, but do not automatically install 
 
+---- v0.8.3 released -------------------------------------------------
+
 Fri Nov 23 15:48:00 2001 <douxchamps@ieee.org>
 	* use dc1394 feature-indexed function in
 	  dc1394_(get/set)_trigger_on_off
-
+	  
 Thu Jan 31 23:38:28 2002 <dan@dennedy.org>
     * dc1394_control.h: added dma_device_member to struct 
       dc1394_cameracapture. This enables support for mutliple
@@ -194,9 +196,9 @@ Mon Mar 18 14:43:31 2002 <douxchamps@ieee.org>
 	15fps (was 280, should have been 480)
 
 Mon March 26 0:41:50 2002 <dan@dennedy.org>
-	* Applied David Moore's <david@startbox.com> patch to avoid getting
+    * Applied David Moore's <david@startbox.com> patch to avoid getting
       old captures with dma_multi_capture.
-	* Applied John Stanley's <stanley@peak.org> patch to use multiple
+    * Applied John Stanley's <stanley@peak.org> patch to use multiple
       cameras on mutliple ports (hosts).
       NOTE: the new dc1394_destroy_handle() in dc1394_control.h
       NOTE: the dma device file defaults to the video1394 devfs default
@@ -211,5 +213,16 @@ Fri May 10 16:12:00 2002 <dan@dennedy.org>
       dma_device_file as a param to force users to set it.
       
 Sun July 21 22:51:00 2002 <dan@dennedy.org>
-	* added examples/dc1394_multiview.c to test/demonstrate multicapture
-	  over multiple ports.
+    * added examples/dc1394_multiview.c to test/demonstrate multicapture
+      over multiple ports.
+	  
+Fri July 28 00:26:00 2002 <dan@dennedy.org>
+    * dc1394_capture.c: added drop_frames boolean to
+      dc1394_dma_setup_capture().
+    * bumped versions to 0.9 since interface has changed some.
+      Correct libtool versions:
+	    major=9, interface changed
+		revision=0, first implementation of this interface
+	    age=0 for no backwards compatibilty
+    * examples/dc1394_multicapture: added drop_frames support, cleanup.
+

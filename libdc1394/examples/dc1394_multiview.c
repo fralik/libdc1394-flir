@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.3  2002/07/27 04:45:07  ddennedy
+**  added drop_frames option to dma capture, prepare versions/NEWS for 0.9 release
+**
 **  Revision 1.2  2002/07/24 02:22:40  ddennedy
 **  cleanup, add drop frame support to dc1394_multiview
 **
@@ -45,10 +48,10 @@
 
 
 /* uncomment the following to drop frames to prevent delays */
-#define DROP_FRAMES
-#define MAX_PORTS 4
+#define DROP_FRAMES 1
+#define MAX_PORTS 3
 #define MAX_CAMERAS 8
-#define NUM_BUFFERS 4
+#define NUM_BUFFERS 2
 
 /* ok the following constant should be by right included thru in Xvlib.h */
 #ifndef XV_YV12
@@ -414,7 +417,7 @@ int main(int argc,char *argv[])
 			 
 			if (dc1394_dma_setup_capture(handles[p], cameras[numCameras].node, i+1 /*channel*/,
 									FORMAT_VGA_NONCOMPRESSED, res,
-									SPEED_400, fps, NUM_BUFFERS,
+									SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
 									device_name, &cameras[numCameras]) != DC1394_SUCCESS) 
 			{
 				fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
@@ -562,12 +565,6 @@ int main(int argc,char *argv[])
 			for (i = 0; i < numCameras; i++)
 			{
 				dc1394_dma_done_with_buffer(&cameras[i]);
-#ifdef DROP_FRAMES
-				while (cameras[i].dma_extra_count > 0) {
-					dc1394_dma_single_capture( &cameras[i] );
-					dc1394_dma_done_with_buffer( &cameras[i] );
-				}
-#endif
 			}
 		
 		} /* while not interrupted */

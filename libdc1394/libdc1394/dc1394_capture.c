@@ -317,7 +317,7 @@ _dc1394_dma_basic_setup(int channel,
 
     camera->dma_buffer_size= vmmap.buf_size * vmmap.nb_buffers;
 
-    /* makesure the ring buffer was allocated */
+    /* make sure the ring buffer was allocated */
     if (camera->dma_ring_buffer == (unsigned char*)-1) {
         printf("(%s) mmap failed!\n", __FILE__);
         ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
@@ -326,9 +326,22 @@ _dc1394_dma_basic_setup(int channel,
 
     /* allocate extra buffers to properly multiplex cameras */
     camera->dma_extra_count = 0;
-    camera->dma_extra_buffer = (unsigned char *) malloc( camera->dma_buffer_size );
-   
-    return DC1394_SUCCESS;
+	if (camera->drop_frames == 0)
+	{
+		camera->dma_extra_buffer = (unsigned char *) malloc( camera->dma_buffer_size );
+		if (camera->dma_extra_buffer == NULL)
+		{
+			printf("(%s) failed to allocate internal buffers!\n", __FILE__);
+			ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
+			munmap((void*)camera->dma_ring_buffer,camera->dma_buffer_size);
+			return DC1394_FAILURE;
+		}
+	}	
+	else
+	{
+		camera->dma_extra_buffer = NULL;
+	}
+	return DC1394_SUCCESS;
 }
 
 
@@ -517,6 +530,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                          int channel, int format, int mode,
                          int speed, int frame_rate,
                          int num_dma_buffers, 
+						 int drop_frames,
 						 const char *dma_device_file,
 						 dc1394_cameracapture *camera)
 {
@@ -532,6 +546,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
 	myPort = raw1394_get_userdata( handle );
 	camera->port = *myPort;
 	camera->dma_device_file = dma_device_file;
+	camera->drop_frames = drop_frames;
 
     if (_dc1394_basic_setup(handle,node, channel, format, mode,
                             speed,frame_rate, camera) == DC1394_FAILURE)
@@ -539,12 +554,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    if (_dc1394_dma_basic_setup (channel, num_dma_buffers, camera) == DC1394_FAILURE)
-    {
-        return DC1394_FAILURE;
-    }
-
-    return DC1394_SUCCESS;
+    return _dc1394_dma_basic_setup (channel, num_dma_buffers, camera);
 }
 
 
@@ -566,7 +576,7 @@ dc1394_dma_release_camera(raw1394handle_t handle,
         munmap((void*)camera->dma_ring_buffer,camera->dma_buffer_size);
     }
     
-    if (camera->dma_extra_buffer)
+    if (camera->dma_extra_buffer != NULL)
     {
         free( camera->dma_extra_buffer);
     }
@@ -654,25 +664,49 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 				return DC1394_FAILURE;
 			}
 
-            /* point to the next buffer in the dma ringbuffer */
             cams[i].filltime = vwait.filltime;
-            cams[i].capture_buffer= (int*)(cams[i].dma_ring_buffer +
-                                           cams[i].dma_last_buffer *
-                                           cams[i].dma_frame_size);
 
-			/* get the number of buffers by which we are behind */
-			cams[i].dma_extra_count = vwait.buffer;
-
-            /* copy the extra frames into internal buffer */
-            for (j = cams[i].dma_extra_count-1; j >= 0; j--)
-            {
-                cb = (cb+1) % cams[i].num_dma_buffers;
-                memcpy( (cams[i].dma_extra_buffer + j * cams[i].dma_frame_size),
-                        (cams[i].dma_ring_buffer + cb * cams[i].dma_frame_size),
-                        cams[i].dma_frame_size );
-            }
-
-        } else {
+			if (cams[i].drop_frames == 0)
+			{
+				/* point to the next buffer in the dma ringbuffer */
+				cams[i].capture_buffer= (int*)(cams[i].dma_ring_buffer +
+											   cams[i].dma_last_buffer *
+											   cams[i].dma_frame_size);
+	
+				/* get the number of buffers by which we are behind */
+				cams[i].dma_extra_count = vwait.buffer;
+	
+				/* copy the extra frames into internal buffer */
+				for (j = cams[i].dma_extra_count-1; j >= 0; j--)
+				{
+					cb = (cb+1) % cams[i].num_dma_buffers;
+					memcpy( (cams[i].dma_extra_buffer + j * cams[i].dma_frame_size),
+							(cams[i].dma_ring_buffer + cb * cams[i].dma_frame_size),
+							cams[i].dma_frame_size );
+				}
+			}
+			else
+			{
+				int extra_buf;
+				extra_buf = vwait.buffer;
+				for (j = 0; j < extra_buf; j++)
+				{
+					vwait.buffer = (cb + j) % cams[i].num_dma_buffers;
+					if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
+					{
+						printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER failed in "
+							   "multi capture!\n", __FILE__);
+						return DC1394_FAILURE;
+					}
+				}
+				cams[i].dma_last_buffer = (cb + extra_buf) % cams[i].num_dma_buffers;
+				cams[i].capture_buffer  = (int*)(cams[i].dma_ring_buffer +
+											   (cams[i].dma_last_buffer) *
+											   cams[i].dma_frame_size);
+			}
+		}
+		else 
+		{
             /* point to an internal extra buffer */
             cams[i].capture_buffer = (int*)(cams[i].dma_extra_buffer + 
                                             (cams[i].dma_extra_count-1) *

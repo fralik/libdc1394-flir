@@ -46,3 +46,12 @@ Version 0.8.2:
 - new trigger control functions
 - synchronize kernel-video1394.h with the recent version
 
+Version 0.9.0:
+- added ability to set video1394 device name
+- default video1349 device name to default video1394 devfs names: e.g.,
+  /dev/video1394/0, where "/0" refers to the first port (host adapter).
+- added dma multicapture support over multiple adapters.
+- format7 enhancements (see ChangeLog)
+- added dma capture option to drop frames or attempt to return every
+  frame.
+
