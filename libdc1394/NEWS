@@ -77,5 +77,3 @@ Version 0.9.4:
 - Compatibility break: an additional argument ('extra buffering') has
   been added to the capture functions.
 
-Version 0.9.5:
-- no code change, just fixes the revision numbers that were wrong.
