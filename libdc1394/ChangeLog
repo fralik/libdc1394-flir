@@ -385,3 +385,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-01-19 Dan Dennedy <dan@dennedy.org>
     * dc1394_control.h: added dc1394_free_camera_nodes
     * updated examples to call dc1394_free_camera_nodes
+    * examples/dc1394_vloopback.c: workaround potential linux/videodev.h
+      problems on some distros' kernel headers.
+

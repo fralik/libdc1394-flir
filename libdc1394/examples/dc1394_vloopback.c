@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9  2004/01/20 04:15:34  ddennedy
+**  workaround some potential V4L compilation error
+**
 **  Revision 1.8  2004/01/20 04:12:27  ddennedy
 **  added dc1394_free_camera_nodes and applied to examples
 **
@@ -54,6 +57,8 @@
 #include <sys/poll.h>
 #include <unistd.h>
 #include <signal.h>
+#define _LINUX_TIME_H
+#define _DEVICE_H_
 #include <linux/videodev.h>
 #include <getopt.h>
 
