@@ -3296,9 +3296,9 @@ dc1394_get_bandwidth_usage(raw1394handle_t handle, nodeid_t node, unsigned int *
     
     // mutiply by 4 anyway because the best speed is SPEED_400 only
     if (speed>=SPEED_1600)
-      *bandwidth = qpp << (SPEED_1600-speed));
+      *bandwidth = qpp << (SPEED_1600-speed);
     else
-      *bandwidth = qpp >> (speed-SPEED_1600));
+      *bandwidth = qpp >> (speed-SPEED_1600);
   }
   else {
     *bandwidth=0;
