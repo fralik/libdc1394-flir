@@ -471,3 +471,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-08-10 Damien <ddouxchamps@users.sf.net>
     * Applied patch from Johann Schoonees to remove extra buffering.
       Yet another compatibility break.
+	
+2004-09-07 Damien <ddouxchamps@users.sf.net>
+    * Applied a patch from David Ergo to fix broken raw capture in libdc0.9.5.
