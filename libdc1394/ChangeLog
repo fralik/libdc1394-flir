@@ -1,13 +1,3 @@
-Mon Jul 24 16:41:31 2000   <GordPeters@smarttech.com>
-
-	* Fixed dc1394_get_camera_info() (it finally works)
-
-Mon Jul 24 14:59:18 2000   <GordPeters@smarttech.com>
-
-	* Fixed quadval initialization bug in dc1394_is_camera() that appears
-	  when multiple calls are made to it.
-	* Fixed 1st byte strip problem with dc1394_get_camera_info()
-
 Mon Jan 17 10:53:15 2000   <GordPeters@smarttech.com>
 
 	* Made constants in dc1394_control.c explicitly ULL, UL, or U
@@ -72,3 +62,35 @@ Mon Mar 13 18:28:49 2000   <GordPeters@smarttech.com>
 	  dc1394_set_feature_value() (breaking compatibility with old library)
 	* Added target_temperature parameter to dc1394_get_temperature()
 	  (again breaking compatibility with old library)
+
+Mon Oct 16 2000 <curmson@ri.cmu.edu>
+	* Changed return values of external functions so that they return
+	DC1394_SUCCESS or DC1394_FAILURE instead of returning the subsystem
+	retval (allowing checks such as if (dc1394_call()<0) {error handle}
+	(breaks compatability with old library)
+	* Added routines to nicely handle setting up multiple cameras to 
+	capture frames simultaneously
+	* Added routines and structures that represent the entire feature set 
+	of a camera, and can interrogate a camera to get the feature set in a
+	somewhat optimized way
+	* Added routines that return cameras nodes described by their unique ID
+	* Fixed dc1394_get_camera_info 
+	* functions added are:
+	dc1394_get_camera_feature_set
+	dc1394_get_caemra_feature
+	dc1394_print_feature
+	dc1394_print_feature_set
+	dc1394_create_handle
+	dc1394_get_camera_nodes
+	dc1394_get_sorted_camera_nodes
+	dc1394_print_camera_info
+	dc1394_setup_camera
+	dc1394_release_camera
+	dc1394_multi_capture
+	* structures added are:
+	dc1394_cameracapture 
+	dc1394_feature_info
+	dc1394_feature_set
+	
+
+	

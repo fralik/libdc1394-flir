@@ -3,6 +3,21 @@
  * Copyright (C) 2000 SMART Technologies Inc.
  *
  * Written by Gord Peters <GordPeters@smarttech.com>
+ * Additions by Chris Urmson <curmson@ri.cmu.edu>
+ *
+ * Acknowledgments:
+ * Per Dalgas Jakobsen <pdj@maridan.dk>
+ *   - Added retries to ROM and CSR reads
+ *   - Nicer endianness handling
+ *
+ * Robert Ficklin <rficklin@westengineering.com>
+ *   - bug fixes
+ * 
+ * Julie Andreotti <JulieAndreotti@smarttech.com>
+ *   - bug fixes
+ * 
+ *  Ann Dang <AnnDang@smarttech.com>
+ *   - bug fixes
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,6 +34,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "dc1394_control.h"
+
 
 #define CONFIG_ROM_BASE                0xFFFFF0000000ULL
 #define CCR_BASE                       0xFFFFF0F00000ULL
@@ -77,59 +93,411 @@
 #define REG_CAMERA_TILT		       0x888U
 #define REG_CAMERA_OPTICAL_FILTER      0x88CU
 #define REG_CAMERA_CAPTURE_SIZE	       0x8C0U
-#define REG_CAMERA_CAPTURE_QUALITY     0x8C4U
+#define REG_CAMERA_CAPTURE_QUALITY     0x8C4U 
 
 #define ON_VALUE                       0x80000000UL
 #define OFF_VALUE                      0x00000000UL
 
-/* Maximum number of write/read retries */
-#define MAX_RETRIES                    10
 
-/* Define this to get tons o' debug spew */
+//#define CAMERA_READ_OK  0x20000
+//#define CAMERA_WRITE_OK 0x1000f
+
+/**************************/
+/*  constant definitions  */
+/**************************/
+const char * dc1394_feature_desc[NUM_FEATURES] = {
+  "Brightness",
+  "Exposure",
+  "Sharpness",
+  "White Balance",
+  "Hue",
+  "Saturation",
+  "Gamma",
+  "Shutter",
+  "Gain",
+  "Iris",
+  "Focus",
+  "Temperature",
+  "Trigger",
+  "Zoom",
+  "Pan",
+  "Tilt",
+  "Optical Filter",
+  "Capture Size",
+  "Capture Quality"
+};
+
+
+/*these arrays define how many image quadlets there
+  are in a packet given a mode and a frame rate
+  This is defined in the 1394 digital camera spec 
+*/
+const int quadlets_per_packet_format_0[36] = 
+{ -1, -1, 15, 30, 60, -1,
+  -1, 20, 40, 80,160, -1,
+  -1, 60,120,240,480,-1,
+  -1, 80,160,320,640,-1,
+  -1,120,240,280,960, -1,
+  -1, 40, 80,160,320,640};
+
+const int quadlets_per_packet_format_1[36] = 
+{ -1,125,250,500,1000,  -1,
+  -1, -1,375,750,  -1,  -1,
+  -1, -1,125,250, 500,1000,
+  96,192,384,768,  -1,  -1,
+ 144,288,576, -1,  -1,  -1,
+  48, 96,192,384, 768,  -1};
+
+const int quadlets_per_packet_format_2[36] = 
+{ 160,320, 640,  -1,-1,-1,
+  240,480, 960,  -1,-1,-1,
+  80 ,160, 320, 640,-1,-1,
+  250,500,1000,  -1,-1,-1,
+  375,750,  -1,  -1,-1,-1,
+  125,250, 500,1000,-1,-1};
+  
+
+    
+
 //#define SHOW_ERRORS
+
+/* Maximum number of write/read retries */
+#define MAX_RETRIES                    20
+/* A hard compiled factor that makes sure async read and writes don't happen too fast*/
+#define SLOW_DOWN 20
+
+/* transaction acknowldegements (this should be in the raw1394 headers) */
+#define ACK_COMPLETE   0x0001U
+#define ACK_PENDING    0x0002U
+#define ACK_LOCAL      0x0010U
+
+/*Response codes (this should be in the raw1394 headers) */
+//not currently used
+#define RESP_COMPLETE    0x0000U
+#define RESP_URMSON      0x000fU
+
+
+
+
+
+
+#define NUM_ISO_CHANNELS 64
+/*Variables used for simultaneous capture of video from muliple cameras*/
+int * _dc1394_buffer[NUM_ISO_CHANNELS];
+int _dc1394_frame_captured[NUM_ISO_CHANNELS];
+int _dc1394_offset[NUM_ISO_CHANNELS];
+int _dc1394_quadlets_per_frame[NUM_ISO_CHANNELS];
+int _dc1394_quadlets_per_packet[NUM_ISO_CHANNELS];
+int _dc1394_all_captured;
 
 /**********************/
 /* Internal functions */
 /**********************/
 
+int _dc1394_get_wh_from_format(int format, int mode, int *w, int *h) {
+  switch(format) {
+    case FORMAT_VGA_NONCOMPRESSED:
+      switch(mode) {
+      case 0:
+	*w = 160;*h=120;
+	return DC1394_SUCCESS;
+      case 1:
+	*w = 320;*h=240;
+	return DC1394_SUCCESS;
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+	*w =640;*h=480;
+	return DC1394_SUCCESS;
+      default:
+	return DC1394_FAILURE;
+      }
+  case FORMAT_SVGA_NONCOMPRESSED_1:
+    switch(mode) {
+    case 0:
+    case 1:
+    case 2:
+      *w=800;*h=600;
+      return DC1394_SUCCESS;
+    case 3:
+    case 4:
+    case 5:
+      *w=1024;*h=768;
+      return DC1394_SUCCESS;
+    default:
+      return DC1394_FAILURE;
+    }
+    case FORMAT_SVGA_NONCOMPRESSED_2:
+      switch(mode) {
+      case 0:
+      case 1:
+      case 2:
+	*w=1280;*h=960;
+	return DC1394_SUCCESS;
+      case 3:
+      case 4:
+      case 5:
+	*w=1600;*h=1200;
+	return DC1394_SUCCESS;
+      default:
+	return DC1394_FAILURE;
+      }
+  default:
+    return DC1394_FAILURE;
+  }
+}
+	
+
+/*****************************************************
+_dc1394_get_quadlets_per_packet
+this routine reports the number of useful image quadlets 
+per packet
+*****************************************************/
+int _dc1394_get_quadlets_per_packet(int format,int mode, int frame_rate) {
+  if (((-1<mode) && (mode<NUM_MODES)) && 
+      ((-1<frame_rate) && frame_rate<NUM_FRAMERATES)) {
+    switch(format) {
+    case FORMAT_VGA_NONCOMPRESSED:
+      return quadlets_per_packet_format_0[6*mode+frame_rate];
+    case FORMAT_SVGA_NONCOMPRESSED_1:
+      return quadlets_per_packet_format_1[6*mode+frame_rate];
+    case FORMAT_SVGA_NONCOMPRESSED_2:
+      return quadlets_per_packet_format_2[6*mode+frame_rate];
+    default:
+      printf("(%s) Quadlets per packet unkown for format %d!\n",
+	     __FILE__,format);
+      return -1;
+    }
+  } else {
+    printf("(%s) Invalid framerate (%d) or mode (%d)!\n",__FILE__,
+	   frame_rate,format);
+    return -1;
+  }      
+}
+
+/*****************************************************
+_dc1394_quadlets_from_format
+this routine reports the number of quadlets that make up a 
+frame given the format and mode
+*****************************************************/
+int _dc1394_quadlets_from_format(int format, int mode) {
+  switch (format) {
+  case FORMAT_VGA_NONCOMPRESSED:
+    switch(mode) {
+    case MODE_160x120_YUV444:
+      return 14400; //160x120*3/4
+    case MODE_320x240_YUV422:
+      return 38400;//320x240/2
+    case MODE_640x480_YUV411:
+      return 115200;//640x480x12/32
+    case MODE_640x480_YUV422:
+      return 153600;//640x480/2
+    case MODE_640x480_RGB:
+      return 230400;//640x480x3/4
+    case MODE_640x480_MONO:
+      return 76800;//640x480/4
+    default:
+      printf("(%s) Improper mode specified: %d\n",__FILE__,mode);
+      return -1; 
+    }
+  case FORMAT_SVGA_NONCOMPRESSED_1: 
+    switch(mode) {
+    case 0:
+      return 240000;//800x600/2
+    case 1:
+      return 360000;//800x600x3/4
+    case 2:
+      return 120000;//800x600/4
+    case 3:
+      return 393216;//1024x768/2
+    case 4:
+      return 589824;//1024x768x3/4
+    case 5:
+      return 196608;//1024x768/4
+    default:
+      printf("(%s) Improper mode specified: %d\n",__FILE__,mode);
+      return -1;
+    }
+  case FORMAT_SVGA_NONCOMPRESSED_2:
+    switch (mode) {
+    case 0:
+      return 61440;//1280x960/2
+    case 1:
+      return 921600;//1280x960x3/4
+    case 2:
+      return 307200;//1280x960/4
+    case 3:
+      return 960000;//1600x1200/2
+    case 4:
+      return 1440000;//1600x1200x3/4
+    case 5:
+      return 480000;//1600x1200/4
+    default:
+      printf("(%s) Improper mode specified: %d\n",__FILE__,mode);
+      return -1;
+    }
+  case FORMAT_STILL_IMAGE:
+      printf("(%s) Don't know how many quadlets per frame for FORMAT_STILL_IMAGE mode:%d\n",__FILE__,mode);
+      return -1;
+  case FORMAT_SCALABLE_IMAGE_SIZE:
+      printf("(%s) Don't know how many quadlets per frame for FORMAT_SCALABLE_IMAGE mode:%d\n",__FILE__,mode);
+      return -1;
+  default:
+    printf("(%s) Improper format specified: %d\n",__FILE__,format);
+    return -1;
+  }
+  return -1;
+}
+
+
+
+/*****************************************************
+_dc1394_mem_quad_copy
+to speed up memory copies, this routine copies 4 bytes for
+each loop through rather than 1 (we know that our data
+will be word aligned)
+*****************************************************/
+void _dc1394_mem_quad_copy(int *targ, const int *source,int num_quadlets) {
+  int i;
+  for (i=0;i<num_quadlets;i++) {
+    targ[i]=source[i];
+  }
+}
+
+
+/*****************************************************
+_dc1394_video_iso_handler
+this is the routine that is plugged into the raw1394 callback
+hook to allow us to capture mutliple iso video streams
+*****************************************************/
+int _dc1394_video_iso_handler(raw1394handle_t handle,  
+			      int channel,size_t length,quadlet_t *data) {
+  
+  /*the first packet of a frame has a 1 in the lsb of the header */
+  if ((data[0] & 0x1) && (_dc1394_frame_captured[channel] ==0)) {
+    _dc1394_offset[channel] =0;
+    _dc1394_frame_captured[channel]=2;
+
+    /* the plus 1 is to shift past the first header quadlet*/
+    //    _dc1394_mem_quad_copy(_dc1394_buffer[channel], 
+    //data+1,_dc1394_quadlets_per_packet[channel]);
+    memcpy((char*)_dc1394_buffer[channel],(char*)(data+1),
+	     4*_dc1394_quadlets_per_packet[channel]);
+    _dc1394_offset[channel]+=_dc1394_quadlets_per_packet[channel];
+
+ 
+  } else if (_dc1394_frame_captured[channel] == 2) {
+    //    _dc1394_mem_quad_copy(_dc1394_buffer[channel]+_dc1394_offset[channel],
+    //			  data+1,_dc1394_quadlets_per_packet[channel]);
+    memcpy((char*)(_dc1394_buffer[channel]+_dc1394_offset[channel]),
+	     (char*)(data+1),4*_dc1394_quadlets_per_packet[channel]);
+
+    _dc1394_offset[channel]+=_dc1394_quadlets_per_packet[channel];
+
+    if (_dc1394_offset[channel]>=_dc1394_quadlets_per_frame[channel]) {
+      _dc1394_frame_captured[channel]=1;      
+      _dc1394_all_captured--;     
+      _dc1394_offset[channel]=0;
+      
+    }
+    
+  }
+  //  printf("offset is: %d\n",offset);
+  return 1;
+}
+
+
+
+
+#define DC1394_READ_END(retval) return _dc1394_read_check(retval);
+#define DC1394_WRITE_END(retval) return _dc1394_write_check(retval);
+
+
+int _dc1394_read_check(int retval) {
+  int ack;
+  int rcode;
+  ack = retval >> 16;
+  rcode = retval & 0xffff;
+#ifdef SHOW_ERRORS
+  printf("read ack of %x rcode of %x\n",ack,rcode);
+#endif
+  if ((ack==ACK_PENDING)||(ack==ACK_LOCAL) && (rcode==RESP_COMPLETE)) {
+    return DC1394_SUCCESS; 
+  } else {
+    return DC1394_FAILURE;
+  }
+}
+
+int _dc1394_write_check(int retval) {
+  int ack;
+  int rcode;
+  ack = retval >> 16;
+  rcode = retval & 0xffff;
+#ifdef SHOW_ERRORS
+  printf("write ack of %x rcode of %x\n",ack,rcode);
+#endif
+  if (((ack==ACK_PENDING)||(ack==ACK_LOCAL)||(ack==ACK_COMPLETE)) && 
+      ((rcode==RESP_COMPLETE)|| (rcode==RESP_URMSON)) ) {
+    return DC1394_SUCCESS;
+  } else {
+    return DC1394_FAILURE;
+  }
+}
+
 static int
 GetCameraROMValue(raw1394handle_t handle, nodeid_t node,
-                  octlet_t offset, quadlet_t *value)
-{
-    int retval, retry= MAX_RETRIES;
-
-    /* retry a few times if necessary (addition by PDJ) */
-    while( (retry--) &&
-	   ((retval= raw1394_read(handle, 0xffc0 | node,
-				  CONFIG_ROM_BASE + offset, 4, value)) <= 0) )
-    {
-	usleep(0);
+                  octlet_t offset, quadlet_t *value) {
+  int retval, retry= MAX_RETRIES;
+  int ack, rcode;
+  
+  /* retry a few times if necessary (addition by PDJ) */
+  
+  while( (retry--)) {
+    retval= raw1394_read(handle, 0xffc0 | node, CONFIG_ROM_BASE + offset, 4, value);
+    if (retval>=0) {
+      ack = retval >>16;  
+      rcode = retval & 0xffff;  
+      //      printf( "ROM ack is: %x, rcode is %x\n",ack,rcode);  
+      if ( ((ack==ACK_PENDING)|| ack==ACK_LOCAL) && (rcode==RESP_COMPLETE)) {  
+	/* conditionally byte swap the value (addition by PDJ) */
+	*value= ntohl(*value);  
+	return(retval); 
+      }
     }
+    usleep(SLOW_DOWN);
+  }
 
-    /* conditionally byte swap the value
-       (thanks to Per Dalgas Jakobsen for this much nicer solution to the
-       endianness problem) */
-    *value= ntohl(*value);
-    return(retval);
+  *value= ntohl(*value);
+  return(retval);	  
 }
 
 static int
 GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
                          octlet_t offset, quadlet_t *value)
 {
-    int retval, retry= MAX_RETRIES;
-
-    /* retry a few times if necessary (addition by PDJ) */
-    while( (retry--) &&
-	   ((retval= raw1394_read(handle, 0xffc0 | node, CCR_BASE + offset,
-				 4, value)) <= 0) )
-    {
-	usleep(0);
-    }
-
-    /* conditionally byte swap the value (addition by PDJ) */
-    *value= ntohl(*value);
-    return(retval);
+  int retval, retry= MAX_RETRIES;
+  int rcode, ack;
+  //  usleep(SLOW_DOWN);
+  /* retry a few times if necessary (addition by PDJ) */
+  while( (retry--)) {
+    retval= raw1394_read(handle, 0xffc0 | node, CCR_BASE + offset, 4, value);
+    if (retval>=0) {
+      ack = retval >>16; 
+      rcode = retval & 0xffff; 
+      //      printf( "Get ack is: %x, rcode is %x\n",ack,rcode); 
+      if ( ((ack==ACK_PENDING)|| ack==ACK_LOCAL) && (rcode==RESP_COMPLETE)) { 
+	/* conditionally byte swap the value (addition by PDJ) */
+	*value= ntohl(*value); 
+	return(retval); 
+      }  
+      
+    } 
+    usleep(SLOW_DOWN); 
+  }
+  /* conditionally byte swap the value (addition by PDJ) */
+  *value= ntohl(*value);
+  return(retval);
 }
 
 static int
@@ -137,18 +505,24 @@ SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
                          octlet_t offset, quadlet_t value)
 {
     int retval, retry= MAX_RETRIES;
+    int rcode, ack;
 
     /* conditionally byte swap the value (addition by PDJ) */
     value= htonl(value);
-
-    /* retry a few times if necessary (addition by PDJ) */
-    while( (retry--) &&
-	   ((retval= raw1394_write(handle, 0xffc0 | node, CCR_BASE + offset,
-				   4, &value)) <= 0) )
-    {
-	usleep(0);
+    while( (retry--)) {
+      retval= raw1394_write(handle, 0xffc0 | node, CCR_BASE + offset, 4,&value);
+      if (retval>=0) {
+	ack = retval >>16;
+	rcode = retval & 0xffff;
+	//	printf( "Set ack is: %x, rcode is %x\n",ack,rcode);
+	if ( ((ack==ACK_PENDING)|| (ack==ACK_LOCAL)|| (ack==ACK_COMPLETE)) && ((rcode==RESP_COMPLETE) || (rcode==RESP_URMSON))) {
+	  return(retval);
+	}
+	
+	
+      }
+      usleep(SLOW_DOWN);
     }
-
     return(retval);
 }
 
@@ -177,14 +551,14 @@ SetFeatureValue(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t curval;
 
-    if ( (retval= GetCameraControlRegister(handle, node, featureoffset,
-                                           &curval)) < 0 )
-    {
-        return(retval);
-    }
-
-    return(SetCameraControlRegister(handle, node, featureoffset,
-				 (curval & 0xFFFFF000UL) | (value & 0xFFFUL)));
+    if ( _dc1394_read_check((retval= GetCameraControlRegister(handle, node, featureoffset,
+					   &curval))) !=DC1394_SUCCESS )
+      {
+	return DC1394_FAILURE;
+      }
+    retval =SetCameraControlRegister(handle, node, featureoffset,
+				     (curval & 0xFFFFF000UL) | (value & 0xFFFUL));
+    DC1394_WRITE_END(retval);
 }
 
 static int
@@ -195,76 +569,201 @@ GetFeatureValue(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node, featureoffset,
                                          &quadval);
 
-    if (retval >= 0)
-    {
-        *value= (unsigned int)(quadval & 0xFFFUL);
-    }
-
-    return(retval);
+    *value= (unsigned int)(quadval & 0xFFFUL);
+    DC1394_READ_END(retval);
 }
 
 /**********************/
 /* External functions */
 /**********************/
+nodeid_t* dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,int showCameras) {
+  nodeid_t * nodes; 
+  dc1394bool_t isCamera;
+  int numNodes;
+  int i;  
+  dc1394_camerainfo caminfo;
+  numNodes= raw1394_get_nodecount(handle);
+  /*we know that the computer isn't a camera so there are only
+    numNodes-1 possible camera nodes*/
+  nodes=(nodeid_t *)calloc(numNodes-1,sizeof(nodeid_t));
+  for (i=0;i<numNodes-1;i++) {
+    nodes[i]=DC1394_NO_CAMERA;
+  }
+
+  for (i=0;i<numNodes;i++) {
+    dc1394_is_camera(handle,i,&isCamera);
+    if (isCamera) {
+      printf("node %d is a camera\n",i);
+      nodes[*numCameras]=i; 
+      (*numCameras)++;
+      if (showCameras) {
+	if (dc1394_get_camera_info(handle,i,&caminfo)==DC1394_SUCCESS) {
+	  dc1394_print_camera_info(&caminfo);
+	} else {
+	  printf("Couldn't get camera info!\n");
+	}
+      }
+    } else {
+      printf("node %d is not a camera\n",i);
+    }
+  }
+  return nodes; 
+}
+
+/*****************************************************
+dc1394_get_camera_nodes
+this returns the available cameras on the bus.
+It returns the node id's in the same index as the id specified
+the ids array contains a list of the low quadlet of the unique camera 
+ids.
+returns -1 in numCameras and NULL from the call if there is a problem, 
+otherwise the number of cameras and the nodeid_t array from the call
+*****************************************************/
+nodeid_t* dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numIds, int *ids,int * numCameras,int showCameras) {
+  int numNodes;
+  int i,j;
+  dc1394bool_t isCamera;
+  int uid;
+  int foundId;
+  int extraId;
+  nodeid_t *nodes;
+  //  int numCameras=0;
+  dc1394_camerainfo caminfo;
+  *numCameras=0;
+  //  printf("started get camera nodes\n");
+
+  numNodes= raw1394_get_nodecount(handle);
+  //  printf("numnodes is %d",numNodes);
+  /*we know that the computer isn't a camera so there are only
+    numNodes-1 possible camera nodes*/
+  nodes=(nodeid_t *)calloc(numNodes-1,sizeof(nodeid_t));
+  for (i=0;i<numNodes-1;i++) {
+    nodes[i]=0xffff;
+  }
+  //  printf("done clearing calloc space\n");
+  extraId=numIds;
+  for (i=0;i<numNodes;i++) {
+    dc1394_is_camera(handle,i,&isCamera);
+    if (isCamera) {
+      (*numCameras)++;
+      dc1394_get_camera_info(handle,i,&caminfo);
+      if (showCameras) dc1394_print_camera_info(&caminfo);
+      uid=caminfo.euid_64 & 0xffffffff;
+      foundId =0;
+      /*check to see if the unique id is one we know...*/
+      //      printf("numIds is: %d\n",numIds);
+      fflush(stdout);
+      for (j=0;j<numIds;j++) {
+	//	printf("comparing (index %d) %x to %x\n",j,ids[j],uid);
+	if (ids[j]==uid) {
+	  //	  printf("found a match %x\n",ids[j]);
+	  nodes[j]=i;
+	  foundId=1;
+	  break;
+	}
+      }
+      /* if it isn't then we need to put it in one of the extra
+	 spaces- but check first to make sure we aren't overflowing
+	 our bounds*/
+      if (foundId==0) {
+	//	printf("storing as an extra id\n");
+	if (extraId>=(numNodes-1)) {
+	  //  printf("(%s) Given ID's don't exist- failing!\n");
+	  *numCameras=-1;
+	  free(nodes);
+	  return NULL;
+	}
+	nodes[extraId++]=i;
+      }
+    }else {// if (isCamera)
+      //      printf("isn't a camera\n");
+    }
+  }
+  return nodes;
+}
+
+
+
+/*****************************************************
+dc1394_create_handle
+this creates a raw1394_handle
+if a handle can't be created, it returns NULL
+*****************************************************/
+raw1394handle_t dc1394_create_handle(void) {
+  raw1394handle_t handle;
+  handle = raw1394_get_handle();
+  if (!handle) 
+    {
+      printf("(%s) Couldn't get raw1394 handle!\n",__FILE__);
+      return NULL;
+    }
+  if (raw1394_set_port(handle, 0) < 0) 
+    {	
+      if (handle != NULL)
+	raw1394_destroy_handle(handle);
+      printf("(%s) Couldn't raw1394_set_port!\n",__FILE__);
+      return NULL;
+    }
+  return handle;
+}
+
 
 int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 {
     octlet_t offset= 0x424UL;
-    quadlet_t quadval= 0;
+    quadlet_t quadval;
     int retval;
 
-#ifdef SHOW_ERRORS
-    printf("Entering dc1394_is_camera\n");
-    printf("Values : handle %d, nodeid %d\n", (int)handle, (int)node);
-#endif
-
     /* get the unit_directory offset */
-    if ( (retval= GetCameraROMValue(handle, node, offset, &quadval)) < 0 )
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, offset, &quadval)) !=DC1394_SUCCESS )
     {
-#ifdef SHOW_ERRORS
-        printf("Falling out of get unit directory offset\n");
-#endif
-        return(retval);
+	*value=DC1394_FALSE;
+	return DC1394_FAILURE;
+	//        return(retval);
     }
 
     offset+= ((quadval & 0xFFFFFFUL) * 4) + 4;
+    usleep(1000);
 
     /* get the unit_spec_ID (should be 0x00A02D for 1394 digital camera) */
-    if ( (retval= GetCameraROMValue(handle, node, offset, &quadval)) < 0 )
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, offset, &quadval)) !=DC1394_SUCCESS )
     {
-#ifdef SHOW_ERRORS
-        printf("Falling out of get unit spec id\n");
-#endif
-        return(retval);
+	*value=DC1394_FALSE;
+	return DC1394_FAILURE;
     }
-
-#ifdef SHOW_ERRORS
-    printf("Hex value of value is : %x\n", (quadval & 0xFFFFFFUL));
-#endif
 
     if ((quadval & 0xFFFFFFUL) != 0x00A02DUL)
     {
-#ifdef SHOW_ERRORS
-        printf("Returning DC1394_FALSE\n");
-#endif
 
         *value= DC1394_FALSE;
     }
     else
     {
-#ifdef SHOW_ERRORS
-        printf("Returning DC1394_TRUE\n");
-#endif
         *value= DC1394_TRUE;
     }
+    DC1394_READ_END(retval);
 
-    return(retval);
 }
+
+void dc1394_print_camera_info(dc1394_camerainfo *info) {
+  quadlet_t value[2];
+  value[0] = info->euid_64 & 0xffffffff;
+  value[1] = (info->euid_64 >>32) & 0xffffffff;
+  printf("CAMERA INFO\n===============\n");
+  printf("Node: %x\n",info->id);
+  //  printf("value 1 is: %08x\n",value[1]);
+  //  printf("value 0 is: %08x\n",value[0]);
+  printf("CCR_Offset: %x\n",info->ccr_offset);
+  printf("UID: 0x%08x%08x\n",value[1], value[0]);
+  printf("Vendor: %s\tModel: %s\n\n",info->vendor, info->model);
+}
+
+
 
 int
 dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
-                       struct dc1394_camerainfo *info)
+                       dc1394_camerainfo *info)
 {
     dc1394bool_t iscamera;
     int retval, i, len;
@@ -273,159 +772,409 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
     unsigned int count;
 
 #ifdef SHOW_ERRORS
-    printf("Entering dc1394_get_camera_info\n");
-    printf("Node id in dc1394_get_camara_info is %d\n", (int)node);
+    //    printf("Entering dc1394_get_camera_info\n");
+    //    printf("Node id in dc1394_get_camara_info is %d\n", (int)node);
 #endif
 
-    /* J.A. - tsk tsk - first bug I found.  We pass node, not i!!! */
-    //if ( (retval= dc1394_is_camera(handle, i, &iscamera)) < 0 )
-    if ( (retval= dc1394_is_camera(handle, node, &iscamera)) < 0 )
+    if ( (retval= dc1394_is_camera(handle, node, &iscamera)) !=DC1394_SUCCESS )
+        /* J.A. - tsk tsk - first bug I found.  We pass node, not i!!! */
+        //    if ( (retval= dc1394_is_camera(handle, i, &iscamera)) < 0 )
     {
 #ifdef SHOW_ERRORS
-        printf("Error - this is not a camera (get_camera_info)\n");
+      printf("Error - this is not a camera (get_camera_info)\n");
 #endif
-        return(retval);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
     else if (iscamera != DC1394_TRUE)
     {
-        return(-1);
-
+      return DC1394_FAILURE;
+      //return(-1);
     }
 
     info->handle= handle;
     info->id= node;
 
     /* get the indirect_offset */
-    if ( (retval= GetCameraROMValue(handle, node, (ROM_ROOT_DIRECTORY + 12),
-                                    &offset)) < 0 )
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, (ROM_ROOT_DIRECTORY + 12),
+                                    &offset)) !=DC1394_SUCCESS )
     {
-        return(retval);
+      //      printf("failing!!! with retval of: %d\n",retval);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
-
-    /* make sure to strip 1st byte -- bug found by Robert Ficklin */
-    offset&= 0xFFFFFFUL;
+    
     offset<<= 2;
+    offset &=0x00ffffff;// this is needed to clear the top two bytes which otherwise causes trouble
     offset+= (ROM_ROOT_DIRECTORY + 12);
 
     /* now get the EUID-64 */
-    if ( (retval= GetCameraROMValue(handle, node, offset + 4, value)) < 0 )
+    /* fixed this, the value at offset is that start of the leaf.  The first element is 0x0002 CRC
+       the actual UID lives at +4 and +8  Chris Urmson
+    */
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, offset+4, value)) != DC1394_SUCCESS )
     {
-        return(retval);
+      //      printf("failing %d, retval %d\n", __LINE__,retval);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
 
-    if ( (retval= GetCameraROMValue(handle, node, offset + 8, &value[1])) < 0 )
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, offset + 8, &value[1])) !=DC1394_SUCCESS )
     {
-        return(retval);
+      //      printf("failing %d", __LINE__);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
-
+    //    printf("got id values of: %x,%x\n",value[0],value[1]);
     info->euid_64= ((u_int64_t)value[0] << 32) | (u_int64_t)value[1];
 
     /* get the unit_directory offset */
-    if ( (retval= GetCameraROMValue(handle, node, (ROM_ROOT_DIRECTORY + 16),
-                                    &offset)) < 0 )
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, (ROM_ROOT_DIRECTORY + 16),
+                                    &offset)) !=DC1394_SUCCESS )
     {
-        return(retval);
+      //      printf("failing %d", __LINE__);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
 
-    offset&= 0xFFFFFFUL;
     offset<<= 2;
+    offset &=0x00ffffff;
     offset+= (ROM_ROOT_DIRECTORY + 16);
 
+
     /* now get the unit dependent directory offset */
-    if ( (retval= GetCameraROMValue(handle, node, (offset + 12),
-                                    &offset2)) < 0 )
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, (offset + 12),
+                                    &offset2)) !=DC1394_SUCCESS )
     {
-        return(retval);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
 
-    offset2&= 0xFFFFFFUL;
     offset2<<= 2;
     offset2+= (offset + 12);
+    offset2 &=0x00ffffff;
 
     /* now get the command_regs_base */
-    if ( (retval= GetCameraROMValue(handle, node, (offset2 + 4),
-                                    &offset)) < 0 )
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, (offset2 + 4),
+                                    &offset)) !=DC1394_SUCCESS )
     {
-        return(retval);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
 
-    offset&= 0xFFFFFFUL;
     offset<<= 2;
+    offset &=0x00ffffff;
     info->ccr_offset= (octlet_t)offset;
 
+
     /* get the vendor_name_leaf offset */
-    if ( (retval= GetCameraROMValue(handle, node, (offset2 + 8),
-                                    &offset)) < 0 )
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, (offset2 + 8),
+                                    &offset)) !=DC1394_SUCCESS )
     {
-        return(retval);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
 
-    offset&= 0xFFFFFFUL;
     offset<<= 2;
-    offset+= (offset2 + 20);
+    offset &=0x00ffffff;
+    offset+= (offset2 + 8);
+
+    /* read in the length of the vendor name */
+    if ( _dc1394_read_check(retval= GetCameraROMValue(handle, node, offset, value)) !=DC1394_SUCCESS )
+    {
+      return DC1394_FAILURE;
+      //        return(retval);
+    }
+
+    len= (int)((value[0] >> 16) & 0xFFFFUL);
+
+    if (len > MAX_CHARS)
+    {
+        len= MAX_CHARS;
+    }
+
+    offset+= 12;
     count= 0;
 
     /* grab the vendor name */
-    do
+    while (len > 0)
     {
-        if ( (retval= GetCameraROMValue(handle, node, offset + count,
-                                        value)) < 0 )
+
+        if (_dc1394_read_check (retval= GetCameraROMValue(handle, node, offset + count,
+                                        value)) !=DC1394_SUCCESS )
         {
-            return(retval);
+	  return DC1394_FAILURE;
+	  //            return(retval);
         }
 
         info->vendor[count++]= (value[0] >> 24);
         info->vendor[count++]= (value[0] >> 16) & 0xFFUL;
         info->vendor[count++]= (value[0] >> 8) & 0xFFUL;
         info->vendor[count++]= value[0] & 0xFFUL;
+        len-= 4;
     }
-    while ( (value[0] & 0xFFFFUL) && (count < MAX_CHARS) );
 
-    if (count == MAX_CHARS)
-    {
-        info->vendor[count]= '\0';
-    }
+    info->vendor[count]= '\0';
 
     /* get the model_name_leaf offset */
-    if ( (retval= GetCameraROMValue(handle, node, (offset2 + 12),
-                                    &offset)) < 0 )
+    if (_dc1394_read_check (retval= GetCameraROMValue(handle, node, (offset2 + 12),
+                                    &offset)) !=DC1394_SUCCESS )
     {
-        return(retval);
+      return DC1394_FAILURE;
+      //        return(retval);
     }
 
-    offset&= 0xFFFFFFUL;
     offset<<= 2;
-    offset+= (offset2 + 24);
+    offset &=0x00ffffff;
+    offset+= (offset2 + 12);
+
+    /* read in the length of the model name */
+    if (_dc1394_read_check (retval= GetCameraROMValue(handle, node, offset, value)) !=DC1394_SUCCESS )
+    {
+      return DC1394_FAILURE;
+      //        return(retval);
+    }
+
+    len= (int)((value[0] >> 16) & 0xFFFFUL);
+
+    if (len > MAX_CHARS)
+    {
+        len= MAX_CHARS;
+    }
+
+    offset+= 12;
     count= 0;
 
     /* grab the model name */
-    do
+    while (len > 0)
     {
-        if ( (retval= GetCameraROMValue(handle, node, offset + count,
-                                        value)) < 0 )
+
+        if (_dc1394_read_check(retval= GetCameraROMValue(handle, node, offset + count,
+                                        value)) !=DC1394_SUCCESS )
         {
-            return(retval);
+	  return DC1394_FAILURE;
+	  //            return(retval);
         }
 
         info->model[count++]= (value[0] >> 24);
         info->model[count++]= (value[0] >> 16) & 0xFFUL;
         info->model[count++]= (value[0] >> 8) & 0xFFUL;
         info->model[count++]= value[0] & 0xFFUL;
-    }
-    while ( (value[0] & 0xFFFFUL) && (count < MAX_CHARS) );
-
-    if (count == MAX_CHARS)
-    {
-        info->model[count]= '\0';
+        len-= 4;
     }
 
-    return(0);
+    info->model[count]= '\0';
+    return DC1394_SUCCESS;
+    //    return(0);
 }
+
+/*****************************************************
+dc1394_get_camera_feature_set
+this returns the complete feature set of the camera
+the only things that aren't probably represented are
+TRIGGER, WHITE_BALANCE and TEMPERATURE
+*****************************************************/
+int dc1394_get_camera_feature_set(raw1394handle_t handle, nodeid_t node,dc1394_feature_set *features) {
+  int i;
+  for (i=FEATURE_MIN;i<FEATURE_MAX;i++) {
+    features->feature[i].feature_id=i;
+    dc1394_get_camera_feature(handle,node,&features->feature[i]);
+  }
+  return DC1394_SUCCESS;
+}
+
+/*****************************************************
+dc1394_get_camera_feature
+this returns the current configuration and options
+of the feature specified in the feature->feature_id 
+passed in, currently not represented completely are:
+TRIGGER, WHITE_BALANCE and TEMPERATURE
+*****************************************************/
+int dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,dc1394_feature_info *feature) {
+  octlet_t offset;
+  quadlet_t value;
+  int f;
+  int index;
+  dc1394bool_t present;
+  f= feature->feature_id;
+  if (f<FEATURE_BRIGHTNESS || f>FEATURE_CAPTURE_QUALITY) {
+    return DC1394_FAILURE;
+  } else if (f<FEATURE_ZOOM) {
+    offset= REG_CAMERA_FEATURE_HI_BASE_INQ;
+    index =f;
+  } else {
+    offset= REG_CAMERA_FEATURE_LO_BASE_INQ;
+    index = f- FEATURE_ZOOM;
+    if (f >= FEATURE_CAPTURE_SIZE) {
+      index+= 12;
+    }
+  }
+
+  if ( _dc1394_read_check( GetCameraControlRegister(handle, node,offset 
+						    + (index * 0x04U),
+						    &value)) 
+       != DC1394_SUCCESS) {
+    return DC1394_FAILURE;
+  }
+
+  feature->available = (value & 0x80000000UL)?DC1394_TRUE:DC1394_FALSE;
+  if (feature->available==DC1394_FALSE) {
+    return DC1394_SUCCESS;
+  }
+
+  if (f!=FEATURE_TRIGGER) {
+    feature->one_push= (value & 0x10000000UL)?DC1394_TRUE:DC1394_FALSE;
+  } else {
+    feature->one_push=DC1394_FALSE;
+  }
+
+
+  feature->readout_capable=(value & 0x08000000UL)?DC1394_TRUE:DC1394_FALSE;
+  feature->on_off_capable= (value & 0x04000000UL)?DC1394_TRUE:DC1394_FALSE;
+  if (f!=FEATURE_TRIGGER) {
+    feature->auto_capable=   (value & 0x02000000UL)?DC1394_TRUE:DC1394_FALSE;
+    feature->manual_capable= (value & 0x01000000UL)?DC1394_TRUE:DC1394_FALSE;
+    
+    feature->min = (value & 0xFFF000UL)>>12;
+    feature->max = (value & 0xFFFUL);
+  } else {
+    feature->auto_capable = DC1394_FALSE;
+    feature->manual_capable = DC1394_FALSE;
+  }
+
+    
+    if (f < FEATURE_ZOOM) {
+      offset= REG_CAMERA_FEATURE_HI_BASE;
+      index =f;
+    } else {
+      offset= REG_CAMERA_FEATURE_LO_BASE;
+      index =f- FEATURE_ZOOM;
+      if (f >= FEATURE_CAPTURE_SIZE) {
+	index+= 12;
+      }
+    } 
+
+    if (_dc1394_read_check(GetCameraControlRegister(handle, node,  
+						    offset + (index * 0x04U),
+						    &value)) 
+	!=DC1394_SUCCESS) {
+
+      return DC1394_FAILURE;
+    }
+    if (f!=FEATURE_TRIGGER) {
+      feature->one_push_active=(value & 0x04000000UL)?DC1394_TRUE:DC1394_FALSE;
+    } else {
+      feature->one_push_active=DC1394_FALSE;
+    }
+
+    feature->is_on          =(value & 0x02000000UL)?DC1394_TRUE:DC1394_FALSE;
+
+    if (f!=FEATURE_TRIGGER) {
+      feature->auto_active    =(value & 0x01000000UL)?DC1394_TRUE:DC1394_FALSE;
+    } else {
+      feature->auto_active = DC1394_FALSE;
+    }
+    if (f!=FEATURE_TRIGGER && f!=FEATURE_WHITE_BALANCE && 
+      f!= FEATURE_TEMPERATURE) {
+      feature->value = value &0xFFFUL;
+    }
+  return DC1394_SUCCESS;
+}
+
+
+/*****************************************************
+dc1394_print_feature
+prints the bounds and current values of the given feature
+previously retrieved
+*****************************************************/
+void dc1394_print_feature(dc1394_feature_info *f) {
+  char * tags[2] = {"NO","YES"};
+  char * autoMode[2] = {"Manual","Auto"};
+  int fid;
+  fid = f->feature_id;
+  if (fid<FEATURE_BRIGHTNESS || 
+      fid>FEATURE_CAPTURE_QUALITY) {
+    return;
+  }
+  printf("%s:\n\t",dc1394_feature_desc[fid]);
+  if (!f->available) {
+    printf("NOT AVAILABLE\n");
+    return;
+  }
+
+  if (f->one_push) 
+    printf("OP  ");
+  if (f->readout_capable)
+    printf("RC  ");
+  if (f->on_off_capable)
+    printf("O/OC  ");
+  if (f->auto_capable)
+    printf("AC  ");
+  if (f->manual_capable)
+    printf("MC  ");
+  printf("\n");
+
+
+
+  if (f->on_off_capable) {
+    if (f->is_on) 
+      printf("\tFeature: ON  ");
+    else
+      printf("\tFeature: OFF  ");
+  } else {
+    printf("\t");
+  }
+  if (f->one_push) {
+    if (f->one_push_active)
+      printf("One push: ACTIVE  ");
+    else
+      printf("One push: INACTIVE  ");
+  }
+  if (f->auto_active) {
+    printf("AUTO  ");
+  } else {
+    printf("MANUAL ");
+  }
+  if (fid!=FEATURE_TRIGGER) {
+    printf("min: %d max %d\n",f->min,f->max);
+  }
+  if (fid!=FEATURE_TRIGGER && fid!=FEATURE_WHITE_BALANCE && 
+      fid!=FEATURE_TEMPERATURE) {
+    printf("\tcurrent value is: %d\n",f->value);
+  }
+  if (fid==FEATURE_TRIGGER)
+    printf("\n");
+}
+
+
+/*****************************************************
+dc1394_print_feature_set
+outputs to stdout a list of the cameras capabilities
+and current settings
+ *****************************************************/
+void dc1394_print_feature_set(dc1394_feature_set *features) {
+  int i;
+  printf("FEATURE SETTINGS\n==================================\n");
+  printf("OP- one push capable\n");
+  printf("RC- readout capable\n");
+  printf("O/OC- on/off capable\n");
+  printf("AC- auto capable\n");
+  printf("MC- manual capable\n");
+  printf("==================================\n");
+  for (i=FEATURE_MIN;i<FEATURE_MAX;i++) {
+    dc1394_print_feature(&features->feature[i]);
+  }
+  printf("==================================\n");
+}
+
+
+
+
 
 int
 dc1394_init_camera(raw1394handle_t handle, nodeid_t node)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_INITIALIZE,
+  DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_INITIALIZE,
                                     ON_VALUE));
 }
 
@@ -433,8 +1182,8 @@ int
 dc1394_query_supported_formats(raw1394handle_t handle, nodeid_t node,
                                quadlet_t *value)
 {
-    return(GetCameraControlRegister(handle, node, REG_CAMERA_V_FORMAT_INQ,
-                                    value));
+  DC1394_READ_END(GetCameraControlRegister(handle, node, REG_CAMERA_V_FORMAT_INQ,
+					   value));
 }
 
 int
@@ -444,10 +1193,10 @@ dc1394_query_supported_modes(raw1394handle_t handle, nodeid_t node,
 
     if (format > FORMAT_MAX)
     {
-	return(-1);
+      return DC1394_FAILURE;
     }
 
-    return(GetCameraControlRegister(handle, node,
+    DC1394_READ_END(GetCameraControlRegister(handle, node,
 				    REG_CAMERA_V_MODE_INQ_BASE +
 				    (format * 0x04U), value));
 }
@@ -460,10 +1209,10 @@ dc1394_query_supported_framerates(raw1394handle_t handle, nodeid_t node,
 
     if ( (format > FORMAT_MAX) || (mode > MODE_MAX) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
 
-    return(GetCameraControlRegister(handle, node,
+    DC1394_READ_END(GetCameraControlRegister(handle, node,
 				    REG_CAMERA_V_RATE_INQ_BASE +
 				    (format * 0x20U) + (mode * 0x04U),
 				    value));
@@ -476,10 +1225,10 @@ dc1394_query_revision(raw1394handle_t handle, nodeid_t node, int mode,
 
     if (mode > MODE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
 
-    return(GetCameraControlRegister(handle, node,
+    DC1394_READ_END(GetCameraControlRegister(handle, node,
 				    REG_CAMERA_V_REV_INQ_BASE + (mode * 0x04U),
 				    value));
 }
@@ -491,10 +1240,10 @@ dc1394_query_csr_offset(raw1394handle_t handle, nodeid_t node, int mode,
 
     if (mode > MODE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
 
-    return(GetCameraControlRegister(handle, node,
+    DC1394_READ_END(GetCameraControlRegister(handle, node,
 				    REG_CAMERA_V_CSR_INQ_BASE + (mode * 0x04U),
 				    value));
 }
@@ -503,7 +1252,7 @@ int
 dc1394_query_basic_functionality(raw1394handle_t handle, nodeid_t node,
                                  quadlet_t *value)
 {
-    return(GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ,
+    DC1394_READ_END(GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ,
                                     value));
 }
 
@@ -517,7 +1266,7 @@ dc1394_query_feature_control(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -528,20 +1277,21 @@ dc1394_query_feature_control(raw1394handle_t handle, nodeid_t node,
 	offset= REG_CAMERA_FEATURE_LO_INQ;
     }
 
-    if ((retval= GetCameraControlRegister(handle, node, offset, &value)) < 0 )
+    if (_dc1394_read_check(retval= GetCameraControlRegister(handle, node, offset, &value)) !=DC1394_SUCCESS )
     {
-        return(retval);
+        return DC1394_FAILURE;
     }
 
     *availability= IsFeatureBitSet(value, feature);
-    return(retval);
+   
+    return DC1394_SUCCESS;
 }
 
 int
 dc1394_query_advanced_feature_offset(raw1394handle_t handle, nodeid_t node,
                                      quadlet_t *value)
 {
-    return(GetCameraControlRegister(handle, node, REG_CAMERA_ADV_FEATURE_INQ,
+    DC1394_READ_END(GetCameraControlRegister(handle, node, REG_CAMERA_ADV_FEATURE_INQ,
                                     value));
 }
 
@@ -553,7 +1303,7 @@ dc1394_query_feature_characteristics(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -571,7 +1321,7 @@ dc1394_query_feature_characteristics(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(GetCameraControlRegister(handle, node, offset + (feature * 0x04U),
+    DC1394_READ_END(GetCameraControlRegister(handle, node, offset + (feature * 0x04U),
 				    value));
 }
 
@@ -583,19 +1333,19 @@ dc1394_get_video_framerate(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node, REG_CAMERA_FRAME_RATE,
                                          &value);
 
-    if (retval >= 0)
-    {
+    //    if (retval !=CAEMRA_READ_OK)
+    //    {
         *framerate= (unsigned int)((value >> 29) & 0x7UL);
-    }
+	//    }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
 dc1394_set_video_framerate(raw1394handle_t handle, nodeid_t node,
                            unsigned int framerate)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_FRAME_RATE,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_FRAME_RATE,
                                     (quadlet_t)((framerate & 0x7UL) << 29)));
 }
 
@@ -607,18 +1357,18 @@ dc1394_get_video_mode(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_MODE,
                                          &value);
 
-    if (retval >= 0)
-    {
+    //    if (retval >= 0)
+    //    {
         *mode= (unsigned int)((value >> 29) & 0x7UL);
-    }
+	//    }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
 dc1394_set_video_mode(raw1394handle_t handle, nodeid_t node, unsigned int mode)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_MODE,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_MODE,
                                     (quadlet_t)((mode & 0x7UL) << 29)));
 }
 
@@ -630,19 +1380,19 @@ dc1394_get_video_format(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_FORMAT,
                                          &value);
 
-    if (retval >= 0)
-    {
+    //    if (retval >= 0)
+    //    {
         *format= (unsigned int)((value >> 29) & 0x7UL);
-    }
+	//    }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
 dc1394_set_video_format(raw1394handle_t handle, nodeid_t node,
                         unsigned int format)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_FORMAT,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_FORMAT,
                                     (quadlet_t)((format & 0x7UL) << 29)));
 }
 
@@ -654,20 +1404,22 @@ dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
                                          &value);
 
-    if (retval >= 0)
-    {
-        *channel= (unsigned int)((value >> 28) & 0xFUL);
-        *speed= (unsigned int)((value >> 24) & 0x3UL);
-    }
-
-    return(retval);
+    //    if (retval >= 0)
+    //    {
+    *channel= (unsigned int)((value >> 28) & 0xFUL);
+    *speed= (unsigned int)((value >> 24) & 0x3UL);
+    //    }
+    
+    DC1394_READ_END(retval);
 }
 
 int
 dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
                                  unsigned int channel, unsigned int speed)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
+  //  printf("going to set camera ISO data to to %08x\n", ((channel & 0xFUL) << 28) |((speed & 0x3UL) << 24) );
+
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
                                     (quadlet_t)( ((channel & 0xFUL) << 28) |
                                                  ((speed & 0x3UL) << 24) )));
 }
@@ -675,41 +1427,43 @@ dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_camera_on(raw1394handle_t handle, nodeid_t node)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_POWER, ON_VALUE));
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_POWER, ON_VALUE));
 }
 
 int
 dc1394_camera_off(raw1394handle_t handle, nodeid_t node)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_POWER,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_POWER,
                                     OFF_VALUE));
 }
 
 int
 dc1394_start_iso_transmission(raw1394handle_t handle, nodeid_t node)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_ISO_EN,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_ISO_EN,
                                     ON_VALUE));
 }
 
 int
 dc1394_stop_iso_transmission(raw1394handle_t handle, nodeid_t node)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_ISO_EN,
-                                    OFF_VALUE));
+  int retval;
+  retval =SetCameraControlRegister(handle, node, REG_CAMERA_ISO_EN,
+                                    OFF_VALUE);
+  DC1394_WRITE_END(retval);
 }
 
 int
 dc1394_set_one_shot(raw1394handle_t handle, nodeid_t node)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_ONE_SHOT,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_ONE_SHOT,
                                     ON_VALUE));
 }
 
 int
 dc1394_unset_one_shot(raw1394handle_t handle, nodeid_t node)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_ONE_SHOT,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_ONE_SHOT,
                                     OFF_VALUE));
 }
 
@@ -717,14 +1471,14 @@ int
 dc1394_set_multi_shot(raw1394handle_t handle, nodeid_t node,
                       unsigned int numFrames)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_ONE_SHOT,
+  DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_ONE_SHOT,
                                     (0x40000000UL | (numFrames & 0xFFFFUL))));
 }
 
 int
 dc1394_unset_multi_shot(raw1394handle_t handle, nodeid_t node)
 {
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_ONE_SHOT,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_ONE_SHOT,
                                     OFF_VALUE));
 }
 
@@ -732,42 +1486,42 @@ int
 dc1394_get_brightness(raw1394handle_t handle, nodeid_t node,
                       unsigned int *brightness)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_BRIGHTNESS, brightness));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_BRIGHTNESS, brightness));
 }
 
 int
 dc1394_set_brightness(raw1394handle_t handle, nodeid_t node,
                       unsigned int brightness)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_BRIGHTNESS, brightness));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_BRIGHTNESS, brightness));
 }
 
 int
 dc1394_get_exposure(raw1394handle_t handle, nodeid_t node,
                     unsigned int *exposure)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_EXPOSURE, exposure));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_EXPOSURE, exposure));
 }
 
 int
 dc1394_set_exposure(raw1394handle_t handle, nodeid_t node,
                     unsigned int exposure)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_EXPOSURE, exposure));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_EXPOSURE, exposure));
 }
 
 int
 dc1394_get_sharpness(raw1394handle_t handle, nodeid_t node,
                      unsigned int *sharpness)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_SHARPNESS, sharpness));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_SHARPNESS, sharpness));
 }
 
 int
 dc1394_set_sharpness(raw1394handle_t handle, nodeid_t node,
                      unsigned int sharpness)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_SHARPNESS, sharpness));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_SHARPNESS, sharpness));
 }
 
 int
@@ -778,13 +1532,13 @@ dc1394_get_white_balance(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node,
                                          REG_CAMERA_WHITE_BALANCE, &value);
 
-    if (retval >= 0)
-    {
+    //    if (retval >= 0)
+    //    {
         *u_b_value= (unsigned int)((value & 0xFFF000UL) >> 12);
         *v_r_value= (unsigned int)(value & 0xFFFUL);
-    }
+	//    }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -794,16 +1548,16 @@ dc1394_set_white_balance(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t curval;
 
-    if ( (retval= GetCameraControlRegister(handle, node,
+    if ( _dc1394_read_check(retval= GetCameraControlRegister(handle, node,
                                            REG_CAMERA_WHITE_BALANCE,
-                                           &curval)) < 0 )
+                                           &curval)) !=DC1394_SUCCESS )
     {
-        return(retval);
+        return DC1394_SUCCESS;
     }
 
     curval= (curval & 0xFF000000UL) | ( ((u_b_value & 0xFFFUL) << 12) |
                                         (v_r_value & 0xFFFUL) );
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_WHITE_BALANCE,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_WHITE_BALANCE,
                                     curval));
 }
 
@@ -811,98 +1565,98 @@ int
 dc1394_get_hue(raw1394handle_t handle, nodeid_t node,
                unsigned int *hue)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_HUE, hue));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_HUE, hue));
 }
 
 int
 dc1394_set_hue(raw1394handle_t handle, nodeid_t node,
                unsigned int hue)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_HUE, hue));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_HUE, hue));
 }
 
 int
 dc1394_get_saturation(raw1394handle_t handle, nodeid_t node,
                       unsigned int *saturation)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_SATURATION, saturation));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_SATURATION, saturation));
 }
 
 int
 dc1394_set_saturation(raw1394handle_t handle, nodeid_t node,
                       unsigned int saturation)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_SATURATION, saturation));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_SATURATION, saturation));
 }
 
 int
 dc1394_get_gamma(raw1394handle_t handle, nodeid_t node,
                  unsigned int *gamma)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_GAMMA, gamma));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_GAMMA, gamma));
 }
 
 int
 dc1394_set_gamma(raw1394handle_t handle, nodeid_t node,
                  unsigned int gamma)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_GAMMA, gamma));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_GAMMA, gamma));
 }
 
 int
 dc1394_get_shutter(raw1394handle_t handle, nodeid_t node,
                    unsigned int *shutter)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_SHUTTER, shutter));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_SHUTTER, shutter));
 }
 
 int
 dc1394_set_shutter(raw1394handle_t handle, nodeid_t node,
                    unsigned int shutter)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_SHUTTER, shutter));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_SHUTTER, shutter));
 }
 
 int
 dc1394_get_gain(raw1394handle_t handle, nodeid_t node,
                 unsigned int *gain)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_GAIN, gain));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_GAIN, gain));
 }
 
 int
 dc1394_set_gain(raw1394handle_t handle, nodeid_t node,
                 unsigned int gain)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_GAIN, gain));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_GAIN, gain));
 }
 
 int
 dc1394_get_iris(raw1394handle_t handle, nodeid_t node,
                 unsigned int *iris)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_IRIS, iris));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_IRIS, iris));
 }
 
 int
 dc1394_set_iris(raw1394handle_t handle, nodeid_t node,
                 unsigned int iris)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_IRIS, iris));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_IRIS, iris));
 }
 
 int
 dc1394_get_focus(raw1394handle_t handle, nodeid_t node,
                  unsigned int *focus)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_FOCUS, focus));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_FOCUS, focus));
 }
 
 int
 dc1394_set_focus(raw1394handle_t handle, nodeid_t node,
                  unsigned int focus)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_FOCUS, focus));
+  DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_FOCUS, focus));
 }
 
 int
@@ -914,13 +1668,13 @@ dc1394_get_temperature(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node,
                                          REG_CAMERA_TEMPERATURE, &value);
 
-    if (retval >= 0)
-    {
+    //    if (retval >= 0)
+    //    {
 	*target_temperature= (unsigned int)((value >> 12) & 0xFFF);
         *temperature= (unsigned int)(value & 0xFFFUL);
-    }
+	//    }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -930,15 +1684,15 @@ dc1394_set_temperature(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t curval;
 
-    if ( (retval= GetCameraControlRegister(handle, node,
+    if (_dc1394_read_check (retval= GetCameraControlRegister(handle, node,
                                            REG_CAMERA_TEMPERATURE,
-                                           &curval)) < 0 )
-    {
-        return(retval);
+                                           &curval)) !=DC1394_SUCCESS )
+      {
+        return DC1394_FAILURE;
     }
 
     curval= (curval & 0xFF000FFFUL) | ((target_temperature & 0xFFFUL) << 12);
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_TEMPERATURE,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_TEMPERATURE,
                                     curval));
 }
 
@@ -950,12 +1704,12 @@ dc1394_get_trigger_mode(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node,
                                          REG_CAMERA_TRIGGER_MODE, &value);
 
-    if (retval >= 0)
-    {
+    //    if (retval >= 0)
+    //    {
         *mode= (unsigned int)( ((value >> 16) & 0xFUL) );
-    }
+	//    }
 
-    return(retval);
+    DC1394_WRITE_END(retval);
 }
 
 int
@@ -965,15 +1719,15 @@ dc1394_set_trigger_mode(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t curval;
 
-    if ( (retval= GetCameraControlRegister(handle, node,
+    if (_dc1394_read_check (retval= GetCameraControlRegister(handle, node,
                                            REG_CAMERA_TRIGGER_MODE,
-                                           &curval)) < 0 )
+                                           &curval)) !=DC1394_SUCCESS )
     {
-        return(retval);
+        return DC1394_FAILURE;
     }
 
     curval= (curval & 0xFFF0FFFFUL) | ((mode & 0xFUL) << 16);
-    return(SetCameraControlRegister(handle, node, REG_CAMERA_TRIGGER_MODE,
+    DC1394_WRITE_END(SetCameraControlRegister(handle, node, REG_CAMERA_TRIGGER_MODE,
                                     curval));
 }
 
@@ -981,49 +1735,49 @@ int
 dc1394_get_zoom(raw1394handle_t handle, nodeid_t node,
                 unsigned int *zoom)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_ZOOM, zoom));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_ZOOM, zoom));
 }
 
 int
 dc1394_set_zoom(raw1394handle_t handle, nodeid_t node,
                 unsigned int zoom)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_ZOOM, zoom));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_ZOOM, zoom));
 }
 
 int
 dc1394_get_pan(raw1394handle_t handle, nodeid_t node,
                unsigned int *pan)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_PAN, pan));
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_PAN, pan));
 }
 
 int
 dc1394_set_pan(raw1394handle_t handle, nodeid_t node,
                unsigned int pan)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_PAN, pan));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_PAN, pan));
 }
 
 int
 dc1394_get_tilt(raw1394handle_t handle, nodeid_t node,
                 unsigned int *tilt)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_TILT, tilt));
+  DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_TILT, tilt));
 }
 
 int
 dc1394_set_tilt(raw1394handle_t handle, nodeid_t node,
                 unsigned int tilt)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_TILT, tilt));
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_TILT, tilt));
 }
 
 int
 dc1394_get_optical_filter(raw1394handle_t handle, nodeid_t node,
                           unsigned int *optical_filter)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_OPTICAL_FILTER,
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_OPTICAL_FILTER,
                            optical_filter));
 }
 
@@ -1031,7 +1785,7 @@ int
 dc1394_set_optical_filter(raw1394handle_t handle, nodeid_t node,
                           unsigned int optical_filter)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_OPTICAL_FILTER,
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_OPTICAL_FILTER,
                            optical_filter));
 }
 
@@ -1039,7 +1793,7 @@ int
 dc1394_get_capture_size(raw1394handle_t handle, nodeid_t node,
                         unsigned int *capture_size)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_CAPTURE_SIZE,
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_CAPTURE_SIZE,
                            capture_size));
 }
 
@@ -1047,7 +1801,7 @@ int
 dc1394_set_capture_size(raw1394handle_t handle, nodeid_t node,
                         unsigned int capture_size)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_CAPTURE_SIZE,
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_CAPTURE_SIZE,
                            capture_size));
 }
 
@@ -1055,7 +1809,7 @@ int
 dc1394_get_capture_quality(raw1394handle_t handle, nodeid_t node,
                            unsigned int *capture_quality)
 {
-    return(GetFeatureValue(handle, node, REG_CAMERA_CAPTURE_QUALITY,
+    DC1394_READ_END(GetFeatureValue(handle, node, REG_CAMERA_CAPTURE_QUALITY,
                            capture_quality));
 }
 
@@ -1063,7 +1817,7 @@ int
 dc1394_set_capture_quality(raw1394handle_t handle, nodeid_t node,
                            unsigned int capture_quality)
 {
-    return(SetFeatureValue(handle, node, REG_CAMERA_CAPTURE_QUALITY,
+    DC1394_WRITE_END(SetFeatureValue(handle, node, REG_CAMERA_CAPTURE_QUALITY,
                            capture_quality));
 }
 
@@ -1075,7 +1829,7 @@ dc1394_get_feature_value(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1093,7 +1847,7 @@ dc1394_get_feature_value(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(GetFeatureValue(handle, node, offset + (feature * 0x04U),
+    DC1394_READ_END(GetFeatureValue(handle, node, offset + (feature * 0x04U),
 			   value));
 }
 
@@ -1105,7 +1859,7 @@ dc1394_set_feature_value(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1123,7 +1877,7 @@ dc1394_set_feature_value(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(SetFeatureValue(handle, node, offset + (feature * 0x04U),
+    DC1394_WRITE_END(SetFeatureValue(handle, node, offset + (feature * 0x04U),
 			   value));
 }
 
@@ -1137,7 +1891,7 @@ dc1394_is_feature_present(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1155,9 +1909,9 @@ dc1394_is_feature_present(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    if ( (retval= GetCameraControlRegister(handle, node,
+    if ( _dc1394_read_check(retval= GetCameraControlRegister(handle, node,
 					   offset + (feature * 0x04U),
-					   &quadval)) >= 0 )
+					   &quadval)) ==DC1394_SUCCESS )
     {
 
         if (quadval & 0x80000000UL)
@@ -1171,7 +1925,7 @@ dc1394_is_feature_present(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1184,7 +1938,7 @@ dc1394_has_one_push_auto(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1218,7 +1972,7 @@ dc1394_has_one_push_auto(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1231,7 +1985,7 @@ dc1394_is_one_push_in_operation(raw1394handle_t handle, nodeid_t node,
 
     if ( (feature > FEATURE_MAX) || (feature == FEATURE_TRIGGER) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1265,11 +2019,11 @@ dc1394_is_one_push_in_operation(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
-dc1394_start_one_push(raw1394handle_t handle, nodeid_t node,
+dc1394_start_one_push_operation(raw1394handle_t handle, nodeid_t node,
                       unsigned int feature)
 {
     int retval;
@@ -1278,7 +2032,7 @@ dc1394_start_one_push(raw1394handle_t handle, nodeid_t node,
 
     if ( (feature > FEATURE_MAX) || (feature == FEATURE_TRIGGER) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1296,21 +2050,21 @@ dc1394_start_one_push(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    if ( (retval= GetCameraControlRegister(handle, node,
+    if (_dc1394_read_check (retval= GetCameraControlRegister(handle, node,
 					   offset + (feature * 0x04U),
-					   &curval)) < 0)
+					   &curval)) !=DC1394_SUCCESS)
     {
-        return(retval);
+        return DC1394_FAILURE;
     }
 
     if (!(curval & 0x04000000UL))
     {
         curval|= 0x04000000UL;
-        return(SetCameraControlRegister(handle, node,
+        DC1394_WRITE_END(SetCameraControlRegister(handle, node,
 					offset + (feature * 0x04U), curval));
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1323,7 +2077,7 @@ dc1394_can_read_out(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1357,7 +2111,7 @@ dc1394_can_read_out(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1370,7 +2124,7 @@ dc1394_can_turn_on_off(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1404,7 +2158,7 @@ dc1394_can_turn_on_off(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1417,7 +2171,7 @@ dc1394_is_feature_on(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1451,7 +2205,7 @@ dc1394_is_feature_on(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1464,7 +2218,7 @@ dc1394_feature_on_off(raw1394handle_t handle, nodeid_t node,
 
     if (feature > FEATURE_MAX)
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1482,27 +2236,27 @@ dc1394_feature_on_off(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    if ( (retval= GetCameraControlRegister(handle, node,
+    if (_dc1394_read_check(retval= GetCameraControlRegister(handle, node,
 					   offset + (feature * 0x04U),
-					   &curval)) < 0)
+					   &curval)) !=DC1394_SUCCESS)
     {
-        return(retval);
+        return DC1394_FAILURE;
     }
 
     if (!(curval & 0x02000000UL))
     {
         curval|= 0x02000000UL;
-        return(SetCameraControlRegister(handle, node,
+        DC1394_WRITE_END(SetCameraControlRegister(handle, node,
 					offset + (feature * 0x04U), curval));
     }
     else if (!value && (curval & 0x02000000UL))
     {
         curval&= 0xFDFFFFFFUL;
-        return(SetCameraControlRegister(handle, node,
+        DC1394_WRITE_END(SetCameraControlRegister(handle, node,
 					offset + (feature * 0x04U), curval));
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1515,7 +2269,7 @@ dc1394_has_auto_mode(raw1394handle_t handle, nodeid_t node,
 
     if ( (feature > FEATURE_MAX) || (feature == FEATURE_TRIGGER) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1549,7 +2303,7 @@ dc1394_has_auto_mode(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1562,7 +2316,7 @@ dc1394_has_manual_mode(raw1394handle_t handle, nodeid_t node,
 
     if ( (feature > FEATURE_MAX) || (feature == FEATURE_TRIGGER) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1596,7 +2350,7 @@ dc1394_has_manual_mode(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1609,7 +2363,7 @@ dc1394_is_feature_auto(raw1394handle_t handle, nodeid_t node,
 
     if ( (feature > FEATURE_MAX) || (feature == FEATURE_TRIGGER) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1643,7 +2397,7 @@ dc1394_is_feature_auto(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1656,7 +2410,7 @@ dc1394_auto_on_off(raw1394handle_t handle, nodeid_t node,
 
     if ( (feature > FEATURE_MAX) || (feature == FEATURE_TRIGGER) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1674,27 +2428,26 @@ dc1394_auto_on_off(raw1394handle_t handle, nodeid_t node,
 
     }
 
-    if ( (retval= GetCameraControlRegister(handle, node,
+    if (_dc1394_read_check(retval= GetCameraControlRegister(handle, node,
 					   offset + (feature * 0x04U),
-					   &curval)) < 0)
+					   &curval)) !=DC1394_SUCCESS)
     {
-        return(retval);
+        return DC1394_FAILURE;
     }
-
+    
     if (!(curval & 0x01000000UL))
-    {
+      {
         curval|= 0x01000000UL;
-        return(SetCameraControlRegister(handle, node,
-					offset + (feature * 0x04U), curval));
-    }
-    else if (!value && (curval & 0x01000000UL))
-    {
+        DC1394_WRITE_END(SetCameraControlRegister(handle, node,
+						  offset + (feature * 0x04U), curval));
+      } else if (!value && (curval & 0x01000000UL))
+      {
         curval&= 0xFEFFFFFFUL;
-        return(SetCameraControlRegister(handle, node,
+        DC1394_WRITE_END(SetCameraControlRegister(handle, node,
 					offset + (feature * 0x04U), curval));
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1707,7 +2460,7 @@ dc1394_get_min_value(raw1394handle_t handle, nodeid_t node,
 
     if ( (feature > FEATURE_MAX) || (feature == FEATURE_TRIGGER) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1732,7 +2485,7 @@ dc1394_get_min_value(raw1394handle_t handle, nodeid_t node,
         *value= (unsigned int)((quadval & 0xFFF000UL) >> 12);
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
 
 int
@@ -1745,7 +2498,7 @@ dc1394_get_max_value(raw1394handle_t handle, nodeid_t node,
 
     if ( (feature > FEATURE_MAX) || (feature == FEATURE_TRIGGER) )
     {
-	return(-1);
+	return DC1394_FAILURE;
     }
     else if (feature < FEATURE_ZOOM)
     {
@@ -1770,5 +2523,156 @@ dc1394_get_max_value(raw1394handle_t handle, nodeid_t node,
         *value= (unsigned int)(quadval & 0xFFFUL);
     }
 
-    return(retval);
+    DC1394_READ_END(retval);
 }
+
+/*****************************************************
+dc1394_setup_camera
+sets up both the camera and the cameracapture structure
+to be used other places.
+returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
+*****************************************************/
+int dc1394_setup_camera(raw1394handle_t handle, nodeid_t node, 
+			int channel, int format, int mode, 
+			int speed, int frame_rate, 
+			dc1394_cameracapture * camera) {
+  if (dc1394_init_camera(handle,node)!=DC1394_SUCCESS) {
+    printf("(%s) Unable to initialize camera!\n",__FILE__);
+    return DC1394_FAILURE;
+  }
+  if (dc1394_set_video_format(handle,node,format)!=DC1394_SUCCESS) {
+    printf("(%s) Unable to set video format %d!\n",__FILE__,format);
+    return DC1394_FAILURE;
+  }
+  if (dc1394_set_video_mode(handle, node,mode)!=DC1394_SUCCESS) {
+    printf("(%s) Unable to set video mode %d!\n",__FILE__, mode);
+    return DC1394_FAILURE;
+  }
+  if (dc1394_set_video_framerate(handle,node,frame_rate)!=DC1394_SUCCESS) {
+    printf("(%s) Unable to set framerate %d!\n",__FILE__,frame_rate);
+    return DC1394_FAILURE;
+  }
+  if (dc1394_set_iso_channel_and_speed(handle,node,channel,speed)!=DC1394_SUCCESS) {
+    printf("(%s) Unable to set channel %d and speed %d!\n",__FILE__,channel,speed);
+    return DC1394_FAILURE;
+  }
+  camera->node = node;
+  camera->frame_rate = frame_rate;
+  camera->channel=channel;
+  camera->quadlets_per_packet = _dc1394_get_quadlets_per_packet(format,mode,
+								frame_rate);
+
+  if (camera->quadlets_per_packet<0) {
+    return DC1394_FAILURE;
+  }
+  
+  camera->quadlets_per_frame= _dc1394_quadlets_from_format(format,mode);
+  //  printf("setting quadlets per frame to: %d\n",camera->quadlets_per_frame);
+  if (camera->quadlets_per_frame<0) {
+    return DC1394_FAILURE;
+  }
+    
+    
+  camera->capture_buffer =(int *) malloc(camera->quadlets_per_frame*4);
+  if (_dc1394_get_wh_from_format(format,mode,&camera->frame_width,
+			     &camera->frame_height)==DC1394_FAILURE) {
+    return DC1394_FAILURE;
+  }
+
+
+  if (camera->capture_buffer==NULL) {
+        printf("(%s) unable to allocate memory for capture buffer\n",__FILE__);
+    return DC1394_FAILURE;
+  }
+  return DC1394_SUCCESS;
+}
+
+/*****************************************************
+dc1394_release_camera
+frees buffer space contained in the cameracapture 
+structure
+*****************************************************/
+int dc1394_release_camera(raw1394handle_t handle,dc1394_cameracapture *camera) {
+  if (camera->capture_buffer!=NULL) {
+    free(camera->capture_buffer);
+  }
+  dc1394_unset_one_shot(handle,camera->node);
+  return DC1394_SUCCESS;
+}
+
+
+
+/*****************************************************
+dc1394_multi_capture
+this routine captures a frame from each camera specified
+in the cams array.  Cameras must be set up first using dc1394_setup_camera
+returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it scucceeds
+*****************************************************/
+int dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams, int num) {
+  int i,j;
+  _dc1394_all_captured=num;
+  /*this first routine does the setup-
+    sets up the global variables needed in the handler,
+    sets the iso handler,
+    tells the 1394 subsystem to listen for iso packets
+  */
+  for (i=0;i<num;i++) {
+    _dc1394_buffer[cams[i].channel]=cams[i].capture_buffer;
+    if (raw1394_set_iso_handler(handle,cams[i].channel,_dc1394_video_iso_handler)<0) {
+      /* error handling- for some reason something didn't work, so we have
+	 to reset everything....*/
+      for (j=i-1;j>-1;j--) {
+	raw1394_stop_iso_rcv(handle,cams[j].channel);
+	raw1394_set_iso_handler(handle,cams[j].channel,NULL);
+      }
+      return DC1394_FAILURE;
+    }
+    _dc1394_frame_captured[cams[i].channel]=0;
+    _dc1394_quadlets_per_frame[cams[i].channel]=cams[i].quadlets_per_frame;
+    _dc1394_quadlets_per_packet[cams[i].channel]=cams[i].quadlets_per_packet;
+    //    printf("setting quadlets per packet to %d\n",cams[i].quadlets_per_packet);
+    if (raw1394_start_iso_rcv(handle,cams[i].channel)<0) {
+      /* error handling- for some reason something didn't work, so we have
+	 to reset everything....*/
+      for (j=0;j<num;j++) {
+	raw1394_stop_iso_rcv(handle,cams[j].channel);
+	raw1394_set_iso_handler(handle,cams[j].channel,NULL);
+
+      }
+      return DC1394_FAILURE;
+    }
+  }
+
+  
+  /*now we tell each camera to send us data*/
+  /*  for (i=0;i<num;i++) {
+      if (dc1394_set_one_shot(handle,cams[i].node)!=DC1394_SUCCESS) {
+      for (j=0;j<num;j++) { 
+      raw1394_stop_iso_rcv(handle,cams[j].channel);
+      raw1394_set_iso_handler(handle,cams[j].channel,NULL); 
+      } 
+      for (j=i-1;j>-1;j--) { 
+      dc1394_unset_one_shot(handle, cams[j].node); 
+      //	dc1394_stop_iso_transmission(handle,c ams[j].node);
+      } 
+      return DC1394_FAILURE; 
+      }
+      }*/
+
+  /* now we iterate till the data is here*/
+  while (_dc1394_all_captured!=0) {
+    raw1394_loop_iterate(handle);
+  }
+  
+  /* now turn off the cameras and stop the subsystem from listening*/
+  for (i=0;i<num;i++) {
+    //    dc1394_stop_iso_transmission(handle,cams[i].node);
+    raw1394_stop_iso_rcv(handle,cams[i].channel);
+    raw1394_set_iso_handler(handle,cams[i].channel,NULL);
+  }
+  return DC1394_SUCCESS;
+
+}
+
+
+
