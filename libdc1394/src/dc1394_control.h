@@ -252,8 +252,6 @@ typedef struct __dc1394_feature_info_struct
     dc1394bool_t auto_capable;
     dc1394bool_t manual_capable;
     dc1394bool_t polarity_capable;
-    
-
     dc1394bool_t one_push_active;
     dc1394bool_t is_on;
     dc1394bool_t auto_active;
@@ -268,8 +266,7 @@ typedef struct __dc1394_feature_info_struct
     int target_value;
 } dc1394_feature_info;
 
-/*This structure contains all of the info above for everything except
-  trigger and white balance...*/
+
 typedef struct __dc1394_feature_set_struct 
 {
   dc1394_feature_info feature[NUM_FEATURES];
@@ -298,6 +295,7 @@ int
 dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
                           dc1394_feature_info *feature);
 
+
 /*****************************************************
 dc1394_get_camera_misc_info
 Collects other camera info registers
@@ -305,6 +303,7 @@ Collects other camera info registers
 int 
 dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
                             dc1394_miscinfo *info);
+
 
 /*****************************************************
 dc1394_print_feature
@@ -358,13 +357,16 @@ dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numids,
                                int *ids,int * numCameras,
                                int showCameras);
 
+
 /* Initialize camera to factory default settings */
 int
 dc1394_init_camera(raw1394handle_t handle, nodeid_t node);
 
+
 /* determine if the given node is a camera */
 int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value);
+
 
 /* get the camera information and print that structure*/
 void 
@@ -373,6 +375,7 @@ dc1394_print_camera_info(dc1394_camerainfo *info);
 int
 dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
                        dc1394_camerainfo *info);
+
 
 /* Functions for querying camera attributes */
 int
@@ -404,6 +407,7 @@ int
 dc1394_query_feature_characteristics(raw1394handle_t handle, nodeid_t node,
                                      unsigned int feature, quadlet_t *value);
 
+
 /* Get/Set the framerate, mode, format, iso channel/speed for the video */
 int
 dc1394_get_video_framerate(raw1394handle_t handle, nodeid_t node,
@@ -430,11 +434,13 @@ int
 dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
                                  unsigned int channel, unsigned int speed);
 
+
 /* Turn camera on or off */
 int
 dc1394_camera_on(raw1394handle_t handle, nodeid_t node);
 int
 dc1394_camera_off(raw1394handle_t handle, nodeid_t node);
+
 
 /* Start/stop isochronous data transmission */
 int
@@ -445,11 +451,13 @@ int
 dc1394_get_iso_status(raw1394handle_t handle, nodeid_t node,
                       dc1394bool_t *is_on);
 
+
 /* Turn one shot mode on or off */
 int
 dc1394_set_one_shot(raw1394handle_t handle, nodeid_t node);
 int
 dc1394_unset_one_shot(raw1394handle_t handle, nodeid_t node);
+
 
 /* Turn multishot mode on or off */
 int
@@ -457,6 +465,7 @@ dc1394_set_multi_shot(raw1394handle_t handle, nodeid_t node,
                       unsigned int numFrames);
 int
 dc1394_unset_multi_shot(raw1394handle_t handle, nodeid_t node);
+
 
 /* Get/Set the values of the various features on the camera */
 int
@@ -575,6 +584,7 @@ int
 dc1394_set_capture_quality(raw1394handle_t handle, nodeid_t node,
                            unsigned int capture_quality);
 
+
 /* Convenience functions to query/set based on a variable camera feature */
 /* (can't be used for white balance) */
 int
@@ -584,6 +594,7 @@ dc1394_get_feature_value(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_set_feature_value(raw1394handle_t handle, nodeid_t node,
                          unsigned int feature, unsigned int value);
+
 
 /* Query/set specific feature characteristics */
 int
@@ -630,6 +641,7 @@ dc1394_get_min_value(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_get_max_value(raw1394handle_t handle, nodeid_t node,
                      unsigned int feature, unsigned int *value);
+
 
 /*****************************
 DMA Capture Functions 
@@ -734,6 +746,7 @@ int
 dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams,
                      int num);
 
+
 /**************************************************
  functions to read and write camera setups on/in
  memory channels
@@ -758,8 +771,14 @@ int
 dc1394_memory_save(raw1394handle_t handle, nodeid_t node);
 
 int
-dc1394_memory_load(raw1394handle_t handle, nodeid_t node, unsigned int channel);
+dc1394_memory_load(raw1394handle_t handle, nodeid_t node,
+                   unsigned int channel);
 
+
+/**************************************************
+ functions to get/set the trigger polarity and
+ determine if the camera has such a feature
+ **************************************************/
 int
 dc1394_set_trigger_polarity(raw1394handle_t handle, nodeid_t node,
                             dc1394bool_t polarity);
