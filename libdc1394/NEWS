@@ -46,7 +46,3 @@ Version 0.8.2:
 - new trigger control functions
 - synchronize kernel-video1394.h with the recent version
 
-Version 0.8.3:
-- new format7 functions and examples from Olaf Ronneberger
-- reorganized source tree and build
-
