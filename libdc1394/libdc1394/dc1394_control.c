@@ -896,6 +896,27 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
         *value= DC1394_TRUE;
     }
 
+	quadval = 0;
+    offset += 4;
+    usleep(1000);
+
+    /* get the unit_sw_version (should be 0x000100 or 0x000101 for 1394 digital camera) */
+	/* DRD> without this check, AV/C cameras show up as well */
+    if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
+    {
+        *value= DC1394_FALSE;
+        return DC1394_FAILURE;
+    }
+
+    if ((quadval & 0xFFFFFFUL) == 0x000100UL || (quadval & 0xFFFFFFUL) == 0x000101UL)
+    {
+        *value= DC1394_TRUE;
+    }
+    else
+    {
+        *value= DC1394_FALSE;
+    }
+
     return DC1394_SUCCESS;
 }
 
