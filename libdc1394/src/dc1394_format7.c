@@ -128,12 +128,8 @@ dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
         *vertical_size  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
         *horizontal_size= (unsigned int) ( value & 0x0000FFFFUL );
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -158,11 +154,7 @@ dc1394_query_format7_unit_size(raw1394handle_t handle, nodeid_t node,
         *horizontal_unit= (unsigned int) ( value & 0x0000FFFFUL );
     }
 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -186,12 +178,8 @@ dc1394_query_format7_image_position(raw1394handle_t handle, nodeid_t node,
         *top_position = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
         *left_position= (unsigned int) ( value & 0x0000FFFFUL );       
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
  
@@ -214,12 +202,8 @@ dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
         *height= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
         *width = (unsigned int) ( value & 0x0000FFFFUL );       
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -238,12 +222,8 @@ dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
                                          REG_CAMERA_FORMAT7_COLOR_CODING_ID,
                                          value);
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -262,12 +242,8 @@ dc1394_query_format7_color_coding(raw1394handle_t handle, nodeid_t node,
                                          REG_CAMERA_FORMAT7_COLOR_CODING_INQ,
                                          value);
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -288,12 +264,8 @@ dc1394_query_format7_pixel_number(raw1394handle_t handle, nodeid_t node,
                                          &value);
         *pixnum= (unsigned int) value;
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -318,12 +290,8 @@ dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
  
         *total_bytes= (unsigned int) (value_lo | ( value_hi << 16) ); 
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -346,12 +314,8 @@ dc1394_query_format7_packet_para(raw1394handle_t handle, nodeid_t node,
         *max_bytes= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
         *min_bytes= (unsigned int) ( value & 0x0000FFFFUL );       
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -373,12 +337,8 @@ dc1394_query_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
                                          &value);
         *packet_bytes= (unsigned int) ( value & 0x0000FFFFUL );
     }
- 
-#ifdef OLD_ERROR_CHECKING
-    DC1394_READ_END(handle);
-#else
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -389,12 +349,7 @@ dc1394_set_format7_image_position(raw1394handle_t handle, nodeid_t node,
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_IMAGE_POSITION,
                                          (quadlet_t)((top << 16) | left));
-
-#ifdef OLD_ERROR_CHECKING
-    DC1394_WRITE_END(handle);
-#else
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -405,12 +360,7 @@ dc1394_set_format7_image_size(raw1394handle_t handle, nodeid_t node,
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_IMAGE_SIZE,
                                          (quadlet_t)((height << 16) | width));
-
-#ifdef OLD_ERROR_CHECKING
-    DC1394_WRITE_END(handle);
-#else
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -420,12 +370,7 @@ dc1394_set_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_COLOR_CODING_ID,
                                          (quadlet_t)color_id);
-
-#ifdef OLD_ERROR_CHECKING
-    DC1394_WRITE_END(handle);
-#else
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }
  
 int
@@ -436,10 +381,5 @@ dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
                                          (quadlet_t)packet_bytes);
-
-#ifdef OLD_ERROR_CHECKING
-    DC1394_WRITE_END(handle);
-#else
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-#endif
 }

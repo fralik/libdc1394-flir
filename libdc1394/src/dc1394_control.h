@@ -39,12 +39,8 @@
 /* Maximum number of write/read retries */
 #define MAX_RETRIES                    20
 
-#ifdef OLD_ERROR_CHECKING
-#define DC1394_READ_END(handle) return _dc1394_read_check(handle);
-#define DC1394_WRITE_END(handle) return _dc1394_write_check(handle);
-#endif
-
-/* A hard compiled factor that makes sure async read and writes don't happen too fast*/
+/* A hard compiled factor that makes sure async read and writes don't happen
+   too fast */
 #define SLOW_DOWN 20
 
 /* transaction acknowldegements (this should be in the raw1394 headers) */
@@ -290,7 +286,8 @@ collects the available features for the camera
 described by node and stores them in features.
 *****************************************************/  
 int 
-dc1394_get_camera_feature_set(raw1394handle_t handle, nodeid_t node,dc1394_feature_set *features);
+dc1394_get_camera_feature_set(raw1394handle_t handle, nodeid_t node,
+                              dc1394_feature_set *features);
 
 /*****************************************************
 dc1394_get_camera_feature
@@ -298,14 +295,16 @@ stores the bounds and options associated with the
 feature described by feature->feature_id
 *****************************************************/
 int 
-dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,dc1394_feature_info *feature);
+dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
+                          dc1394_feature_info *feature);
 
 /*****************************************************
 dc1394_get_camera_misc_info
 Collects other camera info registers
 *****************************************************/
 int 
-dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node, dc1394_miscinfo *info);
+dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
+                            dc1394_miscinfo *info);
 
 /*****************************************************
 dc1394_print_feature
@@ -342,7 +341,7 @@ otherwise the number of cameras and the nodeid_t array from the call
 *****************************************************/
 nodeid_t* 
 dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
-				    int showCameras);
+                        int showCameras);
 
 /*****************************************************
 dc1394_get_sorted_camera_nodes
@@ -356,14 +355,14 @@ otherwise the number of cameras and the nodeid_t array from the call
 *****************************************************/
 nodeid_t* 
 dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numids, 
-				    int *ids,int * numCameras,
-				    int showCameras);
+                               int *ids,int * numCameras,
+                               int showCameras);
 
 /* Initialize camera to factory default settings */
 int
 dc1394_init_camera(raw1394handle_t handle, nodeid_t node);
 
-  /* determine if the given node is a camera */
+/* determine if the given node is a camera */
 int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value);
 
@@ -443,7 +442,8 @@ dc1394_start_iso_transmission(raw1394handle_t handle, nodeid_t node);
 int
 dc1394_stop_iso_transmission(raw1394handle_t handle, nodeid_t node);
 int
-dc1394_get_iso_status(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on);
+dc1394_get_iso_status(raw1394handle_t handle, nodeid_t node,
+                      dc1394bool_t *is_on);
 
 /* Turn one shot mode on or off */
 int
@@ -630,11 +630,13 @@ dc1394_get_min_value(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_get_max_value(raw1394handle_t handle, nodeid_t node,
                      unsigned int feature, unsigned int *value);
+
 /*****************************
 DMA Capture Functions 
 These routines will be much faster
 than the above capture routines.
 *****************************/
+
 /*****************************************************
 dc1394_dma_setup_capture
 this sets up the given camera to capture images using 
@@ -643,11 +645,10 @@ routines
 *****************************************************/
 int
 dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
-                        int channel, int format, int mode,
-                        int speed, int frame_rate, 
-                        int num_dma_buffers,
-                        dc1394_cameracapture *camera);
-
+                         int channel, int format, int mode,
+                         int speed, int frame_rate, 
+                         int num_dma_buffers,
+                         dc1394_cameracapture *camera);
 
 /*****************************************************
 dc1394_dma_release_camera
@@ -658,14 +659,12 @@ int
 dc1394_dma_release_camera(raw1394handle_t handle, 
                           dc1394_cameracapture *camera);
 
-
 /*****************************************************
 dc1394_dma_single_capture
 This captures a frame from the given camera
 *****************************************************/
 int 
 dc1394_dma_single_capture(dc1394_cameracapture *camera);
-
 
 /*****************************************************
 dc1394_dma_multi_capture
@@ -677,7 +676,6 @@ dc1394_dma_done_with_buffer.
 int
 dc1394_dma_multi_capture(dc1394_cameracapture *cams,int num);
 
-
 /*****************************************************
 dc1394_dma_done_with_buffer
 This allows the driver to use the buffer previously handed
@@ -687,8 +685,6 @@ int
 dc1394_dma_done_with_buffer(dc1394_cameracapture * camera);
 
 
-
-
 /*****************************
 Non DMA Capture Functions 
 These functions use libraw
@@ -696,6 +692,7 @@ to grab frames from the cameras,
 the dma routines are faster, and 
 should be used instead.
 *****************************/
+
 /*****************************************************
 dc1394_setup_camera
 sets up both the camera and the cameracapture structure
@@ -707,10 +704,9 @@ your application WILL leak memory
 *****************************************************/
 int 
 dc1394_setup_capture(raw1394handle_t handle, nodeid_t node, 
-                    int channel, int format, int mode, 
-                    int speed, int frame_rate, 
-                    dc1394_cameracapture * camera);
-
+                     int channel, int format, int mode, 
+                     int speed, int frame_rate, 
+                     dc1394_cameracapture * camera);
 
 /*****************************************************
 dc1394_release_camera
@@ -718,8 +714,7 @@ frees buffer space contained in the cameracapture structure
 *****************************************************/
 int 
 dc1394_release_camera(raw1394handle_t handle,
-                              dc1394_cameracapture *camera);
-
+                      dc1394_cameracapture *camera);
 
 /*****************************************************
 dc1394_single_capture
@@ -729,7 +724,6 @@ int
 dc1394_single_capture(raw1394handle_t handle,
                       dc1394_cameracapture *camera);
 
-
 /*****************************************************
 dc1394_multi_capture
 this routine captures a frame from each camera specified
@@ -737,22 +731,28 @@ in the cams array.  Cameras must be set up first using dc1394_setup_camera
 returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it scucceeds
 *****************************************************/
 int 
-dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture * cams, int num);
+dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams,
+                     int num);
+
 /**************************************************
  functions to read and write camera setups on/in
  memory channels
  **************************************************/
 int 
-dc1394_get_memory_load_ch(raw1394handle_t handle, nodeid_t node, unsigned int *channel);
+dc1394_get_memory_load_ch(raw1394handle_t handle, nodeid_t node,
+                          unsigned int *channel);
 
 int 
-dc1394_get_memory_save_ch(raw1394handle_t handle, nodeid_t node, unsigned int *channel);
+dc1394_get_memory_save_ch(raw1394handle_t handle, nodeid_t node,
+                          unsigned int *channel);
 
 int 
-dc1394_is_memory_save_in_operation(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value);
+dc1394_is_memory_save_in_operation(raw1394handle_t handle, nodeid_t node,
+                                   dc1394bool_t *value);
 
 int 
-dc1394_set_memory_save_ch(raw1394handle_t handle, nodeid_t node, unsigned int channel);
+dc1394_set_memory_save_ch(raw1394handle_t handle, nodeid_t node,
+                          unsigned int channel);
 
 int
 dc1394_memory_save(raw1394handle_t handle, nodeid_t node);
@@ -760,16 +760,17 @@ dc1394_memory_save(raw1394handle_t handle, nodeid_t node);
 int
 dc1394_memory_load(raw1394handle_t handle, nodeid_t node, unsigned int channel);
 
-
+int
+dc1394_set_trigger_polarity(raw1394handle_t handle, nodeid_t node,
+                            dc1394bool_t polarity);
 
 int
-dc1394_set_trigger_polarity(raw1394handle_t handle, nodeid_t node, dc1394bool_t polarity);
+dc1394_get_trigger_polarity(raw1394handle_t handle, nodeid_t node,
+                            dc1394bool_t *polarity);
 
 int
-dc1394_get_trigger_polarity(raw1394handle_t handle, nodeid_t node, dc1394bool_t *polarity);
-
-int
-dc1394_trigger_has_polarity(raw1394handle_t handle, nodeid_t node, dc1394bool_t *polarity);
+dc1394_trigger_has_polarity(raw1394handle_t handle, nodeid_t node,
+                            dc1394bool_t *polarity);
 
 
 /*************************************************
@@ -778,17 +779,20 @@ dc1394_trigger_has_polarity(raw1394handle_t handle, nodeid_t node, dc1394bool_t 
 
 int
 dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
-				    unsigned int mode, unsigned int *horizontal_size,
+				    unsigned int mode,
+                                    unsigned int *horizontal_size,
 				    unsigned int *vertical_size);
 
 int
 dc1394_query_format7_unit_size(raw1394handle_t handle, nodeid_t node,
-			       unsigned int mode, unsigned int *horizontal_unit,
+			       unsigned int mode,
+                               unsigned int *horizontal_unit,
 			       unsigned int *vertical_unit);
 
 int
 dc1394_query_format7_image_position(raw1394handle_t handle, nodeid_t node,
-				    unsigned int mode, unsigned int *left_position,
+				    unsigned int mode,
+                                    unsigned int *left_position,
 				    unsigned int *top_position);
 
 int
@@ -819,7 +823,8 @@ dc1394_query_format7_packet_para(raw1394handle_t handle, nodeid_t node,
 
 int
 dc1394_query_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
-				     unsigned int mode, unsigned int *packet_bytes);
+				     unsigned int mode,
+                                     unsigned int *packet_bytes);
 
 int
 dc1394_set_format7_image_position(raw1394handle_t handle, nodeid_t node,
@@ -837,7 +842,8 @@ dc1394_set_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
 
 int
 dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
-				   unsigned int mode, unsigned int packet_bytes);
+				   unsigned int mode,
+                                   unsigned int packet_bytes);
 #ifdef __cplusplus
 }
 #endif
