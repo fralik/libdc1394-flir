@@ -12,6 +12,10 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.3  2001/10/16 09:14:14  ronneber
+**  - added more meaningful error message, when no raw1394 handle could be get
+**  - does not exit anymore, when camera has no trigger
+**
 **  Revision 1.2  2001/09/14 08:10:41  ronneber
 **  - some cosmetic changes
 **
@@ -46,8 +50,10 @@ int main(int argc, char *argv[])
   handle = dc1394_create_handle(0);
   if (handle==NULL)
   {
-    fprintf( stderr, "Unable to aquire a raw1394 handle\n"
-             "did you insmod the drivers?\n");
+    fprintf( stderr, "Unable to aquire a raw1394 handle\n\n"
+             "Please check \n"
+	     "  - if the kernel modules `ieee1394',`raw1394' and `ohci1394' are loaded \n"
+	     "  - if you have read/write access to /dev/raw1394\n\n");
     exit(1);
   }
 
@@ -124,9 +130,11 @@ int main(int argc, char *argv[])
       != DC1394_SUCCESS)
   {
     fprintf( stderr, "unable to set camera trigger mode\n");
+#if 0
     dc1394_release_camera(handle,&camera);
     raw1394_destroy_handle(handle);
     exit(1);
+#endif
   }
   
   
