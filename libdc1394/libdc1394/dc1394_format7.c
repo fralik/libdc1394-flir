@@ -348,8 +348,13 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
    *  ensure that quadlet aligned buffers are big enough, still expect
    *  problems when width*height  != quadlets_per_frame*4
    *-----------------------------------------------------------------------*/
-  /* OOPS! TODO: assumes 1 byte per pixel, only right for monochrome */
-  camera->quadlets_per_frame= (width*height+3)/4;
+  if (dc1394_query_format7_total_bytes( handle, node, mode, camera->quadlets_per_frame))
+    {
+      printf("(%s) Unable to get format 7 bytes per packet %d \n", __FILE__, mode);
+      return DC1394_FAILURE;
+    }
+  camera->quadlets_per_frame=camera->quadlets_per_frame/4;
+      
   if (camera->quadlets_per_frame<=0)
   {
     return DC1394_FAILURE;
