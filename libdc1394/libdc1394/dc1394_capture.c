@@ -528,9 +528,9 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                          int channel, int format, int mode,
                          int speed, int frame_rate,
                          int num_dma_buffers, 
-						 int drop_frames,
-						 const char *dma_device_file,
-						 dc1394_cameracapture *camera)
+			 int drop_frames,
+			 const char *dma_device_file,
+			 dc1394_cameracapture *camera)
 {
  
     dc1394_camerahandle *camera_handle;
@@ -572,6 +572,19 @@ dc1394_dma_release_camera(raw1394handle_t handle,
     if (camera->dma_ring_buffer)
     {
         munmap((void*)camera->dma_ring_buffer,camera->dma_buffer_size);
+
+	_dc1394_num_using_fd[camera->port]--;
+	
+	if (_dc1394_num_using_fd[camera->port] == 0)
+	  {
+	    
+	    while (close(camera->dma_fd) != 0)
+	      {
+		printf("(%s) waiting for dma_fd to close\n", __FILE__);
+		sleep(1);
+	      }
+	    
+	  }
     }
     
     if (camera->dma_extra_buffer != NULL)
@@ -579,18 +592,6 @@ dc1394_dma_release_camera(raw1394handle_t handle,
         free( camera->dma_extra_buffer);
     }
 
-    _dc1394_num_using_fd[camera->port]--;
-
-    if (_dc1394_num_using_fd[camera->port] == 0)
-    {
-
-        while (close(camera->dma_fd) != 0)
-        {
-            printf("(%s) waiting for dma_fd to close\n", __FILE__);
-            sleep(1);
-        }
-
-    }
 
     return DC1394_SUCCESS;
 }
@@ -662,14 +663,14 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 				return DC1394_FAILURE;
 			}
 
-            cams[i].filltime = vwait.filltime;
+			cams[i].filltime = vwait.filltime;
 
 			if (cams[i].drop_frames == 0)
 			{
 				/* point to the next buffer in the dma ringbuffer */
 				cams[i].capture_buffer= (int*)(cams[i].dma_ring_buffer +
-											   cams[i].dma_last_buffer *
-											   cams[i].dma_frame_size);
+							       cams[i].dma_last_buffer *
+							       cams[i].dma_frame_size);
 	
 				/* get the number of buffers by which we are behind */
 				cams[i].dma_extra_count = vwait.buffer;
@@ -709,7 +710,7 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
             cams[i].capture_buffer = (int*)(cams[i].dma_extra_buffer + 
                                             (cams[i].dma_extra_count-1) *
                                             cams[i].dma_frame_size);
-			cams[i].dma_extra_count--;
+	    cams[i].dma_extra_count--;
         }
 	
     }

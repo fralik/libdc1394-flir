@@ -1959,6 +1959,29 @@ dc1394_unset_one_shot(raw1394handle_t handle, nodeid_t node)
 }
 
 int
+dc1394_get_one_shot(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on)
+{
+ quadlet_t value;
+ int retval = GetCameraControlRegister(handle, node,
+                                          REG_CAMERA_ONE_SHOT, &value);
+ *is_on = value & ON_VALUE;
+ return (retval ? DC1394_FAILURE : DC1394_SUCCESS);     
+}
+
+int
+dc1394_get_multi_shot(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on,
+		      unsigned int *numFrames)
+{
+ quadlet_t value;
+ int retval = GetCameraControlRegister(handle, node,
+                                          REG_CAMERA_ONE_SHOT, &value);
+ *is_on = value & (ON_VALUE>>1);
+ *numFrames= value & 0xFFFFUL;
+
+ return (retval ? DC1394_FAILURE : DC1394_SUCCESS);     
+}
+
+int
 dc1394_set_multi_shot(raw1394handle_t handle, nodeid_t node,
                       unsigned int numFrames)
 {

@@ -526,6 +526,13 @@ int
 dc1394_unset_multi_shot(raw1394handle_t handle, nodeid_t node);
 
 
+int
+dc1394_get_one_shot(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on);
+
+int
+dc1394_get_multi_shot(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on,
+		      unsigned int *numFrames);
+
 /* Get/Set the values of the various features on the camera */
 int
 dc1394_get_brightness(raw1394handle_t handle, nodeid_t node,
@@ -970,6 +977,8 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                                  unsigned int left, unsigned int top,
                                  unsigned int width, unsigned int height,
                                  int num_dma_buffers,
+				 int drop_frames,
+				 const char *dma_device_file,
                                  dc1394_cameracapture *camera);
   
 

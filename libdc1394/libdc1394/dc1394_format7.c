@@ -638,21 +638,26 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                                  unsigned int left, unsigned int top,
                                  unsigned int width, unsigned int height,
                                  int num_dma_buffers,
+				 int drop_frames,
+				 const char *dma_device_file,
                                  dc1394_cameracapture *camera)
 {
-  int *myPort;
-
+    dc1394_camerahandle *camera_handle;
+    camera_handle = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+ 
     if (_dc1394_basic_format7_setup(handle,node, channel, mode,
-                            speed, bytes_per_packet,
-                            left, top, width, height, camera) == DC1394_FAILURE)
+				    speed, bytes_per_packet,
+				    left, top, width, height, camera) == DC1394_FAILURE)
     {
       return DC1394_FAILURE;
     }
 
-    myPort = raw1394_get_userdata(handle);
-    camera->port = *myPort;
+    camera->port = camera_handle->port;
+    camera->dma_device_file = dma_device_file;
+    camera->drop_frames = drop_frames;
 
     return _dc1394_dma_basic_setup(channel,num_dma_buffers, camera);
+
 }
 
 
@@ -794,7 +799,7 @@ dc1394_query_format7_color_coding(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_COLOR_CODING_INQ,
                                          value);
-        if (retval==DC1394_SUCCESS) value+= COLOR_FORMAT7_MIN;
+	/* if (retval==DC1394_SUCCESS) value+= COLOR_FORMAT7_MIN; //This is really crap.*/
     }
 
     return retval;
