@@ -41,6 +41,9 @@
 #define REG_CAMERA_FORMAT7_BYTE_PER_PACKET               0x044U
 #define REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ          0x048U
 #define REG_CAMERA_FORMAT7_UNIT_POSITION_INQ             0x04CU
+#define REG_CAMERA_FORMAT7_FRAME_INTERVAL_INQ            0x050U
+#define REG_CAMERA_FORMAT7_DATA_DEPTH_INQ                0x054U
+#define REG_CAMERA_FORMAT7_COLOR_FILTER_ID               0x058U
 #define REG_CAMERA_FORMAT7_VALUE_SETTING                 0x07CU
 
 /**********************/ 
@@ -320,6 +323,14 @@ _Format7BytePerPixel(int color_coding)
     case COLOR_FORMAT7_MONO16: return 2.0;
       break;
     case COLOR_FORMAT7_RGB16: return 6.0;
+      break;
+    case COLOR_FORMAT7_MONO16S: return 2.0;
+      break;
+    case COLOR_FORMAT7_RGB16S: return 6.0;
+      break;
+    case COLOR_FORMAT7_RAW8: return 1.0;
+      break;
+    case COLOR_FORMAT7_RAW16: return 2.0;
       break;
     default: return (-1);
     }
@@ -1122,3 +1133,74 @@ dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
 
     return retval;
 }
+
+int
+dc1394_query_format7_frame_interval(raw1394handle_t handle, nodeid_t node,
+				    unsigned int mode,
+				    float *interval)
+{   
+  quadlet_t value;
+
+  if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    return DC1394_FAILURE;
+  
+  if (GetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_FRAME_INTERVAL_INQ,
+			       &value)==DC1394_FAILURE)
+    return DC1394_FAILURE;
+  
+  *interval=value;
+  
+  return DC1394_SUCCESS;
+}   
+    
+int
+dc1394_query_format7_data_depth(raw1394handle_t handle, nodeid_t node,
+				unsigned int mode,
+				unsigned int *data_depth)
+{   
+  quadlet_t value;
+
+  if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    return DC1394_FAILURE;
+  
+  if (GetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_DATA_DEPTH_INQ,
+			       &value)==DC1394_FAILURE)
+    return DC1394_FAILURE;
+  
+  *data_depth=value >> 24;
+  return DC1394_SUCCESS;
+}   
+    
+int
+dc1394_query_format7_color_filter_id(raw1394handle_t handle, nodeid_t node,
+				     unsigned int mode,
+				     unsigned int *color_id)
+{   
+  quadlet_t value;
+  
+  if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    return DC1394_FAILURE;
+  
+  if (GetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID,
+			       &value)==DC1394_FAILURE)
+    return DC1394_FAILURE;
+  
+  *color_id= (value >> 24)+COLOR_FORMAT7_MIN;
+  return DC1394_SUCCESS;
+}   
+     
+int
+dc1394_set_format7_color_filter_id(raw1394handle_t handle, nodeid_t node,
+				   unsigned int mode,
+				   unsigned int color_id)
+{   
+
+  if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    return DC1394_FAILURE;
+  
+  if (SetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID,
+			       color_id - COLOR_FORMAT7_MIN)==DC1394_FAILURE)
+    return DC1394_FAILURE;
+  
+  return DC1394_SUCCESS;
+}   

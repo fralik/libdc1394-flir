@@ -87,6 +87,8 @@
 #define REG_CAMERA_ONE_SHOT            0x61CU
 #define REG_CAMERA_MEM_SAVE_CH         0x620U
 #define REG_CAMERA_CUR_MEM_CH          0x624U
+#define REG_CAMERA_SOFT_TRIGGER        0x62CU
+#define REG_CAMERA_DATA_DEPTH          0x630U
 
 #define REG_CAMERA_FEATURE_HI_BASE     0x800U
 #define REG_CAMERA_FEATURE_LO_BASE     0x880U
@@ -104,6 +106,9 @@
 #define REG_CAMERA_FOCUS               0x828U
 #define REG_CAMERA_TEMPERATURE         0x82CU
 #define REG_CAMERA_TRIGGER_MODE        0x830U
+#define REG_CAMERA_TRIGGER_DELAY       0x834U
+#define REG_CAMERA_WHITE_SHADING       0x838U
+#define REG_CAMERA_FRAME_RATE_FEATURE  0x83CU
 #define REG_CAMERA_ZOOM                0x880U
 #define REG_CAMERA_PAN                 0x884U
 #define REG_CAMERA_TILT                0x888U
@@ -199,41 +204,41 @@ const char *dc1394_feature_desc[NUM_FEATURES] =
   are in a packet given a mode and a frame rate
   This is defined in the 1394 digital camera spec 
 */
-const int quadlets_per_packet_format_0[42] = 
+const int quadlets_per_packet_format_0[56] = 
 {
-     -1,  -1,  15,  30,  60,  -1,
-     -1,  20,  40,  80, 160,  -1,
-     -1,  60, 120, 240, 480,  -1,
-     -1,  80, 160, 320, 640,  -1,
-     -1, 120, 240, 480, 960,  -1,
-     -1,  40,  80, 160, 320, 640,
-     -1,  80, 160, 320, 640,  -1
+  -1,  -1,  15,  30,  60,  120,  240,  480,
+  10,  20,  40,  80, 160,  320,  640, 1280,
+  30,  60, 120, 240, 480,  960, 1920, 3840,
+  40,  80, 160, 320, 640, 1280, 2560, 5120,
+  60, 120, 240, 480, 960, 1920, 3840, 7680,
+  20,  40,  80, 160, 320,  640, 1280, 2560,
+  40,  80, 160, 320, 640, 1280, 2560, 5120
 };
-
-const int quadlets_per_packet_format_1[48] = 
+ 
+const int quadlets_per_packet_format_1[64] = 
 {
-     -1, 125, 250, 500, 1000,   -1,
-     -1,  -1, 375, 750,   -1,   -1,
-     -1,  -1, 125, 250,  500, 1000,
-     96, 192, 384, 768,   -1,   -1,
-    144, 288, 576,  -1,   -1,   -1,
-     48,  96, 192, 384,  768,   -1,
-     -1, 125, 250, 500, 1000,   -1,
-     96, 192, 384, 768,   -1,   -1
+   -1, 125, 250,  500, 1000, 2000, 4000, 8000,
+   -1,  -1, 375,  750, 1500, 3000, 6000,   -1,
+   -1,  -1, 125,  250,  500, 1000, 2000, 4000,
+   96, 192, 384,  768, 1536, 3072, 6144,   -1,
+  144, 288, 576, 1152, 2304, 4608,   -1,   -1,
+   48,  96, 192,  384,  768, 1536, 3073, 6144,
+   -1, 125, 250,  500, 1000, 2000, 4000, 8000,
+   96, 192, 384,  768, 1536, 3072, 6144,   -1
 };
-
-const int quadlets_per_packet_format_2[48] = 
+ 
+const int quadlets_per_packet_format_2[56] = 
 {
-    160, 320,  640,   -1, -1, -1,
-    240, 480,  960,   -1, -1, -1,
-     80, 160,  320,  640, -1, -1,
-    250, 500, 1000,   -1, -1, -1,
-    375, 750,   -1,   -1, -1, -1,
-    125, 250,  500, 1000, -1, -1,
-    160, 320,  640,   -1, -1, -1,
-    250, 500, 1000,   -1, -1, -1
+  160, 320,  640, 1280, 2560, 5120,   -1,
+  240, 480,  960, 1920, 3840, 7680,   -1,
+   80, 160,  320,  640, 1280, 2560, 5120,
+  250, 500, 1000, 2000, 4000, 8000,   -1,
+  375, 750, 1500, 3000, 6000,   -1,   -1,
+  125, 250,  500, 1000, 2000, 4000, 8000,
+  160, 320,  640, 1280, 2560, 5120,   -1,
+  250, 500, 1000, 2000, 4000, 8000,   -1
 };
-  
+   
 
 /**********************/
 /* Internal functions */
@@ -1276,8 +1281,10 @@ dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
 
     if (dc1394_query_basic_functionality(handle,node,&value) != DC1394_SUCCESS)
         return DC1394_FAILURE;
-    else
+    else {
       info->mem_channel_number= (value & 0xF);
+      info->bmode_capable= (value & (0x1 << 22) >> 22);
+    }
 
     if (info->mem_channel_number>0) {
       if (dc1394_get_memory_load_ch(handle, node, &info->load_channel)
@@ -1396,6 +1403,9 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
         feature->trigger_mode= (int)((value >> 14) & 0xF);
         feature->auto_active= DC1394_FALSE;
 	break;
+    case FEATURE_TRIGGER_DELAY:
+        feature->one_push_active= DC1394_FALSE;
+	feature->auto_active=DC1394_FALSE;
     default:
         feature->one_push_active=
             (value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -1411,6 +1421,11 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
     case FEATURE_WHITE_BALANCE:
       feature->RV_value= value & 0xFFFUL;
       feature->BU_value= (value & 0xFFF000UL) >> 12;
+      break;
+    case FEATURE_WHITE_SHADING:
+      feature->R_value=value & 0xFFUL;
+      feature->G_value=(value & 0xFF00UL)>>8;
+      feature->B_value=(value & 0xFF0000UL)>>16;
       break;
     case FEATURE_TEMPERATURE:
       feature->value= value & 0xFFFUL;
@@ -1502,50 +1517,50 @@ dc1394_print_feature(dc1394_feature_info *f)
     {
         printf("min: %d max %d\n", f->min, f->max);
     }
-
-    if (fid == FEATURE_TRIGGER)
-    {
-        printf("\n\tAvailableTriggerModes: ");
-
-        if (f->trigger_mode_capable_mask & 0x08)
-            printf("0 ");
-        if (f->trigger_mode_capable_mask & 0x04)
-            printf("1 ");
-        if (f->trigger_mode_capable_mask & 0x02)
-            printf("2 ");
-        if (f->trigger_mode_capable_mask & 0x02)
-            printf("3 ");
-        if (!(f->trigger_mode_capable_mask & 0x0f))
-            printf("No modes available");
-
-        printf("\n\tPolarity Change Capable: ");
-
-        if (f->polarity_capable) 
-            printf("True");
-        else 
-            printf("False");
-
-        printf("\n\tCurrent Polarity: ");
-
-        if (f->trigger_polarity) 
-            printf("POS");
-        else 
-            printf("NEG");
-
-        printf("\n\tcurrent mode: %d\n", f->trigger_mode);
-    }
-    else if (fid == FEATURE_WHITE_BALANCE) 
-    {
-        printf("\tB/U value: %d R/V value: %d\n", f->BU_value, f->RV_value);
-    }
-    else if (fid == FEATURE_TEMPERATURE) 
-    {
-        printf("\tTarget temp: %d Current Temp: %d\n", f->target_value,
-               f->value);
-    }
-    else 
-    {
-        printf("\tcurrent value is: %d\n",f->value);
+    switch(fid) {
+    case FEATURE_TRIGGER:
+      printf("\n\tAvailableTriggerModes: ");
+      
+      if (f->trigger_mode_capable_mask & 0x08)
+	printf("0 ");
+      if (f->trigger_mode_capable_mask & 0x04)
+	printf("1 ");
+      if (f->trigger_mode_capable_mask & 0x02)
+	printf("2 ");
+      if (f->trigger_mode_capable_mask & 0x02)
+	printf("3 ");
+      if (!(f->trigger_mode_capable_mask & 0x0f))
+	printf("No modes available");
+      
+      printf("\n\tPolarity Change Capable: ");
+      
+      if (f->polarity_capable) 
+	printf("True");
+      else 
+	printf("False");
+      
+      printf("\n\tCurrent Polarity: ");
+      
+      if (f->trigger_polarity) 
+	printf("POS");
+      else 
+	printf("NEG");
+      
+      printf("\n\tcurrent mode: %d\n", f->trigger_mode);
+      break;
+    case FEATURE_WHITE_BALANCE: 
+      printf("\tB/U value: %d R/V value: %d\n", f->BU_value, f->RV_value);
+      break;
+    case FEATURE_TEMPERATURE:
+      printf("\tTarget temp: %d Current Temp: %d\n", f->target_value, f->value);
+      break;
+    case FEATURE_WHITE_SHADING: 
+      printf("\tR value: %d G value: %d B value: %d\n", f->R_value,
+	     f->G_value, f->B_value);
+      break;
+    default:
+      printf("\tcurrent value is: %d\n",f->value);
+      break;
     }
     if (f->absolute_capable)
       printf("\tabsolute settings:\n\t value: %f\n\t min: %f\n\t max: %f\n",
@@ -1856,14 +1871,27 @@ int
 dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
                                  unsigned int *channel, unsigned int *speed)
 {
-    quadlet_t value;
+    quadlet_t value_inq, value;
     int retval;
     
+    retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ,
+				     &value_inq);
     retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
 				     &value);
-    
-    *channel= (unsigned int)((value >> 28) & 0xFUL);
-    *speed= (unsigned int)((value >> 24) & 0x3UL);
+    if (value_inq & 0x00800000) { // check if 1394b is available
+      if (value & 0x00800000) { //check if we are now using 1394b
+	*channel= (unsigned int)((value >> 8) & 0x3FUL);
+	*speed= (unsigned int)(value& 0x7UL);
+      }
+      else { // fallback to legacy
+	*channel= (unsigned int)((value >> 28) & 0xFUL);
+	*speed= (unsigned int)((value >> 24) & 0x3UL);
+      }
+    }
+    else { // legacy
+      *channel= (unsigned int)((value >> 28) & 0xFUL);
+      *speed= (unsigned int)((value >> 24) & 0x3UL);
+    }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
@@ -1872,12 +1900,65 @@ int
 dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
                                  unsigned int channel, unsigned int speed)
 {
+  quadlet_t value_inq, value;
   int retval;
-  retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
-				   (quadlet_t) (((channel & 0xFUL) << 28) |
-						((speed & 0x3UL) << 24) ));
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ,
+				   &value_inq);
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
+				   &value);
+  if ((value_inq & 0x00800000)&&(value & 0x00800000)) {
+    // check if 1394b is available and if we are now using 1394b
+    retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
+				     (quadlet_t) ( ((channel & 0x3FUL) << 8) |
+						   (speed & 0x7UL) |
+						   (0x1 << 15) ));
+  }
+  else { // fallback to legacy
+    if (speed>SPEED_400)
+      return DC1394_FAILURE;
+    retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
+				     (quadlet_t) (((channel & 0xFUL) << 28) |
+						  ((speed & 0x3UL) << 24) ));
+  }
+  
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
+
+int
+dc1394_get_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int *mode)
+{
+  quadlet_t value;
+  if (GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value)==DC1394_FAILURE)
+    return DC1394_FAILURE;
+
+  if (value & 0x00010000)
+    *mode = OPERATION_MODE_1394B;
+  else
+    *mode = OPERATION_MODE_LEGACY;
+
+  return DC1394_SUCCESS;
+}
+
+int
+dc1394_set_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int mode)
+{
+  quadlet_t value;
+
+  if (GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value)==DC1394_FAILURE)
+    return DC1394_FAILURE;
+
+  if (mode==OPERATION_MODE_LEGACY)
+    value=(value&0xFFFEFFFF);
+  else
+    value=(value | 0x0001000);
+
+  if (SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, value)==DC1394_FAILURE)
+    return DC1394_FAILURE;
+
+  return DC1394_SUCCESS;
+}
+
 
 int
 dc1394_camera_on(raw1394handle_t handle, nodeid_t node)
@@ -2118,35 +2199,35 @@ int
 dc1394_set_gain(raw1394handle_t handle, nodeid_t node,
                 unsigned int gain)
 {
-    return SetFeatureValue(handle, node, FEATURE_GAIN, gain);
+  return SetFeatureValue(handle, node, FEATURE_GAIN, gain);
 }
 
 int
 dc1394_get_iris(raw1394handle_t handle, nodeid_t node,
                 unsigned int *iris)
 {
-    return GetFeatureValue(handle, node, FEATURE_IRIS, iris);
+  return GetFeatureValue(handle, node, FEATURE_IRIS, iris);
 }
 
 int
 dc1394_set_iris(raw1394handle_t handle, nodeid_t node,
                 unsigned int iris)
 {
-    return SetFeatureValue(handle, node, FEATURE_IRIS, iris);
+  return SetFeatureValue(handle, node, FEATURE_IRIS, iris);
 }
 
 int
 dc1394_get_focus(raw1394handle_t handle, nodeid_t node,
                  unsigned int *focus)
 {
-    return GetFeatureValue(handle, node, FEATURE_FOCUS, focus);
+  return GetFeatureValue(handle, node, FEATURE_FOCUS, focus);
 }
 
 int
 dc1394_set_focus(raw1394handle_t handle, nodeid_t node,
                  unsigned int focus)
 {
-    return SetFeatureValue(handle, node, FEATURE_FOCUS, focus);
+  return SetFeatureValue(handle, node, FEATURE_FOCUS, focus);
 }
 
 int
@@ -2154,43 +2235,104 @@ dc1394_get_temperature(raw1394handle_t handle, nodeid_t node,
                        unsigned int *target_temperature,
                        unsigned int *temperature)
 {
-    quadlet_t value;
-    int retval= GetCameraControlRegister(handle, node,
-                                         REG_CAMERA_TEMPERATURE, &value);
-    *target_temperature= (unsigned int)((value >> 12) & 0xFFF);
-    *temperature= (unsigned int)(value & 0xFFFUL);
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+  quadlet_t value;
+  int retval= GetCameraControlRegister(handle, node,
+				       REG_CAMERA_TEMPERATURE, &value);
+  *target_temperature= (unsigned int)((value >> 12) & 0xFFF);
+  *temperature= (unsigned int)(value & 0xFFFUL);
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
 int
 dc1394_set_temperature(raw1394handle_t handle, nodeid_t node,
                        unsigned int target_temperature)
 {
-    int retval;
-    quadlet_t curval;
+  int retval;
+  quadlet_t curval;
+  
+  if (GetCameraControlRegister(handle, node, REG_CAMERA_TEMPERATURE,
+			       &curval) < 0) {
+    return DC1394_FAILURE;
+  }
+  
+  curval= (curval & 0xFF000FFFUL) | ((target_temperature & 0xFFFUL) << 12);
+  retval= SetCameraControlRegister(handle, node, REG_CAMERA_TEMPERATURE,
+				   curval);
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
 
-    if (GetCameraControlRegister(handle, node, REG_CAMERA_TEMPERATURE,
-                                 &curval) < 0)
-    {
-        return DC1394_FAILURE;
-    }
+int
+dc1394_get_white_shading(raw1394handle_t handle, nodeid_t node,
+                         unsigned int *r_value, unsigned int *g_value, unsigned int *b_value)
+{
+  quadlet_t value;
+  int retval= GetCameraControlRegister(handle, node,
+				       REG_CAMERA_WHITE_SHADING, &value);
+  
+  *r_value= (unsigned int)((value & 0xFF0000UL) >> 16);
+  *g_value= (unsigned int)((value & 0xFF00UL) >> 8);
+  *b_value= (unsigned int)(value & 0xFFUL);
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
 
-    curval= (curval & 0xFF000FFFUL) | ((target_temperature & 0xFFFUL) << 12);
-    retval= SetCameraControlRegister(handle, node, REG_CAMERA_TEMPERATURE,
-                                     curval);
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+int
+dc1394_set_white_shading(raw1394handle_t handle, nodeid_t node,
+			 unsigned int r_value, unsigned int g_value, unsigned int b_value)
+
+{
+  int retval;
+  quadlet_t curval;
+  
+  if (GetCameraControlRegister(handle, node, REG_CAMERA_WHITE_SHADING,
+			       &curval) < 0)
+    return DC1394_FAILURE;
+  
+  curval= (curval & 0xFF000000UL) | ( ((r_value & 0xFFUL) << 16) |
+				      ((g_value & 0xFFUL) << 8) |
+				      (b_value & 0xFFUL) );
+  retval= SetCameraControlRegister(handle, node, REG_CAMERA_WHITE_SHADING,
+				   curval);
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+
+int
+dc1394_get_trigger_delay(raw1394handle_t handle, nodeid_t node,
+			 unsigned int *trigger_delay)
+{
+  return GetFeatureValue(handle, node, FEATURE_TRIGGER_DELAY, trigger_delay);
+}
+
+int
+dc1394_set_trigger_delay(raw1394handle_t handle, nodeid_t node,
+			 unsigned int trigger_delay)
+{
+  return SetFeatureValue(handle, node, FEATURE_TRIGGER_DELAY, trigger_delay);
+}
+
+int
+dc1394_get_frame_rate(raw1394handle_t handle, nodeid_t node,
+		      unsigned int *frame_rate)
+{
+  return GetFeatureValue(handle, node, FEATURE_FRAME_RATE, frame_rate);
+}
+
+int
+dc1394_set_frame_rate(raw1394handle_t handle, nodeid_t node,
+		      unsigned int frame_rate)
+{
+  return SetFeatureValue(handle, node, FEATURE_FRAME_RATE, frame_rate);
 }
 
 int
 dc1394_get_trigger_mode(raw1394handle_t handle, nodeid_t node,
                         unsigned int *mode)
 {
-    quadlet_t value;
-    int retval= GetCameraControlRegister(handle, node,
-                                         REG_CAMERA_TRIGGER_MODE, &value);
-
-    *mode= (unsigned int)( ((value >> 16) & 0xFUL) ) + TRIGGER_MODE_MIN;
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+  quadlet_t value;
+  int retval= GetCameraControlRegister(handle, node,
+				       REG_CAMERA_TRIGGER_MODE, &value);
+  
+  *mode= (unsigned int)( ((value >> 16) & 0xFUL) ) + TRIGGER_MODE_MIN;
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
 int

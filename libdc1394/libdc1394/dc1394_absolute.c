@@ -103,7 +103,7 @@ GetCameraAbsoluteRegister(raw1394handle_t handle, nodeid_t node,
             int rcode= retval & 0xffff;
 
 #ifdef SHOW_ERRORS
-            printf("Format 7 reg read ack of %x rcode of %x\n", ack, rcode);
+            printf("Absolute reg read ack of %x rcode of %x\n", ack, rcode);
 #endif
 
             if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL)) &&
@@ -164,7 +164,7 @@ SetCameraAbsoluteRegister(raw1394handle_t handle, nodeid_t node,
             int rcode= retval & 0xffff;
 
 #ifdef SHOW_ERRORS
-            printf("Format 7 reg write ack of %x rcode of %x\n", ack, rcode);
+            printf("Absolute reg write ack of %x rcode of %x\n", ack, rcode);
 #endif
 
             if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL) ||

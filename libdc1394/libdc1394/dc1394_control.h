@@ -35,10 +35,13 @@ enum
 {
     SPEED_100= 0,
     SPEED_200,
-    SPEED_400
+    SPEED_400,
+    SPEED_800,
+    SPEED_1600,
+    SPEED_3200
 };
 #define SPEED_MIN                   SPEED_100
-#define SPEED_MAX                   SPEED_400
+#define SPEED_MAX                   SPEED_3200
 #define NUM_SPEEDS                  (SPEED_MAX - SPEED_MIN + 1)
 
 /* Enumeration of camera framerates */
@@ -49,10 +52,12 @@ enum
     FRAMERATE_7_5,
     FRAMERATE_15,
     FRAMERATE_30,
-    FRAMERATE_60
+    FRAMERATE_60,
+    FRAMERATE_120,
+    FRAMERATE_240
 };
 #define FRAMERATE_MIN               FRAMERATE_1_875
-#define FRAMERATE_MAX               FRAMERATE_60
+#define FRAMERATE_MAX               FRAMERATE_240
 #define NUM_FRAMERATES              (FRAMERATE_MAX - FRAMERATE_MIN + 1)
 
 /* Enumeration of camera modes for Format_0 */
@@ -135,10 +140,14 @@ enum {
     COLOR_FORMAT7_YUV444,
     COLOR_FORMAT7_RGB8,
     COLOR_FORMAT7_MONO16,
-    COLOR_FORMAT7_RGB16
+    COLOR_FORMAT7_RGB16,
+    COLOR_FORMAT7_MONO16S,
+    COLOR_FORMAT7_RGB16S,
+    COLOR_FORMAT7_RAW8,
+    COLOR_FORMAT7_RAW16
 };
 #define COLOR_FORMAT7_MIN           COLOR_FORMAT7_MONO8
-#define COLOR_FORMAT7_MAX           COLOR_FORMAT7_RGB16
+#define COLOR_FORMAT7_MAX           COLOR_FORMAT7_RAW16
 #define NUM_COLOR_FORMAT7           (COLOR_FORMAT7_MAX - COLOR_FORMAT7_MIN + 1)
 
 /* Enumeration of trigger modes */
@@ -181,7 +190,10 @@ enum
     FEATURE_FOCUS,
     FEATURE_TEMPERATURE,
     FEATURE_TRIGGER,
-    /* 19 reserved features */
+    FEATURE_TRIGGER_DELAY,
+    FEATURE_WHITE_SHADING,
+    FEATURE_FRAME_RATE,
+    /* 16 reserved features */
     FEATURE_ZOOM,
     FEATURE_PAN,
     FEATURE_TILT,
@@ -194,6 +206,13 @@ enum
 #define FEATURE_MIN                 FEATURE_BRIGHTNESS
 #define FEATURE_MAX                 FEATURE_CAPTURE_QUALITY
 #define NUM_FEATURES                (FEATURE_MAX - FEATURE_MIN + 1)
+
+/* Operation modes */
+enum 
+{
+  OPERATION_MODE_LEGACY = 480,
+  OPERATION_MODE_1394B
+};
 
 /* Maximum number of characters in vendor and model strings */
 #define MAX_CHARS                   32
@@ -272,6 +291,8 @@ typedef struct __dc1394_misc_info
   int save_channel;
   int load_channel;
 
+  dc1394bool_t bmode_capable;
+
 } dc1394_miscinfo;
 
 typedef struct __dc1394_feature_info_struct 
@@ -296,6 +317,9 @@ typedef struct __dc1394_feature_info_struct
     int value;
     int BU_value;
     int RV_value;
+    int B_value;
+    int R_value;
+    int G_value;
     int target_value;
 
     dc1394bool_t abs_control;
@@ -515,7 +539,13 @@ dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
                                  unsigned int channel, unsigned int speed);
-
+int
+dc1394_get_operation_mode(raw1394handle_t handle, nodeid_t node,
+			  unsigned int *mode);
+int
+dc1394_set_operation_mode(raw1394handle_t handle, nodeid_t node,
+			  unsigned int mode);
+ 
 
 /* Turn camera on or off */
 int
@@ -631,6 +661,30 @@ dc1394_get_temperature(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_set_temperature(raw1394handle_t handle, nodeid_t node,
                        unsigned int target_temperature);
+int
+dc1394_get_white_shading(raw1394handle_t handle, nodeid_t node,
+                         unsigned int *r_value, unsigned int *g_value,
+			 unsigned int *b_value);
+int
+dc1394_set_white_shading(raw1394handle_t handle, nodeid_t node,
+			 unsigned int r_value, unsigned int g_value,
+			 unsigned int b_value);
+int
+dc1394_get_trigger_delay(raw1394handle_t handle, nodeid_t node,
+			 unsigned int *trigger_delay);
+int
+dc1394_set_trigger_delay(raw1394handle_t handle, nodeid_t node,
+			 unsigned int trigger_delay);
+int
+dc1394_get_frame_rate(raw1394handle_t handle, nodeid_t node,
+		      unsigned int *frame_rate);
+int
+dc1394_set_frame_rate(raw1394handle_t handle, nodeid_t node,
+		      unsigned int frame_rate);
+  int
+dc1394_get_hue(raw1394handle_t handle, nodeid_t node,
+	       unsigned int *hue);
+
 int
 dc1394_get_trigger_mode(raw1394handle_t handle, nodeid_t node,
                         unsigned int *mode);
@@ -1111,6 +1165,25 @@ dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
 				   unsigned int mode,
 				   unsigned int *horizontal_pos,
 				   unsigned int *vertical_pos);
+int
+dc1394_query_format7_data_depth(raw1394handle_t handle, nodeid_t node,
+				unsigned int mode,
+				unsigned int *data_depth);
+
+int
+dc1394_query_format7_frame_interval(raw1394handle_t handle, nodeid_t node,
+				    unsigned int mode,
+				    float *interval);
+
+int
+dc1394_set_format7_color_filter_id(raw1394handle_t handle, nodeid_t node,
+				   unsigned int mode,
+				   unsigned int color_id);
+
+int
+dc1394_query_format7_color_filter_id(raw1394handle_t handle, nodeid_t node,
+				     unsigned int mode,
+				     unsigned int *color_id);
 
 /**********************************
  *   ABSOLUTE SETTING FUNCTIONS   *		     
