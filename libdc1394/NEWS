@@ -54,4 +54,4 @@ Version 0.9.0:
 - format7 enhancements (see ChangeLog)
 - added dma capture option to drop frames or attempt to return every
   frame.
-
+- added some format7 IIDC 1.30 compatibility -- needs testing
