@@ -935,7 +935,7 @@ dc1394_print_camera_info(dc1394_camerainfo *info)
     value[1]= (info->euid_64 >>32) & 0xffffffff;
     printf("CAMERA INFO\n===============\n");
     printf("Node: %x\n", info->id);
-    printf("CCR_Offset: %ux\n", info->ccr_offset);
+    printf("CCR_Offset: %llux\n", info->ccr_offset);
     printf("UID: 0x%08x%08x\n", value[1], value[0]);
     printf("Vendor: %s\tModel: %s\n\n", info->vendor, info->model);
     fflush(stdout);
