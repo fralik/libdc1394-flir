@@ -567,18 +567,17 @@ int
 dc1394_set_video_format(raw1394handle_t handle, nodeid_t node,
                         unsigned int format);
 int
-dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
-                                 unsigned int *channel, unsigned int *speed);
-int
-dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
-                                 unsigned int channel, unsigned int speed);
-int
 dc1394_get_operation_mode(raw1394handle_t handle, nodeid_t node,
 			  unsigned int *mode);
 int
 dc1394_set_operation_mode(raw1394handle_t handle, nodeid_t node,
 			  unsigned int mode);
- 
+int
+dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
+                                 unsigned int *channel, unsigned int *speed);
+int
+dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
+                                 unsigned int channel, unsigned int speed);
 
 /* Turn camera on or off */
 int

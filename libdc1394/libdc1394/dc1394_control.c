@@ -1950,6 +1950,55 @@ dc1394_set_video_format(raw1394handle_t handle, nodeid_t node,
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
+
+int
+dc1394_get_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int *mode)
+{
+  quadlet_t value_inq, value;
+  int retval;
+  
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
+  
+  if (value_inq & 0x00800000) {
+    *mode=((value & 0x00008000) >0);
+  }
+  else {
+    *mode=OPERATION_MODE_LEGACY;
+  }
+  
+  return retval;
+}
+
+
+int
+dc1394_set_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int mode)
+{
+  quadlet_t value_inq, value;
+  int retval;
+  
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
+
+  if (mode==OPERATION_MODE_LEGACY) {
+    retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
+				     (quadlet_t) (value & 0xFFFF7FFF));
+  }
+  else { // 1394b
+    if (value_inq & 0x00800000) { // if 1394b available
+      retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
+				       (quadlet_t) (value | 0x00008000));
+    }
+    else { // 1394b asked, but it is not available
+      return DC1394_FAILURE;
+    }
+  }
+
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+  
+}
+
+
 int
 dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
                                  unsigned int *channel, unsigned int *speed)
@@ -1957,10 +2006,9 @@ dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
     quadlet_t value_inq, value;
     int retval;
     
-    retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ,
-				     &value_inq);
-    retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
-				     &value);
+    retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+    retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
+
     if (value_inq & 0x00800000) { // check if 1394b is available
       if (value & 0x00800000) { //check if we are now using 1394b
 	*channel= (unsigned int)((value >> 8) & 0x3FUL);
@@ -1986,10 +2034,8 @@ dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
   quadlet_t value_inq, value;
   int retval;
 
-  retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ,
-				   &value_inq);
-  retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
-				   &value);
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
   if ((value_inq & 0x00800000)&&(value & 0x00800000)) {
     // check if 1394b is available and if we are now using 1394b
     retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
@@ -2007,7 +2053,7 @@ dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
   
   return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
-
+/*
 int
 dc1394_get_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int *mode)
 {
@@ -2041,7 +2087,7 @@ dc1394_set_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int mo
 
   return DC1394_SUCCESS;
 }
-
+*/
 
 int
 dc1394_camera_on(raw1394handle_t handle, nodeid_t node)

@@ -497,3 +497,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-11-12 Damien <ddouxchamps@users.sf.net>
     * update for previous fix: use NUM_FRAMERATES
 	
+2005-01-26 Damien <ddouxchamps@users.sf.net>
+    * update the get/set_operation_mode functions.
+	
