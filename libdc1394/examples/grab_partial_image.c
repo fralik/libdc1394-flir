@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4  2003/09/02 23:42:36  ddennedy
+**  cleanup handle destroying in examples; fix dc1394_multiview to use handle per camera; new example
+**
 **  Revision 1.3  2003/07/02 14:16:20  ddouxchamps
 **  changed total_bytes to unsigned long long int in dc1394_query_format7_total_bytes.
 **
@@ -76,7 +79,7 @@ int main(int argc, char *argv[])
   if (numCameras<1)
   {
     fprintf( stderr, "no cameras found :(\n");
-    raw1394_destroy_handle(handle);
+    dc1394_destroy_handle(handle);
     exit(1);
   }
   printf("working with the first camera on the bus\n");
@@ -110,6 +113,7 @@ int main(int argc, char *argv[])
              "for more information see the FAQ at \n"
              "http://linux1394.sourceforge.net/faq.html#DCbusmgmt\n"
              "\n");
+    dc1394_destroy_handle(handle);
     exit( 1);
   }
   
@@ -130,7 +134,7 @@ int main(int argc, char *argv[])
              "that the video mode,framerate and format are\n"
              "supported by your camera\n",
              __LINE__,__FILE__);
-    raw1394_destroy_handle(handle);
+    dc1394_destroy_handle(handle);
     exit(1);
   }
 
@@ -140,7 +144,7 @@ int main(int argc, char *argv[])
   {
     fprintf( stderr, "unable to set camera trigger mode\n");
     dc1394_release_camera(handle,&camera);
-    raw1394_destroy_handle(handle);
+    dc1394_destroy_handle(handle);
     exit(1);
   }
   
@@ -184,7 +188,7 @@ int main(int argc, char *argv[])
   {
     fprintf( stderr, "unable to start camera iso transmission\n");
     dc1394_release_camera(handle,&camera);
-    raw1394_destroy_handle(handle);
+    dc1394_destroy_handle(handle);
     exit(1);
   }
 
@@ -202,7 +206,7 @@ int main(int argc, char *argv[])
     {
       fprintf( stderr, "unable to capture a frame\n");
       dc1394_release_camera(handle,&camera);
-      raw1394_destroy_handle(handle);
+      dc1394_destroy_handle(handle);
       exit(1);
     }
 
@@ -241,6 +245,6 @@ int main(int argc, char *argv[])
    *  Close camera
    *-----------------------------------------------------------------------*/
   dc1394_release_camera(handle,&camera);
-  raw1394_destroy_handle(handle);
+  dc1394_destroy_handle(handle);
   return 0;
 }

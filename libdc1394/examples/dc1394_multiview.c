@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5  2003/09/02 23:42:36  ddennedy
+**  cleanup handle destroying in examples; fix dc1394_multiview to use handle per camera; new example
+**
 **  Revision 1.4  2002/07/27 21:24:51  ddennedy
 **  just increase buffers some to reduce chance of hangs
 **
@@ -52,7 +55,7 @@
 
 /* uncomment the following to drop frames to prevent delays */
 #define DROP_FRAMES 1
-#define MAX_PORTS 3
+#define MAX_PORTS   4
 #define MAX_CAMERAS 8
 #define NUM_BUFFERS 8
 
@@ -72,7 +75,7 @@
 
 /* declarations for libdc1394 */
 int numPorts = MAX_PORTS;
-raw1394handle_t handles[MAX_PORTS];
+raw1394handle_t handles[MAX_CAMERAS];
 int numCameras = 0;
 dc1394_cameracapture cameras[MAX_CAMERAS];
 nodeid_t *camera_nodes;
@@ -307,11 +310,10 @@ void cleanup(void) {
 	int i;
 	for (i=0; i < numCameras; i++)
 	{
-		dc1394_dma_unlisten( handles[cameras[i].port], &cameras[i] );
-		dc1394_dma_release_camera( handles[cameras[i].port], &cameras[i]);
+		dc1394_dma_unlisten( handles[i], &cameras[i] );
+		dc1394_dma_release_camera( handles[i], &cameras[i]);
+		dc1394_destroy_handle(handles[i]);
 	}
-	for (i=0; i < numPorts; i++)
-		raw1394_destroy_handle(handles[i]);
 	if ((void *)window != NULL)
 		XUnmapWindow(display,window);
 	if (display != NULL)
@@ -387,8 +389,8 @@ int main(int argc,char *argv[])
 	{
 		int camCount;
 		
-		handles[p] = dc1394_create_handle(p);
-		if (handles[p]==NULL) {
+		handles[numCameras] = dc1394_create_handle(p);
+		if (handles[numCameras]==NULL) {
 			perror("Unable to aquire a raw1394 handle\n");
 			perror("did you load the drivers?\n");
 			cleanup();
@@ -396,21 +398,21 @@ int main(int argc,char *argv[])
 		}
 
 		/* get the camera nodes and describe them as we find them */
-		camera_nodes = dc1394_get_camera_nodes(handles[p], &camCount, 1);
+		camera_nodes = dc1394_get_camera_nodes(handles[numCameras], &camCount, 1);
 
 		/* setup cameras for capture */
 		for (i = 0; i < camCount; i++)
 		{	
 			cameras[numCameras].node = camera_nodes[i];
 		
-			if(dc1394_get_camera_feature_set(handles[p], cameras[numCameras].node, &features) !=DC1394_SUCCESS) 
+			if(dc1394_get_camera_feature_set(handles[numCameras], cameras[numCameras].node, &features) !=DC1394_SUCCESS) 
 			{
 				printf("unable to get feature set\n");
 			} else {
 				dc1394_print_feature_set(&features);
 			}
 		
-			if (dc1394_get_iso_channel_and_speed(handles[p], cameras[numCameras].node,
+			if (dc1394_get_iso_channel_and_speed(handles[numCameras], cameras[numCameras].node,
 										 &channel, &speed) != DC1394_SUCCESS) 
 			{
 				printf("unable to get the iso channel number\n");
@@ -418,7 +420,7 @@ int main(int argc,char *argv[])
 				exit(-1);
 			}
 			 
-			if (dc1394_dma_setup_capture(handles[p], cameras[numCameras].node, i+1 /*channel*/,
+			if (dc1394_dma_setup_capture(handles[numCameras], cameras[numCameras].node, i+1 /*channel*/,
 									FORMAT_VGA_NONCOMPRESSED, res,
 									SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
 									device_name, &cameras[numCameras]) != DC1394_SUCCESS) 
@@ -433,7 +435,7 @@ int main(int argc,char *argv[])
 		
 		
 			/*have the camera start sending us data*/
-			if (dc1394_start_iso_transmission(handles[p], cameras[numCameras].node) !=DC1394_SUCCESS) 
+			if (dc1394_start_iso_transmission(handles[numCameras], cameras[numCameras].node) !=DC1394_SUCCESS) 
 			{
 				perror("unable to start camera iso transmission\n");
 				cleanup();
@@ -538,27 +540,27 @@ int main(int argc,char *argv[])
 						case XK_1:
 							fps =	FRAMERATE_1_875; 
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[cameras[i].port], cameras[i].node, fps);
+								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
 							break;
 						case XK_2:
 							fps =	FRAMERATE_3_75; 
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[cameras[i].port], cameras[i].node, fps);
+								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
 							break;
 						case XK_4:
 							fps = FRAMERATE_15; 
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[cameras[i].port], cameras[i].node, fps);
+								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
 							break;
 						case XK_5: 
 							fps = FRAMERATE_30;
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[cameras[i].port], cameras[i].node, fps);
+								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
 							break;
 						case XK_3:
 							fps = FRAMERATE_7_5; 
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[cameras[i].port], cameras[i].node, fps);
+								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
 							break;
 						}
 					break;

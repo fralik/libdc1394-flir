@@ -291,7 +291,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed bytes_per_packet setting in _dc1394_basic_format7_setup
     * cancelled the previous commit (18/7/2003): it was a mistake.
 
-2003-08-12  dan <dan@dennedy.org>
+2003-08-12  Dan Dennedy <dan@dennedy.org>
    * dc1394_control.c: make config ROM reading more generic,
      remove tab indenting to make consistent
    * configure.in: incrmement lib revision
@@ -300,7 +300,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	* dc1394_control.c: cleanup config ROM code; fix for Point
 	        Grey cameras
 
-2003-08-20  dan <dan@dennedy.org>
+2003-08-20  Dan Dennedy <dan@dennedy.org>
     * use command register base from config rom offset instead of hardcoded
     * make raw1394 userdata point to a new dc1394_camerahandle struct 
       containing port, software version, and command register base
@@ -311,4 +311,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       dc1394_is_feature_present. dc1394_query_feature_control is deprecated
       and has been commented out. 
 
-	
+2003-09-02  Dan Dennedy <dan@dennedy.org>
+    * examples/*.c: call dc1394_destroy_handle() to cleanup mem and show
+      proper technique
+    * examples/dc1394_multiview.c: show new proper technique of multi-capture by
+      creating a handle for each camera as opposed to port.
+    * examples/gray_color_image.c: new example similar to grab_gray_image, but
+      also contains example code how to locate first camera on any port and 
+      attempt to make the camera non-root.
