@@ -205,6 +205,7 @@ enum
 /* Parameter flags for dc1394_setup_format7_capture() */
 #define QUERY_FROM_CAMERA -1
 #define USE_MAX_AVAIL     -2
+#define USE_RECOMMENDED   -3
 
 /* Yet another boolean data type */
 typedef enum
@@ -1029,6 +1030,38 @@ int
 dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
 				   unsigned int mode,
                                    unsigned int packet_bytes);
+
+int
+dc1394_query_format7_value_setting(raw1394handle_t handle, nodeid_t node,
+				   unsigned int mode,
+				   unsigned int *present,
+				   unsigned int *setting1,
+				   unsigned int *err_flag1,
+				   unsigned int *err_flag2);
+int
+dc1394_set_format7_value_setting(raw1394handle_t handle, nodeid_t node,
+				 unsigned int mode);
+
+int
+dc1394_query_format7_recommended_byte_per_packet(raw1394handle_t handle, nodeid_t node,
+						  unsigned int mode,
+						  unsigned int *bpp);
+
+int
+dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
+				      unsigned int mode,
+				      unsigned int *ppf);
+
+int
+dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
+				      unsigned int mode,
+				      unsigned int *ppf);
+
+int
+dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
+				   unsigned int mode,
+				   unsigned int *horizontal_pos,
+				   unsigned int *vertical_pos);
 #ifdef __cplusplus
 }
 #endif

@@ -1,22 +1,22 @@
 /*
-  * 1394-Based Digital Camera Format_7 functions for the Control Library
-  *
-  * Written by Damien Douxchamps <douxchamps@ieee.org>
-  *
-  * This library is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU Lesser General Public
-  * License as published by the Free Software Foundation; either
-  * version 2.1 of the License, or (at your option) any later version.
-  *
-  * This library is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this library; if not, write to the Free Software
-  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  */
+ * 1394-Based Digital Camera Format_7 functions for the Control Library
+ *
+ * Written by Damien Douxchamps <douxchamps@ieee.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 #include <unistd.h>
 #include <netinet/in.h>
 #include <errno.h>
@@ -26,19 +26,22 @@
 #include "dc1394_internal.h"
 #include "config.h"
 
-#define REG_CAMERA_V_CSR_INQ_BASE              0x2E0U
+#define REG_CAMERA_V_CSR_INQ_BASE                        0x2E0U
 
-#define REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ  0x000U
-#define REG_CAMERA_FORMAT7_UNIT_SIZE_INQ       0x004U
-#define REG_CAMERA_FORMAT7_IMAGE_POSITION      0x008U
-#define REG_CAMERA_FORMAT7_IMAGE_SIZE          0x00CU
-#define REG_CAMERA_FORMAT7_COLOR_CODING_ID     0x010U
-#define REG_CAMERA_FORMAT7_COLOR_CODING_INQ    0x014U
-#define REG_CAMERA_FORMAT7_PIXEL_NUMBER_INQ    0x034U
-#define REG_CAMERA_FORMAT7_TOTAL_BYTES_HI_INQ  0x038U
-#define REG_CAMERA_FORMAT7_TOTAL_BYTES_LO_INQ  0x03CU
-#define REG_CAMERA_FORMAT7_PACKET_PARA_INQ     0x040U
-#define REG_CAMERA_FORMAT7_BYTE_PER_PACKET     0x044U
+#define REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ            0x000U
+#define REG_CAMERA_FORMAT7_UNIT_SIZE_INQ                 0x004U
+#define REG_CAMERA_FORMAT7_IMAGE_POSITION                0x008U
+#define REG_CAMERA_FORMAT7_IMAGE_SIZE                    0x00CU
+#define REG_CAMERA_FORMAT7_COLOR_CODING_ID               0x010U
+#define REG_CAMERA_FORMAT7_COLOR_CODING_INQ              0x014U
+#define REG_CAMERA_FORMAT7_PIXEL_NUMBER_INQ              0x034U
+#define REG_CAMERA_FORMAT7_TOTAL_BYTES_HI_INQ            0x038U
+#define REG_CAMERA_FORMAT7_TOTAL_BYTES_LO_INQ            0x03CU
+#define REG_CAMERA_FORMAT7_PACKET_PARA_INQ               0x040U
+#define REG_CAMERA_FORMAT7_BYTE_PER_PACKET               0x044U
+#define REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ          0x048U
+#define REG_CAMERA_FORMAT7_UNIT_POSITION_INQ             0x04CU
+#define REG_CAMERA_FORMAT7_VALUE_SETTING                 0x07CU
 
 /**********************/ 
 /* Internal functions */
@@ -196,6 +199,9 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   dc1394bool_t is_iso_on= DC1394_FALSE;
   unsigned int min_bytes, max_bytes;
   unsigned packet_bytes=0;
+  unsigned int v130handshake, setting_1, err_flag1, err_flag2;
+  unsigned int exit_loop;
+  unsigned int recom_bpp;
 
   if (dc1394_get_iso_status(handle, node, &is_iso_on) != DC1394_SUCCESS)
       return DC1394_FAILURE;
@@ -267,10 +273,10 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     if (dc1394_query_format7_image_size(handle, node, mode,
                                             &camera_width, &camera_height)
         != DC1394_SUCCESS)
-    {
-      printf("(%s) Unable to query image size\n", __FILE__);
-      return DC1394_FAILURE;
-    }
+      {
+	printf("(%s) Unable to query image size\n", __FILE__);
+	return DC1394_FAILURE;
+      }
     
     if( width == QUERY_FROM_CAMERA)   width  = camera_width;
     else if( width == USE_MAX_AVAIL)  width  = camera_width - left;
@@ -279,46 +285,117 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     
   }
   if (dc1394_set_format7_image_size(handle, node, mode, width, height) != DC1394_SUCCESS)
-  {
-    printf("(%s) Unable to set format 7 image size to "
-           "width=%d and height=%d!\n", __FILE__, width, height);
-    return DC1394_FAILURE;
-  }
-
-  if (dc1394_query_format7_packet_para(handle, node, mode, &min_bytes, &max_bytes) != DC1394_SUCCESS) /* PACKET_PARA_INQ */
-  {
-    printf("Packet para inq error\n");
-    return DC1394_FAILURE;
-  }
-    
-  /*-----------------------------------------------------------------------
-   *  if -1 is given for bytes_per_packet, use maximum allowed packet
-   *  size. if given bytes_per_packet exceeds allowed range, correct it 
-   *-----------------------------------------------------------------------*/
-  if( bytes_per_packet == USE_MAX_AVAIL)
-  {
-    bytes_per_packet = max_bytes;
-  }
-  else if (bytes_per_packet > max_bytes)
-  {
-    bytes_per_packet = max_bytes;
-  }
-  else if (bytes_per_packet < min_bytes)
-  {
-    bytes_per_packet = min_bytes;
-  }
-
-  /*
-   * TODO: bytes_per_packet must be full quadlet
-   */
-  //printf( "Trying to set bytes per packet to %d\n",  bytes_per_packet);
+    {
+      printf("(%s) Unable to set format 7 image size to "
+	     "width=%d and height=%d!\n", __FILE__, width, height);
+      return DC1394_FAILURE;
+    }
   
-  if (dc1394_set_format7_byte_per_packet(handle, node, mode, bytes_per_packet) != DC1394_SUCCESS)
-  {
-    printf("(%s) Unable to set format 7 bytes per packet %d \n", __FILE__, mode);
-    return DC1394_FAILURE;
-  }
+  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					 &setting_1, &err_flag1, &err_flag2)
+      != DC1394_SUCCESS)
+    {
+      printf("(%s) Unable to read value setting register.\n", __FILE__);
+      return DC1394_FAILURE;
+    }
   
+  if (v130handshake==1)
+    {
+      // we should use advanced IIDC v1.30 handshaking.
+
+      // set value setting to 1
+      if (dc1394_set_format7_value_setting(handle, node, mode) != DC1394_SUCCESS)
+	{
+	  printf("(%s) Unable to set value setting register.\n", __FILE__);
+	  return DC1394_FAILURE;
+	}
+      // wait for value setting to clear:
+      exit_loop=0;
+      while (!exit_loop)// WARNING: there is no timeout in this loop yet.
+	{
+	  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					 &setting_1, &err_flag1, &err_flag2)
+	      != DC1394_SUCCESS)
+	    {
+	      printf("(%s) Unable to read value setting register.\n", __FILE__);
+	      return DC1394_FAILURE;
+	    }
+	  exit_loop=(setting_1==1);
+	  usleep(0); 
+	}
+      if (err_flag1>0)
+	{
+	  printf("(%s) Invalid image position/size-color coding-ISO speed\n", __FILE__);
+	  return DC1394_FAILURE;
+	}
+	
+      // bytes per packet... registers are ready for reading.
+    }
+
+  if (dc1394_query_format7_recommended_byte_per_packet(handle, node, mode, &recom_bpp) != DC1394_SUCCESS)
+    {
+      printf("Recommended byte-per-packet inq error\n");
+      return DC1394_FAILURE;
+    }
+
+  if (bytes_per_packet == USE_RECOMMENDED)
+    {
+      if (bytes_per_packet>0)
+	{
+	  if (dc1394_set_format7_byte_per_packet(handle, node, mode, recom_bpp) != DC1394_SUCCESS)
+	    {
+	      printf("(%s) Unable to set format 7 bytes per packet to recommended for mode %d \n", __FILE__, mode);
+	      return DC1394_FAILURE;
+	    }
+	}
+      else
+	{
+	  // recom. bpp asked, but register is 0. IGNORED
+	  printf("(%s) Recommended bytes per packet asked, but register is zero. Falling back to MAX BPP for mode %d \n", 
+		 __FILE__, mode);
+	  bytes_per_packet=USE_MAX_AVAIL;
+	}
+    }
+  if (bytes_per_packet > USE_RECOMMENDED) // max avail, or user setup
+    {
+      if (dc1394_query_format7_packet_para(handle, node, mode, &min_bytes, &max_bytes) != DC1394_SUCCESS) /* PACKET_PARA_INQ */
+	{
+	  printf("Packet para inq error\n");
+	  return DC1394_FAILURE;
+	}
+      
+      /*-----------------------------------------------------------------------
+       *  if -1 is given for bytes_per_packet, use maximum allowed packet
+       *  size. if given bytes_per_packet exceeds allowed range, correct it 
+       *-----------------------------------------------------------------------*/
+      if( bytes_per_packet == USE_MAX_AVAIL)
+	{
+	  bytes_per_packet = max_bytes;
+	}
+      else
+	if (bytes_per_packet > max_bytes)
+	  {
+	    bytes_per_packet = max_bytes;
+	  }
+	else
+	  if (bytes_per_packet < min_bytes)
+	    {
+	      bytes_per_packet = min_bytes;
+	    }
+
+      /*
+       * TODO: bytes_per_packet must be full quadlet
+       */
+      //printf( "Trying to set bytes per packet to %d\n",  bytes_per_packet);
+      
+      if (dc1394_set_format7_byte_per_packet(handle, node, mode, bytes_per_packet) != DC1394_SUCCESS)
+	{
+	  printf("(%s) Unable to set format 7 bytes per packet %d \n", __FILE__, mode);
+	  return DC1394_FAILURE;
+	}
+    }
+
+
   if (dc1394_query_format7_byte_per_packet(handle, node, mode, &packet_bytes) == DC1394_SUCCESS)
   {
     camera->quadlets_per_packet= packet_bytes /4;
@@ -745,5 +822,117 @@ dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
                                          (quadlet_t)(packet_bytes) << 16 );
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+
+int
+dc1394_query_format7_value_setting(raw1394handle_t handle, nodeid_t node,
+				   unsigned int mode,
+				   unsigned int *present,
+				   unsigned int *setting1,
+				   unsigned int *err_flag1,
+				   unsigned int *err_flag2)
+{
+    int retval;
+    quadlet_t value;
+   
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    {
+        return DC1394_FAILURE;
+    }
+    else
+    {
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_VALUE_SETTING,
+                                         &value);
+        *present= (unsigned int) ( value & 0x80000000UL ) >> 31;
+        *setting1= (unsigned int) ( value & 0x40000000UL ) >> 30;
+        *err_flag1= (unsigned int) ( value & 0x00800000UL ) >> 23;
+        *err_flag2= (unsigned int) ( value & 0x00400000UL ) >> 22;
+    }
+
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+
+int
+dc1394_set_format7_value_setting(raw1394handle_t handle, nodeid_t node,
+				 unsigned int mode)
+{
+    int retval;
+
+    retval= SetCameraFormat7Register(handle, node, mode,
+                                     REG_CAMERA_FORMAT7_VALUE_SETTING,
+                                     (quadlet_t)0x40000000UL);
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+ 
+int
+dc1394_query_format7_recommended_byte_per_packet(raw1394handle_t handle, nodeid_t node,
+						  unsigned int mode,
+						  unsigned int *bpp)
+{
+    int retval;
+    quadlet_t value;
+   
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    {
+        return DC1394_FAILURE;
+    }
+    else
+    {
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
+                                         &value);
+        *bpp= (unsigned int) ( value & 0x0000FFFFUL );
+    }
+
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+
+int
+dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
+				      unsigned int mode,
+				      unsigned int *ppf)
+{
+    int retval;
+    quadlet_t value;
+   
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    {
+        return DC1394_FAILURE;
+    }
+    else
+    {
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ,
+                                         &value);
+        *ppf= (unsigned int) (value);
+    }
+
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+
+int
+dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
+				   unsigned int mode,
+				   unsigned int *horizontal_pos,
+				   unsigned int *vertical_pos)
+{
+    int retval;
+    quadlet_t value;
+   
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    {
+        return DC1394_FAILURE;
+    }
+    else
+    {
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_UNIT_POSITION_INQ,
+                                         &value);
+        *horizontal_pos= (unsigned int) ( value & 0xFFFF0000UL );
+        *vertical_pos= (unsigned int) ( value & 0x0000FFFFUL );
+    }
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }

@@ -226,3 +226,7 @@ Fri July 28 00:26:00 2002 <dan@dennedy.org>
 	    age=0 for no backwards compatibilty
     * examples/dc1394_multicapture: added drop_frames support, cleanup.
 
+Wed Aug  7 17:08:31 2002 <ddouxchamps@users.sf.net>
+    * added several format7 functions for IIDC 1.30 compatibility.
+    * first quick hack of IIDC 1.30 handshaking for byte-per-packet
+      setting in format7. This happens in _dc1394_basic_format7_setup.
