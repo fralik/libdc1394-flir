@@ -80,7 +80,7 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
 #ifdef LIBRAW1394_OLD
     if ( (data[0] & 0x1) && (_dc1394_frame_captured[channel] != 1) )
 #else
-    if ( (data[0] & 0x01000000UL) && (_dc1394_frame_captured[channel] != 1) )
+    if ( (ntohl(data[0]) & 0x01000000UL) && (_dc1394_frame_captured[channel] != 1) )
 #endif
 
     {

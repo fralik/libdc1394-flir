@@ -450,3 +450,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * remove duplicate "cams[i].dma_last_buffer = last_buffer_orig;" in
       dc1394_capture.c
     * moved declarations to the beginning of functions.
+	
+2004-02-16 Damien <ddouxchamps@users.sf.net>
+    * fixed an endianess issue. Thanks to Tim Canham for spotting this bug.
