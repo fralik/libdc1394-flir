@@ -556,9 +556,10 @@ dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
  
 int
 dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
- 				     unsigned int mode, quadlet_t *value)
+ 				     unsigned int mode, unsigned int *color_id)
 {
     int retval;
+    quadlet_t value;
    
     if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
@@ -568,8 +569,9 @@ dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
     {
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_COLOR_CODING_ID,
-                                         value);
-        if (!retval) value+= COLOR_FORMAT7_MIN;
+                                         &value);
+	value=value>>24;
+        if (!retval) *color_id= (unsigned int)value+COLOR_FORMAT7_MIN;
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);

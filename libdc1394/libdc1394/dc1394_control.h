@@ -971,7 +971,7 @@ dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
 
 int
 dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
-				     unsigned int mode, quadlet_t *value);
+				     unsigned int mode, unsigned int *color_id);
 
 int
 dc1394_query_format7_color_coding(raw1394handle_t handle, nodeid_t node,
