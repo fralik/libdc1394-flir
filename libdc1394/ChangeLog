@@ -319,3 +319,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * examples/gray_color_image.c: new example similar to grab_gray_image, but
       also contains example code how to locate first camera on any port and 
       attempt to make the camera non-root.
+
+2003-09-15 Damien <ddouxchamps@users.sf.net>
+    * fixed format7 capture setting when the current size register is initialized
+      to zero at the camera boot.

@@ -401,9 +401,20 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       return DC1394_FAILURE;
     }
     
-    if (width == QUERY_FROM_CAMERA)   width  = camera_width;
-    if (height == QUERY_FROM_CAMERA)  height = camera_height;
-    
+    /* Idea from Ralf Ebeling: we should check if the image sizes are > 0.
+       If == 0, we use the maximum size available */
+    if (width == QUERY_FROM_CAMERA) {
+      if (camera_width>0)
+	width = camera_width;
+      else
+	width = USE_MAX_AVAIL;
+    }
+    if (height == QUERY_FROM_CAMERA)) {
+      if (camera_height>0)
+	height = camera_height;
+      else
+	height = USE_MAX_AVAIL;
+    }
   }
 
   /*-----------------------------------------------------------------------
