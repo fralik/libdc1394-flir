@@ -506,4 +506,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-01-27 Damien <ddouxchamps@users.sf.net>
     * fixed 1394b operation thanks to inputs and patches from Christoph Ganser.
 
+2005-01-31 Damien <ddouxchamps@users.sf.net>
+    * fixed 1394b bandwidth usage
+
 	
