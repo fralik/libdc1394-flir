@@ -18,6 +18,7 @@ AC_CHECK_LIB(raw1394, raw1394_new_handle,
 
 AC_HEADER_STDC 
 AC_CHECK_HEADERS(fcntl.h sys/ioctl.h unistd.h)
+AC_PATH_XTRA
 
 AC_TYPE_SIZE_T
 

@@ -488,3 +488,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-09-30 Damien <ddouxchamps@users.sf.net>
     * Fixed small issue in the IIDC version detection
 	
+2004-10-28 Damien <ddouxchamps@users.sf.net>
+    * Applied a patch from F. Devernay to allow compilation on x86_64.
+	
