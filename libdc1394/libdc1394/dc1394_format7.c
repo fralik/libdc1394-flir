@@ -133,10 +133,10 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     
     if (QueryFormat7CSROffset(handle, node, mode, &csr)!=DC1394_SUCCESS)
     {
-      fprintf(stderr,"failure to get format7 CSR offset\n");
+      //fprintf(stderr,"failure to get format7 CSR offset\n");
         return DC1394_FAILURE;
     }
-    fprintf(stderr,"Got format7 CSR offset\n");
+    //fprintf(stderr,"Got format7 CSR offset\n");
     csr*= 0x04UL;
   
     /* conditionally byte swap the value (addition by PDJ) */
