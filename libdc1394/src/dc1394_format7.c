@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include "dc1394_control.h"
 #include "dc1394_internal.h"
@@ -151,9 +152,206 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     return retval;
 }
 
+
+/*======================================================================*/
+/*! 
+ *   setup capture for format7 (FORMAT_SCALABLE_IMAGE_SIZE) mode.
+ *
+ *   \param handle   handle for raw1394 port
+ *   \param node     node of the camera
+ *   \param channel  iso channel for data transmission (0 ... 15)
+ *   \param mode     mode for camera operation 
+ *                   (MODE_FORMAT7_0 ... MODE_FORMAT7_7)
+ *   \param speed    transmission speed (SPEED_100 ... SPEED_400)
+ *   \param bytes_per_packet number of bytes per packet can be used to
+ *                   control the framerate. -1 means query max speed
+ *                   from camera and use this
+ *   \param left     area of interest start column
+ *   \param top      area of interest start row
+ *   \param width    area of interest width
+ *   \param height   area of interest height
+ *
+ *   \return DC1394_SUCCESS or DC1394_FAILURE
+ *
+ *======================================================================*/
+int
+_dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
+                            int channel, int mode, int speed,
+                            int bytes_per_packet,
+                            unsigned int left, unsigned int top,
+                            unsigned int width, unsigned int height, 
+                            dc1394_cameracapture * camera)
+{
+  dc1394bool_t is_iso_on= DC1394_FALSE;
+  unsigned int min_bytes, max_bytes;
+  unsigned packet_bytes=0;
+
+  if (dc1394_get_iso_status(handle, node, &is_iso_on) != DC1394_SUCCESS)
+      return DC1394_FAILURE;
+
+  if (is_iso_on)
+  {
+
+    if (dc1394_stop_iso_transmission(handle, node) != DC1394_SUCCESS)
+    {
+      printf("(%s) Unable to stop iso transmission!\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+
+  }
+  if (dc1394_set_iso_channel_and_speed(handle,node,channel,speed)!=DC1394_SUCCESS)
+  {
+    printf("(%s) Unable to set channel %d and speed %d!\n",__FILE__,channel,speed);
+    return DC1394_FAILURE;
+  }
+
+  if (dc1394_set_video_format(handle,node,FORMAT_SCALABLE_IMAGE_SIZE)!=DC1394_SUCCESS)
+  {
+    printf("(%s) Unable to set video format %d!\n",__FILE__, FORMAT_SCALABLE_IMAGE_SIZE);
+    return DC1394_FAILURE;
+  }
+
+  if (dc1394_set_video_mode(handle, node,mode) != DC1394_SUCCESS)
+  {
+    printf("(%s) Unable to set video mode %d!\n", __FILE__, mode);
+    return DC1394_FAILURE;
+  }
+
+
+  if (dc1394_set_format7_image_position(handle, node, mode, left, top) != DC1394_SUCCESS)
+  {
+    printf("(%s) Unable to set format 7 image position to "
+           "left=%d and top=%d!\n",  __FILE__, left, top);
+    return DC1394_FAILURE;
+  }
+
+  if (dc1394_set_format7_image_size(handle, node, mode, width, height) != DC1394_SUCCESS)
+  {
+    printf("(%s) Unable to set format 7 image size to "
+           "width=%d and height=%d!\n", __FILE__, width, height);
+    return DC1394_FAILURE;
+  }
+
+  if (dc1394_query_format7_packet_para(handle, node, mode, &min_bytes, &max_bytes) != DC1394_SUCCESS) /* PACKET_PARA_INQ */
+  {
+    printf("Packet para inq error\n");
+    return DC1394_FAILURE;
+  }
+    
+  /*-----------------------------------------------------------------------
+   *  if -1 is given for bytes_per_packet, use maximum allowed packet
+   *  size. if given bytes_per_packet exceeds allowed range, correct it 
+   *-----------------------------------------------------------------------*/
+  if( bytes_per_packet == -1)
+  {
+    bytes_per_packet = max_bytes;
+  }
+  else if (bytes_per_packet > max_bytes)
+  {
+    bytes_per_packet = max_bytes;
+  }
+  else if (bytes_per_packet < min_bytes)
+  {
+    bytes_per_packet = min_bytes;
+  }
+
+  /*
+   * TODO: bytes_per_packet must be full quadlet
+   */
+  if (dc1394_set_format7_byte_per_packet(handle, node, mode, bytes_per_packet) != DC1394_SUCCESS)
+  {
+    printf("(%s) Unable to set format 7 bytes per packet %d \n", __FILE__, mode);
+    return DC1394_FAILURE;
+  }
+  
+  if (dc1394_query_format7_byte_per_packet(handle, node, mode, &packet_bytes) == DC1394_SUCCESS)
+  {
+    camera->quadlets_per_packet= packet_bytes /4;
+    if (camera->quadlets_per_packet<=0)
+    {
+      printf("(%s) No format 7 bytes per packet %d \n", __FILE__, mode);
+      return DC1394_FAILURE;
+    }
+  }
+  else
+  {
+    printf("(%s) Unable to get format 7 bytes per packet %d \n", __FILE__, mode);
+    return DC1394_FAILURE;
+  }
+  
+  camera->node = node;
+  /*
+   * TODO: frame_rate not used for format 7, may be calculated
+   */
+  camera->frame_rate = 0; 
+  camera->channel=channel;
+  
+  
+  /*-----------------------------------------------------------------------
+   *  ensure that quadlet aligned buffers are big enough, still expect
+   *  problems when width*height  != quadlets_per_frame*4
+   *-----------------------------------------------------------------------*/
+  /* OOPS! TODO: assumes 1 byte per pixel, only right for monochrome */
+  camera->quadlets_per_frame= (width*height+3)/4;
+  if (camera->quadlets_per_frame<=0)
+  {
+    return DC1394_FAILURE;
+  }
+  camera->frame_width = width; /* irrespecable of pixel depth */
+  camera->frame_height= height;
+
+  if (is_iso_on)
+  {
+    
+    if (dc1394_start_iso_transmission(handle,node) != DC1394_SUCCESS)
+    {
+      printf("(%s) Unable to start iso transmission!\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+    
+  }
+  
+  return DC1394_SUCCESS;
+}
+
+
 /**********************/
 /* External functions */
 /**********************/
+
+
+/*=========================================================================
+ *  DESCRIPTION OF FUNCTION:  dc1394_setup_format7_capture
+ *  ==> see headerfile
+ *=======================================================================*/
+int
+dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
+                             int channel, int mode, int speed,
+                             int bytes_per_packet,
+                             unsigned int left, unsigned int top,
+                             unsigned int width, unsigned int height, 
+                             dc1394_cameracapture * camera)
+
+{
+  if (_dc1394_basic_format7_setup(handle,node, channel, mode,
+                                  speed, bytes_per_packet,
+                                  left, top, width, height, camera) ==
+      DC1394_FAILURE)
+  {
+    return DC1394_FAILURE;
+  }
+
+  camera->capture_buffer= (int*)malloc(camera->quadlets_per_frame*4);
+  
+  if (camera->capture_buffer == NULL)
+  {
+    printf("(%s) unable to allocate memory for capture buffer\n",
+           __FILE__);
+    return DC1394_FAILURE;
+  }
+  
+  return DC1394_SUCCESS;
+}
 
 int
 dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
