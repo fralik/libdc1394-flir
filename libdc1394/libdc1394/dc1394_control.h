@@ -325,6 +325,8 @@ typedef struct __dc1394_misc_info
   int load_channel;
 
   dc1394bool_t bmode_capable;
+  dc1394bool_t one_shot_capable;
+  dc1394bool_t multi_shot_capable;
 
 } dc1394_miscinfo;
 
@@ -1009,7 +1011,18 @@ int
 dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
                           dc1394bool_t *on_off);
 
+/* Turn one software trigger on or off and get state */
+int
+dc1394_set_soft_trigger(raw1394handle_t handle, nodeid_t node);
 
+int
+dc1394_unset_soft_trigger(raw1394handle_t handle, nodeid_t node);
+
+int
+dc1394_get_soft_trigger(raw1394handle_t handle, nodeid_t node,
+			dc1394bool_t *is_on);
+
+ 
 /*************************************************
   FORMAT_7 access functions
 **************************************************/

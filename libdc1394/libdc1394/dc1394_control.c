@@ -23,6 +23,9 @@
  * Dan Dennedy <dan@dennedy.org>
  *  - bug fixes
  *
+ * Yves Jaeger <yves.jaeger@fraenz-jaeger.de>
+ *  - software trigger functions
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -1365,8 +1368,10 @@ dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
     if (dc1394_query_basic_functionality(handle,node,&value) != DC1394_SUCCESS)
         return DC1394_FAILURE;
     else {
-      info->mem_channel_number= (value & 0xF);
-      info->bmode_capable= (value & (0x1 << 22) >> 22);
+      info->mem_channel_number = (value & 0xF);
+      info->bmode_capable      = (value & (0x1 << 22)) != 0;
+      info->one_shot_capable   = (value & (0x1 << 12)) != 0;
+      info->multi_shot_capable = (value & (0x1 << 11)) != 0;
     }
 
     if (info->mem_channel_number>0) {
@@ -1956,8 +1961,8 @@ dc1394_get_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int *m
 {
   quadlet_t value_inq, value;
   int retval;
-  
-  retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+
+  retval= dc1394_query_basic_functionality(handle, node, &value_inq);
   retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
   
   if (value_inq & 0x00800000) {
@@ -1977,7 +1982,7 @@ dc1394_set_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int mo
   quadlet_t value_inq, value;
   int retval;
   
-  retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  retval= dc1394_query_basic_functionality(handle, node, &value_inq);
   retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
 
   if (mode==OPERATION_MODE_LEGACY) {
@@ -2003,28 +2008,28 @@ int
 dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
                                  unsigned int *channel, unsigned int *speed)
 {
-    quadlet_t value_inq, value;
-    int retval;
-    
-    retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
-    retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
-
-    if (value_inq & 0x00800000) { // check if 1394b is available
-      if (value & 0x00800000) { //check if we are now using 1394b
-	*channel= (unsigned int)((value >> 8) & 0x3FUL);
-	*speed= (unsigned int)(value& 0x7UL);
-      }
-      else { // fallback to legacy
-	*channel= (unsigned int)((value >> 28) & 0xFUL);
-	*speed= (unsigned int)((value >> 24) & 0x3UL);
-      }
+  quadlet_t value_inq, value;
+  int retval;
+  
+  retval= dc1394_query_basic_functionality(handle, node, &value_inq);
+  retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
+  
+  if (value_inq & 0x00800000) { // check if 1394b is available
+    if (value & 0x00800000) { //check if we are now using 1394b
+      *channel= (unsigned int)((value >> 8) & 0x3FUL);
+      *speed= (unsigned int)(value& 0x7UL);
     }
-    else { // legacy
+    else { // fallback to legacy
       *channel= (unsigned int)((value >> 28) & 0xFUL);
       *speed= (unsigned int)((value >> 24) & 0x3UL);
     }
-
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+  }
+  else { // legacy
+    *channel= (unsigned int)((value >> 28) & 0xFUL);
+    *speed= (unsigned int)((value >> 24) & 0x3UL);
+  }
+  
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
 int
@@ -2034,7 +2039,7 @@ dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
   quadlet_t value_inq, value;
   int retval;
 
-  retval= GetCameraControlRegister(handle, node, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  retval= dc1394_query_basic_functionality(handle, node, &value_inq);
   retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
   if ((value_inq & 0x00800000)&&(value & 0x00800000)) {
     // check if 1394b is available and if we are now using 1394b
@@ -3161,6 +3166,33 @@ dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
                           dc1394bool_t *on_off)
 {
   return dc1394_is_feature_on(handle, node, FEATURE_TRIGGER, on_off);
+}
+
+int
+dc1394_set_soft_trigger(raw1394handle_t handle, nodeid_t node)
+{
+  int retval= SetCameraControlRegister(handle, node, REG_CAMERA_SOFT_TRIGGER, ON_VALUE);
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+
+int
+dc1394_unset_soft_trigger(raw1394handle_t handle, nodeid_t node)
+{
+  int retval= SetCameraControlRegister(handle, node, REG_CAMERA_SOFT_TRIGGER, OFF_VALUE);
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+
+int
+dc1394_get_soft_trigger(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on)
+{
+  quadlet_t value;
+  int retval;
+  
+  //printf("before gst\n");
+  retval = GetCameraControlRegister(handle, node, REG_CAMERA_SOFT_TRIGGER, &value);
+  //printf("after gst %x, %x\n", retval, value);
+  *is_on = value & ON_VALUE;
+  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
 int

@@ -337,11 +337,9 @@ _Format7BytePerPixel(int color_coding)
 }
 
  
-/*======================================================================*/
-/*! 
+/*====================================================================== 
  *   see documentation of dc1394_setup_format7_capture() in
  *   dc1394_control.h
- *
  *======================================================================*/
 int
 _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,

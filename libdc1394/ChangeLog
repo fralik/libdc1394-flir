@@ -499,4 +499,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-01-26 Damien <ddouxchamps@users.sf.net>
     * update the get/set_operation_mode functions.
-	
+    * applied a patch from Yves Jaeger to add software trigger functions
+
