@@ -904,6 +904,11 @@ dc1394_query_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
         *packet_bytes= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
     }
 
+    if (packet_bytes==0) {
+      printf("(%s): BYTES_PER_PACKET is zero. This should not happen.\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+
     return retval;
 }
  
@@ -1074,10 +1079,14 @@ dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
 					   &value);
 	  *ppf= (unsigned int) (value);
 	}
+      return retval;
     }
     else {
       // return an estimate, NOT TAKING ANY PADDING INTO ACCOUNT
       if (dc1394_query_format7_byte_per_packet(handle, node, mode, &packet_bytes)!=DC1394_SUCCESS) {
+	return DC1394_FAILURE;
+      }
+      if (packet_bytes==0) {
 	return DC1394_FAILURE;
       }
       if (dc1394_query_format7_total_bytes(handle, node, mode, &total_bytes)!=DC1394_SUCCESS) {
@@ -1087,10 +1096,10 @@ dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
 	*ppf=total_bytes/packet_bytes+1;
       else
 	*ppf=total_bytes/packet_bytes;
-      retval=DC1394_SUCCESS;
+
+      return DC1394_SUCCESS;
     }
 
-    return retval;
 }
 
 int

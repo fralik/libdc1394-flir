@@ -389,5 +389,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       problems on some distros' kernel headers.
 
 2004-01-20 Dan Dennedy <dan@dennedy.org>
-	* dc1394_multiview.c: bugfix segfault
+    * dc1394_multiview.c: bugfix segfault
+	
+2004-01-21 Damien <ddouxchamps@users.sf.net>
+    * print a warning when format7 BPP is zero.
 
