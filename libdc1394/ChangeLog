@@ -286,3 +286,8 @@ Wed Jul 2 14:35:00 2003 <ddouxchamps@users.sf.net>
     * fixed some F7 issues. Thanks to Kero van Gelder.
     * changed total_bytes to unsigned long long int in
       dc1394_query_format7_total_bytes.
+
+Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
+    * fixed bytes_per_packet setting in _dc1394_basic_format7_setup
+    * cancelled the previous commit (18/7/2003): it was a mistake.
+    

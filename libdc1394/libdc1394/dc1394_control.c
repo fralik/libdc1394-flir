@@ -686,41 +686,6 @@ GetFeatureValue(raw1394handle_t handle, nodeid_t node,
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
-static int
-GetBlockRegWithTag(raw1394handle_t handle, nodeid_t node, unsigned int tag, octlet_t* offset, quadlet_t* value)
-{
-  quadlet_t quadval;
-  int i;
-  int block_size;
-
-  if (GetCameraROMValue(handle, node, *offset, &quadval) < 0) {
-    *value= DC1394_FALSE;
-    return DC1394_FAILURE;
-  }
-
-  block_size=quadval &0xFFUL;
-  //fprintf(stderr,"Offset number %d\n", block_size);
-  for (i=0;i<block_size;i++) {
-    *offset+=4;
-    //fprintf(stderr,"Probing offset 0x%x\n",*offset);
-    if (GetCameraROMValue(handle, node, *offset, &quadval) < 0) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
-    }
-    if ((quadval >> 24)==tag) {
-      //fprintf(stderr,"  0x%x\n",quadval);
-      *value=quadval & 0xFFFFFFUL;
-      break;
-    }
-    usleep(1000);
-  }
-  if ((quadval >> 24)!=tag) {
-    *value= DC1394_FALSE;
-    return DC1394_FAILURE;
-  }
-  return DC1394_SUCCESS;
-}
-
 /**********************/
 /* External functions */
 /**********************/
@@ -924,8 +889,7 @@ int *myPort;
 int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 {
-    octlet_t offset= 0x414UL;
-    octlet_t unitdiroffset;
+    octlet_t offset= 0x424UL;
     quadlet_t quadval;
     dc1394bool_t ptgrey;
 
@@ -943,23 +907,22 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
      */
 
     /* get the unit_directory offset */
-    if (GetBlockRegWithTag(handle, node, 0xD1UL, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
+    if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
+    {
+        *value= DC1394_FALSE;
+        return DC1394_FAILURE;
     }
-    //fprintf(stderr,"  0x%x\n",quadval);
-    //fprintf(stderr,"  0x%x\n",offset);
 
-    unitdiroffset =offset+((quadval & 0xFFFFFFUL) * 4);
+    offset+= ((quadval & 0xFFFFFFUL) * 4) + 4;
     usleep(1000);
-    //fprintf(stderr,"  0x%x\n",unitdiroffset);
 
-    offset=unitdiroffset;
-    if (GetBlockRegWithTag(handle, node, 0x12UL, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
+    /* get the unit_spec_ID (should be 0x00A02D for 1394 digital camera) */
+    if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
+    {
+        *value= DC1394_FALSE;
+        return DC1394_FAILURE;
     }
-    //fprintf(stderr,"  0x%x\n",quadval);
+    quadval&=0xFFFFFFUL;
 
     ptgrey=(quadval == 0x00B09DUL);
       
@@ -972,16 +935,18 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
         *value= DC1394_FALSE;
     }
 
+    quadval = 0;
+    offset += 4;
     usleep(1000);
 
     /* get the unit_sw_version (should be 0x000100 - 0x000102 for 1394 digital camera) */
 	/* DRD> without this check, AV/C cameras show up as well */
-    offset=unitdiroffset;
-    if (GetBlockRegWithTag(handle, node, 0x13UL, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
+    if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
+    {
+        *value= DC1394_FALSE;
+        return DC1394_FAILURE;
     }
-    //fprintf(stderr,"  0x%x\n",quadval);
+    quadval &= 0xFFFFFFUL;
 
     if ((quadval == 0x000100UL) || 
 	(quadval == 0x000101UL) ||
@@ -1002,29 +967,27 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 int
 dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value)
 {
-    octlet_t offset= 0x414UL;
-    octlet_t unitdiroffset;
+    octlet_t offset= 0x424UL;
     quadlet_t quadval;
 
     /* get the unit_directory offset */
-    if (GetBlockRegWithTag(handle, node, 0xD1UL, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
+    if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
+    {
+        *value= DC1394_FALSE;
+        return DC1394_FAILURE;
     }
-    //fprintf(stderr,"  0x%x\n",quadval);
-    //fprintf(stderr,"  0x%x\n",offset);
 
-    unitdiroffset =offset+((quadval & 0xFFFFFFUL) * 4);
+    offset+= ((quadval & 0xFFFFFFUL) * 4) + 8;
     usleep(1000);
-    //fprintf(stderr,"  0x%x\n",unitdiroffset);
 
-    offset=unitdiroffset;
-    if (GetBlockRegWithTag(handle, node, 0x13UL, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
-      return DC1394_FAILURE;
+    /* get the unit_spec_ID (should be 0x00A02D for 1394 digital camera) */
+    if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
+    {
+        *value= DC1394_FALSE;
+        return DC1394_FAILURE;
     }
-    *value=quadval;
 
+    *value= (quadval & 0xFFFFFFUL);
     return DC1394_SUCCESS;
 }
 
