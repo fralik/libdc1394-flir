@@ -12,6 +12,10 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.2  2001/09/14 08:20:43  ronneber
+**  - adapted to new dc1394_setup_format7_capture()
+**  - using times() instead of time() for more precise frame rate measurement
+**
 **  Revision 1.1  2001/07/24 13:50:59  ronneber
 **  - simple test programs to demonstrate the use of libdc1394 (based
 **    on 'samplegrab' of Chris Urmson
@@ -24,6 +28,8 @@
 #include <libdc1394/dc1394_control.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/times.h>
+
 
 int main(int argc, char *argv[]) 
 {
@@ -34,9 +40,15 @@ int main(int argc, char *argv[])
   raw1394handle_t handle;
   nodeid_t * camera_nodes;
   int grab_n_frames = 100;
-  time_t start_time;
-  time_t elapsed_time;
+  struct tms tms_buf;
+  clock_t start_time;
+  float elapsed_time;
   int i;
+  unsigned int min_bytes, max_bytes;
+  unsigned int actual_bytes;
+  unsigned int total_bytes = 0;
+
+  
   
   
 
@@ -105,7 +117,7 @@ int main(int argc, char *argv[])
                                    0, /* channel */
                                    MODE_FORMAT7_0, 
                                    SPEED_400,
-                                   -1, /* use max speed */
+                                   USE_MAX_AVAIL, /* use max packet size */
                                    10, 20, /* left, top */
                                    200, 100,  /* width, height */
                                    &camera) != DC1394_SUCCESS)
@@ -115,11 +127,52 @@ int main(int argc, char *argv[])
              "that the video mode,framerate and format are\n"
              "supported by your camera\n",
              __LINE__,__FILE__);
+    raw1394_destroy_handle(handle);
+    exit(1);
+  }
+
+  /* set trigger mode */
+  if( dc1394_set_trigger_mode(handle, camera.node, TRIGGER_MODE_0)
+      != DC1394_SUCCESS)
+  {
+    fprintf( stderr, "unable to set camera trigger mode\n");
     dc1394_release_camera(handle,&camera);
     raw1394_destroy_handle(handle);
     exit(1);
   }
- 
+  
+  /*-----------------------------------------------------------------------
+   *  print allowed and used packet size
+   *-----------------------------------------------------------------------*/
+  if (dc1394_query_format7_packet_para(handle, camera_nodes[0], MODE_FORMAT7_0, &min_bytes, &max_bytes) != DC1394_SUCCESS) /* PACKET_PARA_INQ */
+  {
+    printf("Packet para inq error\n");
+    return DC1394_FAILURE;
+  }
+  printf( "camera reports allowed packet size from %d - %d bytes\n",
+          min_bytes, max_bytes);
+
+  
+  if (dc1394_query_format7_byte_per_packet(handle, camera_nodes[0], MODE_FORMAT7_0, &actual_bytes) != DC1394_SUCCESS) 
+  {
+    printf("dc1394_query_format7_byte_per_packet error\n");
+    return DC1394_FAILURE;
+  }
+  printf( "camera reports actual packet size = %d bytes\n",
+          actual_bytes);
+
+  if (dc1394_query_format7_total_bytes(handle, camera_nodes[0], MODE_FORMAT7_0, &total_bytes) != DC1394_SUCCESS) 
+  {
+    printf("dc1394_query_format7_total_bytes error\n");
+    return DC1394_FAILURE;
+  }
+  printf( "camera reports total bytes per frame = %d bytes\n",
+          total_bytes);
+
+  
+  
+
+  
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
@@ -135,7 +188,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  capture 1000 frames and measure the time for this operation
    *-----------------------------------------------------------------------*/
-  start_time = time(NULL);
+  start_time = times(&tms_buf);
 
   for( i = 0; i < grab_n_frames; ++i)
   {
@@ -153,9 +206,9 @@ int main(int argc, char *argv[])
     /*---------------------------------------------------------------------
      *  output elapsed time
      *---------------------------------------------------------------------*/
-    elapsed_time = time(NULL) - start_time;
-    printf( "got frame %d. elapsed time: %d sec ==> %g frames/second\n",
-            i, (int)elapsed_time, (float)i / elapsed_time);
+    elapsed_time = (float)(times(&tms_buf) - start_time) / CLK_TCK;
+    printf( "got frame %d. elapsed time: %g sec ==> %g frames/second\n",
+            i, elapsed_time, (float)i / elapsed_time);
   }
   
   /*-----------------------------------------------------------------------
