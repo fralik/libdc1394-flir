@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4  2003/09/26 16:08:36  ddennedy
+**  add libtoolize with no tests to autogen.sh, suppress examples/grab_color_image.c warning
+**
 **  Revision 1.3  2003/09/23 13:44:12  ddennedy
 **  fix camera location by guid for all ports, add camera guid option to vloopback, add root detection and reset to vloopback
 **
@@ -81,7 +84,6 @@ int main(int argc, char *argv[])
   dc1394_cameracapture camera;
   struct raw1394_portinfo ports[MAX_PORTS];
   int numPorts = 0;
-  int numNodes;
   int numCameras = 0;
   int i, j;
   raw1394handle_t handle;
