@@ -181,31 +181,16 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
 
 /*======================================================================*/
 /*! 
- *   setup capture for format7 (FORMAT_SCALABLE_IMAGE_SIZE) mode.
- *
- *   \param handle   handle for raw1394 port
- *   \param node     node of the camera
- *   \param channel  iso channel for data transmission (0 ... 15)
- *   \param mode     mode for camera operation 
- *                   (MODE_FORMAT7_0 ... MODE_FORMAT7_7)
- *   \param speed    transmission speed (SPEED_100 ... SPEED_400)
- *   \param bytes_per_packet number of bytes per packet can be used to
- *                   control the framerate. -1 means query max speed
- *                   from camera and use this
- *   \param left     area of interest start column
- *   \param top      area of interest start row
- *   \param width    area of interest width
- *   \param height   area of interest height
- *
- *   \return DC1394_SUCCESS or DC1394_FAILURE
+ *   see documentation of dc1394_setup_format7_capture() in
+ *   dc1394_control.h
  *
  *======================================================================*/
 int
 _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
                             int channel, int mode, int speed,
                             int bytes_per_packet,
-                            unsigned int left, unsigned int top,
-                            unsigned int width, unsigned int height, 
+                            int left, int top,
+                            int width, int height, 
                             dc1394_cameracapture * camera)
 {
   dc1394bool_t is_iso_on= DC1394_FALSE;
@@ -243,6 +228,25 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     return DC1394_FAILURE;
   }
 
+  /*-----------------------------------------------------------------------
+   *  set image position. If QUERY_FROM_CAMERA was given instead of a
+   *  position, use the actual value from camera
+   *-----------------------------------------------------------------------*/
+  if( left == QUERY_FROM_CAMERA || top == QUERY_FROM_CAMERA)
+  {
+    unsigned int camera_left = 0;
+    unsigned int camera_top = 0;
+    if (dc1394_query_format7_image_position(handle, node, mode,
+                                            &camera_left, &camera_top)
+        != DC1394_SUCCESS)
+    {
+      printf("(%s) Unable to query image position\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+    
+    if( left == QUERY_FROM_CAMERA) left = camera_left;
+    if( top == QUERY_FROM_CAMERA)  top = camera_top;
+  }
 
   if (dc1394_set_format7_image_position(handle, node, mode, left, top) != DC1394_SUCCESS)
   {
@@ -251,6 +255,29 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     return DC1394_FAILURE;
   }
 
+  /*-----------------------------------------------------------------------
+   *  set image size. If QUERY_FROM_CAMERA was given instead of a
+   *  position, use the actual value from camera, if USE_MAX_AVAIL was
+   *  given, calculate max availible size
+   *-----------------------------------------------------------------------*/
+  if( width < 0 || height < 0)
+  {
+    unsigned int camera_width = 0;
+    unsigned int camera_height = 0;
+    if (dc1394_query_format7_image_size(handle, node, mode,
+                                            &camera_width, &camera_height)
+        != DC1394_SUCCESS)
+    {
+      printf("(%s) Unable to query image size\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+    
+    if( width == QUERY_FROM_CAMERA)   width  = camera_width;
+    else if( width == USE_MAX_AVAIL)  width  = camera_width - left;
+    if( height == QUERY_FROM_CAMERA)  height = camera_height;
+    else if( height == USE_MAX_AVAIL) height = camera_height - top;
+    
+  }
   if (dc1394_set_format7_image_size(handle, node, mode, width, height) != DC1394_SUCCESS)
   {
     printf("(%s) Unable to set format 7 image size to "
@@ -268,7 +295,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
    *  if -1 is given for bytes_per_packet, use maximum allowed packet
    *  size. if given bytes_per_packet exceeds allowed range, correct it 
    *-----------------------------------------------------------------------*/
-  if( bytes_per_packet == -1)
+  if( bytes_per_packet == USE_MAX_AVAIL)
   {
     bytes_per_packet = max_bytes;
   }
@@ -284,6 +311,8 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   /*
    * TODO: bytes_per_packet must be full quadlet
    */
+  printf( "Trying to set bytes per packet to %d\n",  bytes_per_packet);
+  
   if (dc1394_set_format7_byte_per_packet(handle, node, mode, bytes_per_packet) != DC1394_SUCCESS)
   {
     printf("(%s) Unable to set format 7 bytes per packet %d \n", __FILE__, mode);
@@ -298,6 +327,8 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       printf("(%s) No format 7 bytes per packet %d \n", __FILE__, mode);
       return DC1394_FAILURE;
     }
+    printf("Camera has now %d bytes per packet\n\n", packet_bytes);
+    
   }
   else
   {
@@ -359,6 +390,14 @@ dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                              dc1394_cameracapture * camera)
 
 {
+  printf( "trying to setup format7 with \n"
+          "bpp    = %d\n"
+          "pos_x  = %d\n"
+          "pos_y  = %d\n"
+          "size_x = %d\n"
+          "size_y = %d\n",
+          bytes_per_packet, left, top, width, height);
+  
   if (_dc1394_basic_format7_setup(handle,node, channel, mode,
                                   speed, bytes_per_packet,
                                   left, top, width, height, camera) ==
@@ -562,7 +601,7 @@ dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
                                          REG_CAMERA_FORMAT7_TOTAL_BYTES_LO_INQ,
                                          &value_lo);
  
-        *total_bytes= (unsigned int) (value_lo | ( value_hi << 16) ); 
+        *total_bytes= (unsigned int) (value_lo | ( value_hi << 32) ); 
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -662,6 +701,6 @@ dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
 {
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
-                                         (quadlet_t)(packet_bytes << 16) );
+                                         (quadlet_t)(packet_bytes) << 16 );
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
