@@ -228,7 +228,7 @@ _dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
       while (!exit_loop)// WARNING: there is no timeout in this loop yet.
 	{
 	  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
-					 &setting_1, &err_flag1, &err_flag2)
+						 &setting_1, &err_flag1, &err_flag2)
 	      != DC1394_SUCCESS)
 	    {
 	      printf("(%s) Unable to read value setting register.\n", __FILE__);
@@ -254,13 +254,15 @@ _dc1394_v130_errflag2(raw1394handle_t handle, nodeid_t node, int mode)
   int setting_1, err_flag1, err_flag2, v130handshake;
   quadlet_t value;
 
+  //fprintf(stderr,"Checking error flags\n");
+
   if (dc1394_get_sw_version(handle, node, &value) != DC1394_SUCCESS) {
     printf("(%s) Unable to read software revision\n", __FILE__);
     return DC1394_FAILURE;
   }
   else {
     if (value == 0x000102UL) { // if version is 1.30.
-      // We don't use > because 114 is for ptgrey cameras which are not 1.30 but 1.20
+      // We don't use > because 0x114 is for ptgrey cameras which are not 1.30 but 1.20
       if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
 					     &setting_1, &err_flag1, &err_flag2)
 	  != DC1394_SUCCESS) {
@@ -284,8 +286,10 @@ _dc1394_v130_errflag2(raw1394handle_t handle, nodeid_t node, int mode)
       }
       if (err_flag2==0)
 	return DC1394_SUCCESS;
-      else
+      else {
+	printf("(%s) Error flag 2 is set: proposed bytes per packet is not a valid value.\n", __FILE__);
 	return DC1394_FAILURE;
+      }
     }
 
   return DC1394_SUCCESS;
@@ -356,7 +360,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     printf("(%s) Unable to set channel %d and speed %d!\n",__FILE__,channel,speed);
     return DC1394_FAILURE;
   }
-
+  
   if (dc1394_set_video_format(handle,node,FORMAT_SCALABLE_IMAGE_SIZE)!=DC1394_SUCCESS) {
     printf("(%s) Unable to set video format %d!\n",__FILE__, FORMAT_SCALABLE_IMAGE_SIZE);
     return DC1394_FAILURE;
@@ -366,7 +370,11 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     printf("(%s) Unable to set video mode %d!\n", __FILE__, mode);
     return DC1394_FAILURE;
   }
-  
+
+  // Don't know why, but it seems to be necessaey to query BPP value at this point.
+  // otherwise, the maximum bpp is used regardless of any other setting...
+  dc1394_query_format7_byte_per_packet(handle, node, mode, &bytes_per_packet);
+
   /*-----------------------------------------------------------------------
    *  set image position. If QUERY_FROM_CAMERA was given instead of a
    *  position, use the actual value from camera
@@ -442,7 +450,10 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     printf("(%s) Unable to set format 7 image size to width=%d and height=%d!\n", __FILE__, width, height);
     return DC1394_FAILURE;
   }
-  
+
+  /*-----------------------------------------------------------------------
+   *  Bytes-per-packet definition
+   *-----------------------------------------------------------------------*/
   if (dc1394_query_format7_recommended_byte_per_packet(handle, node, mode, &recom_bpp) != DC1394_SUCCESS) {
     printf("Recommended byte-per-packet inq error\n");
     return DC1394_FAILURE;
@@ -473,6 +484,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       printf("(%s) Bytes_per_packet query failure\n", __FILE__);
       return DC1394_FAILURE;
     }
+    //fprintf(stderr,"libdc bpp: %d\n",bytes_per_packet);
     break;
   default:
     if (bytes_per_packet > max_bytes) {
@@ -489,19 +501,11 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     break;
   }
       
-  //printf( "Trying to set bytes per packet to %d\n",  bytes_per_packet);
-    
   if (dc1394_set_format7_byte_per_packet(handle, node, mode, bytes_per_packet) != DC1394_SUCCESS) {
     printf("(%s) Unable to set format 7 bytes per packet %d \n", __FILE__, mode);
     return DC1394_FAILURE;
   }
-
-  // IIDC v1.30 handshaking:
-  if ( _dc1394_v130_handshake(handle, node, mode) != DC1394_SUCCESS) {
-    printf("(%s) Format7 handshaking failure \n", __FILE__);
-    return DC1394_FAILURE;
-  }
-
+  
   if (dc1394_query_format7_byte_per_packet(handle, node, mode, &packet_bytes) == DC1394_SUCCESS) {
     camera->quadlets_per_packet= packet_bytes /4;
     if (camera->quadlets_per_packet<=0) {

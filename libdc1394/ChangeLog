@@ -353,5 +353,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2003-12-15 Damien <ddouxchamps@users.sf.net>
     * fixed significant bug regarding IIDC specs revision detection
       (in dc1394_get_sw_revision).
+	
+2003-12-17 Damien <ddouxchamps@users.sf.net>
+    * temporary fix for bpp settings in dc1394_format7_basic_setup
 
 	
