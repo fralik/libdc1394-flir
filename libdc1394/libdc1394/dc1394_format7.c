@@ -41,6 +41,9 @@
 #define REG_CAMERA_FORMAT7_BYTE_PER_PACKET               0x044U
 #define REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ          0x048U
 #define REG_CAMERA_FORMAT7_UNIT_POSITION_INQ             0x04CU
+#define REG_CAMERA_FORMAT7_FRAME_INTERVAL_INQ            0x050U
+#define REG_CAMERA_FORMAT7_DATA_DEPTH_INQ                0x054U
+#define REG_CAMERA_FORMAT7_COLOR_FILTER_ID               0x058U
 #define REG_CAMERA_FORMAT7_VALUE_SETTING                 0x07CU
 
 /**********************/ 

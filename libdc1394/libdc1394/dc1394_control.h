@@ -35,10 +35,13 @@ enum
 {
     SPEED_100= 0,
     SPEED_200,
-    SPEED_400
+    SPEED_400,
+    SPEED_800,
+    SPEED_1600,
+    SPEED_3200
 };
 #define SPEED_MIN                   SPEED_100
-#define SPEED_MAX                   SPEED_400
+#define SPEED_MAX                   SPEED_3200
 #define NUM_SPEEDS                  (SPEED_MAX - SPEED_MIN + 1)
 
 /* Enumeration of camera framerates */
@@ -49,10 +52,12 @@ enum
     FRAMERATE_7_5,
     FRAMERATE_15,
     FRAMERATE_30,
-    FRAMERATE_60
+    FRAMERATE_60,
+    FRAMERATE_120,
+    FRAMERATE_240
 };
 #define FRAMERATE_MIN               FRAMERATE_1_875
-#define FRAMERATE_MAX               FRAMERATE_60
+#define FRAMERATE_MAX               FRAMERATE_240
 #define NUM_FRAMERATES              (FRAMERATE_MAX - FRAMERATE_MIN + 1)
 
 /* Enumeration of camera modes for Format_0 */
@@ -181,7 +186,10 @@ enum
     FEATURE_FOCUS,
     FEATURE_TEMPERATURE,
     FEATURE_TRIGGER,
-    /* 19 reserved features */
+    FEATURE_TRIGGER_DELAY,
+    FEATURE_WHITE_SHADING,
+    FEATURE_FRAME_RATE,
+    /* 16 reserved features */
     FEATURE_ZOOM,
     FEATURE_PAN,
     FEATURE_TILT,
@@ -274,6 +282,9 @@ typedef struct __dc1394_misc_info
   int mem_channel_number;
   int save_channel;
   int load_channel;
+
+  dc1394bool_t bmode_capable;
+
 } dc1394_miscinfo;
 
 typedef struct __dc1394_feature_info_struct 
@@ -298,6 +309,9 @@ typedef struct __dc1394_feature_info_struct
     int value;
     int BU_value;
     int RV_value;
+    int B_value;
+    int R_value;
+    int G_value;
     int target_value;
 
     dc1394bool_t abs_control;
@@ -583,6 +597,27 @@ dc1394_get_white_balance(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_set_white_balance(raw1394handle_t handle, nodeid_t node,
                          unsigned int u_b_value, unsigned int v_r_value);
+
+int
+dc1394_get_white_shading(raw1394handle_t handle, nodeid_t node,
+                         unsigned int *r_value, unsigned int *g_value,
+			 unsigned int *b_value);
+int
+dc1394_set_white_shading(raw1394handle_t handle, nodeid_t node,
+			 unsigned int r_value, unsigned int g_value,
+			 unsigned int b_value);
+int
+dc1394_get_trigger_delay(raw1394handle_t handle, nodeid_t node,
+			 unsigned int *trigger_delay);
+int
+dc1394_set_trigger_delay(raw1394handle_t handle, nodeid_t node,
+			 unsigned int trigger_delay);
+int
+dc1394_get_frame_rate(raw1394handle_t handle, nodeid_t node,
+		      unsigned int *frame_rate);
+int
+dc1394_set_frame_rate(raw1394handle_t handle, nodeid_t node,
+		      unsigned int frame_rate);
 int
 dc1394_get_hue(raw1394handle_t handle, nodeid_t node,
                unsigned int *hue);

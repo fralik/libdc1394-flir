@@ -71,3 +71,11 @@ Version 0.9.3:
   1.0.0
 - Compatibility break: this release of libdc1394, as well as further
   releases, will be compatible only with kernels 2.4.21+ and 2.6.0+
+
+Version 0.9.4:
+- several minor fixes/enhancements/beautifications
+- Compatibility break: an additional argument ('extra buffering') has
+  been added to the capture functions.
+
+Version 0.9.5:
+- no code change, just fixes the revision numbers that were wrong.
