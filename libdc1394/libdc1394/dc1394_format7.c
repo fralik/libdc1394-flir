@@ -409,7 +409,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       else
 	width = USE_MAX_AVAIL;
     }
-    if (height == QUERY_FROM_CAMERA)) {
+    if (height == QUERY_FROM_CAMERA) {
       if (camera_height>0)
 	height = camera_height;
       else
