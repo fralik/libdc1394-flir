@@ -201,37 +201,37 @@ const char *dc1394_feature_desc[NUM_FEATURES] =
 */
 const int quadlets_per_packet_format_0[42] = 
 {
-  -1,  -1,  15,  30,  60,  -1,
-  10,  20,  40,  80, 160,  -1,
-  30,  60, 120, 240, 480,  -1,
-  40,  80, 160, 320, 640,  -1,
-  60, 120, 240, 480, 960,  -1,
-  20,  40,  80, 160, 320,  640,
-  40,  80, 160, 320, 640,  -1
+     -1,  -1,  15,  30,  60,  -1,
+     -1,  20,  40,  80, 160,  -1,
+     -1,  60, 120, 240, 480,  -1,
+     -1,  80, 160, 320, 640,  -1,
+     -1, 120, 240, 480, 960,  -1,
+     -1,  40,  80, 160, 320, 640,
+     -1,  80, 160, 320, 640,  -1
 };
 
 const int quadlets_per_packet_format_1[48] = 
 {
-   -1, 125, 250,  500, 1000, -1,
-   -1,  -1, 375,  750, -1,   -1,
-   -1,  -1, 125,  250,  500, 1000,
-   96, 192, 384,  768, -1,   -1,
-  144, 288, 576, -1,  -1,   -1,
-   48,  96, 192,  384,  768, -1,
-   -1, 125, 250,  500, 1000, -1,
-   96, 192, 384,  768, -1,  -1
+     -1, 125, 250, 500, 1000,   -1,
+     -1,  -1, 375, 750,   -1,   -1,
+     -1,  -1, 125, 250,  500, 1000,
+     96, 192, 384, 768,   -1,   -1,
+    144, 288, 576,  -1,   -1,   -1,
+     48,  96, 192, 384,  768,   -1,
+     -1, 125, 250, 500, 1000,   -1,
+     96, 192, 384, 768,   -1,   -1
 };
 
 const int quadlets_per_packet_format_2[48] = 
 {
-  160, 320,  640, -1,   -1,  -1,
-  240, 480,  960, -1,   -1,  -1,
-   80, 160,  320,  640, -1,  -1,
-  250, 500, 1000, -1,   -1,  -1,
-  375, 750,   -1, -1,   -1,  -1,
-  125, 250,  500, 1000, -1,  -1,
-  160, 320,  640, -1,   -1,  -1,
-  250, 500, 1000, -1,   -1,  -1
+    160, 320,  640,   -1, -1, -1,
+    240, 480,  960,   -1, -1, -1,
+     80, 160,  320,  640, -1, -1,
+    250, 500, 1000,   -1, -1, -1,
+    375, 750,   -1,   -1, -1, -1,
+    125, 250,  500, 1000, -1, -1,
+    160, 320,  640,   -1, -1, -1,
+    250, 500, 1000,   -1, -1, -1
 };
   
 
@@ -1861,8 +1861,9 @@ dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
     
     retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
 				     &value);
-    *channel= (unsigned int)((value >> 8) & 0x3FUL);
-    *speed= (unsigned int)(value& 0x7UL);
+    
+    *channel= (unsigned int)((value >> 28) & 0xFUL);
+    *speed= (unsigned int)((value >> 24) & 0x3UL);
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
@@ -1875,8 +1876,7 @@ dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
   retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
 				   (quadlet_t) (((channel & 0xFUL) << 28) |
 						((speed & 0x3UL) << 24) ));
-
-  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
 int

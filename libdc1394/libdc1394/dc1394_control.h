@@ -581,6 +581,7 @@ dc1394_get_white_balance(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_set_white_balance(raw1394handle_t handle, nodeid_t node,
                          unsigned int u_b_value, unsigned int v_r_value);
+
 int
 dc1394_get_hue(raw1394handle_t handle, nodeid_t node,
                unsigned int *hue);
