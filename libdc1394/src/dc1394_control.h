@@ -4,6 +4,7 @@
  *
  * Written by Gord Peters <GordPeters@smarttech.com>
  * Additions by Chris Urmson <curmson@ri.cmu.edu>
+ * Additions by Damien Douxchamps <douxchamps@ieee.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,6 +27,34 @@
 #include <sys/types.h>
 #include <libraw1394/raw1394.h>
 #include <stdio.h>
+
+/* General definitions: */
+
+#define CONFIG_ROM_BASE                0xFFFFF0000000ULL
+#define CCR_BASE                       0xFFFFF0F00000ULL
+
+#define ON_VALUE                       0x80000000UL
+#define OFF_VALUE                      0x00000000UL
+
+#define DC1394_READ_END(retval) return _dc1394_read_check(retval);
+#define DC1394_WRITE_END(retval) return _dc1394_write_check(retval);
+
+/* Maximum number of write/read retries */
+#define MAX_RETRIES                    20
+
+/* A hard compiled factor that makes sure async read and writes don't happen too fast*/
+#define SLOW_DOWN 20
+
+/* transaction acknowldegements (this should be in the raw1394 headers) */
+#define ACK_COMPLETE   0x0001U
+#define ACK_PENDING    0x0002U
+#define ACK_LOCAL      0x0010U
+
+/*Response codes (this should be in the raw1394 headers) */
+//not currently used
+#define RESP_COMPLETE    0x0000U
+#define RESP_SONY_HACK   0x000fU
+
 
 /* Enumeration of data speeds */
 enum 
@@ -109,6 +138,45 @@ enum
 #define FEATURE_MAX              FEATURE_CAPTURE_QUALITY
 #define NUM_FEATURES             (FEATURE_MAX - FEATURE_MIN + 1)
 
+/* Enumeration of Format_7 color modes */
+enum {
+  COLOR_FORMAT7_MONO8 = 0,
+  COLOR_FORMAT7_YUV411,
+  COLOR_FORMAT7_YUV422,
+  COLOR_FORMAT7_YUV444,
+  COLOR_FORMAT7_RGB8,
+  COLOR_FORMAT7_MONO16,
+  COLOR_FORMAT7_RGB16
+};
+#define COLOR_FORMAT7_MIN    COLOR_FORMAT7_MONO8
+#define COLOR_FORMAT7_MAX    COLOR_FORMAT7_RGB16
+#define NUM_COLOR_FORMAT7   (COLOR_FORMAT7_MAX - COLOR_FORMAT7_MIN + 1)
+
+/* Enumeration of Format_7 camera modes */
+enum {
+  MODE_FORMAT7_0 = 0,
+  MODE_FORMAT7_1,
+  MODE_FORMAT7_2,
+  MODE_FORMAT7_3,
+  MODE_FORMAT7_4,
+  MODE_FORMAT7_5,
+  MODE_FORMAT7_6,
+  MODE_FORMAT7_7
+};
+#define MODE_FORMAT7_MIN    MODE_FORMAT7_0
+#define MODE_FORMAT7_MAX    MODE_FORMAT7_7
+#define NUM_MODE_FORMAT7   (MODE_FORMAT7_MAX - MODE_FORMAT7_MIN + 1)
+
+/* Enumeration of trigger modes */
+enum {
+  TRIGGER_MODE_0 = 0,
+  TRIGGER_MODE_1,
+  TRIGGER_MODE_2,
+  TRIGGER_MODE_3
+};
+#define TRIGGER_MODE_MIN    TRIGGER_MODE_0
+#define TRIGGER_MODE_MAX    TRIGGER_MODE_3
+#define NUM_TRIGGER_MODE   (TRIGGER_MODE_3 - TRIGGER_MODE_0 + 1)
 
 
 /* Maximum number of characters in vendor and model strings */
@@ -160,25 +228,47 @@ typedef struct __dc1394_cam_cap_struct
     int dma_last_buffer;
 } dc1394_cameracapture ;
 
+
+typedef struct __dc1394_misc_info
+{
+  int format;
+  int mode;
+  int framerate;
+
+  dc1394bool_t is_iso_on;
+  int iso_channel;
+  int iso_speed;
+
+  int mem_channel_number;
+  int save_channel;
+  int load_channel;
+} dc1394_miscinfo;
+
+
 typedef struct __dc1394_feature_info_struct 
 {
-  int feature_id;
-  dc1394bool_t available;
-  dc1394bool_t one_push;
-  dc1394bool_t readout_capable;
-  dc1394bool_t on_off_capable;
-  dc1394bool_t auto_capable;
-  dc1394bool_t manual_capable;
-  
+    int feature_id;
+    dc1394bool_t available;
+    dc1394bool_t one_push;
+    dc1394bool_t readout_capable;
+    dc1394bool_t on_off_capable;
+    dc1394bool_t auto_capable;
+    dc1394bool_t manual_capable;
+    dc1394bool_t polarity_capable;
+    
 
-  dc1394bool_t one_push_active;
-  dc1394bool_t is_on;
-  dc1394bool_t auto_active;
-  
-  
-  int min;
-  int max;
-  int value;
+    dc1394bool_t one_push_active;
+    dc1394bool_t is_on;
+    dc1394bool_t auto_active;
+    char trigger_mode_capable_mask;
+    int trigger_mode;
+    dc1394bool_t trigger_polarity;
+    int min;
+    int max;
+    int value;
+    int BU_value;
+    int RV_value;
+    int target_value;
 } dc1394_feature_info;
 
 /*This structure contains all of the info above for everything except
@@ -208,6 +298,13 @@ feature described by feature->feature_id
 *****************************************************/
 int 
 dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,dc1394_feature_info *feature);
+
+/*****************************************************
+dc1394_get_camera_misc_info
+Collects other camera info registers
+*****************************************************/
+int 
+dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node, dc1394_miscinfo *info);
 
 /*****************************************************
 dc1394_print_feature
@@ -344,6 +441,8 @@ int
 dc1394_start_iso_transmission(raw1394handle_t handle, nodeid_t node);
 int
 dc1394_stop_iso_transmission(raw1394handle_t handle, nodeid_t node);
+int
+dc1394_get_iso_status(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on);
 
 /* Turn one shot mode on or off */
 int
@@ -555,7 +654,8 @@ this releases memory that was mapped by
 dc1394_dma_setup_camera
 *****************************************************/
 int 
-dc1394_dma_release_camera(dc1394_cameracapture *camera);
+dc1394_dma_release_camera(raw1394handle_t handle, 
+                          dc1394_cameracapture *camera);
 
 
 /*****************************************************
@@ -637,7 +737,106 @@ returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it scucceeds
 *****************************************************/
 int 
 dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture * cams, int num);
+/**************************************************
+ functions to read and write camera setups on/in
+ memory channels
+ **************************************************/
+int 
+dc1394_get_memory_load_ch(raw1394handle_t handle, nodeid_t node, unsigned int *channel);
 
+int 
+dc1394_get_memory_save_ch(raw1394handle_t handle, nodeid_t node, unsigned int *channel);
+
+int 
+dc1394_is_memory_save_in_operation(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value);
+
+int 
+dc1394_set_memory_save_ch(raw1394handle_t handle, nodeid_t node, unsigned int channel);
+
+int
+dc1394_memory_save(raw1394handle_t handle, nodeid_t node);
+
+int
+dc1394_memory_load(raw1394handle_t handle, nodeid_t node, unsigned int channel);
+
+
+
+int
+dc1394_set_trigger_polarity(raw1394handle_t handle, nodeid_t node, dc1394bool_t polarity);
+
+int
+dc1394_get_trigger_polarity(raw1394handle_t handle, nodeid_t node, dc1394bool_t *polarity);
+
+int
+dc1394_trigger_has_polarity(raw1394handle_t handle, nodeid_t node, dc1394bool_t *polarity);
+
+
+/*************************************************
+  FORMAT_7 access functions
+ *************************************************/
+
+int
+dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
+				    unsigned int mode, unsigned int *horizontal_size,
+				    unsigned int *vertical_size);
+
+int
+dc1394_query_format7_unit_size(raw1394handle_t handle, nodeid_t node,
+			       unsigned int mode, unsigned int *horizontal_unit,
+			       unsigned int *vertical_unit);
+
+int
+dc1394_query_format7_image_position(raw1394handle_t handle, nodeid_t node,
+				    unsigned int mode, unsigned int *left_position,
+				    unsigned int *top_position);
+
+int
+dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
+				unsigned int mode, unsigned int *width,
+				unsigned int *height);
+
+int
+dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
+				     unsigned int mode, quadlet_t *value);
+
+int
+dc1394_query_format7_color_coding(raw1394handle_t handle, nodeid_t node,
+				  unsigned int mode, quadlet_t *value);
+
+int
+dc1394_query_format7_pixel_number(raw1394handle_t handle, nodeid_t node,
+				  unsigned int mode, unsigned int *pixnum);
+
+int
+dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
+				 unsigned int mode, unsigned int *total_bytes);
+
+int
+dc1394_query_format7_packet_para(raw1394handle_t handle, nodeid_t node,
+				 unsigned int mode, unsigned int *min_bytes,
+				 unsigned int *max_bytes);
+
+int
+dc1394_query_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
+				     unsigned int mode, unsigned int *packet_bytes);
+
+int
+dc1394_set_format7_image_position(raw1394handle_t handle, nodeid_t node,
+				  unsigned int mode, unsigned int left,
+				  unsigned int top);
+
+int
+dc1394_set_format7_image_size(raw1394handle_t handle, nodeid_t node,
+			      unsigned int mode, unsigned int width,
+			      unsigned int height);
+
+int
+dc1394_set_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
+				   unsigned int mode, unsigned int color_id);
+
+int
+dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
+				   unsigned int mode, unsigned int packet_bytes);
 #ifdef __cplusplus
 }
 #endif

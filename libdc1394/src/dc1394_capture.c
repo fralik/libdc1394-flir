@@ -334,25 +334,20 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
     vmmap.buf_size = camera->quadlets_per_frame*4;//number of bytes needed
     vmmap.channel = channel;
 
+    /* tell the video1394 system that we want to listen to the given channel */
     if (ioctl(camera->dma_fd,VIDEO1394_LISTEN_CHANNEL, &vmmap)<0) {
         printf("(%s) VIDEO1394_LISTEN_CHANNEL ioctl failed!\n",__FILE__);
         return DC1394_FAILURE;
     }
-    printf("requested %d bytes buffer, got %d bytes buffer\n",camera->quadlets_per_frame*4,vmmap.buf_size);
+/*    printf("requested %d bytes buffer, got %d bytes buffer\n",
+      camera->quadlets_per_frame*4,vmmap.buf_size);
+      printf("vmmap fields are: nb_buffers:%d, buf_sze: %d\n",vmmap.nb_buffers,
+      vmmap.buf_size);*/
     camera->dma_frame_size = vmmap.buf_size;
     camera->num_dma_buffers = vmmap.nb_buffers;
     camera->dma_last_buffer = -1;
-    camera->dma_ring_buffer = mmap(0,vmmap.nb_buffers *vmmap.buf_size,
-                           PROT_READ|PROT_WRITE,MAP_SHARED, camera->dma_fd,0);
 
 
-    /* tell the video1394 system that we want to listen to the given channel */
-    if (camera->dma_ring_buffer == ((unsigned char *) -1)) {
-        printf("(%s) mmap failed!\n",__FILE__);
-        ioctl(camera->dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
-        return DC1394_FAILURE;
-    }
-    camera->dma_buffer_size = vmmap.buf_size;
     vwait.channel = channel;
     /* QUEUE the buffers */
     for (i=0;i<vmmap.nb_buffers;i++) {
@@ -360,11 +355,25 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
         if (ioctl(camera->dma_fd,VIDEO1394_LISTEN_QUEUE_BUFFER,&vwait)<0) {
             printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER ioctl failed!\n",
                    __FILE__); 
-            ioctl(camera->dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
-            munmap(camera->dma_ring_buffer,vmmap.buf_size);
+            ioctl(camera->dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &(vwait.channel));
             return DC1394_FAILURE;
         }
     }
+
+    camera->dma_ring_buffer = mmap(0,vmmap.nb_buffers *vmmap.buf_size,
+                           PROT_READ|PROT_WRITE,MAP_SHARED, camera->dma_fd,0);
+    camera->dma_buffer_size = vmmap.buf_size*vmmap.nb_buffers;
+/*    printf("allocated %d bytes at %p\n",vmmap.nb_buffers*vmmap.buf_size,
+      camera->dma_ring_buffer);*/
+    
+    /* makesure the ring buffer was allocated */
+    if (camera->dma_ring_buffer == ((unsigned char *) -1)) {
+        printf("(%s) mmap failed!\n",__FILE__);
+        ioctl(camera->dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
+        return DC1394_FAILURE;
+    }
+
+
     return DC1394_SUCCESS;
 }
 
@@ -375,11 +384,17 @@ this releases memory that was mapped by
 dc1394_dma_setup_camera
 *****************************************************/
 int 
-dc1394_dma_release_camera(dc1394_cameracapture *camera) 
+dc1394_dma_release_camera(raw1394handle_t handle,dc1394_cameracapture *camera) 
 {
-    ioctl(camera->dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &camera->channel);
+    dc1394_stop_iso_transmission(handle,camera->node);
+    ioctl(camera->dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &(camera->channel));
+/*    printf("would call munmap with: %d bytes, at address %p\n",
+      camera->dma_buffer_size,camera->dma_ring_buffer);*/
     if (camera->dma_ring_buffer)
-        munmap(camera->dma_ring_buffer,camera->dma_buffer_size);
+        munmap(camera->dma_ring_buffer,camera->dma_buffer_size); 
+    printf("Giving video1394 time to shutdown...\n");
+    sleep(2);
+    close(camera->dma_fd);
     return DC1394_SUCCESS;
 }
 
@@ -418,14 +433,17 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
         {
             printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",
                    __FILE__);
+            cams[i].dma_last_buffer++;
             return DC1394_FAILURE;
         }
-        
         /* we want to return the most recent buffer, so skip the old 
            ones */
         extra_buf = vwait.buffer;
+
         if (extra_buf) 
         {
+//            printf("extrabuffers: %d\n",extra_buf);
+
             for (j=0;j<extra_buf;j++) 
             {
                 vwait.buffer = (cb+j)%cams[i].num_dma_buffers;         
