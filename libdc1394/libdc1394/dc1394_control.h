@@ -27,7 +27,7 @@
 #include <sys/types.h>
 #include <libraw1394/raw1394.h>
 #include <stdio.h>
-#include <time.h>
+#include <sys/time.h>
 
 
 /* Enumeration of data speeds */
