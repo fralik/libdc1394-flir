@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.6  2005/03/17 03:13:20  ddouxchamps
+**  updated grab_gray_image example to work with all 8bit-mono formats
+**
 **  Revision 1.5  2004/01/20 04:12:27  ddennedy
 **  added dc1394_free_camera_nodes and applied to examples
 **
@@ -49,6 +52,8 @@ int main(int argc, char *argv[])
   raw1394handle_t handle;
   nodeid_t * camera_nodes;
   dc1394_feature_set features;
+  int format, mode;
+  quadlet_t quadlet;
 
   /*-----------------------------------------------------------------------
    *  Open ohci and asign handle to it
@@ -113,12 +118,52 @@ int main(int argc, char *argv[])
   }
   
   /*-----------------------------------------------------------------------
+   *  find a supported format/mode
+   *-----------------------------------------------------------------------*/
+  dc1394_query_supported_formats(handle,camera_nodes[0],&quadlet);
+  if (quadlet & (1<<29)) {
+    // check medium resolution formats
+    dc1394_query_supported_modes(handle,camera_nodes[0],FORMAT_SVGA_NONCOMPRESSED_2,&quadlet);
+    if (quadlet & (1<< (31-5))) {
+      fprintf(stderr,"Using format2/mode5\n");
+      format=FORMAT_SVGA_NONCOMPRESSED_2;
+      mode=MODE_1600x1200_MONO;
+    } else if (quadlet & (1<< (31-2))) {
+      fprintf(stderr,"Using format2/mode2\n");
+      format=FORMAT_SVGA_NONCOMPRESSED_2;
+      mode=MODE_1280x960_MONO;
+    }
+  } else if (quadlet & (1<<30)) {
+    // check medium resolution formats
+    dc1394_query_supported_modes(handle,camera_nodes[0],FORMAT_SVGA_NONCOMPRESSED_1,&quadlet);
+    if (quadlet & (1<< (31-5))) {
+      fprintf(stderr,"Using format1/mode2\n");
+      format=FORMAT_SVGA_NONCOMPRESSED_1;
+      mode=MODE_1024x768_MONO;
+    } else if (quadlet & (1<< (31-2))) {
+      fprintf(stderr,"Using format1/mode5\n");
+      format=FORMAT_SVGA_NONCOMPRESSED_1;
+      mode=MODE_800x600_MONO;
+    }
+  } else if (quadlet & (1<<31)) {
+    // check for VGA format
+    dc1394_query_supported_modes(handle,camera_nodes[0],FORMAT_VGA_NONCOMPRESSED,&quadlet);
+    if (quadlet & (1<< (31-5))) {
+      fprintf(stderr,"Using format0/mode5\n");
+      format=FORMAT_VGA_NONCOMPRESSED;
+      mode=MODE_640x480_MONO;
+    }
+  } else {
+    fprintf(stderr,"Your camera does not seem to support an 8-bit grayscale format.\nAborting...\n");
+    exit(1);
+  }
+    
+  /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
   if (dc1394_setup_capture(handle,camera_nodes[0],
                            0, /* channel */ 
-                           FORMAT_VGA_NONCOMPRESSED,
-                           MODE_640x480_MONO,
+                           format, mode,
                            SPEED_400,
                            FRAMERATE_7_5,
                            &camera)!=DC1394_SUCCESS) 
