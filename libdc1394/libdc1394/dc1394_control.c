@@ -20,6 +20,9 @@
  * Ann Dang <AnnDang@smarttech.com>
  *   - bug fixes
  *
+ * Dan Dennedy <dan@dennedy.org>
+ *  - bug fixes
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -900,7 +903,7 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
     offset += 4;
     usleep(1000);
 
-    /* get the unit_sw_version (should be 0x000100 or 0x000101 for 1394 digital camera) */
+    /* get the unit_sw_version (should be 0x000100 - 0x000102 for 1394 digital camera) */
 	/* DRD> without this check, AV/C cameras show up as well */
     if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
     {
@@ -908,7 +911,10 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
         return DC1394_FAILURE;
     }
 
-    if ((quadval & 0xFFFFFFUL) == 0x000100UL || (quadval & 0xFFFFFFUL) == 0x000101UL)
+	quadval &= 0xFFFFFFUL;
+    if ((quadval == 0x000100UL) || 
+		(quadval == 0x000101UL) ||
+		(quadval == 0x000102UL) )
     {
         *value= DC1394_TRUE;
     }
@@ -988,28 +994,13 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
     info->handle= handle;
     info->id= node;
 
-    /* get the indirect_offset */
-    if (GetCameraROMValue(handle, node, (ROM_ROOT_DIRECTORY + 12), &offset)
-        < 0)
-    {
-        return DC1394_FAILURE;
-    }
-    
-    offset<<= 2;
-    offset&= 0x00ffffff; // this is needed to clear the top two bytes which
-                         // otherwise causes trouble
-    offset+= (ROM_ROOT_DIRECTORY + 12);
-
     /* now get the EUID-64 */
-    /* fixed this, the value at offset is that start of the leaf.  
-       The first element is 0x0002 CRC
-       the actual UID lives at +4 and +8  Chris Urmson */
-    if (GetCameraROMValue(handle, node, offset+4, value) < 0)
+    if (GetCameraROMValue(handle, node, ROM_BUS_INFO_BLOCK+0x0C, value) < 0)
     {
         return DC1394_FAILURE;
     }
 
-    if (GetCameraROMValue(handle, node, offset+8, &value[1]) < 0)
+    if (GetCameraROMValue(handle, node, ROM_BUS_INFO_BLOCK+0x10, &value[1]) < 0)
     {
         return DC1394_FAILURE;
     }
