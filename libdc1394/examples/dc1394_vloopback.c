@@ -18,8 +18,8 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
-**  Revision 1.2  2003/09/02 23:42:36  ddennedy
-**  cleanup handle destroying in examples; fix dc1394_multiview to use handle per camera; new example
+**  Revision 1.3  2003/09/02 23:51:56  ddennedy
+**  revert leaked local changes to dc1394_vloopback
 **
 **  Revision 1.1  2002/10/27 04:21:54  ddennedy
 **  added v4l utility using vloopback
@@ -41,20 +41,18 @@
 #include <linux/videodev.h>
 #define _GNU_SOURCE
 #include <getopt.h>
-#include <errno.h>
 
 #include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
 
-#define USE_v4L_MMAP
+#undef USE_v4L_MMAP
 
 /* uncomment the following to drop frames to prevent delays */
 #define DROP_FRAMES 1
-#define MAX_PORTS   4
+#define MAX_PORTS 4
 #define NUM_BUFFERS 8
-#define WIDTH       320
-#define HEIGHT      240
-#define V4L_BUFFERS 1
+#define WIDTH 640
+#define HEIGHT 480
 
 /* declarations for libdc1394 */
 int numPorts = MAX_PORTS;
@@ -66,7 +64,7 @@ dc1394_feature_set features;
 /* Video4Linux globals */
 int v4l_dev = -1;
 char *image_out = NULL;
-int v4l_fmt = VIDEO_PALETTE_YUV422;
+int v4l_fmt = VIDEO_PALETTE_RGB24;
 #define MAXIOCTL 1024
 char ioctlbuf[MAXIOCTL];
 
@@ -75,7 +73,7 @@ char *dc_dev_name = NULL;
 char *v4l_dev_name = "/dev/video0";
 int width = WIDTH;
 int height = HEIGHT;
-int size = WIDTH*HEIGHT*2;
+int size = WIDTH*HEIGHT*3;
 
 static struct option long_options[]={
 	{"dc_dev",1,NULL,0},
@@ -121,7 +119,7 @@ void get_options(int argc,char *argv[])
 /* Video4Linux vloopback stuff */
 int start_pipe (int dev, int width, int height, int format)
 {
-	struct video_capability vid_caps;
+        struct video_capability vid_caps;
 	struct video_window vid_win;
 	struct video_picture vid_pic;
 
@@ -154,8 +152,15 @@ int start_pipe (int dev, int width, int height, int format)
 
 int put_image(int dev, char *image, int size)
 {
-	char pixels[size];
-	swab(image, pixels, size);
+	int i;
+	char pixels[3*640*480];
+	
+	for (i = 0; i < size; i+=3)
+	{
+		pixels[i+2] = image[i+0];
+		pixels[i+1] = image[i+1];
+		pixels[i+0] = image[i+2];
+	}
 	if (write(dev, pixels, size) != size) {
 		perror("Error writing image to pipe!");
 		return 0;
@@ -165,13 +170,20 @@ int put_image(int dev, char *image, int size)
 
 /* more direct way */
 
-int get_frame(int offset)
+int get_frame(void)
 {
-	if ( dc1394_dma_single_capture(&camera) == DC1394_SUCCESS)
+	int i;
+	const int size = 640*480*3;
+
+	dc1394_dma_single_capture(&camera);
+	for (i = 0; i < size; i+=3)
 	{
-		swab(camera.capture_buffer, image_out+offset, WIDTH*HEIGHT*2);
-		dc1394_dma_done_with_buffer(&camera);
+		image_out[i+2] = camera.capture_buffer[i+0];
+		image_out[i+1] = camera.capture_buffer[i+1];
+		image_out[i+0] = camera.capture_buffer[i+2];
 	}
+	dc1394_dma_done_with_buffer(&camera);
+	
 	return 0;
 }
 
@@ -193,7 +205,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 		{
 			struct video_capability *vidcap=arg;
 
-			sprintf(vidcap->name, "IEEE 1394 Digital Camera");
+			sprintf(vidcap->name, "Jeroen's dummy v4l driver");
 			vidcap->type= VID_TYPE_CAPTURE;
 			vidcap->channels=1;
 			vidcap->audios=0;
@@ -208,7 +220,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			struct video_channel *vidchan=arg;
 			
 			if (vidchan->channel!=0)
-				return EINVAL;
+				return 1;
 			vidchan->flags=0;
 			vidchan->tuners=0;
 			vidchan->type= VIDEO_TYPE_CAMERA;
@@ -218,9 +230,10 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 		}
 		case VIDIOCSCHAN:
 		{
-			// int *v=arg;
-			// v[0] is the new channel?
-			// ignore channel changes
+			int *v=arg;
+			
+			if (v[0]!=0)
+				return 1;
 			return 0;
 		}
 		case VIDIOCGPICT:
@@ -232,9 +245,8 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			vidpic->brightness=0xffff;
 			vidpic->contrast=0xffff;
 			vidpic->whiteness=0xffff;
-			vidpic->depth=2;
-			vidpic->palette=v4l_fmt; 
-
+			vidpic->depth=3;
+			vidpic->palette=v4l_fmt;
 			return 0;
 		}
 		case VIDIOCSPICT:
@@ -242,7 +254,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			struct video_picture *vidpic=arg;
 			
 			if (vidpic->palette!=v4l_fmt)
-				return EINVAL;
+				return 1;
 			return 0;
 		}
 		case VIDIOCGWIN:
@@ -264,9 +276,9 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			
 			if (vidwin->width > WIDTH ||
 			    vidwin->height > HEIGHT )
-				return EINVAL;
+				return 1;
 			if (vidwin->flags)
-				return EINVAL;
+				return 1;
 			width=vidwin->width;
 			height=vidwin->height;
 			printf("new size: %dx%d\n", width, height);
@@ -276,8 +288,8 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 		{
 			struct video_mbuf *vidmbuf=arg;
 
-			vidmbuf->size=width*height*2;
-			vidmbuf->frames = V4L_BUFFERS;
+			vidmbuf->size=width*height*3;
+			vidmbuf->frames=1;
 			for (i=0; i<vidmbuf->frames; i++)
 				vidmbuf->offsets[i]=i*vidmbuf->size;
 			return 0;
@@ -286,10 +298,11 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 		{
 			struct video_mmap *vidmmap=arg;
 
+			return 0;
 			if (vidmmap->height>HEIGHT ||
 			    vidmmap->width>WIDTH ||
 			    vidmmap->format!=v4l_fmt )
-				return EINVAL;
+				return 1;
 			if (vidmmap->height!=height ||
 			    vidmmap->width!=width) {
 				height=vidmmap->height;
@@ -303,10 +316,10 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 		case VIDIOCSYNC:
 		{
 			//struct video_mmap *vidmmap=arg;
-			int frame = *(int*)arg;
+
 			// check if frames are ready.
 			// wait until ready.
-			get_frame( frame*width*height*2 );
+			get_frame();
 			return 0;
 		}
 		default:
@@ -424,8 +437,8 @@ int main(int argc,char *argv[])
 			}
 			 
 			if (dc1394_dma_setup_capture(handle, camera.node,  channel,
-									FORMAT_VGA_NONCOMPRESSED, MODE_320x240_YUV422,
-									SPEED_400, FRAMERATE_30, NUM_BUFFERS, DROP_FRAMES,
+									FORMAT_VGA_NONCOMPRESSED, MODE_640x480_RGB,
+									SPEED_400, FRAMERATE_15, NUM_BUFFERS, DROP_FRAMES,
 									dc_dev_name, &camera) != DC1394_SUCCESS) 
 			{
 				fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
@@ -465,7 +478,7 @@ int main(int argc,char *argv[])
 	
 	
 #ifdef USE_v4L_MMAP
-	image_out = v4l_create(v4l_dev, WIDTH*HEIGHT*2 * V4L_BUFFERS);
+	image_out = v4l_create(v4l_dev, WIDTH*HEIGHT*3);
 	if (!image_out) {
 		perror ("Failed to set device to zero-copy mode");
 		cleanup();
@@ -485,11 +498,9 @@ int main(int argc,char *argv[])
 	printf("Running. Press Ctrl+C to quit.\n");
 	while(1){
 
-		if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS)
-		{
-			put_image( v4l_dev, (char *) camera.capture_buffer, size);
-			dc1394_dma_done_with_buffer(&camera);
-		}
+		dc1394_dma_single_capture(&camera);
+		put_image( v4l_dev, (char *) camera.capture_buffer, size);
+		dc1394_dma_done_with_buffer(&camera);
 		
 	} /* while not interrupted */
 #endif
