@@ -683,6 +683,42 @@ GetFeatureValue(raw1394handle_t handle, nodeid_t node,
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
+static int
+GetConfigROMTaggedRegister(raw1394handle_t handle, nodeid_t node,
+			   unsigned int tag, octlet_t *offset, quadlet_t *value)
+{
+  unsigned int block_length;
+  int i;
+
+  // get the block length
+  if (GetCameraROMValue(handle,node,*offset,value)<0) {
+    return DC1394_FAILURE;
+  }
+  
+  block_length=*value>>16;
+
+  if (*offset+block_length>CSR_CONFIG_ROM_END) {
+    block_length=(CSR_CONFIG_ROM_END-*offset)/4;
+  }
+
+  // find the tag and return the result
+  for (i=0;i<block_length;i++) {
+    *offset+=4;
+    if (GetCameraROMValue(handle,node,*offset,value)<0) {
+      return DC1394_FAILURE;
+    }
+    else {
+      if ((*value>>24)==tag) {
+	return DC1394_SUCCESS;
+      }
+    }
+  }
+
+  return DC1394_FAILURE;
+
+}
+
+
 /**********************/
 /* External functions */
 /**********************/
@@ -886,7 +922,7 @@ int *myPort;
 int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 {
-    octlet_t offset = ROM_ROOT_DIRECTORY; // start at root
+    octlet_t offset;
     octlet_t ud_offset = 0;
     quadlet_t quadval = 0;
     dc1394bool_t ptgrey;
@@ -905,59 +941,44 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
      */
 
     /* get the unit_directory offset */
-    while ((quadval>>24) != 0xD1 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
-        {
-            *value= DC1394_FALSE;
-            return DC1394_FAILURE;
-        }
-        offset+=4;
-        usleep(1000);
+    offset= ROM_ROOT_DIRECTORY;
+    if (GetConfigROMTaggedRegister(handle, node, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
+      *value= DC1394_FALSE;
+      return DC1394_FAILURE;
     }
-
-    offset+= ((quadval & 0xFFFFFFUL) * 4) - 4;
-    quadval = 0;
-    ud_offset = offset;
-
+    else {
+      ud_offset=(quadval & 0xFFFFFFUL)*4+offset;
+    }
+  
     /* get the unit_spec_ID (should be 0x00A02D for 1394 digital camera) */
-    while ((quadval>>24) != 0x12 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
-        {
-            *value= DC1394_FALSE;
-            return DC1394_FAILURE;
-        }
-        offset+=4;
-        usleep(1000);
+    offset=ud_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0x12, &offset, &quadval)!=DC1394_SUCCESS) {
+      *value= DC1394_FALSE;
+      return DC1394_FAILURE;
     }
-    quadval&=0xFFFFFFUL;
+    else {
+      quadval&=0xFFFFFFUL;
+    }
 
     ptgrey=(quadval == 0x00B09DUL);
-      
-    if ( ! (quadval == 0x00A02DUL)||ptgrey)
+  
+    if ( ! ( (quadval == 0x00A02DUL) || ptgrey) )
     {
         *value= DC1394_FALSE;
         return DC1394_SUCCESS;
     }
 
     quadval = 0;
-    offset = ud_offset;
-
     /* get the unit_sw_version (should be 0x000100 - 0x000102 for 1394 digital camera) */
     /* DRD> without this check, AV/C cameras show up as well */
-    while ((quadval>>24) != 0x13 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
-        {
-            *value= DC1394_FALSE;
-            return DC1394_FAILURE;
-        }
-        offset+=4;
-        usleep(1000);
+    offset = ud_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0x13, &offset, &quadval)!=DC1394_SUCCESS) {
+      *value= DC1394_FALSE;
+      return DC1394_FAILURE;
     }
-    quadval &= 0xFFFFFFUL;
-
+    else {
+      quadval&=0xFFFFFFUL;
+    }
     if ((quadval == 0x000100UL) || 
         (quadval == 0x000101UL) ||
         (quadval == 0x000102UL) ||
@@ -977,38 +998,30 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 int
 dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value)
 {
-    octlet_t offset= ROM_ROOT_DIRECTORY;
-    quadlet_t quadval;
+    octlet_t offset;
+    octlet_t ud_offset = 0;
+    quadlet_t quadval = 0;
 
     /* get the unit_directory offset */
-    while ((quadval>>24) != 0xD1 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
-        {
-            *value= DC1394_FALSE;
-            return DC1394_FAILURE;
-        }
-        offset+=4;
-        usleep(1000);
+    offset= ROM_ROOT_DIRECTORY;
+    if (GetConfigROMTaggedRegister(handle, node, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
+      *value= DC1394_FALSE;
+      return DC1394_FAILURE;
     }
-
-    offset+= ((quadval & 0xFFFFFFUL) * 4) - 4;
-    quadval = 0;
-
-    while ((quadval>>24) != 0x13 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
-        {
-            *value= DC1394_FALSE;
-            return DC1394_FAILURE;
-        }
-        offset+=4;
-        usleep(1000);
+    else {
+      ud_offset=(quadval & 0xFFFFFFUL)*4+offset;
     }
-    quadval &= 0xFFFFFFUL;
-
-    *value= (quadval & 0xFFFFFFUL);
-    return DC1394_SUCCESS;
+  
+    /* get the unit_sw_version  */
+    offset = ud_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0x13, &offset, &quadval)!=DC1394_SUCCESS) {
+      *value= DC1394_FALSE;
+      return DC1394_FAILURE;
+    }
+    else {
+      quadval&=0xFFFFFFUL;
+      return DC1394_SUCCESS;
+    }
 }
 
 void
@@ -1033,9 +1046,10 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
 {
     dc1394bool_t iscamera;
     int retval, len;
-    quadlet_t offset = ROM_ROOT_DIRECTORY, offset2;
-    quadlet_t value[2];
+    octlet_t offset;
+    quadlet_t value[2], quadval;
     unsigned int count;
+    octlet_t ud_offset, udd_offset;
 
     if ( (retval= dc1394_is_camera(handle, node, &iscamera)) !=
          DC1394_SUCCESS )
@@ -1067,49 +1081,40 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
     info->euid_64= ((u_int64_t)value[0] << 32) | (u_int64_t)value[1];
 
     /* get the unit_directory offset */
-    while ((value[0]>>24) != 0xD1 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, value) < 0)
-            return DC1394_FAILURE;
-        offset+=4;
-        usleep(1000);
+    offset= ROM_ROOT_DIRECTORY;
+    if (GetConfigROMTaggedRegister(handle, node, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
+      return DC1394_FAILURE;
     }
-    offset+= ((value[0] & 0xFFFFFFUL) * 4) - 4;
-    value[0] = 0;
+    else {
+      ud_offset=(quadval & 0xFFFFFFUL)*4+offset;
+    }
 
-    /* now get the unit dependent directory offset */
-    while ((value[0]>>24) != 0xD4 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, value) < 0)
-            return DC1394_FAILURE;
-        offset+=4;
-        usleep(1000);
+    /* get the unit_dependent_directory offset */
+    offset= ud_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0xD4, &offset, &quadval)!=DC1394_SUCCESS) {
+      return DC1394_FAILURE;
     }
-    offset+= ((value[0] & 0xFFFFFFUL) * 4) - 4;
-    offset2 = offset; /* save to reset offset to top of directory */
-    value[0] = 0;
+    else {
+      udd_offset=(quadval & 0xFFFFFFUL)*4+offset;
+    }
 
     /* now get the command_regs_base */
-    while ((value[0]>>24) != 0x40 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, value) < 0)
-            return DC1394_FAILURE;
-        offset+=4;
-        usleep(1000);
+    offset= udd_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0x40, &offset, &quadval)!=DC1394_SUCCESS) {
+      return DC1394_FAILURE;
     }
-    info->ccr_offset= (octlet_t)(value[0]*4 & 0x00FFFFFFUL);
-    offset = offset2;
-    value[0] = 0;
+    else {
+      info->ccr_offset=(quadval & 0xFFFFFFUL)*4+offset;
+    }
 
     /* get the vendor_name_leaf offset */
-    while ((value[0]>>24) != 0x81 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, value) < 0)
-            return DC1394_FAILURE;
-        offset+=4;
-        usleep(1000);
+    offset= udd_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0x81, &offset, &quadval)!=DC1394_SUCCESS) {
+      return DC1394_FAILURE;
     }
-    offset+= ((value[0] & 0xFFFFFFUL) * 4) - 4;
+    else {
+      offset=(quadval & 0xFFFFFFUL)*4+offset;
+    }
 
     /* read in the length of the vendor name */
     if (GetCameraROMValue(handle, node, offset, value) < 0)
@@ -1117,8 +1122,7 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    len= (int)((value[0] >> 16) & 0xFFFFUL)*4-8;
-    /* Tim Evers corrected length value */ 
+    len= (int)((value[0] >> 16) & 0xFFFFUL)*4-8; /* Tim Evers corrected length value */ 
 
     if (len > MAX_CHARS)
     {
@@ -1147,16 +1151,14 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
     info->vendor[count]= '\0';
 
     /* get the model_name_leaf offset */
-    offset = offset2; /* start at the top of the directory again */
-    value[0] = 0;
-    while ((value[0]>>24) != 0x82 && offset < CSR_CONFIG_ROM_END)
-    {
-        if (GetCameraROMValue(handle, node, offset, value) < 0)
-            return DC1394_FAILURE;
-        offset+=4;
-        usleep(1000);
+    offset= udd_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0x82, &offset, &quadval)!=DC1394_SUCCESS) {
+      *value= DC1394_FALSE;
+      return DC1394_FAILURE;
     }
-    offset+= ((value[0] & 0xFFFFFFUL) * 4) - 4;
+    else {
+      offset=(quadval & 0xFFFFFFUL)*4+offset;
+    }
 
     /* read in the length of the model name */
     if (GetCameraROMValue(handle, node, offset, value) < 0)
@@ -1164,8 +1166,7 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    len= (int)((value[0] >> 16) & 0xFFFFUL)*4-8;
-    /* Tim Evers corrected length value */ 
+    len= (int)((value[0] >> 16) & 0xFFFFUL)*4-8; /* Tim Evers corrected length value */ 
 
     if (len > MAX_CHARS)
     {

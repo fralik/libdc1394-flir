@@ -295,3 +295,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	* dc1394_control.c: make config ROM reading more generic,
 		remove tab indenting to make consistent
 	* configure.in: incrmement lib revision
+
+2003-08-13 Damien <ddouxchamps@users.sf.net>
+	* dc1394_control.c: cleanup config ROM code; fix for Point
+	        Grey cameras
