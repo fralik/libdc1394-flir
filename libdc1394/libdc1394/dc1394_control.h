@@ -886,9 +886,13 @@ dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
  *                   or USE_MAX_AVAIL
  *   \param height   area of interest height or QUERY_FROM_CAMERA
  *                   or USE_MAX_AVAIL
+ *   \param camera   (out) structure containing the returned parameters
+ *                   from the camera. Memory for this struct must be
+ *                   allocated by the calling  function
  *
  *   \return DC1394_SUCCESS or DC1394_FAILURE
- *======================================================================*/
+ */
+/*======================================================================*/
 int
 dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                              int channel, int mode, int speed,
@@ -896,6 +900,49 @@ dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                              unsigned int left, unsigned int top,
                              unsigned int width, unsigned int height, 
                              dc1394_cameracapture * camera);
+  
+
+/*======================================================================*/
+/*!
+ *   setup capture for format7 (FORMAT_SCALABLE_IMAGE_SIZE) mode using
+ *   the dma engine.  Should be much faster than the above
+ *   routines. For some parameters you may pass QUERY_FROM_CAMERA
+ *   (which means query this value from the camera and maybe adjust it
+ *   to the new conditions) or USE_MAX_AVAIL (which means query the
+ *   maximum availible value for this parameter from camera and use
+ *   this)
+ *
+ *   \param handle   handle for raw1394 port
+ *   \param node     node of the camera
+ *   \param channel  iso channel for data transmission (0 ... 15)
+ *   \param mode     mode for camera operation 
+ *                   (MODE_FORMAT7_0 ... MODE_FORMAT7_7)
+ *   \param speed    transmission speed (SPEED_100 ... SPEED_400)
+ *   \param bytes_per_packet number of bytes per packet can be used to
+ *                   control the framerate or QUERY_FROM_CAMERA or
+ *                   USE_MAX_AVAIL
+ *   \param left     area of interest start column or QUERY_FROM_CAMERA
+ *   \param top      area of interest start row or QUERY_FROM_CAMERA
+ *   \param width    area of interest width or QUERY_FROM_CAMERA
+ *                   or USE_MAX_AVAIL
+ *   \param height   area of interest height or QUERY_FROM_CAMERA
+ *                   or USE_MAX_AVAIL
+ *   \param num_dma_buffers number of buffers for the dma ring buffer
+ *   \param camera   (out) structure containing the returned parameters
+ *                   from the camera. Memory for this struct must be
+ *                   allocated by the calling  function
+ *
+ *   \return DC1394_SUCCESS or DC1394_FAILURE
+ */
+/*======================================================================*/
+int
+dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
+                                 int channel, int mode, int speed,
+                                 int bytes_per_packet,
+                                 unsigned int left, unsigned int top,
+                                 unsigned int width, unsigned int height,
+                                 int num_dma_buffers,
+                                 dc1394_cameracapture *camera);
   
 
 int

@@ -348,7 +348,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
    *  ensure that quadlet aligned buffers are big enough, still expect
    *  problems when width*height  != quadlets_per_frame*4
    *-----------------------------------------------------------------------*/
-  if (dc1394_query_format7_total_bytes( handle, node, mode, camera->quadlets_per_frame))
+  if (dc1394_query_format7_total_bytes( handle, node, mode, &camera->quadlets_per_frame))
     {
       printf("(%s) Unable to get format 7 bytes per packet %d \n", __FILE__, mode);
       return DC1394_FAILURE;
@@ -422,6 +422,38 @@ dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
   
   return DC1394_SUCCESS;
 }
+
+
+
+/*=========================================================================
+ *  DESCRIPTION OF FUNCTION:  dc1394_dma_setup_format7_capture
+ *  ==> see headerfile
+ *=======================================================================*/
+int
+dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
+                                 int channel, int mode, int speed,
+                                 int bytes_per_packet,
+                                 unsigned int left, unsigned int top,
+                                 unsigned int width, unsigned int height,
+                                 int num_dma_buffers,
+                                 dc1394_cameracapture *camera)
+{
+
+    if (_dc1394_basic_format7_setup(handle,node, channel, mode,
+                            speed, bytes_per_packet,
+                            left, top, width, height, camera) == DC1394_FAILURE)
+    {
+        return DC1394_FAILURE;
+    }
+
+    if (_dc1394_dma_basic_setup(channel,num_dma_buffers, camera) == DC1394_FAILURE)
+    {
+        return DC1394_FAILURE;
+    }
+    return DC1394_SUCCESS;
+}
+
+
 
 int
 dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
