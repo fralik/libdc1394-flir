@@ -430,3 +430,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2004-02-04 Damien <ddouxchamps@users.sf.net>
     * apply patches from Tim Evers and Johann Schoonees
+
+2004-02-04 Kristoffer Delforge <delforge@users.sf.net>
+    * fixed trigger polarity bug
+    * fixed default format7 csr value bug (was "-1" instead of the new "0")
+    * revert FORMAT_STILL_IMAGE change.

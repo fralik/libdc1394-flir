@@ -1983,7 +1983,7 @@ dc1394_get_multi_shot(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on
  quadlet_t value;
  int retval = GetCameraControlRegister(handle, node,
                                           REG_CAMERA_ONE_SHOT, &value);
- *is_on = value & (ON_VALUE>>1);
+ *is_on = (value & (ON_VALUE>>1)) >> 30;
  *numFrames= value & 0xFFFFUL;
 
  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);     
@@ -2813,7 +2813,7 @@ dc1394_is_memory_save_in_operation(raw1394handle_t handle, nodeid_t node,
     quadlet_t quadlet;
     int retval= GetCameraControlRegister(handle, node, REG_CAMERA_MEMORY_SAVE,
                                          &quadlet);
-    *value = (quadlet & ON_VALUE);
+    *value = (quadlet & ON_VALUE) >> 31;
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
@@ -2859,7 +2859,7 @@ dc1394_set_trigger_polarity(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    curval= (curval & 0xFFF0FFFFUL) | ((polarity & 0x1UL) << 24);
+    curval= (curval & 0xFEFFFFFFUL) | ((polarity & 0x1UL) << 24);
     retval= SetCameraControlRegister(handle, node, REG_CAMERA_TRIGGER_MODE,
                                      curval);
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);

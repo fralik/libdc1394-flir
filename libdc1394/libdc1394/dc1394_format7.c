@@ -75,7 +75,7 @@ GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     dc1394_camerahandle *camera;
     camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
 
-    if (camera->format7_csr[mode-MODE_FORMAT7_MIN]==-1) {
+    if (camera->format7_csr[mode-MODE_FORMAT7_MIN]==0) {
       if (QueryFormat7CSROffset(handle, node, mode, &csr) != DC1394_SUCCESS) 
 	return DC1394_FAILURE;
       else 
@@ -142,7 +142,7 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     dc1394_camerahandle *camera;
     camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
 
-    if (camera->format7_csr[mode-MODE_FORMAT7_MIN]==-1) {
+    if (camera->format7_csr[mode-MODE_FORMAT7_MIN]==0) {
       if (QueryFormat7CSROffset(handle, node, mode, &csr) != DC1394_SUCCESS) 
 	return DC1394_FAILURE;
       else 
