@@ -637,9 +637,11 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
     int cb;
     int j;
     int result=-1;
+    int last_buffer_orig;
 
     for (i= 0; i < num; i++)
     {
+        last_buffer_orig = cams[i].dma_last_buffer;
         cb = (cams[i].dma_last_buffer + 1) % cams[i].num_dma_buffers;
         cams[i].dma_last_buffer = cb;
 
@@ -657,21 +659,19 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 			  break;
 			}
 			if ( result != 0) 
-			{       /*
-				printf("(%s) VIDEO1394_IOC_LISTEN_WAIT_BUFFER ioctl failed!\n",
-					   __FILE__);
-				cams[i].dma_last_buffer++;
-				return DC1394_FAILURE;*/
+			{       
+			        cams[i].dma_last_buffer = last_buffer_orig;
                                 if ((policy==VIDEO1394_POLL) && (errno == EINTR))
 				  {                       
 				    // when no frames is present, say so.
+				    cams[i].dma_last_buffer = last_buffer_orig;
 				    return DC1394_NO_FRAME;
 				  }
 				else
 				  {
 				    printf("(%s) VIDEO1394_IOC_LISTEN_WAIT/POLL_BUFFER ioctl failed!\n",
 					   __FILE__);
-				    cams[i].dma_last_buffer++;
+				    cams[i].dma_last_buffer++; //Ringbuffer-index or counter?
 				    return DC1394_FAILURE;
 				  }
 			}
@@ -701,8 +701,10 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 			{
 				int extra_buf;
 				extra_buf = vwait.buffer;
-				for (j = 0; j < extra_buf; j++)
-				{
+				if (extra_buf > 0)
+ 				{
+				    for (j = 0; j < extra_buf; j++)
+				    {
 					vwait.buffer = (cb + j) % cams[i].num_dma_buffers;
 					if (ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
 					{
@@ -710,8 +712,21 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 							   "multi capture!\n", __FILE__);
 						return DC1394_FAILURE;
 					}
+				    }
+				    cams[i].dma_last_buffer = (cb + extra_buf) % cams[i].num_dma_buffers;
+
+				    /* Get the corresponding filltime: */
+				    vwait.buffer = cams[i].dma_last_buffer;
+				    if(ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_POLL_BUFFER, &vwait) < 0)
+				    {
+					printf("(%s) VIDEO1394_IOC_LISTEN_POLL_BUFFER "
+					       "failed in multi capture!\n",
+					       __FILE__);
+					return DC1394_FAILURE;
+				    }
+				    cams[i].filltime = vwait.filltime;
 				}
-				cams[i].dma_last_buffer = (cb + extra_buf) % cams[i].num_dma_buffers;
+
 				cams[i].capture_buffer  = (int*)(cams[i].dma_ring_buffer +
 											   (cams[i].dma_last_buffer) *
 											   cams[i].dma_frame_size);

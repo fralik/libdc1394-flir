@@ -412,7 +412,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-01-31 Damien <ddouxchamps@users.sf.net>
     * Version 0.9.3
 	
-2004-02-04 Damien <ddouxchamps@users.sf.net>
+2004-02-03 Damien <ddouxchamps@users.sf.net>
     * fixed bpp issue in _dc1394_basic_format7_setup
     * fixed missing *4 in boundary check of GetConfigROMTaggedRegister
 
@@ -427,3 +427,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * removed FORMAT_STILL_IMAGE definition to 390, it messes up with the
       number of available formats
     * replaced a 0x1<<31 by ON_VALUE
+
+2004-02-04 Damien <ddouxchamps@users.sf.net>
+    * apply patches from Tim Evers and Johann Schoonees
