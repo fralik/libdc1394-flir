@@ -1550,6 +1550,7 @@ dc1394_query_csr_offset(raw1394handle_t handle, nodeid_t node, int mode,
     retval= GetCameraControlRegister(handle, node,
                                      REG_CAMERA_V_CSR_INQ_BASE +
                                      (mode * 0x04U), value);
+    retval*= 4;
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
