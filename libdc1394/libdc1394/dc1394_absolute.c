@@ -149,7 +149,7 @@ GetCameraAbsoluteRegister(raw1394handle_t handle, nodeid_t node,
 
 static int
 SetCameraAbsoluteRegister(raw1394handle_t handle, nodeid_t node,
-			  int feature, octlet_t offset, quadlet_t value)
+			  int feature, octlet_t offset, quadlet_t* value)
 {
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
@@ -161,13 +161,13 @@ SetCameraAbsoluteRegister(raw1394handle_t handle, nodeid_t node,
     csr*= 0x04UL;
   
     /* conditionally byte swap the value (addition by PDJ) */
-    value= htonl(value);
+    *value= htonl(*value);
  
     /* retry a few times if necessary (addition by PDJ) */
     while(retry--)
     {
         retval= raw1394_write(handle, 0xffc0 | node,
-                              CONFIG_ROM_BASE + offset + csr, 4, &value);
+                              CONFIG_ROM_BASE + offset + csr, 4, value);
 
 #ifdef LIBRAW1394_OLD
         if (retval >= 0)
@@ -220,10 +220,10 @@ dc1394_query_absolute_feature_min_max(raw1394handle_t handle, nodeid_t node,
     {
         retval= GetCameraAbsoluteRegister(handle, node, feature,
 					  REG_CAMERA_ABS_MAX,
-					  max);
+					  (quadlet_t*)max);
         retval= GetCameraAbsoluteRegister(handle, node, feature,
 					  REG_CAMERA_ABS_MIN,
-					  min);
+					  (quadlet_t*)min);
         //*max=value;
     }
 
@@ -245,7 +245,7 @@ dc1394_query_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
     {
         retval= GetCameraAbsoluteRegister(handle, node, feature,
 					  REG_CAMERA_ABS_VALUE,
-					  value);
+					  (quadlet_t*)value);
         //*max=value;
     }
 
@@ -255,10 +255,10 @@ dc1394_query_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
 
 int
 dc1394_set_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
-				  int feature, float value)
+				  int feature, float* value)
 {
     if (SetCameraAbsoluteRegister(handle, node, feature, REG_CAMERA_ABS_VALUE,
-				  value) != DC1394_SUCCESS)
+				  (quadlet_t*)value) != DC1394_SUCCESS)
       {
 	printf("(%s) Absolute value setting failure \n", __FILE__);
 	return DC1394_FAILURE;

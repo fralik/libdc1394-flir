@@ -1086,7 +1086,7 @@ dc1394_query_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
 
 int
 dc1394_set_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
-				  int feature, float value);
+				  int feature, float *value);
 
 int
 dc1394_has_absolute_setting(raw1394handle_t handle, nodeid_t node,

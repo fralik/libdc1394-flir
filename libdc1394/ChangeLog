@@ -251,3 +251,6 @@ Thu Sep 10-11 12:00:00 2002 <ddouxchamps@users.sf.net>
 
 Thu Sep 22 17:30:00 2002 <ddouxchamps@users.sf.net>
     * added absolute feature setting functions. This is a first hack. 
+
+Thu Sep 23 10:10:00 2002 <ddouxchamps@users.sf.net>
+    * debugged absolute settings. Tested for shutter without problems.
