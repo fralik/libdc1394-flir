@@ -131,12 +131,12 @@
     else                                                              \
     {                                                                 \
         offset= REG_CAMERA_FEATURE_LO_BASE;                           \
-        feature-= FEATURE_ZOOM;                                       \
                                                                       \
         if (feature >= FEATURE_CAPTURE_SIZE)                          \
         {                                                             \
             feature+= 12;                                             \
         }                                                             \
+        feature-= FEATURE_ZOOM;                                       \
                                                                       \
     }                                                                 \
                                                                       \
@@ -157,12 +157,12 @@
     else                                                              \
     {                                                                 \
         offset= REG_CAMERA_FEATURE_LO_BASE_INQ;                       \
-        feature-= FEATURE_ZOOM;                                       \
                                                                       \
         if (feature >= FEATURE_CAPTURE_SIZE)                          \
         {                                                             \
             feature+= 12;                                             \
         }                                                             \
+        feature-= FEATURE_ZOOM;                                       \
                                                                       \
     }                                                                 \
                                                                       \
@@ -656,16 +656,22 @@ IsFeatureBitSet(quadlet_t value, unsigned int feature)
 
     if (feature >= FEATURE_ZOOM)
     {
+      if (feature >= FEATURE_CAPTURE_SIZE) {
+	feature+= 12;
+      }
         feature-= FEATURE_ZOOM;
-        if (feature >= FEATURE_CAPTURE_SIZE)
-            feature+= 12;
     }
     else
     {
         feature-= FEATURE_MIN;
     }
 
-    return(value & (0x80000000UL >> feature));
+    value&=(0x80000000UL >> feature);
+
+    if (value>0)
+      return DC1394_TRUE;
+    else
+      return DC1394_FALSE;
 }
 
 static int 
@@ -1306,21 +1312,24 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
 
     orig_fid= feature->feature_id;
     updated_fid= feature->feature_id;
-    FEATURE_TO_INQUIRY_OFFSET(updated_fid, offset);
+    
 
-    if (GetCameraControlRegister(handle, node, offset, &value) < 0)
-    {
-        return DC1394_FAILURE;
+    // check presence
+    if (dc1394_is_feature_present(handle, node, feature->feature_id, &(feature->available))!=DC1394_SUCCESS) {
+      return DC1394_FAILURE;
     }
-
-    feature->available= (value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
 
     if (feature->available == DC1394_FALSE)
     {
         return DC1394_SUCCESS;
     }
 
-    if (orig_fid != FEATURE_TRIGGER) 
+    // get capabilities
+    if (dc1394_query_feature_characteristics(handle, node, feature->feature_id, &value)!=DC1394_SUCCESS) {
+      return DC1394_FAILURE;
+    }
+
+    if (feature->feature_id != FEATURE_TRIGGER) 
     {
         feature->polarity_capable= 0;
         feature->trigger_mode= 0;
@@ -1341,7 +1350,7 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
     feature->on_off_capable=
         (value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
 
-    if (orig_fid != FEATURE_TRIGGER) 
+    if (feature->feature_id != FEATURE_TRIGGER) 
     {
         feature->auto_capable=
             (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -1357,6 +1366,7 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
         feature->manual_capable= DC1394_FALSE;
     }
 
+    // get current values
     updated_fid= orig_fid;
     FEATURE_TO_VALUE_OFFSET(updated_fid, offset);
 
@@ -1666,7 +1676,7 @@ dc1394_query_basic_functionality(raw1394handle_t handle, nodeid_t node,
                                          REG_CAMERA_BASIC_FUNC_INQ, value);
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
-
+/*
 int
 dc1394_query_feature_control(raw1394handle_t handle, nodeid_t node,
                              unsigned int feature, unsigned int *availability)
@@ -1686,16 +1696,16 @@ dc1394_query_feature_control(raw1394handle_t handle, nodeid_t node,
     {
         offset= REG_CAMERA_FEATURE_LO_INQ;
     }
-
     if (GetCameraControlRegister(handle, node, offset, &value) < 0)
     {
         return DC1394_FAILURE;
     }
 
     *availability= IsFeatureBitSet(value, feature);
+
     return DC1394_SUCCESS;
 }
-
+*/
 int
 dc1394_query_advanced_feature_offset(raw1394handle_t handle, nodeid_t node,
                                      quadlet_t *value)
@@ -2316,22 +2326,46 @@ dc1394_is_feature_present(raw1394handle_t handle, nodeid_t node,
     octlet_t offset;
     quadlet_t quadval;
 
-    FEATURE_TO_INQUIRY_OFFSET(feature, offset);
-
-    if (GetCameraControlRegister(handle, node, offset, &quadval) < 0)
+    // check feature presence in 0x404 and 0x408
+    if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) )
     {
-        return DC1394_FAILURE;
+      return DC1394_FAILURE;
     }
-
-    if (quadval & 0x80000000UL)
+    else if (feature < FEATURE_ZOOM)
     {
-        *value= DC1394_TRUE;
+        offset= REG_CAMERA_FEATURE_HI_INQ;
     }
     else
     {
-        *value= DC1394_FALSE;
+        offset= REG_CAMERA_FEATURE_LO_INQ;
+    }
+    if (GetCameraControlRegister(handle, node, offset, &quadval) < 0)
+    {
+      return DC1394_FAILURE;
     }
 
+    if (IsFeatureBitSet(quadval, feature)!=DC1394_TRUE) {
+      *value=DC1394_FALSE;
+      return DC1394_SUCCESS;
+    }
+
+    FEATURE_TO_INQUIRY_OFFSET(feature, offset);
+    
+    if (GetCameraControlRegister(handle, node, offset, &quadval) < 0)
+      {
+	*value=DC1394_FALSE;
+	return DC1394_FAILURE;
+      }
+    
+    if (quadval & 0x80000000UL)
+      {
+	*value= DC1394_TRUE;
+      }
+    else
+      {
+	*value= DC1394_FALSE;
+      }
+    
     return DC1394_SUCCESS;
 }
 

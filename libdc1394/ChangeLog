@@ -304,3 +304,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * use command register base from config rom offset instead of hardcoded
     * make raw1394 userdata point to a new dc1394_camerahandle struct 
       containing port, software version, and command register base
+
+
+2003-08-28 Damien <ddouxchamps@users.sf.net>
+    * fixed feature detection: we now use both 0x404 and 0x5XX registers in
+      dc1394_is_feature_present. dc1394_query_feature_control is deprecated
+      and has been commented out. 
+
+	

@@ -454,9 +454,11 @@ dc1394_query_revision(raw1394handle_t handle, nodeid_t node, int mode,
 int
 dc1394_query_basic_functionality(raw1394handle_t handle, nodeid_t node,
                                  quadlet_t *value);
+/*
 int
 dc1394_query_feature_control(raw1394handle_t handle, nodeid_t node,
                              unsigned int feature, unsigned int *availability);
+*/
 int
 dc1394_query_advanced_feature_offset(raw1394handle_t handle, nodeid_t node,
                                      quadlet_t *value);
