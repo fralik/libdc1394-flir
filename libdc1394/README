@@ -21,7 +21,10 @@ stated at the top of the individual files.
 
 There is currently no external document describing the library functions,
 but you can find documentation for all functions in the header file
-dc1394_control.h
+dc1394_control.h. There are sample programs in the examples directory,
+which are helpful for learning. For a more comprehensive demonstration of the
+features of libdc1394, review the Coriander application source code, 
+available at http://sf.net/projects/coriander/.
 
 4. Maintainer
 

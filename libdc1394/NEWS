@@ -39,3 +39,10 @@ Version 0.8.1:
 - dc1394_dma_unlisten() added
 - resume iso transmission after it has been stopped in _dc1394_basic_setup()
 - bugfixes
+
+Version 0.8.2:
+- bugfix dc1394_get_camera_feature() failing
+- added libraw1394 0.9 compatibility
+- new trigger control functions
+- synchronize kernel-video1394.h with the recent version
+

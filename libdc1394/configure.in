@@ -1,10 +1,11 @@
 # process this file with autoconf to get a configure script
-AC_INIT(src/dc1394_control.c)
+AC_INIT(libdc1394/dc1394_control.c)
 
-AM_INIT_AUTOMAKE(libdc1394, 0.8.2)
-AM_CONFIG_HEADER(src/config.h)
+AM_INIT_AUTOMAKE(libdc1394, 0.8.3)
+AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
+AC_PROG_LIBTOOL
 AM_PROG_LIBTOOL
 
 # Check for the new version of libraw1394 first since they might have both
@@ -24,7 +25,7 @@ AC_FUNC_MMAP
 
 # set the libtool shared library version numbers
 lt_major=8
-lt_revision=2
+lt_revision=3
 lt_age=8
 
 AC_SUBST(lt_major)
@@ -32,4 +33,4 @@ AC_SUBST(lt_revision)
 AC_SUBST(lt_age)
 
 CFLAGS="$CFLAGS -Wall -Wunused"
-AC_OUTPUT([ Makefile src/Makefile ])
+AC_OUTPUT([ Makefile libdc1394/Makefile examples/Makefile ])

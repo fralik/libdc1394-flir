@@ -9,7 +9,7 @@ ORIGDIR=`pwd`
 cd $srcdir
 PROJECT=libdc1394
 TEST_TYPE=-f
-FILE=src/dc1394_control.h
+FILE=libdc1394/dc1394_control.h
 
 DIE=0
 

@@ -159,4 +159,9 @@ Tue Jul  3 16:33:50 2001   <GordPeters@smarttech.com>
 Sat Sept 08 02:19:48 2001 <dan@dennedy.org>
 
     * Updated kernel-video1394.h against current CVS version
-
+    
+Mon Sept 24 22:36:12 2001 <dan@dennedy.org>
+	* moved src -> libdc1394
+	* included examples subdir in autoconf and automake
+	* added examples/Makefile.am
+	* examples build, but do not automatically install 
