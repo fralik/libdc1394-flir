@@ -3001,3 +3001,68 @@ dc1394_has_absolute_control(raw1394handle_t handle, nodeid_t node,
 
     return DC1394_SUCCESS;
 }
+
+
+/* This function returns the bandwidth used by the camera in bandwidth units.
+   The 1394 bus has 4915 bandwidth units available per cycle. Each unit corresponds
+   to the time it takes to send one quadlet at ISO speed S1600. The bandwidth usage
+   at S400 is thus four times the number of quadlets per packet. Thanks to Krisitian
+   Hogsberg for clarifying this.
+*/
+
+int
+dc1394_get_bandwidth_usage(raw1394handle_t handle, nodeid_t node, unsigned int *bandwidth)
+{
+  
+  unsigned int format, iso, mode, qpp, channel, speed, framerate=0;
+
+  // get camera ISO status:
+  if (dc1394_get_iso_status(handle, node, &iso)!= DC1394_SUCCESS)
+    return DC1394_FAILURE;
+  
+  if (iso==DC1394_TRUE) {
+
+    // get format and mode
+    if (dc1394_get_video_format(handle, node, &format) != DC1394_SUCCESS)
+      return DC1394_FAILURE;
+    
+    if (dc1394_get_video_mode(handle, node, &mode) != DC1394_SUCCESS)
+      return DC1394_FAILURE;
+    
+    if (format==FORMAT_SCALABLE_IMAGE_SIZE) {
+      // use the bytes per packet value:
+      if (dc1394_query_format7_byte_per_packet(handle, node, mode, &qpp) != DC1394_SUCCESS)
+	return DC1394_FAILURE;
+      qpp=qpp/4;
+    }
+    else {
+      // get the framerate:
+      if (dc1394_get_video_framerate(handle, node, &framerate) != DC1394_SUCCESS)
+	return DC1394_FAILURE;
+      qpp=_dc1394_get_quadlets_per_packet(format, mode, framerate); 
+    }
+    // add the ISO header and footer:
+    qpp+=3;
+
+    // get camera ISO speed:
+    if (dc1394_get_iso_channel_and_speed(handle, node, &channel, &speed)!= DC1394_SUCCESS)
+      return DC1394_FAILURE;
+    
+    // mutiply by 4 anyway because the best speed is SPEED_400 only
+    *bandwidth = qpp * 4 * (0x1 << (SPEED_400-speed));
+  }
+  else {
+    *bandwidth=0;
+  }
+  return DC1394_SUCCESS;
+    
+}
+
+int
+dc1394_get_camera_port(raw1394handle_t handle)
+{
+  dc1394_camerahandle *camerahandle;
+  camerahandle=(dc1394_camerahandle*) raw1394_get_userdata(handle);
+  return(camerahandle->port);
+
+}

@@ -281,9 +281,9 @@ _dc1394_dma_basic_setup(int channel,
     vmmap.channel= channel;
 
     /* tell the video1394 system that we want to listen to the given channel */
-    if (ioctl(camera->dma_fd, VIDEO1394_LISTEN_CHANNEL, &vmmap) < 0)
+    if (ioctl(camera->dma_fd, VIDEO1394_IOC_LISTEN_CHANNEL, &vmmap) < 0)
     {
-        printf("(%s) VIDEO1394_LISTEN_CHANNEL ioctl failed!\n", __FILE__);
+        printf("(%s) VIDEO1394_IOC_LISTEN_CHANNEL ioctl failed!\n", __FILE__);
         return DC1394_FAILURE;
     }
     //fprintf(stderr,"listening channel set\n");
@@ -298,11 +298,11 @@ _dc1394_dma_basic_setup(int channel,
     {
         vwait.buffer= i;
 
-        if (ioctl(camera->dma_fd,VIDEO1394_LISTEN_QUEUE_BUFFER,&vwait) < 0)
+        if (ioctl(camera->dma_fd,VIDEO1394_IOC_LISTEN_QUEUE_BUFFER,&vwait) < 0)
         {
-            printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER ioctl failed!\n",
+            printf("(%s) VIDEO1394_IOC_LISTEN_QUEUE_BUFFER ioctl failed!\n",
                    __FILE__);
-            ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL,
+            ioctl(camera->dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL,
                   &(vwait.channel));
             return DC1394_FAILURE;
         }
@@ -316,7 +316,7 @@ _dc1394_dma_basic_setup(int channel,
     /* make sure the ring buffer was allocated */
     if (camera->dma_ring_buffer == (unsigned char*)(-1)) {
         printf("(%s) mmap failed!\n", __FILE__);
-        ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
+        ioctl(camera->dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
         return DC1394_FAILURE;
     }
 
@@ -330,7 +330,7 @@ _dc1394_dma_basic_setup(int channel,
 		if (camera->dma_extra_buffer == NULL)
 		{
 			printf("(%s) failed to allocate internal buffers!\n", __FILE__);
-			ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
+			ioctl(camera->dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
 			munmap((void*)camera->dma_ring_buffer,camera->dma_buffer_size);
 			return DC1394_FAILURE;
 		}
@@ -567,7 +567,7 @@ dc1394_dma_release_camera(raw1394handle_t handle,
                           dc1394_cameracapture *camera) 
 {
     //dc1394_stop_iso_transmission(handle,camera->node);
-    //ioctl(_dc1394_dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &(camera->channel));
+    //ioctl(_dc1394_dma_fd,VIDEO1394_IOC_UNLISTEN_CHANNEL, &(camera->channel));
 
     if (camera->dma_ring_buffer)
     {
@@ -605,7 +605,7 @@ int
 dc1394_dma_unlisten(raw1394handle_t handle, dc1394_cameracapture *camera)
 {
 
-    if (ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &(camera->channel))
+    if (ioctl(camera->dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(camera->channel))
         < 0)
     {
         return DC1394_FAILURE;
@@ -655,9 +655,9 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 			vwait.channel = cams[i].channel;
 			vwait.buffer = cb;
 
-			if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
+			if (ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER, &vwait) != 0) 
 			{
-				printf("(%s) VIDEO1394_LISTEN_WAIT_BUFFER ioctl failed!\n",
+				printf("(%s) VIDEO1394_IOC_LISTEN_WAIT_BUFFER ioctl failed!\n",
 					   __FILE__);
 				cams[i].dma_last_buffer++;
 				return DC1394_FAILURE;
@@ -691,9 +691,9 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 				for (j = 0; j < extra_buf; j++)
 				{
 					vwait.buffer = (cb + j) % cams[i].num_dma_buffers;
-					if (ioctl(cams[i].dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
+					if (ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
 					{
-						printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER failed in "
+						printf("(%s) VIDEO1394_IOC_LISTEN_QUEUE_BUFFER failed in "
 							   "multi capture!\n", __FILE__);
 						return DC1394_FAILURE;
 					}
@@ -736,9 +736,9 @@ dc1394_dma_done_with_buffer(dc1394_cameracapture *camera)
     vwait.channel= camera->channel;
     vwait.buffer= camera->dma_last_buffer;
 
-    if (ioctl(camera->dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
+    if (ioctl(camera->dma_fd, VIDEO1394_IOC_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
     {
-        printf("(%s) VIDEO1394_LISTEN_QUEUE_BUFFER failed in "
+        printf("(%s) VIDEO1394_IOC_LISTEN_QUEUE_BUFFER failed in "
                "done with buffer!\n", __FILE__);
         return DC1394_FAILURE;
     }

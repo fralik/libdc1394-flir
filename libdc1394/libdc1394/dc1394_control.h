@@ -1112,6 +1112,13 @@ int
 dc1394_has_absolute_control(raw1394handle_t handle, nodeid_t node,
 			    unsigned int feature, dc1394bool_t *value);
 
+
+int
+dc1394_get_bandwidth_usage(raw1394handle_t handle, nodeid_t node, unsigned int *bandwidth);
+
+int
+dc1394_get_camera_port(raw1394handle_t handle);
+
 #ifdef __cplusplus
 }
 #endif
