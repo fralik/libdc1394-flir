@@ -120,6 +120,7 @@
     else if (feature < FEATURE_ZOOM)                                  \
     {                                                                 \
 	offset= REG_CAMERA_FEATURE_HI_BASE;                           \
+        feature-= FEATURE_MIN;                                        \
     }                                                                 \
     else                                                              \
     {                                                                 \
@@ -133,7 +134,7 @@
                                                                       \
     }                                                                 \
                                                                       \
-    offset+= (feature - FEATURE_MIN) * 0x04U;
+    offset+= feature * 0x04U;
 
 #define FEATURE_TO_INQUIRY_OFFSET(feature, offset)                    \
                                                                       \
@@ -144,6 +145,7 @@
     else if (feature < FEATURE_ZOOM)                                  \
     {                                                                 \
 	offset= REG_CAMERA_FEATURE_HI_BASE_INQ;                       \
+        feature-= FEATURE_MIN;                                        \
     }                                                                 \
     else                                                              \
     {                                                                 \
@@ -157,13 +159,13 @@
                                                                       \
     }                                                                 \
                                                                       \
-    offset+= (feature - FEATURE_MIN) * 0x04U;
+    offset+= feature * 0x04U;
 
 /**************************/
 /*  Constant definitions  */
 /**************************/
 
-const char * dc1394_feature_desc[NUM_FEATURES] =
+const char *dc1394_feature_desc[NUM_FEATURES] =
 {
     "Brightness",
     "Exposure",
@@ -185,7 +187,6 @@ const char * dc1394_feature_desc[NUM_FEATURES] =
     "Capture Size",
     "Capture Quality"
 };
-
 
 /*
   These arrays define how many image quadlets there
@@ -632,8 +633,10 @@ IsFeatureBitSet(quadlet_t value, unsigned int feature)
 	}
 
     }
-
-    feature-= FEATURE_MIN;
+    else
+    {
+        feature-= FEATURE_MIN;
+    }
 
     return(value & (0x80000000UL >> feature));
 }
@@ -1585,7 +1588,11 @@ dc1394_get_video_framerate(raw1394handle_t handle, nodeid_t node,
     quadlet_t value;
     int retval= GetCameraControlRegister(handle, node, REG_CAMERA_FRAME_RATE,
                                          &value);
-    *framerate= (unsigned int)((value >> 29) & 0x7UL);
+
+    if (!retval) {
+        *framerate= (unsigned int)((value >> 29) & 0x7UL) + FRAMERATE_MIN;
+    }
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
@@ -1593,9 +1600,14 @@ int
 dc1394_set_video_framerate(raw1394handle_t handle, nodeid_t node,
                            unsigned int framerate)
 {
-    int retval= SetCameraControlRegister(handle, node, REG_CAMERA_FRAME_RATE,
-                                         (quadlet_t)
-                                         ((framerate & 0x7UL) << 29));
+    int retval;
+
+    if ( (framerate < FRAMERATE_MIN) || (framerate > FRAMERATE_MAX) ) {
+        return DC1394_FAILURE;
+    }
+
+    retval= SetCameraControlRegister(handle, node, REG_CAMERA_FRAME_RATE,
+                     (quadlet_t)(((framerate - FRAMERATE_MIN) & 0x7UL) << 29));
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
@@ -1604,18 +1616,87 @@ dc1394_get_video_mode(raw1394handle_t handle, nodeid_t node,
                       unsigned int *mode)
 {
     quadlet_t value;
-    int retval= GetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_MODE,
-                                         &value);
-    *mode= (unsigned int)((value >> 29) & 0x7UL);
+    int retval;
+    unsigned int format;
+
+    if (dc1394_get_video_format(handle, node, &format) == DC1394_FAILURE) {
+        return DC1394_FAILURE;
+    }
+
+    retval= GetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_MODE,
+                                     &value);
+
+    if (!retval) {
+
+        switch(format) {
+        case FORMAT_VGA_NONCOMPRESSED:
+            *mode= (unsigned int)((value >> 29) & 0x7UL) + MODE_FORMAT0_MIN;
+            break;
+        case FORMAT_SVGA_NONCOMPRESSED_1:
+            *mode= (unsigned int)((value >> 29) & 0x7UL) + MODE_FORMAT1_MIN;
+            break;
+        case FORMAT_SVGA_NONCOMPRESSED_2:
+            *mode= (unsigned int)((value >> 29) & 0x7UL) + MODE_FORMAT2_MIN;
+            break;
+        case FORMAT_STILL_IMAGE:
+            *mode= (unsigned int)((value >> 29) & 0x7UL) + MODE_FORMAT6_MIN;
+            break;
+        case FORMAT_SCALABLE_IMAGE_SIZE:
+            *mode= (unsigned int)((value >> 29) & 0x7UL) + MODE_FORMAT7_MIN;
+            break;
+        default:
+            return DC1394_FAILURE;
+            break;
+        }
+
+    }
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
 int
 dc1394_set_video_mode(raw1394handle_t handle, nodeid_t node, unsigned int mode)
 {
-    int retval= SetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_MODE,
-                                         (quadlet_t)
-                                         ((mode & 0x7UL) << 29));
+    int retval;
+    unsigned int format, min, max;
+
+    if (dc1394_get_video_format(handle, node, &format) == DC1394_FAILURE) {
+        return DC1394_FAILURE;
+    }
+
+    switch(format) {
+        case FORMAT_VGA_NONCOMPRESSED:
+            min= MODE_FORMAT0_MIN;
+            max= MODE_FORMAT0_MAX;
+            break;
+        case FORMAT_SVGA_NONCOMPRESSED_1:
+            min= MODE_FORMAT1_MIN;
+            max= MODE_FORMAT1_MAX;
+            break;
+        case FORMAT_SVGA_NONCOMPRESSED_2:
+            min= MODE_FORMAT2_MIN;
+            max= MODE_FORMAT2_MAX;
+            break;
+        case FORMAT_STILL_IMAGE:
+            min= MODE_FORMAT6_MIN;
+            max= MODE_FORMAT6_MAX;
+            break;
+        case FORMAT_SCALABLE_IMAGE_SIZE:
+            min= MODE_FORMAT7_MIN;
+            max= MODE_FORMAT7_MAX;
+            break;
+        default:
+            return DC1394_FAILURE;
+            break;
+    }
+
+    if ( (mode < min) || (mode > max) ) {
+        return DC1394_FAILURE;
+    }
+
+    retval= SetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_MODE,
+                                    (quadlet_t)(((mode - min) & 0x7UL) << 29));
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
@@ -1626,7 +1707,11 @@ dc1394_get_video_format(raw1394handle_t handle, nodeid_t node,
     quadlet_t value;
     int retval= GetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_FORMAT,
                                          &value);
-    *format= (unsigned int)((value >> 29) & 0x7UL);
+
+    if (!retval) {
+        *format= (unsigned int)((value >> 29) & 0x7UL) + FORMAT_MIN;
+    }
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
@@ -1634,9 +1719,14 @@ int
 dc1394_set_video_format(raw1394handle_t handle, nodeid_t node,
                         unsigned int format)
 {
-    int retval= SetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_FORMAT,
-                                         (quadlet_t)
-                                         ((format & 0x7UL) << 29));
+    int retval;
+
+    if ( (format < FORMAT_MIN) || (format > FORMAT_MAX) ) {
+        return DC1394_FAILURE;
+    }
+
+    retval= SetCameraControlRegister(handle, node, REG_CAMERA_VIDEO_FORMAT,
+                           (quadlet_t)(((format - FORMAT_MIN) & 0x7UL) << 29));
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 

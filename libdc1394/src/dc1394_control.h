@@ -54,7 +54,7 @@
 
 
 /* Enumeration of data speeds */
-enum 
+enum
 {
     SPEED_100= 0,
     SPEED_200,
@@ -67,7 +67,7 @@ enum
 /* Enumeration of camera framerates */
 enum 
 {
-    FRAMERATE_1_875= 0,
+    FRAMERATE_1_875= 32,
     FRAMERATE_3_75,
     FRAMERATE_7_5,
     FRAMERATE_15,
@@ -81,7 +81,7 @@ enum
 /* Enumeration of camera modes for Format_0 */
 enum 
 {
-    MODE_160x120_YUV444= 32,
+    MODE_160x120_YUV444= 64,
     MODE_320x240_YUV422,
     MODE_640x480_YUV411,
     MODE_640x480_YUV422,
@@ -96,7 +96,7 @@ enum
 /* Enumeration of camera modes for Format_1 */
 enum 
 {
-    MODE_800x600_YUV422= 64,
+    MODE_800x600_YUV422= 96,
     MODE_800x600_RGB,
     MODE_800x600_MONO,
     MODE_1024x768_YUV422,
@@ -113,7 +113,7 @@ enum
 /* Enumeration of camera modes for Format_2 */
 enum 
 {
-    MODE_1280x960_YUV422= 96,
+    MODE_1280x960_YUV422= 128,
     MODE_1280x960_RGB,
     MODE_1280x960_MONO,
     MODE_1600x1200_YUV422,
@@ -129,7 +129,7 @@ enum
 /* Enumeration of camera modes for Format_6 */
 enum 
 {
-    MODE_EXIF= 128
+    MODE_EXIF= 256
 };
 #define MODE_FORMAT6_MIN            MODE_EXIF
 #define MODE_FORMAT6_MAX            MODE_EXIF
@@ -137,7 +137,7 @@ enum
 
 /* Enumeration of camera modes for Format_7 */
 enum {
-    MODE_FORMAT7_0= 160,
+    MODE_FORMAT7_0= 288,
     MODE_FORMAT7_1,
     MODE_FORMAT7_2,
     MODE_FORMAT7_3,
@@ -152,7 +152,7 @@ enum {
 
 /* Enumeration of Format_7 color modes */
 enum {
-    COLOR_FORMAT7_MONO8= 192,
+    COLOR_FORMAT7_MONO8= 320,
     COLOR_FORMAT7_YUV411,
     COLOR_FORMAT7_YUV422,
     COLOR_FORMAT7_YUV444,
@@ -166,7 +166,7 @@ enum {
 
 /* Enumeration of trigger modes */
 enum {
-    TRIGGER_MODE_0= 224,
+    TRIGGER_MODE_0= 352,
     TRIGGER_MODE_1,
     TRIGGER_MODE_2,
     TRIGGER_MODE_3
@@ -176,15 +176,12 @@ enum {
 #define NUM_TRIGGER_MODE            (TRIGGER_MODE_3 - TRIGGER_MODE_0 + 1)
 
 /* Enumeration of camera image formats */
-enum 
-{
-    FORMAT_VGA_NONCOMPRESSED= 256,
+enum {
+    FORMAT_VGA_NONCOMPRESSED= 384,
     FORMAT_SVGA_NONCOMPRESSED_1,
     FORMAT_SVGA_NONCOMPRESSED_2,
-    FORMAT_RESERVED_1,
-    FORMAT_RESERVED_2,
-    FORMAT_RESERVED_3,
-    FORMAT_STILL_IMAGE,
+    /* 3 reserved formats */
+    FORMAT_STILL_IMAGE= 390,
     FORMAT_SCALABLE_IMAGE_SIZE
 };
 #define FORMAT_MIN                  FORMAT_VGA_NONCOMPRESSED
@@ -194,7 +191,7 @@ enum
 /* Enumeration of camera features */
 enum 
 {
-    FEATURE_BRIGHTNESS= 288,
+    FEATURE_BRIGHTNESS= 416,
     FEATURE_EXPOSURE,
     FEATURE_SHARPNESS,
     FEATURE_WHITE_BALANCE,
@@ -207,12 +204,15 @@ enum
     FEATURE_FOCUS,
     FEATURE_TEMPERATURE,
     FEATURE_TRIGGER,
+    /* 19 reserved features */
     FEATURE_ZOOM,
     FEATURE_PAN,
     FEATURE_TILT,
     FEATURE_OPTICAL_FILTER,
+    /* 12 reserved features */
     FEATURE_CAPTURE_SIZE,
     FEATURE_CAPTURE_QUALITY
+    /* 14 reserved features */
 };
 #define FEATURE_MIN                 FEATURE_BRIGHTNESS
 #define FEATURE_MAX                 FEATURE_CAPTURE_QUALITY
@@ -306,6 +306,8 @@ typedef struct __dc1394_feature_set_struct
   dc1394_feature_info feature[NUM_FEATURES];
 } dc1394_feature_set;
 
+/* Feature descriptions */
+extern const char *dc1394_feature_desc[NUM_FEATURES];
 
 #ifdef __cplusplus
 extern "C" {

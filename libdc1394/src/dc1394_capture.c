@@ -50,13 +50,13 @@ int _dc1394_num_using_fd= 0;
 /*****************************************/
 /* Functions defined in dc1394_control.c */
 /*****************************************/
-int
+extern int
 _dc1394_get_wh_from_format(int format, int mode, int *w, int *h);
 
-int 
+extern int 
 _dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate); 
 
-int 
+extern int 
 _dc1394_quadlets_from_format(int format, int mode);
 
 /**************************************************************
