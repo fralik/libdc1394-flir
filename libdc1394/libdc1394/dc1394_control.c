@@ -907,6 +907,7 @@ raw1394handle_t
 dc1394_create_handle(int port) 
 {
     raw1394handle_t handle;
+    int i;
     dc1394_camerahandle *camera = malloc(sizeof(dc1394_camerahandle));
     memset(camera, 0, sizeof(dc1394_camerahandle));
 
@@ -932,6 +933,10 @@ dc1394_create_handle(int port)
 
     camera->port = port;
     raw1394_set_userdata( handle, (void*) camera );
+
+    for (i=0;i<NUM_MODE_FORMAT7;i++) {
+      camera->format7_csr[i]=-1;
+    }
 
     return handle;
 }

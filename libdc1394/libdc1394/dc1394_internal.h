@@ -64,6 +64,8 @@ typedef struct __dc1394_camerahandle
 	int       port;
 	octlet_t  ccr_base;
 	quadlet_t sw_version;
+        octlet_t  format7_csr[NUM_MODE_FORMAT7];
+
 } dc1394_camerahandle;
 						
 #endif /* _DC1394_INTERNAL_H */

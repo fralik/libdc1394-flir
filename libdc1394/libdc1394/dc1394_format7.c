@@ -72,12 +72,20 @@ GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
     
-    if (QueryFormat7CSROffset(handle, node, mode, &csr) != DC1394_SUCCESS)
-    {
-        return DC1394_FAILURE;
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+
+    if (camera->format7_csr[mode-MODE_FORMAT7_MIN]==-1) {
+      if (QueryFormat7CSROffset(handle, node, mode, &csr) != DC1394_SUCCESS) 
+	return DC1394_FAILURE;
+      else 
+	camera->format7_csr[mode-MODE_FORMAT7_MIN]=csr;
+    }
+    else {
+      csr=camera->format7_csr[mode-MODE_FORMAT7_MIN];
     }
 
-    csr*= 0x04UL;
+    csr*=0x04UL;
 
     /* retry a few times if necessary (addition by PDJ) */
     while(retry--)
@@ -131,14 +139,21 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
     
-    if (QueryFormat7CSROffset(handle, node, mode, &csr)!=DC1394_SUCCESS)
-    {
-      //fprintf(stderr,"failure to get format7 CSR offset\n");
-        return DC1394_FAILURE;
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+
+    if (camera->format7_csr[mode-MODE_FORMAT7_MIN]==-1) {
+      if (QueryFormat7CSROffset(handle, node, mode, &csr) != DC1394_SUCCESS) 
+	return DC1394_FAILURE;
+      else 
+	camera->format7_csr[mode-MODE_FORMAT7_MIN]=csr;
     }
-    //fprintf(stderr,"Got format7 CSR offset\n");
-    csr*= 0x04UL;
-  
+    else {
+      csr=camera->format7_csr[mode-MODE_FORMAT7_MIN];
+    }
+
+    csr*=0x04UL;
+
     /* conditionally byte swap the value (addition by PDJ) */
     value= htonl(value);
  
@@ -1068,7 +1083,10 @@ dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
       if (dc1394_query_format7_total_bytes(handle, node, mode, &total_bytes)!=DC1394_SUCCESS) {
 	return DC1394_FAILURE;
       }
-      *ppf=total_bytes/packet_bytes;
+      if (total_bytes%packet_bytes!=0)
+	*ppf=total_bytes/packet_bytes+1;
+      else
+	*ppf=total_bytes/packet_bytes;
       retval=DC1394_SUCCESS;
     }
 

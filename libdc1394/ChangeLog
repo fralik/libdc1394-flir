@@ -375,3 +375,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * libdc1394/ieee1394-ioctl.h: removed unnecessary
     * examples/dc1394_vloopback: added support for palettes yuv422p and yuv420p,
       added support for scaling up to 1024x768, greater v4l application compatibility.
+
+2004-01-15 Damien <ddouxchamps@users.sf.net>
+    * little additional fix regarding F7 and version issues.
+	
+2004-01-17 Damien <ddouxchamps@users.sf.net>
+    * f7 csr caching by T.Evers
