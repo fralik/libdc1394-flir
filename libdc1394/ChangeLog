@@ -1,3 +1,9 @@
+Mon Jul 24 14:59:18 2000   <GordPeters@smarttech.com>
+
+	* Fixed quadval initialization bug in dc1394_is_camera() that appears
+	  when multiple calls are made to it.
+	* Fixed 1st byte strip problem with dc1394_get_camera_info()
+
 Mon Jan 17 10:53:15 2000   <GordPeters@smarttech.com>
 
 	* Made constants in dc1394_control.c explicitly ULL, UL, or U
