@@ -309,6 +309,8 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   unsigned int min_bytes, max_bytes;
   unsigned packet_bytes=0;
   unsigned int recom_bpp;
+  int packets_per_frame;
+  int version;
 
   if (dc1394_get_iso_status(handle, node, &is_iso_on) != DC1394_SUCCESS)
       return DC1394_FAILURE;
@@ -497,13 +499,28 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
    *  ensure that quadlet aligned buffers are big enough, still expect
    *  problems when width*height  != quadlets_per_frame*4
    *-----------------------------------------------------------------------*/
-  if (dc1394_query_format7_total_bytes( handle, node, mode, &camera->quadlets_per_frame)!= DC1394_SUCCESS)
-    {
-      printf("(%s) Unable to get format 7 total bytes per frame %d \n", __FILE__, mode);
-      return DC1394_FAILURE;
+  if (dc1394_get_sw_version(handle, node, &version) != DC1394_SUCCESS) {
+    printf("(%s) Unable to read software revision\n", __FILE__);
+    return DC1394_FAILURE;
+  }
+  else {
+    if (version == 0x000102UL) { // if version is 1.30
+      if (dc1394_query_format7_packet_per_frame(handle, node, mode, &packets_per_frame)!=DC1394_SUCCESS)
+	{
+	  printf("(%s) Unable to get format 7 packets per frame %d \n", __FILE__, mode);
+	  return DC1394_FAILURE;
+	}
+      camera->quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
     }
-  camera->quadlets_per_frame=camera->quadlets_per_frame/4;
-      
+    else {
+      if (dc1394_query_format7_total_bytes( handle, node, mode, &camera->quadlets_per_frame)!= DC1394_SUCCESS)
+	{
+	  printf("(%s) Unable to get format 7 total bytes per frame %d \n", __FILE__, mode);
+	  return DC1394_FAILURE;
+	}
+      camera->quadlets_per_frame/=4;
+    }
+  }
   if (camera->quadlets_per_frame<=0)
   {
     return DC1394_FAILURE;

@@ -273,3 +273,6 @@ Sun Oct 27 00:13:00 2002 <dan@dennedy.org>
     * added examples/dc1394_vloopback.c to demonstrate how to make
       digital camera format0 a Video4Linux source.
 
+Mon Nov 18 10:15:23 2002 <ddouxchamps@users.sf.net>
+    * we now use packet_per_frame correctly for format7. This should
+      fix 'walking' frames in DMA mode.
