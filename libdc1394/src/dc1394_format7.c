@@ -17,6 +17,9 @@
   * License along with this library; if not, write to the Free Software
   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   */
+#include <unistd.h>
+#include <netinet/in.h>
+#include <errno.h>
  
 #include "dc1394_control.h"
  
@@ -35,131 +38,160 @@
 /* Internal functions */
  
 static int
-GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node, unsigned int mode,
- 			 octlet_t offset, quadlet_t *value)
+GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
+                         unsigned int mode, octlet_t offset, quadlet_t *value)
 {
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
     
-    retval=dc1394_query_csr_offset(handle, node, mode, &csr);
-    
-    /* retry a few times if necessary (addition by PDJ) */
-    while( (retry--) &&
-           ((retval= raw1394_read(handle, 0xffc0 | node,
-                                  CONFIG_ROM_BASE + offset + csr, 4, value)) <= 0) )
+    if ((retval= dc1394_query_csr_offset(handle, node, mode, &csr)) < 0)
     {
-        usleep(0);
+        return retval;
+    }
+
+    /* retry a few times if necessary (addition by PDJ) */
+    while(retry--)
+    {
+        retval= raw1394_read(handle, 0xffc0 | node,
+                             CONFIG_ROM_BASE + csr + offset, 4, value);
+
+        if (!retval)
+        {
+            /* conditionally byte swap the value (addition by PDJ) */
+            *value= ntohl(*value);  
+            return retval; 
+        }
+        else if (errno != EAGAIN)
+        {
+            return retval;
+        }
+
+        usleep(SLOW_DOWN);
     }
     
-    /* conditionally byte swap the value (addition by PDJ) */
     *value = ntohl(*value);
     return(retval);
 }
 
 static int
-SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node, unsigned int mode,
-                         octlet_t offset, quadlet_t value)
+SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
+                         unsigned int mode, octlet_t offset, quadlet_t value)
 {
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
     
-    retval=dc1394_query_csr_offset(handle, node, mode, &csr);
+    if ((retval= dc1394_query_csr_offset(handle, node, mode, &csr)) < 0)
+    {
+        return retval;
+    }
   
     /* conditionally byte swap the value (addition by PDJ) */
     value= htonl(value);
  
     /* retry a few times if necessary (addition by PDJ) */
-    while( (retry--) &&
- 	   ((retval= raw1394_write(handle, 0xffc0 | node,
- 				   CONFIG_ROM_BASE + offset + csr, 4, &value)) <= 0) )
+    while(retry--)
     {
- 	usleep(0);
+        retval= raw1394_write(handle, 0xffc0 | node,
+                              CONFIG_ROM_BASE + offset + csr, 4, &value);
+
+        if (!retval || (errno != EAGAIN))
+        {
+            return retval;
+        }
+
+ 	usleep(SLOW_DOWN);
     }
     
-    return(retval);
+    return retval;
 }
 
 /* External functions */
 
 int
 dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
- 				    unsigned int mode, unsigned int *horizontal_size,
+ 				    unsigned int mode,
+                                    unsigned int *horizontal_size,
  				    unsigned int *vertical_size)
 {
     int retval;
-    octlet_t offset;
     quadlet_t value;
     
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else     
     {
-        retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ, &value);
- 
-        *vertical_size   = (unsigned int) ( value & 0xFFFF0000UL ) >> 16 ;
-        *horizontal_size = (unsigned int) ( value & 0x0000FFFFUL );
-       
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ,
+                                         &value);
+        *vertical_size  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *horizontal_size= (unsigned int) ( value & 0x0000FFFFUL );
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
 dc1394_query_format7_unit_size(raw1394handle_t handle, nodeid_t node,
- 			       unsigned int mode, unsigned int *horizontal_unit,
+ 			       unsigned int mode,
+                               unsigned int *horizontal_unit,
  			       unsigned int *vertical_unit)
 {
     int retval;
-    octlet_t offset;
     quadlet_t value;
    
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else
     {
         retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_UNIT_SIZE_INQ, &value);
- 
-        *vertical_unit   = (unsigned int) ( value & 0xFFFF0000UL ) >> 16 ;
-        *horizontal_unit = (unsigned int) ( value & 0x0000FFFFUL );
-       
+                                        REG_CAMERA_FORMAT7_UNIT_SIZE_INQ,
+                                        &value);
+        *vertical_unit  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *horizontal_unit= (unsigned int) ( value & 0x0000FFFFUL );
     }
- 
-    DC1394_READ_END(retval);
-   
+
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
 dc1394_query_format7_image_position(raw1394handle_t handle, nodeid_t node,
- 				    unsigned int mode, unsigned int *left_position,
+ 				    unsigned int mode,
+                                    unsigned int *left_position,
  				    unsigned int *top_position)
 {
     int retval;
-    octlet_t offset;
     quadlet_t value;
    
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else
     {
         retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_IMAGE_POSITION, &value);
- 
-        *top_position  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16 ;
-        *left_position = (unsigned int) ( value & 0x0000FFFFUL );
-       
+                                        REG_CAMERA_FORMAT7_IMAGE_POSITION,
+                                        &value);
+        *top_position = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *left_position= (unsigned int) ( value & 0x0000FFFFUL );       
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
  
@@ -169,10 +201,9 @@ dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
  				unsigned int *height)
 {
     int retval;
-    octlet_t offset;
     quadlet_t value;
-   
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
@@ -180,14 +211,15 @@ dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
     {
         retval=GetCameraFormat7Register(handle, node, mode,
                                         REG_CAMERA_FORMAT7_IMAGE_SIZE, &value);
- 
-        *height = (unsigned int) ( value & 0xFFFF0000UL ) >> 16 ;
-        *width  = (unsigned int) ( value & 0x0000FFFFUL );
-       
+        *height= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *width = (unsigned int) ( value & 0x0000FFFFUL );       
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
@@ -195,20 +227,23 @@ dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
  				     unsigned int mode, quadlet_t *value)
 {
     int retval;
-    octlet_t offset;
    
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else
     {
-        retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_COLOR_CODING_ID, value);
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_COLOR_CODING_ID,
+                                         value);
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
@@ -216,20 +251,23 @@ dc1394_query_format7_color_coding(raw1394handle_t handle, nodeid_t node,
  				  unsigned int mode, quadlet_t *value)
 {
     int retval;
-    octlet_t offset;
-   
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else
     {
-        retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_COLOR_CODING_INQ, value);
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_COLOR_CODING_INQ,
+                                         value);
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
@@ -237,24 +275,25 @@ dc1394_query_format7_pixel_number(raw1394handle_t handle, nodeid_t node,
  				  unsigned int mode, unsigned int *pixnum)
 {
     int retval;
-    octlet_t offset;
     quadlet_t value;
    
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else
     {
-        retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_PIXEL_NUMBER_INQ, &value);
- 
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_PIXEL_NUMBER_INQ,
+                                         &value);
         *pixnum= (unsigned int) value;
- 
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
@@ -262,26 +301,29 @@ dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
  				 unsigned int mode, unsigned int *total_bytes)
 {
     int retval;
-    octlet_t offset;
     quadlet_t value_hi, value_lo;
    
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else
     {
-        retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_TOTAL_BYTES_HI_INQ, &value_hi);
-        retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_TOTAL_BYTES_LO_INQ, &value_lo);
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_TOTAL_BYTES_HI_INQ,
+                                         &value_hi);
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_TOTAL_BYTES_LO_INQ,
+                                         &value_lo);
  
-        *total_bytes= (unsigned int) (value_lo | ( value_hi << 16) ) ;
- 
+        *total_bytes= (unsigned int) (value_lo | ( value_hi << 16) ); 
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
@@ -290,50 +332,53 @@ dc1394_query_format7_packet_para(raw1394handle_t handle, nodeid_t node,
 				 unsigned int *max_bytes)
 {
     int retval;
-    octlet_t offset;
     quadlet_t value;
-   
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else
     {
-        retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_PACKET_PARA_INQ, &value);
- 
-        *max_bytes = (unsigned int) ( value & 0xFFFF0000UL ) >> 16 ;
-        *min_bytes = (unsigned int) ( value & 0x0000FFFFUL );
-       
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_PACKET_PARA_INQ,
+                                         &value);
+        *max_bytes= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *min_bytes= (unsigned int) ( value & 0x0000FFFFUL );       
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
 dc1394_query_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
- 				     unsigned int mode, unsigned int *packet_bytes)
+ 				     unsigned int mode,
+                                     unsigned int *packet_bytes)
 {
     int retval;
-    octlet_t offset;
     quadlet_t value;
    
-    if ((mode > MODE_FORMAT7_MAX)||(mode < MODE_FORMAT7_MIN))
+    if (mode > MODE_FORMAT7_MAX)
     {
         return DC1394_FAILURE;
     }
     else
     {
-        retval=GetCameraFormat7Register(handle, node, mode,
-                                        REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
- 
-        *packet_bytes = (unsigned int) ( value & 0x0000FFFFUL );
-       
+        retval= GetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
+                                         &value);
+        *packet_bytes= (unsigned int) ( value & 0x0000FFFFUL );
     }
  
-    DC1394_READ_END(retval);
-   
+#ifdef OLD_ERROR_CHECKING
+    DC1394_READ_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
@@ -341,9 +386,15 @@ dc1394_set_format7_image_position(raw1394handle_t handle, nodeid_t node,
  				  unsigned int mode, unsigned int left,
  				  unsigned int top)
 {
-    DC1394_WRITE_END(SetCameraFormat7Register(handle, node, mode, 
-                                              REG_CAMERA_FORMAT7_IMAGE_POSITION,
-                                              (quadlet_t)( (top << 16) | left ) ));
+    int retval= SetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_IMAGE_POSITION,
+                                         (quadlet_t)((top << 16) | left));
+
+#ifdef OLD_ERROR_CHECKING
+    DC1394_WRITE_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
@@ -351,23 +402,44 @@ dc1394_set_format7_image_size(raw1394handle_t handle, nodeid_t node,
                               unsigned int mode, unsigned int width,
                               unsigned int height)
 {
-    DC1394_WRITE_END(SetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_IMAGE_SIZE,
-                                              (quadlet_t)( (height << 16) | width )));
- }
+    int retval= SetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_IMAGE_SIZE,
+                                         (quadlet_t)((height << 16) | width));
+
+#ifdef OLD_ERROR_CHECKING
+    DC1394_WRITE_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
+}
  
 int
 dc1394_set_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
  				   unsigned int mode, unsigned int color_id)
 {
-    DC1394_WRITE_END(SetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_COLOR_CODING_ID,
-                                              (quadlet_t)(color_id)));
+    int retval= SetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_COLOR_CODING_ID,
+                                         (quadlet_t)color_id);
+
+#ifdef OLD_ERROR_CHECKING
+    DC1394_WRITE_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
 }
  
 int
 dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
- 				   unsigned int mode, unsigned int packet_bytes)
+ 				   unsigned int mode,
+                                   unsigned int packet_bytes)
 {
-    DC1394_WRITE_END(SetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
-                                              (quadlet_t)(packet_bytes)));
-}
+    int retval= SetCameraFormat7Register(handle, node, mode,
+                                         REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
+                                         (quadlet_t)packet_bytes);
 
+#ifdef OLD_ERROR_CHECKING
+    DC1394_WRITE_END(handle);
+#else
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+#endif
+}

@@ -36,11 +36,13 @@
 #define ON_VALUE                       0x80000000UL
 #define OFF_VALUE                      0x00000000UL
 
-#define DC1394_READ_END(retval) return _dc1394_read_check(retval);
-#define DC1394_WRITE_END(retval) return _dc1394_write_check(retval);
-
 /* Maximum number of write/read retries */
 #define MAX_RETRIES                    20
+
+#ifdef OLD_ERROR_CHECKING
+#define DC1394_READ_END(handle) return _dc1394_read_check(handle);
+#define DC1394_WRITE_END(handle) return _dc1394_write_check(handle);
+#endif
 
 /* A hard compiled factor that makes sure async read and writes don't happen too fast*/
 #define SLOW_DOWN 20
@@ -70,12 +72,12 @@ enum
 /* Enumeration of camera framerates */
 enum 
 {
-	FRAMERATE_1_875 = 0,
-	FRAMERATE_3_75,
-	FRAMERATE_7_5,
-	FRAMERATE_15,
-	FRAMERATE_30,
-	FRAMERATE_60
+    FRAMERATE_1_875 = 0,
+    FRAMERATE_3_75,
+    FRAMERATE_7_5,
+    FRAMERATE_15,
+    FRAMERATE_30,
+    FRAMERATE_60
 };
 #define FRAMERATE_MIN	FRAMERATE_1_875
 #define FRAMERATE_MAX	FRAMERATE_60
@@ -84,12 +86,12 @@ enum
 /* Enumeration of camera modes */
 enum 
 {
-	MODE_160x120_YUV444 = 0,
-	MODE_320x240_YUV422,
-	MODE_640x480_YUV411,
-	MODE_640x480_YUV422,
-	MODE_640x480_RGB,
-	MODE_640x480_MONO
+    MODE_160x120_YUV444 = 0,
+    MODE_320x240_YUV422,
+    MODE_640x480_YUV411,
+    MODE_640x480_YUV422,
+    MODE_640x480_RGB,
+    MODE_640x480_MONO
 };
 #define MODE_MIN	MODE_160x120_YUV444
 #define MODE_MAX	MODE_640x480_MONO
@@ -98,14 +100,14 @@ enum
 /* Enumeration of camera image formats */
 enum 
 {
-	FORMAT_VGA_NONCOMPRESSED = 0,
-	FORMAT_SVGA_NONCOMPRESSED_1,
-	FORMAT_SVGA_NONCOMPRESSED_2,
-	FORMAT_RESERVED_1,
-	FORMAT_RESERVED_2,
-	FORMAT_RESERVED_3,
-	FORMAT_STILL_IMAGE,
-	FORMAT_SCALABLE_IMAGE_SIZE
+    FORMAT_VGA_NONCOMPRESSED = 0,
+    FORMAT_SVGA_NONCOMPRESSED_1,
+    FORMAT_SVGA_NONCOMPRESSED_2,
+    FORMAT_RESERVED_1,
+    FORMAT_RESERVED_2,
+    FORMAT_RESERVED_3,
+    FORMAT_STILL_IMAGE,
+    FORMAT_SCALABLE_IMAGE_SIZE
 };
 #define FORMAT_MIN	FORMAT_VGA_NONCOMPRESSED
 #define FORMAT_MAX	FORMAT_SCALABLE_IMAGE_SIZE
@@ -140,13 +142,13 @@ enum
 
 /* Enumeration of Format_7 color modes */
 enum {
-  COLOR_FORMAT7_MONO8 = 0,
-  COLOR_FORMAT7_YUV411,
-  COLOR_FORMAT7_YUV422,
-  COLOR_FORMAT7_YUV444,
-  COLOR_FORMAT7_RGB8,
-  COLOR_FORMAT7_MONO16,
-  COLOR_FORMAT7_RGB16
+    COLOR_FORMAT7_MONO8 = 0,
+    COLOR_FORMAT7_YUV411,
+    COLOR_FORMAT7_YUV422,
+    COLOR_FORMAT7_YUV444,
+    COLOR_FORMAT7_RGB8,
+    COLOR_FORMAT7_MONO16,
+    COLOR_FORMAT7_RGB16
 };
 #define COLOR_FORMAT7_MIN    COLOR_FORMAT7_MONO8
 #define COLOR_FORMAT7_MAX    COLOR_FORMAT7_RGB16
@@ -154,14 +156,14 @@ enum {
 
 /* Enumeration of Format_7 camera modes */
 enum {
-  MODE_FORMAT7_0 = 0,
-  MODE_FORMAT7_1,
-  MODE_FORMAT7_2,
-  MODE_FORMAT7_3,
-  MODE_FORMAT7_4,
-  MODE_FORMAT7_5,
-  MODE_FORMAT7_6,
-  MODE_FORMAT7_7
+    MODE_FORMAT7_0 = 0,
+    MODE_FORMAT7_1,
+    MODE_FORMAT7_2,
+    MODE_FORMAT7_3,
+    MODE_FORMAT7_4,
+    MODE_FORMAT7_5,
+    MODE_FORMAT7_6,
+    MODE_FORMAT7_7
 };
 #define MODE_FORMAT7_MIN    MODE_FORMAT7_0
 #define MODE_FORMAT7_MAX    MODE_FORMAT7_7
@@ -169,10 +171,10 @@ enum {
 
 /* Enumeration of trigger modes */
 enum {
-  TRIGGER_MODE_0 = 0,
-  TRIGGER_MODE_1,
-  TRIGGER_MODE_2,
-  TRIGGER_MODE_3
+    TRIGGER_MODE_0 = 0,
+    TRIGGER_MODE_1,
+    TRIGGER_MODE_2,
+    TRIGGER_MODE_3
 };
 #define TRIGGER_MODE_MIN    TRIGGER_MODE_0
 #define TRIGGER_MODE_MAX    TRIGGER_MODE_3
@@ -841,10 +843,3 @@ dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
 #endif
 
 #endif /* _DC1394_CAMERA_CONTROL_H */
-
-
-
-
-
-
-
