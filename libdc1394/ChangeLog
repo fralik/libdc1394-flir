@@ -91,6 +91,9 @@ Mon Oct 16 2000 <curmson@ri.cmu.edu>
 	dc1394_cameracapture 
 	dc1394_feature_info
 	dc1394_feature_set
-	
 
-	
+Thu Feb  1 02:39:22 2000   <GordPeters@smarttech.com>
+
+	* Updated to use new version of libraw1394
+	* Changed error handling to use new libraw1394 error handling
+	* Code beautification
