@@ -28,7 +28,7 @@
 #include <libraw1394/raw1394.h>
 #include <stdio.h>
 #include <sys/time.h>
-
+#include <stdlib.h>
 
 /* Enumeration of data speeds */
 enum
@@ -392,6 +392,8 @@ dc1394_destroy_handle(raw1394handle_t handle);
 nodeid_t* 
 dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
                         int showCameras);
+
+#define dc1394_free_camera_nodes free
 
 /*****************************************************
  dc1394_get_sorted_camera_nodes

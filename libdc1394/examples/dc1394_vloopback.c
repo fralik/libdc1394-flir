@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.8  2004/01/20 04:12:27  ddennedy
+**  added dc1394_free_camera_nodes and applied to examples
+**
 **  Revision 1.7  2004/01/14 22:20:43  ddennedy
 **  enhanced dc1394_vloopback
 **
@@ -487,6 +490,7 @@ int dc_init()
 						found = 0;
 					}
 				}
+				dc1394_free_camera_nodes(camera_nodes);
 			} /* camCount > 0 */
 		} /* next port */
 	} /* next reset retry */

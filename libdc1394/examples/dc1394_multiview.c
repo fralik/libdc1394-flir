@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.6  2004/01/20 04:12:27  ddennedy
+**  added dc1394_free_camera_nodes and applied to examples
+**
 **  Revision 1.5  2003/09/02 23:42:36  ddennedy
 **  cleanup handle destroying in examples; fix dc1394_multiview to use handle per camera; new example
 **
@@ -443,6 +446,7 @@ int main(int argc,char *argv[])
 			}
 			numCameras++;
 		}
+		dc1394_free_camera_nodes(camera_nodes);
 	}
 
 	fflush(stdout);

@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5  2004/01/20 04:12:27  ddennedy
+**  added dc1394_free_camera_nodes and applied to examples
+**
 **  Revision 1.4  2003/09/26 16:08:36  ddennedy
 **  add libtoolize with no tests to autogen.sh, suppress examples/grab_color_image.c warning
 **
@@ -164,6 +167,7 @@ int main(int argc, char *argv[])
             found = 0;
           }
         }
+        dc1394_free_camera_nodes(camera_nodes);
       } /* cameras >0 */
     } /* next port */
   } /* next reset retry */

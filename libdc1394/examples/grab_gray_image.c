@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5  2004/01/20 04:12:27  ddennedy
+**  added dc1394_free_camera_nodes and applied to examples
+**
 **  Revision 1.4  2003/09/02 23:42:36  ddennedy
 **  cleanup handle destroying in examples; fix dc1394_multiview to use handle per camera; new example
 **
@@ -105,6 +108,7 @@ int main(int argc, char *argv[])
              "http://linux1394.sourceforge.net/faq.html#DCbusmgmt\n"
              "\n");
     dc1394_destroy_handle(handle);
+    dc1394_free_camera_nodes(camera_nodes);
     exit( 1);
   }
   
@@ -126,8 +130,10 @@ int main(int argc, char *argv[])
              __LINE__,__FILE__);
     dc1394_release_camera(handle,&camera);
     dc1394_destroy_handle(handle);
+    dc1394_free_camera_nodes(camera_nodes);
     exit(1);
   }
+  dc1394_free_camera_nodes(camera_nodes);
   
   /* set trigger mode */
   if( dc1394_set_trigger_mode(handle, camera.node, TRIGGER_MODE_0)
