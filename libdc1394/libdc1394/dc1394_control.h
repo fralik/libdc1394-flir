@@ -234,12 +234,12 @@ typedef struct __dc1394_cam_cap_struct
     int quadlets_per_frame;
     int quadlets_per_packet;
     /* components needed for the DMA based video capture */
-    unsigned char * dma_ring_buffer;
+    const unsigned char * dma_ring_buffer;
     int dma_buffer_size;
     int dma_frame_size;
     int num_dma_buffers;
     int dma_last_buffer;
-    char * dma_device_file;
+    const char * dma_device_file;
 } dc1394_cameracapture ;
 
 typedef struct __dc1394_misc_info
