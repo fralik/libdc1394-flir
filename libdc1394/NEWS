@@ -25,10 +25,17 @@ Version 0.2.2:
   breaking compatibility with old library)
 
 
-Version 0.8
+Version 0.8:
 - new features added
         - two types of image capture (raw1394 and DMA based)
         - Format 7 functions
         - data types to make feature querying easier
 - more code cleanup and restructuring
 - some bugfixes (things should be getting quite stable)
+
+
+Version 0.8.1:
+- mutually exclusive enumerations
+- dc1394_dma_unlisten() added
+- resume iso transmission after it has been stopped in _dc1394_basic_setup()
+- bugfixes
