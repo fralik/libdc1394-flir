@@ -290,4 +290,8 @@ Wed Jul 2 14:35:00 2003 <ddouxchamps@users.sf.net>
 Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed bytes_per_packet setting in _dc1394_basic_format7_setup
     * cancelled the previous commit (18/7/2003): it was a mistake.
-    
+
+2003-08-12  dan <dan@dennedy.org>
+	* dc1394_control.c: make config ROM reading more generic,
+		remove tab indenting to make consistent
+	* configure.in: incrmement lib revision
