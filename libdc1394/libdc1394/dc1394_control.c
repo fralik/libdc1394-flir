@@ -194,6 +194,9 @@ const char *dc1394_feature_desc[NUM_FEATURES] =
     "Focus",
     "Temperature",
     "Trigger",
+    "Trigger Delay",
+    "White Shading",
+    "Frame Rate",
     "Zoom",
     "Pan",
     "Tilt",
@@ -2960,9 +2963,9 @@ dc1394_get_bandwidth_usage(dc1394camera_t *camera, unsigned int *bandwidth)
     
     // mutiply by 4 anyway because the best speed is SPEED_400 only
     if (speed>=SPEED_1600)
-      *bandwidth = qpp << (SPEED_1600-speed);
-    else
       *bandwidth = qpp >> (speed-SPEED_1600);
+    else
+      *bandwidth = qpp << (SPEED_1600-speed);
   }
   else {
     *bandwidth=0;

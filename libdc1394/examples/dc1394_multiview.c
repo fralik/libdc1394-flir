@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.2  2005/04/06 05:52:33  ddouxchamps
+**  fixed bandwidth usage estimation and missing strings
+**
 **  Revision 1.9.2.1  2005/02/13 07:02:47  ddouxchamps
 **  Creation of the Version_2_0 branch
 **
