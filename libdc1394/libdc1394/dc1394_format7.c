@@ -320,7 +320,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
 	      printf("(%s) Unable to read value setting register.\n", __FILE__);
 	      return DC1394_FAILURE;
 	    }
-	  exit_loop=(setting_1==1);
+	  exit_loop=(setting_1==0);
 	  usleep(0); 
 	}
       if (err_flag1>0)

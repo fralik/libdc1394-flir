@@ -238,3 +238,7 @@ Tue Aug 20 10:40:12 2002 <ddouxchamps@users.sf.net>
 Thu Aug 22 10:10:00 2002 <ddouxchamps@users.sf.net>
     * Updated support for PointGrey cameras (added the 0x800002
       software revision code)
+	
+Thu Sep 03 10:45:00 2002 <ddouxchamps@users.sf.net>
+    * Bugfix in v1.30 format7 capture handshake. Thanks to Yasutoshi Onishi
+      for pointing it out.
