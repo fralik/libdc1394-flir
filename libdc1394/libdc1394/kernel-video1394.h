@@ -21,6 +21,8 @@
 #ifndef _VIDEO_1394_H
 #define _VIDEO_1394_H
 
+#include <sys/time.h>
+
 #define VIDEO1394_DRIVER_NAME "video1394"
 
 #define VIDEO1394_MAX_SIZE 0x4000000
