@@ -210,3 +210,6 @@ Fri May 10 16:12:00 2002 <dan@dennedy.org>
     * dc1394_capture.c: dc1394_dma_setup_capture() modified to take
       dma_device_file as a param to force users to set it.
       
+Sun July 21 22:51:00 2002 <dan@dennedy.org>
+	* added examples/dc1394_multiview.c to test/demonstrate multicapture
+	  over multiple ports.
