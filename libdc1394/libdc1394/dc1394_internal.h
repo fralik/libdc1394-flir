@@ -50,9 +50,12 @@
 #define RESP_COMPLETE               0x0000U
 #define RESP_SONY_HACK              0x000fU
 
-/* Internal function required by two different source files */
+/* Internal functions required by two different source files */
 int
 GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
 			 octlet_t offset, quadlet_t *value);
 
+int
+_dc1394_dma_basic_setup(int channel, int num_dma_buffers,
+                        dc1394_cameracapture *camera);
 #endif /* _DC1394_INTERNAL_H */
