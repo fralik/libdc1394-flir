@@ -2724,29 +2724,12 @@ int
 dc1394_set_trigger_on_off(raw1394handle_t handle, nodeid_t node,
                           dc1394bool_t on_off)
 {
-    int retval;
-    quadlet_t curval;
-
-    if (GetCameraControlRegister(handle, node, REG_CAMERA_TRIGGER_MODE,
-                                 &curval) < 0)
-    {
-        return DC1394_FAILURE;
-    }
-
-    curval= (curval & 0xFFF0FFFFUL) | ((on_off & 0x1UL) << 25);
-    retval= SetCameraControlRegister(handle, node, REG_CAMERA_TRIGGER_MODE,
-                                     curval);
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+  return dc1394_feature_on_off(handle, node, FEATURE_TRIGGER, on_off);
 }
 
 int
 dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
                           dc1394bool_t *on_off)
 {
-    quadlet_t value;
-    int retval= GetCameraControlRegister(handle, node,
-                                         REG_CAMERA_TRIGGER_MODE, &value);
-
-    *on_off= (unsigned int)( ((value >> 25) & 0x1UL) );
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+  return dc1394_is_feature_on(handle, node, FEATURE_TRIGGER, on_off);
 }

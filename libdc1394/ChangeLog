@@ -165,3 +165,7 @@ Mon Sept 24 22:36:12 2001 <dan@dennedy.org>
 	* included examples subdir in autoconf and automake
 	* added examples/Makefile.am
 	* examples build, but do not automatically install 
+
+Fri Nov 23 15:48:00 2001 <douxchamps@ieee.org>
+	* use dc1394 feature-indexed function in
+	  dc1394_(get/set)_trigger_on_off
