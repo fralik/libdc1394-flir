@@ -899,6 +899,33 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
     return DC1394_SUCCESS;
 }
 
+int
+dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value)
+{
+    octlet_t offset= 0x424UL;
+    quadlet_t quadval;
+
+    /* get the unit_directory offset */
+    if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
+    {
+        *value= DC1394_FALSE;
+        return DC1394_FAILURE;
+    }
+
+    offset+= ((quadval & 0xFFFFFFUL) * 4) + 8;
+    usleep(1000);
+
+    /* get the unit_spec_ID (should be 0x00A02D for 1394 digital camera) */
+    if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
+    {
+        *value= DC1394_FALSE;
+        return DC1394_FAILURE;
+    }
+
+    *value= (quadval & 0xFFFFFFUL);
+    return DC1394_SUCCESS;
+}
+
 void
 dc1394_print_camera_info(dc1394_camerainfo *info) 
 {

@@ -23,6 +23,7 @@
 
 #include "dc1394_control.h"
 #include "dc1394_internal.h"
+#include "config.h"
 
 #define REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ  0x000U
 #define REG_CAMERA_FORMAT7_UNIT_SIZE_INQ       0x004U
@@ -172,8 +173,8 @@ dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ,
                                          &value);
-        *vertical_size  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-        *horizontal_size= (unsigned int) ( value & 0x0000FFFFUL );
+        *horizontal_size  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *vertical_size= (unsigned int) ( value & 0x0000FFFFUL );
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -197,8 +198,8 @@ dc1394_query_format7_unit_size(raw1394handle_t handle, nodeid_t node,
         retval=GetCameraFormat7Register(handle, node, mode,
                                         REG_CAMERA_FORMAT7_UNIT_SIZE_INQ,
                                         &value);
-        *vertical_unit  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-        *horizontal_unit= (unsigned int) ( value & 0x0000FFFFUL );
+        *horizontal_unit  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *vertical_unit= (unsigned int) ( value & 0x0000FFFFUL );
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -222,8 +223,8 @@ dc1394_query_format7_image_position(raw1394handle_t handle, nodeid_t node,
         retval=GetCameraFormat7Register(handle, node, mode,
                                         REG_CAMERA_FORMAT7_IMAGE_POSITION,
                                         &value);
-        *top_position = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-        *left_position= (unsigned int) ( value & 0x0000FFFFUL );       
+        *left_position = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *top_position= (unsigned int) ( value & 0x0000FFFFUL );       
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -246,8 +247,8 @@ dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
     {
         retval=GetCameraFormat7Register(handle, node, mode,
                                         REG_CAMERA_FORMAT7_IMAGE_SIZE, &value);
-        *height= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-        *width = (unsigned int) ( value & 0x0000FFFFUL );       
+        *width= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *height = (unsigned int) ( value & 0x0000FFFFUL );       
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -360,8 +361,8 @@ dc1394_query_format7_packet_para(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_PACKET_PARA_INQ,
                                          &value);
-        *max_bytes= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-        *min_bytes= (unsigned int) ( value & 0x0000FFFFUL );       
+        *min_bytes= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+        *max_bytes= (unsigned int) ( value & 0x0000FFFFUL );       
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -384,7 +385,7 @@ dc1394_query_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
                                          &value);
-        *packet_bytes= (unsigned int) ( value & 0x0000FFFFUL );
+        *packet_bytes= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -397,7 +398,7 @@ dc1394_set_format7_image_position(raw1394handle_t handle, nodeid_t node,
 {
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_IMAGE_POSITION,
-                                         (quadlet_t)((top << 16) | left));
+                                         (quadlet_t)((left << 16) | top));
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
  
@@ -408,7 +409,7 @@ dc1394_set_format7_image_size(raw1394handle_t handle, nodeid_t node,
 {
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_IMAGE_SIZE,
-                                         (quadlet_t)((height << 16) | width));
+                                         (quadlet_t)((width << 16) | height));
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
  
@@ -437,6 +438,6 @@ dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
 {
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
-                                         (quadlet_t)packet_bytes);
+                                         (quadlet_t)(packet_bytes << 16) );
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }

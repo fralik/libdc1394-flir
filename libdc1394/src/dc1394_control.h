@@ -397,6 +397,9 @@ dc1394_init_camera(raw1394handle_t handle, nodeid_t node);
 int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value);
 
+/* Determine the IIDC Specification version */
+int
+dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value);
 
 /* Get the camera information and print that structure*/
 void 

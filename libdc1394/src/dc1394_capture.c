@@ -124,12 +124,12 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
 {
     dc1394bool_t is_iso_on= DC1394_FALSE;
 
-    if (dc1394_init_camera(handle,node) != DC1394_SUCCESS) 
+/*    if (dc1394_init_camera(handle,node) != DC1394_SUCCESS) 
     {
         printf("(%s) Unable to initialize camera!\n", __FILE__);
         return DC1394_FAILURE;
     }
-
+*/
     /* Addition by Alexis Weiland: Certain cameras start sending iso
        data when they are reset, so we need to stop them so we can set
        up the camera properly.  Setting camera parameters "on the fly"
@@ -402,7 +402,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
 
         if ( (_dc1394_dma_fd= open("/dev/video1394",O_RDONLY)) < 0 )
         {
-            printf("(%s) unable to open video1394 device!\n", __FILE__);
+            printf("(%s) unable to open vide1394 device!\n", __FILE__);
             return DC1394_FAILURE;
         }
 
