@@ -1148,7 +1148,7 @@ dc1394_get_camera_feature_set(raw1394handle_t handle, nodeid_t node,
 {
     int i, j;
 
-    for (i= FEATURE_MIN, j= 0; i < FEATURE_MAX; i++, j++) 
+    for (i= FEATURE_MIN, j= 0; i <= FEATURE_MAX; i++, j++) 
     {
         features->feature[j].feature_id= i;
         dc1394_get_camera_feature(handle, node, &features->feature[j]);
@@ -1404,7 +1404,7 @@ dc1394_print_feature_set(dc1394_feature_set *features)
     printf("MC- manual capable\n");
     printf("==================================\n");
 
-    for (i= FEATURE_MIN, j= 0; i < FEATURE_MAX; i++, j++) 
+    for (i= FEATURE_MIN, j= 0; i <= FEATURE_MAX; i++, j++) 
     {
         dc1394_print_feature(&features->feature[j]);
     }
@@ -2042,7 +2042,7 @@ dc1394_get_trigger_mode(raw1394handle_t handle, nodeid_t node,
     int retval= GetCameraControlRegister(handle, node,
                                          REG_CAMERA_TRIGGER_MODE, &value);
 
-    *mode= (unsigned int)( ((value >> 16) & 0xFUL) );
+    *mode= (unsigned int)( ((value >> 16) & 0xFUL) ) + TRIGGER_MODE_MIN;
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
@@ -2053,12 +2053,18 @@ dc1394_set_trigger_mode(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t curval;
 
+    if ( (mode < TRIGGER_MODE_MIN) || (mode > TRIGGER_MODE_MAX) )
+    {
+        return DC1394_FAILURE;
+    }
+
     if (GetCameraControlRegister(handle, node, REG_CAMERA_TRIGGER_MODE,
                                  &curval) < 0)
     {
         return DC1394_FAILURE;
     }
 
+    mode-= TRIGGER_MODE_MIN;
     curval= (curval & 0xFFF0FFFFUL) | ((mode & 0xFUL) << 16);
     retval= SetCameraControlRegister(handle, node, REG_CAMERA_TRIGGER_MODE,
 				     curval);

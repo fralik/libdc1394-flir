@@ -20,10 +20,10 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <errno.h>
- 
+
 #include "dc1394_control.h"
 #include "dc1394_internal.h"
- 
+
 #define REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ  0x000U
 #define REG_CAMERA_FORMAT7_UNIT_SIZE_INQ       0x004U
 #define REG_CAMERA_FORMAT7_IMAGE_POSITION      0x008U
@@ -268,6 +268,7 @@ dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_COLOR_CODING_ID,
                                          value);
+        if (!retval) value+= COLOR_FORMAT7_MIN;
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -288,6 +289,7 @@ dc1394_query_format7_color_coding(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_COLOR_CODING_INQ,
                                          value);
+        if (!retval) value+= COLOR_FORMAT7_MIN;
     }
 
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
@@ -414,9 +416,17 @@ int
 dc1394_set_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
  				   unsigned int mode, unsigned int color_id)
 {
-    int retval= SetCameraFormat7Register(handle, node, mode,
-                                         REG_CAMERA_FORMAT7_COLOR_CODING_ID,
-                                         (quadlet_t)color_id);
+    int retval;
+
+    if ( (color_id < COLOR_FORMAT7_MIN) || (color_id > COLOR_FORMAT7_MAX) )
+    {
+        return DC1394_FAILURE;
+    }
+
+    color_id-= COLOR_FORMAT7_MIN;
+    retval= SetCameraFormat7Register(handle, node, mode,
+                                     REG_CAMERA_FORMAT7_COLOR_CODING_ID,
+                                     (quadlet_t)color_id);
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
  
