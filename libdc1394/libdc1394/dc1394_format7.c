@@ -334,7 +334,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
                             dc1394_cameracapture * camera)
 {
   dc1394bool_t is_iso_on= DC1394_FALSE;
-  unsigned int min_bytes, max_bytes;
+  unsigned int unit_bytes, max_bytes;
   unsigned packet_bytes=0;
   unsigned int recom_bpp;
   int packets_per_frame;
@@ -371,13 +371,18 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
    *  set image position. If QUERY_FROM_CAMERA was given instead of a
    *  position, use the actual value from camera
    *-----------------------------------------------------------------------*/
+
+  /* The image position should be checked regardless of the left and top values
+     as we also use it for the size setting */
+
+  unsigned int camera_left = 0;
+  unsigned int camera_top = 0;
+  if (dc1394_query_format7_image_position(handle, node, mode, &camera_left, &camera_top) != DC1394_SUCCESS) {
+    printf("(%s) Unable to query image position\n", __FILE__);
+    return DC1394_FAILURE;
+  }
+
   if( left == QUERY_FROM_CAMERA || top == QUERY_FROM_CAMERA) {
-    unsigned int camera_left = 0;
-    unsigned int camera_top = 0;
-    if (dc1394_query_format7_image_position(handle, node, mode, &camera_left, &camera_top) != DC1394_SUCCESS) {
-      printf("(%s) Unable to query image position\n", __FILE__);
-      return DC1394_FAILURE;
-    }
     
     if( left == QUERY_FROM_CAMERA) left = camera_left;
     if( top == QUERY_FROM_CAMERA)  top = camera_top;
@@ -443,7 +448,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     return DC1394_FAILURE;
   }
   
-  if (dc1394_query_format7_packet_para(handle, node, mode, &min_bytes, &max_bytes) != DC1394_SUCCESS) { /* PACKET_PARA_INQ */
+  if (dc1394_query_format7_packet_para(handle, node, mode, &unit_bytes, &max_bytes) != DC1394_SUCCESS) { /* PACKET_PARA_INQ */
     printf("Packet para inq error\n");
     return DC1394_FAILURE;
   }
@@ -474,9 +479,12 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       bytes_per_packet = max_bytes;
     }
     else {
-      if (bytes_per_packet < min_bytes) {
-	bytes_per_packet = min_bytes;
+      if (bytes_per_packet < unit_bytes) {
+	bytes_per_packet = unit_bytes;
       }
+    }
+    if (bytes_per_packet % unit_bytes != 0) {
+      bytes_per_packet-=bytes_per_packet % unit_bytes;
     }
     break;
   }
