@@ -1,0 +1,10 @@
+# process this file with autoconf to get a configure script
+
+AC_INIT(Makefile.am)
+AM_INIT_AUTOMAKE(libdc1394, 0.2)
+AM_CONFIG_HEADER(src/config.h)
+
+AC_PROG_CC
+AM_PROG_LIBTOOL
+
+AC_OUTPUT([ Makefile src/Makefile ])

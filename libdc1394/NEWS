@@ -1,0 +1,25 @@
+Version 0.1:
+- first release
+
+
+Version 0.11:
+- converted for changes in 1394 kernel modules that compensate for endianness
+- other cosmetic changes (see ChangeLog)
+
+
+Version 0.2:
+- tons of new functionality for querying and setting features on the camera
+
+
+Version 0.2.1:
+- due to some bugs and some oversights with version 0.2, I'm releasing a new
+  version with (yet more) functionality and bugfixes
+
+
+Version 0.2.2:
+- massive code cleanup with changes suggested by Per Dalgas Jakobsen
+- changed the names of dc1394_get_current_value() and
+  dc1394_set_current_value() to dc1394_get_feature_value() and
+  dc1394_set_feature_value() (breaking compatibility with old library)
+- added target_temperature parameter to dc1394_get_temperature() (again
+  breaking compatibility with old library)

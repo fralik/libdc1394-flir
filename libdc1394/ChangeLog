@@ -1,0 +1,64 @@
+Mon Jan 17 10:53:15 2000   <GordPeters@smarttech.com>
+
+	* Made constants in dc1394_control.c explicitly ULL, UL, or U
+
+Mon Jan 17 14:04:46 2000   <GordPeters@smarttech.com>
+
+	* Put underscore in front of #ifdef in dc1394_control.h for convention
+	* Added extern "C" to dc1394_control.h for C++ support
+
+Wed Jan 19 18:30:49 2000   <GordPeters@smarttech.com>
+
+	* Converted values in dc1394_control.c to compensate for conversion
+	  from little endian to big endian when transferred over 1394 bus.
+
+Thu Jan 20 16:04:24 2000   <GordPeters@smarttech.com>
+
+	* Implemented conditional code for big endian/little endian machines
+	  and changed autoconfig script to test for endianness.  Added file
+	  src/config.h.in to define WORDS_BIGENDIAN.
+
+Wed Jan 26 20:03:28 2000   <GordPeters@smarttech.com>
+
+	* Fixed bug with #ifdef being using instead of #if for testing if
+	  !WORDS_BIGENDIAN
+
+Tue Feb  1 16:09:24 2000   <GordPeters@smarttech.com>
+
+	* Added tons of new functionality for querying and setting features
+	  on the camera.
+
+Tue Feb  1 18:19:52 2000   <GordPeters@smarttech.com>
+
+	* Removed test pattern code since that is not part of the
+	  1394-based Digital Camera spec.  It's specific to my TI camera.
+
+Wed Feb  2 14:11:14 2000   <GordPeters@smarttech.com>
+
+	* Fixed a bunch of bugs regarding the return value of raw1394_read()
+	  (ie. it's >= 0 on no error, < 0 on error)
+
+Fri Feb  4 11:03:42 2000   <GordPeters@smarttech.com>
+
+	* Added more convenience functions and new functions to set auto mode,
+	  turn features on/off, use one push auto mode, and read min/max values
+	  for features
+	* Fixed bug in reading the min value of a feature
+	* Fixed major bug in version 0.2 with setting the value of a feature
+	  (caused all other feature attributes to be cleared in the process)
+
+Mon Mar 13 15:41:17 2000   <GordPeters@smarttech.com>
+
+	* Incorporated changes suggested by Per Dalgas Jakobsen.  This
+	  effectively removes all the endian dependent code (much cleaner).
+
+Mon Mar 13 18:28:49 2000   <GordPeters@smarttech.com>
+
+	* Incorporated more changes suggested by Per Dalgas Jakobsen to
+	  further clean up the code.  Structured the rest of the code to
+	  be uniform with these changes.
+	* Changed the names of dc1394_get_current_value() and
+	  dc1394_set_current_value() to dc1394_get_feature_value() and
+	  dc1394_set_feature_value() (breaking compatibility with old library)
+	* Added target_temperature parameter to dc1394_get_temperature()
+	  (again breaking compatibility with old library)
