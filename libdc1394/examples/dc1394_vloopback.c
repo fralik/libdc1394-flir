@@ -10,7 +10,8 @@
 **    can be consumed by V4L applications on the vloopback output device.
 **    Get vloopback 0.90 from http://motion.technolust.cx/vloopback/
 **    Apply the patch from effectv http://effectv.sf.net/
-**    It has been tested with EffecTV (exciting!), GnomeMeeting, and ffmpeg.
+**    It has been tested with EffecTV (exciting!), GnomeMeeting, ffmpeg,
+**    camsource, Kino, and veejay.
 **
 ** TODO:
 **    - Support video controls
@@ -20,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.7  2004/01/14 22:20:43  ddennedy
+**  enhanced dc1394_vloopback
+**
 **  Revision 1.6  2004/01/04 21:27:56  ddennedy
 **  simplify video1394 includes and other minor corrections
 **
@@ -60,8 +64,12 @@
 #define DROP_FRAMES 1
 #define MAX_PORTS 4
 #define DC1394_BUFFERS 8
-#define MAX_WIDTH 640
-#define MAX_HEIGHT 480
+#define DC1394_WIDTH 640
+#define DC1394_HEIGHT 480
+#define MAX_WIDTH 1024
+#define MAX_HEIGHT 768
+#define MIN_WIDTH 160
+#define MIN_HEIGHT 120
 #define MAX_BPP 3
 #define V4L_BUFFERS 2
 #define MAX_RESETS 5
@@ -89,8 +97,8 @@ enum v4l_modes g_v4l_mode = V4L_MODE_MMAP;
 char *dc_dev_name = NULL;
 char *v4l_dev_name = NULL;
 int g_v4l_fmt = VIDEO_PALETTE_YUV422;
-int g_width = MAX_WIDTH;
-int g_height = MAX_HEIGHT;
+int g_width = DC1394_WIDTH;
+int g_height = DC1394_HEIGHT;
 u_int64_t g_guid = 0;
 
 static struct option long_options[]={
@@ -131,6 +139,10 @@ void get_options(int argc,char *argv[])
 				case 5:
 					if (strcasecmp(optarg, "rgb24") == 0)
 						g_v4l_fmt = VIDEO_PALETTE_RGB24;
+					else if (strcasecmp(optarg, "yuv422p") == 0)
+						g_v4l_fmt = VIDEO_PALETTE_YUV422P;
+					else if (strcasecmp(optarg, "yuv420p") == 0)
+						g_v4l_fmt = VIDEO_PALETTE_YUV420P;
 					break;
 				case 6:
 					g_width = atoi(optarg);
@@ -144,7 +156,7 @@ void get_options(int argc,char *argv[])
 						"Usage:\n"
 						"    %s [--daemon] [--pipe] [--guid=camera-euid]\n"
 						"       [--video1394=/dev/video1394/x] [--vloopback=/dev/video0]\n"
-						"       [--palette=yuv422|rgb24] [--width=n] [--height=n]\n\n"
+						"       [--palette=format] [--width=n] [--height=n]\n\n"
 						"    --daemon    - run as a daemon, detached from console (optional)\n"
 						"    --pipe      - write images to vloopback device instead of using\n"
 						"                  zero-copy mmap mode (optional)\n"
@@ -155,7 +167,7 @@ void get_options(int argc,char *argv[])
 						"    --vloopback - specifies video4linux device to use (optional)\n"
 						"                  by default, this is automatically determined!\n"
 						"    --palette   - specified the video palette to use (optional)\n"
-						"                  yuv422 (default) or rgb24\n"
+						"                  yuv422 (default), yuv422p, yuv420p, or rgb24\n"
 						"    --width     - set the initial width (default=640)\n"
 						"    --height    - set the initial height (default=480)\n"
 						"    --help      - prints this message\n\n"
@@ -182,8 +194,8 @@ void transform_rgb24(const unsigned char *src, unsigned char *dest)
 	dest[0] = src[2]; //r
 }
 
-void affine_scale( const unsigned char *src, unsigned char *dest, int src_width, int src_height, int dest_width, int dest_height, int bpp,
-	affine_transform_cb transform )
+void affine_scale( const unsigned char *src, int src_width, int src_height, unsigned char *dest, int dest_width, int dest_height,
+                   int bpp, affine_transform_cb transform )
 {	
 	affine_transform_t affine;
 	double scale_x = (double) dest_width / (double) src_width;
@@ -224,7 +236,7 @@ void affine_scale( const unsigned char *src, unsigned char *dest, int src_width,
 				s += bpp;
 			}
 	}
-	else if ( scale_x > 1.0 && scale_y > 1.0 )
+	else if ( scale_x >= 1.0 && scale_y >= 1.0 )
 	{
 		affine_transform_scale( &affine, 1.0/scale_x, 1.0/scale_y );
 	
@@ -237,12 +249,57 @@ void affine_scale( const unsigned char *src, unsigned char *dest, int src_width,
 				i = CLAMP( i, 0, dest_width);
 				j += src_height/2;
 				j = CLAMP( j, 0, dest_height);
-				s = src + (j*src_width*bpp) + i*bpp + (bpp == 3 ? (bpp-1) : 0);
+				s = src + (j*src_width*bpp) + i*bpp;
 				d = dest + y*dest_width*bpp + x*bpp;
 				transform(s, d);
 				d += bpp;
 				s += bpp;
 			}
+	}
+}
+
+inline void
+yuy2_to_yv16( const unsigned char *src, unsigned char *dest, int width, int height)
+{
+	register int total = (width * height) >> 1;
+	register int i;
+	register unsigned char *img_y = dest;
+	register unsigned char *img_cb = img_y + (width * height);
+	register unsigned char *img_cr = img_cb + total;
+
+	for (i = 0; i < total; i++) {
+		*img_y++  = *src++;
+		*img_cb++ = *src++;
+		*img_y++  = *src++;
+		*img_cr++ = *src++;
+	}
+}
+
+inline void
+yuy2_to_yv12( const unsigned char *src, unsigned char *dest, int width, int height)
+{
+	register int stride = width >> 1;
+	register int i, j;
+	register unsigned char *img_y = dest;
+	register unsigned char *img_cb = img_y + (width * height);
+	register unsigned char *img_cr = img_cb + stride * (height >> 1);
+
+	for (i = 0; i < height; i++) {
+		for (j = 0; j < stride; j++) {
+			if (i%2) {
+				*img_y++  = *src++;
+				src++;
+				*img_y++  = *src++;
+				src++;
+			} else {
+				*img_y++  = *src++;
+				*img_cb++ = (src[width << 1] + src[0]) >> 1;
+				src++;
+				*img_y++  = *src++;
+				*img_cr++ = (src[width << 1] + src[0]) >> 1;
+				src++;
+			}
+		}
 	}
 }
 
@@ -252,18 +309,52 @@ int capture_pipe(int dev, const unsigned char *image_in)
 {
 	int size = g_width * g_height;
 	int bpp = 0;
-	int ppp = 1;
+	int ppp = 1; /* pixels per pixel! */
+	affine_transform_cb transform = NULL;
+
+	switch (g_v4l_fmt) {
+		case VIDEO_PALETTE_RGB24:
+			bpp = 3;
+			ppp = 1;
+			transform = transform_rgb24;
+			break;
+
+		case VIDEO_PALETTE_YUV422:
+		case VIDEO_PALETTE_YUV422P:
+		case VIDEO_PALETTE_YUV420P:
+			bpp = 2;
+			ppp = 2;
+			transform = transform_yuv422;
+			break;
+
+		default:
+			return 0;
+	}
 	
-	if (g_v4l_fmt == VIDEO_PALETTE_RGB24) {
-		bpp = 3;
-		ppp = 1;
-		affine_scale( image_in, out_pipe, MAX_WIDTH/ppp, MAX_HEIGHT, g_width/ppp, g_height, ppp * bpp, transform_rgb24);
-	} else if (g_v4l_fmt == VIDEO_PALETTE_YUV422) {
-		bpp = 2;
-		ppp = 2;
-		affine_scale( image_in, out_pipe, MAX_WIDTH/ppp, MAX_HEIGHT, g_width/ppp, g_height, ppp * bpp, transform_yuv422);
-	} else
-		return 0;
+	affine_scale( image_in, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+		out_pipe, g_width/ppp, g_height,
+		ppp * bpp, transform);
+		
+	if (g_v4l_fmt == VIDEO_PALETTE_YUV422P && out_pipe != NULL) {
+		size_t memsize = (g_width * g_height) << 1;
+		unsigned char *buffer = malloc(memsize);
+		if (buffer) {
+			memcpy( buffer, out_pipe, memsize);
+			yuy2_to_yv16( buffer, out_pipe, g_width, g_height);
+			free(buffer);
+		}
+	}
+	else if (g_v4l_fmt == VIDEO_PALETTE_YUV420P && out_pipe != NULL) {
+		size_t memsize = (g_width * g_height) << 1;
+		unsigned char *buffer = malloc(memsize);
+		if (buffer) {
+			memcpy( buffer, out_pipe, memsize);
+			yuy2_to_yv12( buffer, out_pipe, g_width, g_height);
+			free(buffer);
+		}
+		size = g_width * g_height * 3 / 2;
+		bpp = 1;
+	}
 	
 	if (write(dev, out_pipe, size*bpp) != (size*bpp)) {
 		perror("Error writing image to pipe");
@@ -278,22 +369,50 @@ int capture_mmap(int frame)
 	int ppp = 1; /* pixels per pixel! */
 	affine_transform_cb transform = NULL;
 	
-	if (g_v4l_fmt == VIDEO_PALETTE_RGB24) {
-		bpp = 3;
-		ppp = 1;
-		transform = transform_rgb24;
-	} else if (g_v4l_fmt == VIDEO_PALETTE_YUV422) {
-		bpp = 2;
-		ppp = 2;
-		transform = transform_yuv422;
-	} else
-		return 0;
+	switch (g_v4l_fmt) {
+		case VIDEO_PALETTE_RGB24:
+			bpp = 3;
+			ppp = 1;
+			transform = transform_rgb24;
+			break;
+
+		case VIDEO_PALETTE_YUV422:
+		case VIDEO_PALETTE_YUV422P:
+		case VIDEO_PALETTE_YUV420P:
+			bpp = 2;
+			ppp = 2;
+			transform = transform_yuv422;
+			break;
+
+		default:
+			return 0;
+	}
 	
-    if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
-		affine_scale( (unsigned char *) camera.capture_buffer, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), 
-			MAX_WIDTH/ppp, MAX_HEIGHT, g_width/ppp, g_height, ppp * bpp, transform);
+	if (g_v4l_fmt == VIDEO_PALETTE_YUV422P && out_pipe != NULL) {
+		if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
+			affine_scale( (unsigned char *) camera.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+				out_pipe, g_width/ppp, g_height,
+				ppp * bpp, transform);
+			dc1394_dma_done_with_buffer(&camera);
+		}
+		yuy2_to_yv16( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
+	}
+	else if (g_v4l_fmt == VIDEO_PALETTE_YUV420P && out_pipe != NULL) {
+		if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
+			affine_scale( (unsigned char *) camera.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+				out_pipe, g_width/ppp, g_height,
+				ppp * bpp, transform);
+			dc1394_dma_done_with_buffer(&camera);
+		}
+		yuy2_to_yv12( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
+	}
+	else if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
+		affine_scale( (unsigned char *) camera.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+			out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width/ppp, g_height,
+			ppp * bpp, transform);
 		dc1394_dma_done_with_buffer(&camera);
 	}
+
 	
 	return 1;
 }
@@ -399,12 +518,20 @@ int dc_start(int palette)
 	unsigned int speed;
 	int mode;
 
-	if (palette == VIDEO_PALETTE_RGB24)
-		mode = MODE_640x480_RGB;
-	else if (palette == VIDEO_PALETTE_YUV422)
-		mode = MODE_640x480_YUV422;
-	else
-		return 0;
+	switch (palette) {
+		case VIDEO_PALETTE_RGB24:
+			mode = MODE_640x480_RGB;
+			break;
+			
+		case VIDEO_PALETTE_YUV422:
+		case VIDEO_PALETTE_YUV422P:
+		case VIDEO_PALETTE_YUV420P:
+			mode = MODE_640x480_YUV422;
+			break;
+
+		default:
+			return 0;
+	}
 	
 	if (dc1394_get_iso_channel_and_speed(handle, camera.node,
 								 &channel, &speed) !=DC1394_SUCCESS) 
@@ -490,14 +617,22 @@ int v4l_start_pipe (int width, int height, int format)
 	struct video_capability vid_caps;
 	struct video_window vid_win;
 	struct video_picture vid_pic;
-	int memsize = width * height;
+	size_t memsize = width * height;
 
-	if (format == VIDEO_PALETTE_RGB24)
-		memsize *= 3;
-	else if (format == VIDEO_PALETTE_YUV422)
-		memsize *= 2;
-	else
-		return 0;
+	switch (format) {
+		case VIDEO_PALETTE_RGB24:
+			memsize *= 3;
+			break;
+
+		case VIDEO_PALETTE_YUV422:
+		case VIDEO_PALETTE_YUV422P:
+		case VIDEO_PALETTE_YUV420P:
+			memsize *= 2;
+			break;
+
+		default:
+			return 0;
+	}
 
 	if (out_pipe)
 		free(out_pipe);
@@ -532,6 +667,10 @@ int v4l_start_pipe (int width, int height, int format)
 
 int v4l_start_mmap (int memsize)
 {
+	if (out_pipe)
+		free(out_pipe);
+	out_pipe = (unsigned char *) malloc(MAX_WIDTH * MAX_HEIGHT * 2);
+
 	out_mmap = mmap(0, memsize, PROT_READ|PROT_WRITE, MAP_SHARED, v4l_dev, 0);
 	if ( out_mmap == (unsigned char *) -1 )
 		return 0;
@@ -547,27 +686,38 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 		{
 			struct video_capability *vidcap=arg;
 
-			sprintf(vidcap->name, "IEEE 1394 Digital Camera Video4Linux provider");
-			vidcap->type= VID_TYPE_CAPTURE|VID_TYPE_SCALES;
+			sprintf(vidcap->name, "IEEE 1394 Digital Camera");
+			vidcap->type = VID_TYPE_CAPTURE | VID_TYPE_SCALES;
 			vidcap->channels = 1;
 			vidcap->audios = 0;
 			vidcap->maxwidth = MAX_WIDTH;
 			vidcap->maxheight = MAX_HEIGHT;
-			vidcap->minwidth = MAX_WIDTH/4;
-			vidcap->minheight = MAX_HEIGHT/4;
+			vidcap->minwidth = MIN_WIDTH;
+			vidcap->minheight = MIN_HEIGHT;
+			break;
+		}
+		case VIDIOCGTUNER:
+		{
+			struct video_tuner *vidtune=arg;
+			
+			sprintf(vidtune->name, "IEEE 1394 Digital Camera");
+			vidtune->tuner = 0;
+			vidtune->rangelow = 0;
+			vidtune->rangehigh = 0;
+			vidtune->flags = VIDEO_TUNER_PAL | VIDEO_TUNER_NTSC;
+			vidtune->mode = g_height > 480 ? VIDEO_MODE_PAL : VIDEO_MODE_NTSC;
+			vidtune->signal = 0;
 			break;
 		}
 		case VIDIOCGCHAN:
 		{
 			struct video_channel *vidchan=arg;
 			
-			if (vidchan->channel != 0)
-				return 1;
+			vidchan->channel = 0;
 			vidchan->flags = 0;
 			vidchan->tuners = 0;
 			vidchan->type = VIDEO_TYPE_CAMERA;
 			strcpy(vidchan->name, "Dummy channel");
-			
 			break;
 		}
 		case VIDIOCGPICT:
@@ -582,30 +732,57 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			vidpic->whiteness = 0xffff;
 			
 			vidpic->palette = g_v4l_fmt;
-			if (g_v4l_fmt == VIDEO_PALETTE_RGB24)
-				vidpic->depth = 24;
-			else if (g_v4l_fmt == VIDEO_PALETTE_YUV422)
-				vidpic->depth = 16;
-			else
-				return 1;
+			switch (g_v4l_fmt) {
+				case VIDEO_PALETTE_RGB24:
+					vidpic->depth = 24;
+					break;
+					
+				case VIDEO_PALETTE_YUV422:
+				case VIDEO_PALETTE_YUV422P:
+					vidpic->depth = 16;
+					break;
+
+				case VIDEO_PALETTE_YUV420P:
+					vidpic->depth = 12;
+					break;
+
+				default:
+					return 1;
+			}
 			break;
 		}
 		case VIDIOCSPICT:
 		{
 			struct video_picture *vidpic=arg;
-			if (vidpic->palette == VIDEO_PALETTE_YUV422) {
-				printf("video format set to YUV422\n");
-				dc_stop();
-				g_v4l_fmt = vidpic->palette;
-				dc_start(g_v4l_fmt);
-			} else if (vidpic->palette == VIDEO_PALETTE_RGB24) {
-				printf("video format set to RGB\n");
-				dc_stop();
-				g_v4l_fmt = vidpic->palette;
-				dc_start(g_v4l_fmt);
+			
+			switch (vidpic->palette)
+			{
+				case VIDEO_PALETTE_YUV422:
+				case VIDEO_PALETTE_YUV422P:
+				case VIDEO_PALETTE_YUV420P:
+					printf("VIDIOCSPICT: video palette set to YUV42%d%s\n",
+						vidpic->palette == VIDEO_PALETTE_YUV420P ? 0 : 2,
+						vidpic->palette == VIDEO_PALETTE_YUV422P ? "P" : "");
+					dc_stop();
+					g_v4l_fmt = vidpic->palette;
+					dc_start(g_v4l_fmt);
+					break;
+					
+				case VIDEO_PALETTE_RGB24:
+					printf("VIDIOCSPICT: video palette set to RGB24\n");
+					dc_stop();
+					g_v4l_fmt = vidpic->palette;
+					dc_start(g_v4l_fmt);
+					break;
+
+				default:
+					printf("VIDIOCSPICT: unsupported video palette %d\n", vidpic->palette);
+					return 1;
 			}
-			else
-				return 1;
+			break;
+		}
+		case VIDIOCCAPTURE:
+		{
 			break;
 		}
 		case VIDIOCGWIN:
@@ -634,7 +811,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 				return 1;
 			g_width = vidwin->width;
 			g_height = vidwin->height;
-			printf("size set to %dx%d\n", g_width, g_height);
+			printf("VIDIOCSWIN: size set to %dx%d\n", g_width, g_height);
 			break;
 		}
 		case VIDIOCGMBUF:
@@ -653,23 +830,52 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 		{
 			struct video_mmap *vidmmap=arg;
 
+			if ( vidmmap->format != g_v4l_fmt )
+			switch (vidmmap->format)
+			{
+				case VIDEO_PALETTE_YUV422:
+				case VIDEO_PALETTE_YUV422P:
+				case VIDEO_PALETTE_YUV420P:
+					printf("VIDIOCMCAPTURE: video palette set to YUV42%d%s\n",
+						vidmmap->format == VIDEO_PALETTE_YUV420P ? 0 : 2,
+						vidmmap->format == VIDEO_PALETTE_YUV422P ? "P" : "");
+					dc_stop();
+					g_v4l_fmt = vidmmap->format;
+					dc_start(g_v4l_fmt);
+					break;
+
+				case VIDEO_PALETTE_RGB24:
+					printf("VIDIOCMCAPTURE: video palette set to RGB24\n");
+					dc_stop();
+					g_v4l_fmt = vidmmap->format;
+					dc_start(g_v4l_fmt);
+					break;
+
+				default:
+					printf("VIDIOCMCAPTURE: unsupported video palette %d\n", vidmmap->format);
+					return 1;
+			}
+				
 			if (vidmmap->height > MAX_HEIGHT ||
-			    vidmmap->width > MAX_WIDTH ||
-			    vidmmap->format != g_v4l_fmt )
+			    vidmmap->width > MAX_WIDTH) {
+				printf("VIDIOCMCAPTURE: invalid size %dx%d\n", vidmmap->width, vidmmap->height );
 				return 1;
+			}
 			if (vidmmap->height != g_height ||
 			    vidmmap->width != g_width) {
 				g_height = vidmmap->height;
 				g_width = vidmmap->width;
-				printf("new size: %dx%d\n", g_width, g_height);
+				printf("VIDIOCMCAPTURE: new size %dx%d\n", g_width, g_height);
 			}
 			break;
 		}
 		case VIDIOCSYNC:
 		{
 			struct video_mmap *vidmmap=arg;
-			if ( !capture_mmap(vidmmap->frame) )
+			if ( !capture_mmap(vidmmap->frame) ) {
+				printf("VIDIOCSYNC: failed frame %d\n", vidmmap->frame);
 				return 1;
+			}
 			break;
 		}
 		default:

@@ -370,3 +370,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-01-14 Damien <ddouxchamps@users.sf.net>
     * fixed a bug related to IIDC version in format7 functions. All registers specific 
       of v1.30 are now only probed if the version is 1.30.
+
+2004-01-14 Dan Dennedy <dan@dennedy.org>
+    * libdc1394/ieee1394-ioctl.h: removed unnecessary
+    * examples/dc1394_vloopback: added support for palettes yuv422p and yuv420p,
+      added support for scaling up to 1024x768, greater v4l application compatibility.

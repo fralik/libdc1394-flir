@@ -21,8 +21,7 @@
 #ifndef _VIDEO_1394_H
 #define _VIDEO_1394_H
 
-#include <asm/ioctl.h>
-#include <asm/types.h>
+#include <sys/ioctl.h>
 
 #define VIDEO1394_DRIVER_NAME "video1394"
 
@@ -77,8 +76,7 @@ struct video1394_wait {
 #define VIDEO1394_IOC_UNTALK_CHANNEL		\
 	_IOW ('#', 0x15, int)
 #define VIDEO1394_IOC_TALK_QUEUE_BUFFER 	\
-	_IOW ('#', 0x16, sizeof (struct video1394_wait) + \
-		sizeof (struct video1394_queue_variable))
+	_IOW ('#', 0x16, size_t)
 #define VIDEO1394_IOC_TALK_WAIT_BUFFER		\
 	_IOW ('#', 0x17, struct video1394_wait)
 #define VIDEO1394_IOC_LISTEN_POLL_BUFFER	\
