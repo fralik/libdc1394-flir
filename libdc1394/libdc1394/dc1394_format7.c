@@ -491,9 +491,19 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       printf("(%s) Bytes_per_packet query failure\n", __FILE__);
       return DC1394_FAILURE;
     }*/
+    // if we wanted QUERY_FROM_CAMERA, the QUERY_FROM_CAMERA value has been overwritten by
+    // the current value at the beginning of the program. It is thus not possible to reach this code fragment.
     printf("(%s:%d) Bytes_per_packet error: we should not reach this code region\n", __FILE__,__LINE__);
     break;
   default:
+    // we have to take several tricks into account here:
+    // 1) BPP could be zero, in which case it becomes MAX_BPP
+    // 2) UNIT_BYTES could also be zero, in which case we force it to MAX_BPP.
+    //    This actually further forces BPP to be set to MAX_BPP too.
+
+    if (unit_bytes==0) {
+      unit_bytes=max_bytes;
+    }
     if (bytes_per_packet > max_bytes) {
       bytes_per_packet = max_bytes;
     }
