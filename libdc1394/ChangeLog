@@ -502,3 +502,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * applied a patch from Yves Jaeger to add software trigger functions
     * updated the configure.in script to link properly against libraw1394 (Peter 'p2' De Schrijver)
     * removed the deprecated file acconfig.h and updated configure.in accordingly.
+	
+2005-01-27 Damien <ddouxchamps@users.sf.net>
+    * fixed 1394b operation thanks to inputs and patches from Christoph Ganser.
+
+	

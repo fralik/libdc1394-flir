@@ -2015,7 +2015,7 @@ dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
   retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
   
   if (value_inq & 0x00800000) { // check if 1394b is available
-    if (value & 0x00800000) { //check if we are now using 1394b
+    if (value & 0x00008000) { //check if we are now using 1394b
       *channel= (unsigned int)((value >> 8) & 0x3FUL);
       *speed= (unsigned int)(value& 0x7UL);
     }
@@ -2041,7 +2041,7 @@ dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
 
   retval= dc1394_query_basic_functionality(handle, node, &value_inq);
   retval= GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value);
-  if ((value_inq & 0x00800000)&&(value & 0x00800000)) {
+  if ((value_inq & 0x00800000)&&(value & 0x00008000)) {
     // check if 1394b is available and if we are now using 1394b
     retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
 				     (quadlet_t) ( ((channel & 0x3FUL) << 8) |
@@ -2049,8 +2049,12 @@ dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
 						   (0x1 << 15) ));
   }
   else { // fallback to legacy
-    if (speed>SPEED_400)
+    if (speed>SPEED_400) {
+      fprintf(stderr,"(%s) line %d: an ISO speed >400Mbps was requested while the camera is in LEGACY mode\n",__FILE__,__LINE__);
+      fprintf(stderr,"              Please set the operation mode to OPERATION_MODE_1394B before asking for\n");
+      fprintf(stderr,"              1394b ISO speeds\n");
       return DC1394_FAILURE;
+    }
     retval= SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA,
 				     (quadlet_t) (((channel & 0xFUL) << 28) |
 						  ((speed & 0x3UL) << 24) ));
@@ -2058,41 +2062,6 @@ dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
   
   return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
-/*
-int
-dc1394_get_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int *mode)
-{
-  quadlet_t value;
-  if (GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value)==DC1394_FAILURE)
-    return DC1394_FAILURE;
-
-  if (value & 0x00010000)
-    *mode = OPERATION_MODE_1394B;
-  else
-    *mode = OPERATION_MODE_LEGACY;
-
-  return DC1394_SUCCESS;
-}
-
-int
-dc1394_set_operation_mode(raw1394handle_t handle, nodeid_t node, unsigned int mode)
-{
-  quadlet_t value;
-
-  if (GetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, &value)==DC1394_FAILURE)
-    return DC1394_FAILURE;
-
-  if (mode==OPERATION_MODE_LEGACY)
-    value=(value&0xFFFEFFFF);
-  else
-    value=(value | 0x0001000);
-
-  if (SetCameraControlRegister(handle, node, REG_CAMERA_ISO_DATA, value)==DC1394_FAILURE)
-    return DC1394_FAILURE;
-
-  return DC1394_SUCCESS;
-}
-*/
 
 int
 dc1394_camera_on(raw1394handle_t handle, nodeid_t node)
