@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.2  2003/09/15 17:21:28  ddennedy
+**  add features to examples
+**
 **  Revision 1.1  2003/09/02 23:42:36  ddennedy
 **  cleanup handle destroying in examples; fix dc1394_multiview to use handle per camera; new example
 **
@@ -23,11 +26,51 @@
 #include <libdc1394/dc1394_control.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
+#include <string.h>
+#define _GNU_SOURCE
+#include <getopt.h>
 
-
-#define IMAGE_FILE_NAME "image.ppm"
 #define MAX_PORTS 4
 #define MAX_RESETS 10
+
+char *g_filename = "image.ppm";
+u_int64_t g_guid = 0;
+
+static struct option long_options[]={
+	{"guid",1,NULL,0},
+	{"help",0,NULL,0},
+	{NULL,0,0,0}
+	};
+
+void get_options(int argc,char *argv[])
+{
+	int option_index=0;
+	
+	while (getopt_long(argc,argv,"",long_options,&option_index)>=0)
+	{
+		switch(option_index){ 
+			/* case values must match long_options */
+			case 0:
+				sscanf(optarg, "%llx", &g_guid);
+				break;
+			default:
+				printf( "\n"
+					"%s - grab a color image using format0, rgb mode\n\n"
+					"Usage:\n"
+					"    %s [--guid=/dev/video1394/x] [filename.ppm]\n\n"
+					"    --guid    - specifies camera to use (optional)\n"
+					"                default = first identified on buses\n"
+					"    --help    - prints this message\n"
+					"    filename is optional; the default is image.ppm\n\n"
+					,argv[0],argv[0]);
+				exit(0);
+		}
+	}
+	if (optind < argc)
+		g_filename = argv[optind];
+}
+
 
 int main(int argc, char *argv[]) 
 {
@@ -41,6 +84,8 @@ int main(int argc, char *argv[])
   raw1394handle_t handle;
   nodeid_t * camera_nodes = NULL;
 
+  get_options(argc, argv);
+  
   /*-----------------------------------------------------------------------
    *  Open ohci and asign handle to it
    *-----------------------------------------------------------------------*/
@@ -58,9 +103,9 @@ int main(int argc, char *argv[])
   raw1394_destroy_handle(handle);
   handle = NULL;
   
-	/* locate the first camera */
   for (j = 0; j < MAX_RESETS; j++)
   {
+    /* look across all ports for cameras */
     for (i = 0; i < numPorts && numCameras == 0; i++)
     {
       if (handle != NULL)
@@ -75,9 +120,38 @@ int main(int argc, char *argv[])
     }
     if (numCameras > 0)
     {
+      if (g_guid == 0)
+      {
+        /* use the first camera found */
+        camera.node = camera_nodes[0];
+        printf("working with the first camera on the bus\n");
+      }
+      else
+      {
+        /* attempt to locate camera by guid */
+        int k;
+        for (k = 0; k < numCameras; k++)
+        {
+          dc1394_camerainfo info;
+          if (dc1394_get_camera_info(handle, camera_nodes[k], &info) == DC1394_SUCCESS)
+          {
+            if (info.euid_64 == g_guid)
+            {
+              dc1394_print_camera_info(&info);
+              camera.node = camera_nodes[k];
+              break;
+            }
+          }
+        }
+        if (k == numCameras)
+        {
+          fprintf( stderr, "Unable to locate camera by node guid\n");
+          exit(1);
+		}
+      }
       numNodes = raw1394_get_nodecount(handle);
       /* camera can not be root--highest order node */
-      if (camera_nodes[0] != numNodes-1)
+      if (camera.node != numNodes-1)
           break;
       /* reset and retry if root */
       raw1394_reset_bus(handle);
@@ -98,17 +172,10 @@ int main(int argc, char *argv[])
     exit(1);
   }
   
-  printf("working with the first camera on the bus\n");  
-  
-  /* set some useful auto features */
-  dc1394_auto_on_off(handle, camera_nodes[0], FEATURE_BRIGHTNESS, 1);
-  dc1394_auto_on_off(handle, camera_nodes[0], FEATURE_EXPOSURE, 1);
-  dc1394_auto_on_off(handle, camera_nodes[0], FEATURE_WHITE_BALANCE, 1);
-	
   /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
-  if (dc1394_setup_capture(handle,camera_nodes[0],
+  if (dc1394_setup_capture(handle, camera.node,
                            0, /* channel */ 
                            FORMAT_VGA_NONCOMPRESSED,
                            MODE_640x480_RGB,
@@ -152,11 +219,11 @@ int main(int argc, char *argv[])
  /*-----------------------------------------------------------------------
    *  save image as 'Image.pgm'
    *-----------------------------------------------------------------------*/
-  imagefile=fopen(IMAGE_FILE_NAME, "w");
+  imagefile=fopen(g_filename, "w");
 
   if( imagefile == NULL)
   {
-    perror( "Can't create '" IMAGE_FILE_NAME "'");
+    perror( "Can't create output file");
     dc1394_release_camera(handle,&camera);
     dc1394_destroy_handle(handle);
     exit( 1);
@@ -168,7 +235,7 @@ int main(int argc, char *argv[])
   fwrite((const char *)camera.capture_buffer, 1,
          camera.frame_height*camera.frame_width*3, imagefile);
   fclose(imagefile);
-  printf("wrote: " IMAGE_FILE_NAME "\n");
+  printf("wrote: %s\n", g_filename);
 
   /*-----------------------------------------------------------------------
    *  Close camera

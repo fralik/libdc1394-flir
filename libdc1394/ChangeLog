@@ -323,3 +323,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2003-09-15 Damien <ddouxchamps@users.sf.net>
     * fixed format7 capture setting when the current size register is initialized
       to zero at the camera boot.
+	  
+2003-09-02  Dan Dennedy <dan@dennedy.org>
+    * examples/grab_color_image.c: remove auto settings, add --guid option, add
+      filename argument.
+    * examples/dc1394_vloopback.c: add scaling, set default mode to mmap, add 
+      mmap double buffering, add pipe mode option, adjust palette by option
+      (pipe) or by ioctl, lookup default v4l device name via procfs, daemon
+      option.

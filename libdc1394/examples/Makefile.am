@@ -14,5 +14,5 @@ grab_partial_image_LDADD = ../libdc1394/libdc1394_control.la -lraw1394
 dc1394_multiview_SOURCES = dc1394_multiview.c
 dc1394_multiview_LDADD = ../libdc1394/libdc1394_control.la -lraw1394 -L/usr/X11R6/lib -lXv -lXext -lX11 
 
-dc1394_vloopback_SOURCES = dc1394_vloopback.c
-dc1394_vloopback_LDADD = ../libdc1394/libdc1394_control.la -lraw1394
+dc1394_vloopback_SOURCES = dc1394_vloopback.c affine.c affine.h
+dc1394_vloopback_LDADD = -lm ../libdc1394/libdc1394_control.la -lraw1394
