@@ -312,18 +312,20 @@ extern "C" {
 #endif
 
 /*****************************************************
-dc1394_get_camera_feature_set
-collects the available features for the camera
-described by node and stores them in features.
+ dc1394_get_camera_feature_set
+
+ Collects the available features for the camera
+ described by node and stores them in features.
 *****************************************************/  
 int 
 dc1394_get_camera_feature_set(raw1394handle_t handle, nodeid_t node,
                               dc1394_feature_set *features);
 
 /*****************************************************
-dc1394_get_camera_feature
-stores the bounds and options associated with the
-feature described by feature->feature_id
+ dc1394_get_camera_feature
+
+ Stores the bounds and options associated with the
+ feature described by feature->feature_id
 *****************************************************/
 int 
 dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
@@ -331,8 +333,9 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
 
 
 /*****************************************************
-dc1394_get_camera_misc_info
-Collects other camera info registers
+ dc1394_get_camera_misc_info
+
+ Collects other camera info registers
 *****************************************************/
 int 
 dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
@@ -340,51 +343,66 @@ dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
 
 
 /*****************************************************
-dc1394_print_feature
-displays the bounds and options of the given feature
+ dc1394_print_feature
+
+ Displays the bounds and options of the given feature
 *****************************************************/
 void 
 dc1394_print_feature(dc1394_feature_info *feature);
 
 /*****************************************************
-dc1394_print_feature_set
-displays the entire feature set stored in features
+ dc1394_print_feature_set
+
+ Displays the entire feature set stored in features
 *****************************************************/
 void 
 dc1394_print_feature_set(dc1394_feature_set *features);
 	
 
 /*****************************************************
-dc1394_create_handle
-this creates a raw1394_handle
-Port should be 0 unless you have multiple firewire cards in your
-system
-if a handle can't be created, it returns NULL
+ dc1394_create_handle
+
+ This creates a raw1394_handle.  Port should be 0
+ unless you have multiple firewire cards in your
+ system
+
+ If a handle can't be created, it returns NULL
 *****************************************************/
 raw1394handle_t 
 dc1394_create_handle(int port);
 
 
 /*****************************************************
-dc1394_get_camera_nodes
-this returns the available cameras on the bus.
-If showCameras is set to 1, a description of the found cameras is printed.
-returns -1 in numCameras and NULL from the call if there is a problem, 
-otherwise the number of cameras and the nodeid_t array from the call
+ dc1394_get_camera_nodes
+
+ This returns the available cameras on the bus.
+
+ If showCameras is set to 1, a description of the
+ found cameras is printed.
+
+ Returns -1 in numCameras and NULL from the call if
+ there is a problem, otherwise the number of cameras
+ and the nodeid_t array from the call
 *****************************************************/
 nodeid_t* 
 dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
                         int showCameras);
 
 /*****************************************************
-dc1394_get_sorted_camera_nodes
-this returns the available cameras on the bus.
-It returns the node id's in the same index as the id specified
-the ids array contains a list of the low quadlet of the unique camera 
-ids.
-If showCameras is set to 1, a description of the found cameras is printed.
-returns -1 in numCameras and NULL from the call if there is a problem, 
-otherwise the number of cameras and the nodeid_t array from the call
+ dc1394_get_sorted_camera_nodes
+
+ This returns the available cameras on the bus.
+
+ It returns the node id's in the same index as the id
+ specified the ids array contains a list of the low
+ quadlet of the unique camera ids.
+
+ If showCameras is set to 1, a description of the
+ found cameras is printed.
+
+ Returns -1 in numCameras and NULL from the call if
+ there is a problem, otherwise the number of cameras
+ and the nodeid_t array from the call
 *****************************************************/
 nodeid_t* 
 dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numids, 
@@ -397,12 +415,12 @@ int
 dc1394_init_camera(raw1394handle_t handle, nodeid_t node);
 
 
-/* determine if the given node is a camera */
+/* Determine if the given node is a camera */
 int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value);
 
 
-/* get the camera information and print that structure*/
+/* Get the camera information and print that structure*/
 void 
 dc1394_print_camera_info(dc1394_camerainfo *info); 
 
@@ -677,18 +695,20 @@ dc1394_get_max_value(raw1394handle_t handle, nodeid_t node,
                      unsigned int feature, unsigned int *value);
 
 
-/*****************************
-DMA Capture Functions 
-These routines will be much faster
-than the above capture routines.
-*****************************/
+/**********************************
+ DMA Capture Functions 
+
+ These routines will be much faster
+ than the above capture routines.
+***********************************/
 
 /*****************************************************
-dc1394_dma_setup_capture
-this sets up the given camera to capture images using 
-the dma engine.  Should be much faster than the above
-routines
-*****************************************************/
+ dc1394_dma_setup_capture
+
+ This sets up the given camera to capture images using 
+ the dma engine.  Should be much faster than the above
+ routines
+******************************************************/
 int
 dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                          int channel, int format, int mode,
@@ -697,9 +717,10 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                          dc1394_cameracapture *camera);
 
 /*****************************************************
-dc1394_dma_release_camera
-this releases memory that was mapped by
-dc1394_dma_setup_camera
+ dc1394_dma_release_camera
+
+ This releases memory that was mapped by
+ dc1394_dma_setup_camera
 *****************************************************/
 int 
 dc1394_dma_release_camera(raw1394handle_t handle, 
@@ -715,85 +736,99 @@ dc1394_dma_unlisten(raw1394handle_t handle,
                           dc1394_cameracapture *camera);
 
 /*****************************************************
-dc1394_dma_single_capture
-This captures a frame from the given camera
+ dc1394_dma_single_capture
+
+ This captures a frame from the given camera
 *****************************************************/
 int 
 dc1394_dma_single_capture(dc1394_cameracapture *camera);
 
 /*****************************************************
-dc1394_dma_multi_capture
-This capture a frame from each of the cameras passed in
-cams.  After you are finished with the frame, you must
-return the buffer to the pool by calling
-dc1394_dma_done_with_buffer.
+ dc1394_dma_multi_capture
+
+ This capture a frame from each of the cameras passed
+ in cams.  After you are finished with the frame, you
+ must return the buffer to the pool by calling
+ dc1394_dma_done_with_buffer.
 *****************************************************/
 int
 dc1394_dma_multi_capture(dc1394_cameracapture *cams,int num);
 
 /*****************************************************
-dc1394_dma_done_with_buffer
-This allows the driver to use the buffer previously handed
-to the user by dc1394_dma_*_capture
+ dc1394_dma_done_with_buffer
+
+ This allows the driver to use the buffer previously handed
+ to the user by dc1394_dma_*_capture
 *****************************************************/
 int 
 dc1394_dma_done_with_buffer(dc1394_cameracapture * camera);
 
 
-/*****************************
-Non DMA Capture Functions 
-These functions use libraw
-to grab frames from the cameras,
-the dma routines are faster, and 
-should be used instead.
-*****************************/
+/********************************
+ Non DMA Capture Functions 
 
-/*****************************************************
-dc1394_setup_camera
-sets up both the camera and the cameracapture structure
-to be used other places.
-returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
-NOTE: it is important to call dc1394_release_camera 
-to free memory allocated by this routine- if you don't,
-your application WILL leak memory
-*****************************************************/
+ These functions use libraw
+ to grab frames from the cameras,
+ the dma routines are faster, and 
+ should be used instead.
+*********************************/
+
+/***********************************************************
+ dc1394_setup_capture
+
+ Sets up both the camera and the cameracapture structure
+ to be used other places.
+
+ Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
+
+ NOTE: it is important to call dc1394_release_camera 
+       to free memory allocated by this routine- if you
+       don't, your application WILL leak memory
+************************************************************/
 int 
 dc1394_setup_capture(raw1394handle_t handle, nodeid_t node, 
                      int channel, int format, int mode, 
                      int speed, int frame_rate, 
                      dc1394_cameracapture * camera);
 
-/*****************************************************
-dc1394_release_camera
-frees buffer space contained in the cameracapture structure
-*****************************************************/
+/***********************************************************
+ dc1394_release_camera
+
+ Frees buffer space contained in the cameracapture structure
+************************************************************/
 int 
 dc1394_release_camera(raw1394handle_t handle,
                       dc1394_cameracapture *camera);
 
 /*****************************************************
-dc1394_single_capture
-captures a frame of video from the camera specified
+ dc1394_single_capture
+
+ Captures a frame of video from the camera specified
 *****************************************************/
 int 
 dc1394_single_capture(raw1394handle_t handle,
                       dc1394_cameracapture *camera);
 
-/*****************************************************
-dc1394_multi_capture
-this routine captures a frame from each camera specified
-in the cams array.  Cameras must be set up first using dc1394_setup_camera
-returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it scucceeds
-*****************************************************/
+/********************************************************
+ dc1394_multi_capture
+
+ This routine captures a frame from each camera specified
+ in the cams array.  Cameras must be set up first using
+ dc1394_setup_camera
+
+ Returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it
+ succeeds
+*********************************************************/
 int 
 dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams,
                      int num);
 
 
 /**************************************************
- functions to read and write camera setups on/in
+ Functions to read and write camera setups on/in
  memory channels
- **************************************************/
+***************************************************/
+
 int 
 dc1394_get_memory_load_ch(raw1394handle_t handle, nodeid_t node,
                           unsigned int *channel);
@@ -818,10 +853,11 @@ dc1394_memory_load(raw1394handle_t handle, nodeid_t node,
                    unsigned int channel);
 
 
-/**************************************************
- functions to get/set the trigger polarity and
+/*************************************************
+ Functions to get/set the trigger polarity and
  determine if the camera has such a feature
- **************************************************/
+**************************************************/
+
 int
 dc1394_set_trigger_polarity(raw1394handle_t handle, nodeid_t node,
                             dc1394bool_t polarity);
@@ -837,7 +873,7 @@ dc1394_trigger_has_polarity(raw1394handle_t handle, nodeid_t node,
 
 /*************************************************
   FORMAT_7 access functions
- *************************************************/
+**************************************************/
 
 int
 dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
