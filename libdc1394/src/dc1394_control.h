@@ -750,7 +750,7 @@ should be used instead.
 *****************************/
 
 /*****************************************************
-dc1394_setup_camera
+dc1394_setup_capture
 sets up both the camera and the cameracapture structure
 to be used other places.
 returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
