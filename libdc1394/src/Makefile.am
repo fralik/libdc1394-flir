@@ -2,7 +2,7 @@
 
 lib_LTLIBRARIES = libdc1394_control.la
 
-libdc1394_control_la_LDFLAGS = -version-info 3:3:3
+libdc1394_control_la_LDFLAGS = -version-info 8:0:8
 
 libdc1394_control_la_SOURCES =  \
 	dc1394_control.c 	\
