@@ -144,13 +144,20 @@ typedef struct __dc1394_camerainfo
 
 typedef struct __dc1394_cam_cap_struct 
 {
-  nodeid_t node;
-  int channel;
-  int frame_rate;
-  int frame_width, frame_height;
-  int * capture_buffer;
-  int quadlets_per_frame;
-  int quadlets_per_packet;
+    nodeid_t node;
+    int channel;
+    int frame_rate;
+    int frame_width, frame_height;
+    int * capture_buffer;
+    int quadlets_per_frame;
+    int quadlets_per_packet;
+    /* components needed for the DMA based video capture */
+    unsigned char * dma_ring_buffer;
+    int dma_buffer_size;
+    int dma_frame_size;
+    int dma_fd;
+    int num_dma_buffers;
+    int dma_last_buffer;
 } dc1394_cameracapture ;
 
 typedef struct __dc1394_feature_info_struct 
@@ -231,6 +238,7 @@ dc1394_create_handle(int port);
 /*****************************************************
 dc1394_get_camera_nodes
 this returns the available cameras on the bus.
+If showCameras is set to 1, a description of the found cameras is printed.
 returns -1 in numCameras and NULL from the call if there is a problem, 
 otherwise the number of cameras and the nodeid_t array from the call
 *****************************************************/
@@ -244,6 +252,7 @@ this returns the available cameras on the bus.
 It returns the node id's in the same index as the id specified
 the ids array contains a list of the low quadlet of the unique camera 
 ids.
+If showCameras is set to 1, a description of the found cameras is printed.
 returns -1 in numCameras and NULL from the call if there is a problem, 
 otherwise the number of cameras and the nodeid_t array from the call
 *****************************************************/
@@ -521,7 +530,71 @@ dc1394_get_min_value(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_get_max_value(raw1394handle_t handle, nodeid_t node,
                      unsigned int feature, unsigned int *value);
+/*****************************
+DMA Capture Functions 
+These routines will be much faster
+than the above capture routines.
+*****************************/
+/*****************************************************
+dc1394_dma_setup_camera
+this sets up the given camera to capture images using 
+the dma engine.  Should be much faster than the above
+routines
+*****************************************************/
+int
+dc1394_dma_setup_camera(raw1394handle_t handle, nodeid_t node,
+                        int channel, int format, int mode,
+                        int speed, int frame_rate, 
+                        int num_dma_buffers,
+                        dc1394_cameracapture *camera);
 
+
+/*****************************************************
+dc1394_dma_release_camera
+this releases memory that was mapped by
+dc1394_dma_setup_camera
+*****************************************************/
+int 
+dc1394_dma_release_camera(dc1394_cameracapture *camera);
+
+
+/*****************************************************
+dc1394_dma_single_capture
+This captures a frame from the given camera
+*****************************************************/
+int 
+dc1394_dma_single_capture(dc1394_cameracapture *camera);
+
+
+/*****************************************************
+dc1394_dma_multi_capture
+This capture a frame from each of the cameras passed in
+cams.  After you are finished with the frame, you must
+return the buffer to the pool by calling
+dc1394_dma_done_with_buffer.
+*****************************************************/
+int
+dc1394_dma_multi_capture(dc1394_cameracapture *cams,int num);
+
+
+/*****************************************************
+dc1394_dma_done_with_buffer
+This allows the driver to use the buffer previously handed
+to the user by dc1394_dma_*_capture
+*****************************************************/
+int 
+dc1394_dma_done_with_buffer(dc1394_cameracapture * camera);
+
+
+
+
+/*****************************
+Non DMA Capture Functions 
+These functions use libraw
+to grab frames from the cameras,
+the dma routines are faster, and 
+should be used instead.
+*****************************/
 /*****************************************************
 dc1394_setup_camera
 sets up both the camera and the cameracapture structure
@@ -533,9 +606,11 @@ your application WILL leak memory
 *****************************************************/
 int 
 dc1394_setup_camera(raw1394handle_t handle, nodeid_t node, 
-			  int channel, int format, int mode, 
-			  int speed, int frame_rate, 
-			  dc1394_cameracapture * camera);
+                    int channel, int format, int mode, 
+                    int speed, int frame_rate, 
+                    dc1394_cameracapture * camera);
+
+
 /*****************************************************
 dc1394_release_camera
 frees buffer space contained in the cameracapture structure
@@ -547,7 +622,7 @@ dc1394_release_camera(raw1394handle_t handle,
 
 /*****************************************************
 dc1394_single_capture
-captures a frame of vide from the camera specified
+captures a frame of video from the camera specified
 *****************************************************/
 int 
 dc1394_single_capture(raw1394handle_t handle,
