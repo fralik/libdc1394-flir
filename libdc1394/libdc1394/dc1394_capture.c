@@ -509,7 +509,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    if (_dc1394_dma_basic_setup (node, num_dma_buffers, camera) == DC1394_FAILURE)
+    if (_dc1394_dma_basic_setup (channel, num_dma_buffers, camera) == DC1394_FAILURE)
     {
         return DC1394_FAILURE;
     }
