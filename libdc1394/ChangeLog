@@ -268,3 +268,8 @@ Thu Oct 22 15:10:00 2002 <ddouxchamps@users.sf.net>
 
 Fri Oct 23 17:19:00 2002 <ddouxchamps@users.sf.net>
     * fixed missing <<16 shift in dc394_get_format7_unit_position
+
+Sun Oct 27 00:13:00 2002 <dan@dennedy.org>
+    * added examples/dc1394_vloopback.c to demonstrate how to make
+      digital camera format0 a Video4Linux source.
+
