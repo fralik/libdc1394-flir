@@ -1120,8 +1120,12 @@ dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, int *version)
     }
     
     if (GetConfigROMTaggedRegister(handle, node, 0x38, &udd_offset, &quadval)!=DC1394_SUCCESS) {
-      *version=-1;
-      return DC1394_FAILURE;
+      // if it fails here we return success with the most accurate version estimation: 1.30.
+      // this is because the GetConfigROMTaggedRegister will return a failure both if there is a comm
+      // problem but also if the tag is not found. In the latter case it simply means that the
+      // camera version is 1.30
+      *version=IIDC_VERSION_1_30;
+      return DC1394_SUCCESS;
     }
     else {
       //fprintf(stderr,"1.3x register is 0x%x\n",quadval);
