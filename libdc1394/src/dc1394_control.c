@@ -85,7 +85,8 @@
 /* Maximum number of write/read retries */
 #define MAX_RETRIES                    10
 
-#define SHOW_ERRORS
+/* Define this to get tons o' debug spew */
+//#define SHOW_ERRORS
 
 /**********************/
 /* Internal functions */
