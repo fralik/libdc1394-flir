@@ -23,6 +23,9 @@
 #ifndef _DC1394_INTERNAL_H
 #define _DC1394_INTERNAL_H
 
+#include <libraw1394/raw1394.h>
+
+
 /* Definitions which application developers shouldn't care about */
 #define CONFIG_ROM_BASE             0xFFFFF0000000ULL
 #define CCR_BASE                    0xFFFFF0F00000ULL
@@ -46,5 +49,10 @@
 //not currently used
 #define RESP_COMPLETE               0x0000U
 #define RESP_SONY_HACK              0x000fU
+
+/* Internal function required by two different source files */
+int
+GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
+			 octlet_t offset, quadlet_t *value);
 
 #endif /* _DC1394_INTERNAL_H */

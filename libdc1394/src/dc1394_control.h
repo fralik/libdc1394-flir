@@ -425,9 +425,6 @@ int
 dc1394_query_revision(raw1394handle_t handle, nodeid_t node, int mode,
                       quadlet_t *value);
 int
-dc1394_query_csr_offset(raw1394handle_t handle, nodeid_t node, int mode,
-                        quadlet_t *value);
-int
 dc1394_query_basic_functionality(raw1394handle_t handle, nodeid_t node,
                                  quadlet_t *value);
 int

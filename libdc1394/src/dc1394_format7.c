@@ -26,6 +26,8 @@
 #include "dc1394_internal.h"
 #include "config.h"
 
+#define REG_CAMERA_V_CSR_INQ_BASE              0x2E0U
+
 #define REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ  0x000U
 #define REG_CAMERA_FORMAT7_UNIT_SIZE_INQ       0x004U
 #define REG_CAMERA_FORMAT7_IMAGE_POSITION      0x008U
@@ -43,16 +45,37 @@
 /**********************/
 
 static int
+QueryFormat7CSROffset(raw1394handle_t handle, nodeid_t node, int mode,
+		      quadlet_t *value)
+{
+    int retval;
+
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+    {
+        return DC1394_FAILURE;
+    }
+
+    mode-= MODE_FORMAT7_MIN;
+    retval= GetCameraControlRegister(handle, node,
+                                     REG_CAMERA_V_CSR_INQ_BASE +
+                                     (mode * 0x04U), value);
+    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+}
+
+static int
 GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
                          unsigned int mode, octlet_t offset, quadlet_t *value)
 {
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
     
-    if ((retval= dc1394_query_csr_offset(handle, node, mode, &csr)) < 0)
+    if ((retval= QueryFormat7CSROffset(handle, node, mode, &csr))
+	< 0)
     {
         return retval;
     }
+
+    csr*= 0x04UL;
 
     /* retry a few times if necessary (addition by PDJ) */
     while(retry--)
@@ -106,10 +129,13 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
     
-    if ((retval= dc1394_query_csr_offset(handle, node, mode, &csr)) < 0)
+    if ((retval= QueryFormat7CSROffset(handle, node, mode, &csr))
+	< 0)
     {
         return retval;
     }
+
+    csr*= 0x04UL;
   
     /* conditionally byte swap the value (addition by PDJ) */
     value= htonl(value);

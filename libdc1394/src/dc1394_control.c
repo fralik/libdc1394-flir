@@ -68,7 +68,6 @@
 #define REG_CAMERA_V_MODE_INQ_BASE     0x180U
 #define REG_CAMERA_V_RATE_INQ_BASE     0x200U
 #define REG_CAMERA_V_REV_INQ_BASE      0x2C0U
-#define REG_CAMERA_V_CSR_INQ_BASE      0x2E0U
 #define REG_CAMERA_BASIC_FUNC_INQ      0x400U
 #define REG_CAMERA_FEATURE_HI_INQ      0x404U
 #define REG_CAMERA_FEATURE_LO_INQ      0x408U
@@ -523,7 +522,7 @@ GetCameraROMValue(raw1394handle_t handle, nodeid_t node,
     return retval;
 }
 
-static int
+int
 GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
                          octlet_t offset, quadlet_t *value)
 {
@@ -1532,25 +1531,6 @@ dc1394_query_revision(raw1394handle_t handle, nodeid_t node, int mode,
     retval= GetCameraControlRegister(handle, node,
                                      REG_CAMERA_V_REV_INQ_BASE +
                                      (mode * 0x04U), value);
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-}
-
-int
-dc1394_query_csr_offset(raw1394handle_t handle, nodeid_t node, int mode,
-                        quadlet_t *value)
-{
-    int retval;
-
-    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
-    {
-	return DC1394_FAILURE;
-    }
-
-    mode-= MODE_FORMAT7_MIN;
-    retval= GetCameraControlRegister(handle, node,
-                                     REG_CAMERA_V_CSR_INQ_BASE +
-                                     (mode * 0x04U), value);
-    *value*= 4;
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
