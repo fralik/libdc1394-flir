@@ -1064,6 +1064,7 @@ dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value)
         }
         else {
           *value=quadval&0xFFFFFFUL;
+	  camera->sw_version=*value;
         }
     }
     return DC1394_SUCCESS;

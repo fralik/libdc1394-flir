@@ -393,4 +393,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2004-01-21 Damien <ddouxchamps@users.sf.net>
     * print a warning when format7 BPP is zero.
+	
+2004-01-26 Damien <ddouxchamps@users.sf.net>
+    * version is now properly memorized. This caused several problems with format_7
+      cameras.
 
