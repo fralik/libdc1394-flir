@@ -155,3 +155,8 @@ Tue Jul  3 16:33:50 2001   <GordPeters@smarttech.com>
 	     -dc1394_set_trigger_on_off()
 	     -dc1394_get_trigger_on_off()
 	  (addition by Audun Jan Myrhol <audun.myrhol@q-free.com>)
+
+Sat Sept 08 02:19:48 2001 <dan@dennedy.org>
+
+    * Updated kernel-video1394.h against current CVS version
+
