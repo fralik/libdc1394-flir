@@ -400,28 +400,46 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   }
 
   /*-----------------------------------------------------------------------
-   *  set image size. If QUERY_FROM_CAMERA was given instead of a
-   *  position, use the actual value from camera, if USE_MAX_AVAIL was
-   *  given, calculate max availible size
+   *  If QUERY_FROM_CAMERA was given instead of an image size
+   *  use the actual value from camera.
    *-----------------------------------------------------------------------*/
-  if( width < 0 || height < 0)
+  if( width == QUERY_FROM_CAMERA || height == QUERY_FROM_CAMERA)
   {
     unsigned int camera_width = 0;
     unsigned int camera_height = 0;
     if (dc1394_query_format7_image_size(handle, node, mode,
-                                            &camera_width, &camera_height)
+					&camera_width, &camera_height)
         != DC1394_SUCCESS)
       {
 	printf("(%s) Unable to query image size\n", __FILE__);
 	return DC1394_FAILURE;
       }
     
-    if( width == QUERY_FROM_CAMERA)   width  = camera_width;
-    else if( width == USE_MAX_AVAIL)  width  = camera_width - left;
-    if( height == QUERY_FROM_CAMERA)  height = camera_height;
-    else if( height == USE_MAX_AVAIL) height = camera_height - top;
+    if (width == QUERY_FROM_CAMERA)   width  = camera_width;
+    if (height == QUERY_FROM_CAMERA)  height = camera_height;
     
   }
+
+  /*-----------------------------------------------------------------------
+   *  If USE_MAX_AVAIL was given instead of an image size
+   *  use the max image size for the given image position
+   *-----------------------------------------------------------------------*/
+  if( width == USE_MAX_AVAIL || height == USE_MAX_AVAIL)
+  {
+    unsigned int max_width = 0;
+    unsigned int max_height = 0;
+    if (dc1394_query_format7_max_image_size(handle, node, mode,
+                                            &max_width, &max_height)
+        != DC1394_SUCCESS)
+      {
+	printf("(%s) Unable to query max image size\n", __FILE__);
+	return DC1394_FAILURE;
+      }
+    if( width == USE_MAX_AVAIL)  width  = max_width - left;
+    if( height == USE_MAX_AVAIL) height = max_height - top;
+    
+  }
+
   if (dc1394_set_format7_image_size(handle, node, mode, width, height) != DC1394_SUCCESS)
     {
       printf("(%s) Unable to set format 7 image size to "
@@ -437,7 +455,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
 
   if (bytes_per_packet == USE_RECOMMENDED)
     {
-      if (bytes_per_packet>0)
+      if (recom_bpp>0)
 	{
 	  if (dc1394_set_format7_byte_per_packet(handle, node, mode, recom_bpp) != DC1394_SUCCESS)
 	    {
@@ -573,7 +591,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   {
     return DC1394_FAILURE;
   }
-  camera->frame_width = width; /* irrespecable of pixel depth */
+  camera->frame_width = width; /* irrespective of pixel depth */
   camera->frame_height= height;
 
   if (is_iso_on)
@@ -658,7 +676,7 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                             speed, bytes_per_packet,
                             left, top, width, height, camera) == DC1394_FAILURE)
     {
-        return DC1394_FAILURE;
+      return DC1394_FAILURE;
     }
 
     myPort = raw1394_get_userdata(handle);
@@ -839,7 +857,7 @@ dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
  				 unsigned int mode, unsigned int *total_bytes)
 {
     int retval;
-    quadlet_t value_hi, value_lo;
+    unsigned long long int value_hi, value_lo;
    
     if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
@@ -849,13 +867,13 @@ dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
     {
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_TOTAL_BYTES_HI_INQ,
-                                         &value_hi);
+                                         (quadlet_t*)&value_hi);
 	if (retval==DC1394_FAILURE)
 	  return DC1394_FAILURE;
 
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_TOTAL_BYTES_LO_INQ,
-                                         &value_lo);
+                                         (quadlet_t*)&value_lo);
  
         *total_bytes= (unsigned int) (value_lo | ( value_hi << 32) ); 
     }

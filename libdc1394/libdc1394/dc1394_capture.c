@@ -241,7 +241,6 @@ _dc1394_dma_basic_setup(int channel,
     struct video1394_wait vwait;
     int i;
     char *device;
-
     if (camera->dma_device_file == NULL) {
 		device = malloc(32);
 		sprintf( device, "/dev/video1394/%d", camera->port );
@@ -271,6 +270,7 @@ _dc1394_dma_basic_setup(int channel,
     else
 	camera->dma_fd = _dc1394_dma_fd[camera->port];
 
+
     _dc1394_num_using_fd[camera->port]++;
     vmmap.sync_tag= 1;
     vmmap.nb_buffers= num_dma_buffers;
@@ -284,6 +284,7 @@ _dc1394_dma_basic_setup(int channel,
         printf("(%s) VIDEO1394_LISTEN_CHANNEL ioctl failed!\n", __FILE__);
         return DC1394_FAILURE;
     }
+    //fprintf(stderr,"listening channel set\n");
 
     camera->dma_frame_size= vmmap.buf_size;
     camera->num_dma_buffers= vmmap.nb_buffers;

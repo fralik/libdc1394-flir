@@ -281,3 +281,6 @@ Mon Nov 20 10:35:00 2002 <ddouxchamps@users.sf.net>
     * Use a little trick from Martin Gramatke to avoid misinterpreta-
       tion of TOTAL_BYTES registers. We don't use the latter register
       anymore.
+	
+Wed Jul 2 14:35:00 2003 <ddouxchamps@users.sf.net>
+    * fixed some F7 issues. Thanks to Kero van Gelder.
