@@ -27,6 +27,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#include "config.h"
 #include "dc1394_control.h"
 #include "kernel-video1394.h"
 
@@ -73,7 +74,11 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
 {
 
     /* the first packet of a frame has a 1 in the lsb of the header */
+#ifdef LIBRAW1394_OLD
     if ( (data[0] & 0x1) && (_dc1394_frame_captured[channel] != 1) )
+#else
+    if ( (data[0] & 0x01000000UL) && (_dc1394_frame_captured[channel] != 1) )
+#endif
     {
         _dc1394_offset[channel]= 0;
         _dc1394_frame_captured[channel]= 2;
@@ -397,7 +402,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
 
         if ( (_dc1394_dma_fd= open("/dev/video1394",O_RDONLY)) < 0 )
         {
-            printf("(%s) unable to open vide1394 device!\n", __FILE__);
+            printf("(%s) unable to open video1394 device!\n", __FILE__);
             return DC1394_FAILURE;
         }
 

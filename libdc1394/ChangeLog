@@ -143,3 +143,8 @@ Mon Apr 30 12:46:22 2001   <GordPeters@smarttech.com>
 
 	* Fixed problem with dc1394_get_camera_feature() failing due to feature
 	  id being modified by feature to offset macros (fix by Li Ming)
+
+Thu Jun  7 12:29:26 2001   <GordPeters@smarttech.com>
+
+	* Applied Dan Dennedy's patch which fixes image capture with newest
+	  version of libraw1394 (0.9) and fixes a small spelling mistake
