@@ -245,3 +245,6 @@ Thu Sep 03 10:45:00 2002 <ddouxchamps@users.sf.net>
 
 Thu Sep 09 12:00:00 2002 <ddouxchamps@users.sf.net>
     * more v1.30 handshake update
+
+Thu Sep 10 12:00:00 2002 <ddouxchamps@users.sf.net>
+    * even more v1.30 handshake update (now with proper error handling)

@@ -236,6 +236,24 @@ _dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
   return DC1394_SUCCESS;
 }
 
+int
+_dc1394_v130_errflag2(raw1394handle_t handle, nodeid_t node, int mode)
+{
+  int setting_1, err_flag1, err_flag2, v130handshake;
+
+  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					 &setting_1, &err_flag1, &err_flag2)
+      != DC1394_SUCCESS)
+    {
+      printf("(%s) Unable to read value setting register.\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+  if (err_flag2==0)
+    return DC1394_SUCCESS;
+  else
+    return DC1394_FAILURE;
+}
+  
 /*======================================================================*/
 /*! 
  *   see documentation of dc1394_setup_format7_capture() in
@@ -407,8 +425,11 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     }
 
   // IIDC v1.30 handshaking:
-  _dc1394_v130_handshake(handle, node, mode);
-
+  if ( _dc1394_v130_handshake(handle, node, mode) != DC1394_SUCCESS)
+    {
+      printf("(%s) Format7 handshaking failure \n", __FILE__);
+      return DC1394_FAILURE;
+    }
 
   if (dc1394_query_format7_byte_per_packet(handle, node, mode, &packet_bytes) == DC1394_SUCCESS)
   {
@@ -793,13 +814,15 @@ dc1394_set_format7_image_position(raw1394handle_t handle, nodeid_t node,
  				  unsigned int mode, unsigned int left,
  				  unsigned int top)
 {
-    int retval= SetCameraFormat7Register(handle, node, mode,
-                                         REG_CAMERA_FORMAT7_IMAGE_POSITION,
-                                         (quadlet_t)((left << 16) | top));
-    // IIDC v1.30 handshaking:
-    retval+=_dc1394_v130_handshake(handle, node, mode);
-
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+    if (SetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_IMAGE_POSITION,
+                                         (quadlet_t)((left << 16) | top)) != DC1394_SUCCESS)
+      {
+	printf("(%s) Format7 image position setting failure \n", __FILE__);
+	return DC1394_FAILURE;
+      }
+    else
+      // IIDC v1.30 handshaking:
+      return _dc1394_v130_handshake(handle, node, mode);
 }
  
 int
@@ -807,34 +830,37 @@ dc1394_set_format7_image_size(raw1394handle_t handle, nodeid_t node,
                               unsigned int mode, unsigned int width,
                               unsigned int height)
 {
-    int retval= SetCameraFormat7Register(handle, node, mode,
-                                         REG_CAMERA_FORMAT7_IMAGE_SIZE,
-                                         (quadlet_t)((width << 16) | height));
-    // IIDC v1.30 handshaking:
-    retval+=_dc1394_v130_handshake(handle, node, mode);
-
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+    if (SetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_IMAGE_SIZE,
+				 (quadlet_t)((width << 16) | height)) != DC1394_SUCCESS)
+      {
+	printf("(%s) Format7 image size setting failure \n", __FILE__);
+	return DC1394_FAILURE;
+      }
+    else
+      // IIDC v1.30 handshaking:
+      return _dc1394_v130_handshake(handle, node, mode);
 }
  
 int
 dc1394_set_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
  				   unsigned int mode, unsigned int color_id)
 {
-    int retval;
-
     if ( (color_id < COLOR_FORMAT7_MIN) || (color_id > COLOR_FORMAT7_MAX) )
     {
         return DC1394_FAILURE;
     }
 
     color_id-= COLOR_FORMAT7_MIN;
-    retval= SetCameraFormat7Register(handle, node, mode,
-                                     REG_CAMERA_FORMAT7_COLOR_CODING_ID,
-                                     (quadlet_t)color_id);
-    // IIDC v1.30 handshaking:
-    retval+=_dc1394_v130_handshake(handle, node, mode);
-
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+    color_id=color_id<<24;
+    if (SetCameraFormat7Register(handle, node, mode,REG_CAMERA_FORMAT7_COLOR_CODING_ID,
+				 (quadlet_t)color_id) != DC1394_SUCCESS)
+      {
+	printf("(%s) Format7 color coding ID setting failure \n", __FILE__);
+	return DC1394_FAILURE;
+      }
+    else
+      // IIDC v1.30 handshaking:
+      return _dc1394_v130_handshake(handle, node, mode);
 }
  
 int
@@ -842,13 +868,15 @@ dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
  				   unsigned int mode,
                                    unsigned int packet_bytes)
 {
-    int retval= SetCameraFormat7Register(handle, node, mode,
-                                         REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
-                                         (quadlet_t)(packet_bytes) << 16 );
-    // IIDC v1.30 handshaking:
-    retval+=_dc1394_v130_handshake(handle, node, mode);
-
-    return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+    if (SetCameraFormat7Register(handle, node, mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
+				 (quadlet_t)(packet_bytes) << 16 ) != DC1394_SUCCESS)
+      {
+	printf("(%s) Format7 bytes-per-packet setting failure \n", __FILE__);
+	return DC1394_FAILURE;
+      }
+    else
+      // IIDC v1.30 error checking:
+      return _dc1394_v130_errflag2(handle, node, mode);
 }
 
 int
