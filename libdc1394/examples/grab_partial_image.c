@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.3  2003/07/02 14:16:20  ddouxchamps
+**  changed total_bytes to unsigned long long int in dc1394_query_format7_total_bytes.
+**
 **  Revision 1.2  2001/09/14 08:20:43  ronneber
 **  - adapted to new dc1394_setup_format7_capture()
 **  - using times() instead of time() for more precise frame rate measurement
@@ -46,7 +49,7 @@ int main(int argc, char *argv[])
   int i;
   unsigned int min_bytes, max_bytes;
   unsigned int actual_bytes;
-  unsigned int total_bytes = 0;
+  unsigned long long int total_bytes = 0;
 
   
   
@@ -166,7 +169,7 @@ int main(int argc, char *argv[])
     printf("dc1394_query_format7_total_bytes error\n");
     return DC1394_FAILURE;
   }
-  printf( "camera reports total bytes per frame = %d bytes\n",
+  printf( "camera reports total bytes per frame = %lld bytes\n",
           total_bytes);
 
   

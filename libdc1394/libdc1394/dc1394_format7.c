@@ -854,10 +854,11 @@ dc1394_query_format7_pixel_number(raw1394handle_t handle, nodeid_t node,
  
 int
 dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
- 				 unsigned int mode, unsigned int *total_bytes)
+ 				 unsigned int mode, unsigned long long int *total_bytes)
 {
     int retval;
     unsigned long long int value_hi, value_lo;
+    quadlet_t value;
    
     if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
@@ -867,15 +868,17 @@ dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
     {
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_TOTAL_BYTES_HI_INQ,
-                                         (quadlet_t*)&value_hi);
+                                         &value);
+	value_hi=value;
 	if (retval==DC1394_FAILURE)
 	  return DC1394_FAILURE;
 
         retval= GetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_TOTAL_BYTES_LO_INQ,
-                                         (quadlet_t*)&value_lo);
+                                         &value);
+	value_lo=value;
  
-        *total_bytes= (unsigned int) (value_lo | ( value_hi << 32) ); 
+        *total_bytes= (value_lo | ( value_hi << 32) ); 
     }
 
     return retval;

@@ -80,6 +80,7 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
 #else
     if ( (data[0] & 0x01000000UL) && (_dc1394_frame_captured[channel] != 1) )
 #endif
+
     {
         _dc1394_offset[channel]= 0;
         _dc1394_frame_captured[channel]= 2;

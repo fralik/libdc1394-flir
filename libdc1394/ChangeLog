@@ -284,3 +284,5 @@ Mon Nov 20 10:35:00 2002 <ddouxchamps@users.sf.net>
 	
 Wed Jul 2 14:35:00 2003 <ddouxchamps@users.sf.net>
     * fixed some F7 issues. Thanks to Kero van Gelder.
+    * changed total_bytes to unsigned long long int in
+      dc1394_query_format7_total_bytes.

@@ -1008,7 +1008,7 @@ dc1394_query_format7_pixel_number(raw1394handle_t handle, nodeid_t node,
 
 int
 dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
-				 unsigned int mode, unsigned int *total_bytes);
+				 unsigned int mode, unsigned long long int *total_bytes);
 
 int
 dc1394_query_format7_packet_para(raw1394handle_t handle, nodeid_t node,
