@@ -1059,7 +1059,7 @@ dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value)
           return DC1394_FAILURE;
         }
         else {
-          quadval&=0xFFFFFFUL;
+          *value=quadval&0xFFFFFFUL;
         }
     }
     return DC1394_SUCCESS;

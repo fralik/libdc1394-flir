@@ -349,5 +349,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2003-12-04 Damien <ddouxchamps@users.sf.net>
     * little tag commit for version 0.9.2
+	
+2003-12-15 Damien <ddouxchamps@users.sf.net>
+    * fixed significant bug regarding IIDC specs revision detection
+      (in dc1394_get_sw_revision).
 
 	
