@@ -415,3 +415,15 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-02-04 Damien <ddouxchamps@users.sf.net>
     * fixed bpp issue in _dc1394_basic_format7_setup
     * fixed missing *4 in boundary check of GetConfigROMTaggedRegister
+
+2004-02-04 Kristoffer Delforge <delforge@users.sf.net>
+    * fixed uninitialized values in dc1394camerahandle_t
+    * changed 0xffff to DC1394_NO_CAMERA in dc1394_get_sorted_camera_nodes
+    * changed some calue by &value[0] in dc1394_get_camera_info
+    * removed unnecessary '& 0xFFFF' in dc1394_get_camera_info
+    * simplify FEATURE_TRIGGER check in dc1394_get_camera_feature
+    * added printf warning before return in dc1394_print_feature
+    * replaced '== DC1394_FAILURE' by '!= DC1394_SUCCESS'
+    * removed FORMAT_STILL_IMAGE definition to 390, it messes up with the
+      number of available formats
+    * replaced a 0x1<<31 by ON_VALUE

@@ -219,7 +219,7 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
     }
 
     if (_dc1394_get_wh_from_format(format,mode,&camera->frame_width,
-                                   &camera->frame_height) == DC1394_FAILURE) 
+                                   &camera->frame_height) != DC1394_SUCCESS) 
     {
         return DC1394_FAILURE;
     }
@@ -382,7 +382,7 @@ dc1394_setup_capture(raw1394handle_t handle, nodeid_t node,
   else
   {
     if (_dc1394_basic_setup(handle,node, channel, format, mode, 
-                            speed,frame_rate, camera) == DC1394_FAILURE)
+                            speed,frame_rate, camera) != DC1394_SUCCESS)
     {
       return DC1394_FAILURE;
     }
@@ -548,7 +548,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
     camera->drop_frames = drop_frames;
 
     if (_dc1394_basic_setup(handle,node, channel, format, mode,
-                            speed,frame_rate, camera) == DC1394_FAILURE)
+                            speed,frame_rate, camera) != DC1394_SUCCESS)
     {
         return DC1394_FAILURE;
     }

@@ -654,7 +654,7 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
  
     if (_dc1394_basic_format7_setup(handle,node, channel, mode,
 				    speed, bytes_per_packet,
-				    left, top, width, height, camera) == DC1394_FAILURE)
+				    left, top, width, height, camera) != DC1394_SUCCESS)
     {
       return DC1394_FAILURE;
     }
@@ -852,7 +852,7 @@ dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
                                          REG_CAMERA_FORMAT7_TOTAL_BYTES_HI_INQ,
                                          &value);
 	value_hi=value;
-	if (retval==DC1394_FAILURE)
+	if (retval != DC1394_SUCCESS)
 	  return DC1394_FAILURE;
 
         retval= GetCameraFormat7Register(handle, node, mode,
