@@ -72,7 +72,7 @@ GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
     
-    if ((retval= QueryFormat7CSROffset(handle, node, mode, &csr)) != DC1394_SUCCESS)
+    if (QueryFormat7CSROffset(handle, node, mode, &csr) != DC1394_SUCCESS)
     {
         return DC1394_FAILURE;
     }
@@ -100,7 +100,7 @@ GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
             { 
                 /* conditionally byte swap the value */
                 *value= ntohl(*value); 
-                return 0;
+                return DC1394_SUCCESS;
             }
 
         }
@@ -109,11 +109,11 @@ GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
         {
             /* conditionally byte swap the value */
             *value= ntohl(*value);
-            return retval;
+            return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
         }
         else if (errno != EAGAIN)
         {
-            return retval;
+            return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
         }
 #endif /* LIBRAW1394_VERSION <= 0.8.2 */
 
@@ -131,11 +131,12 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
     
-    if ((retval= QueryFormat7CSROffset(handle, node, mode, &csr)) !=DC1394_SUCCESS)
+    if (QueryFormat7CSROffset(handle, node, mode, &csr)!=DC1394_SUCCESS)
     {
+      fprintf(stderr,"failure to get format7 CSR offset\n");
         return DC1394_FAILURE;
     }
-
+    fprintf(stderr,"Got format7 CSR offset\n");
     csr*= 0x04UL;
   
     /* conditionally byte swap the value (addition by PDJ) */
@@ -161,7 +162,7 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
                   (ack == ACK_COMPLETE)) &&
                  ((rcode == RESP_COMPLETE) || (rcode == RESP_SONY_HACK)) ) 
             {
-                return 0;
+                return DC1394_SUCCESS;
             }
             
             
@@ -169,7 +170,7 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
 #else
         if (!retval || (errno != EAGAIN))
         {
-            return retval;
+            return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
         }
 #endif /* LIBRAW1394_VERSION <= 0.8.2 */
 
