@@ -242,3 +242,6 @@ Thu Aug 22 10:10:00 2002 <ddouxchamps@users.sf.net>
 Thu Sep 03 10:45:00 2002 <ddouxchamps@users.sf.net>
     * Bugfix in v1.30 format7 capture handshake. Thanks to Yasutoshi Onishi
       for pointing it out.
+
+Thu Sep 09 12:00:00 2002 <ddouxchamps@users.sf.net>
+    * more v1.30 handshake update

@@ -181,6 +181,60 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     return retval;
 }
 
+/*==========================================================================
+ * This function implements the handshaking available (and sometimes required)
+ * on some cameras that comply with the IIDC specs v1.30. Thanks to Yasutoshi
+ * Onishi for his feedback and info.
+ *==========================================================================*/
+
+int
+_dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
+{
+  int setting_1, err_flag1, err_flag2, v130handshake;
+  int exit_loop;
+
+  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					 &setting_1, &err_flag1, &err_flag2)
+      != DC1394_SUCCESS)
+    {
+      printf("(%s) Unable to read value setting register.\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+  
+  if (v130handshake==1)
+    {
+      // we should use advanced IIDC v1.30 handshaking.
+
+      // set value setting to 1
+      if (dc1394_set_format7_value_setting(handle, node, mode) != DC1394_SUCCESS)
+	{
+	  printf("(%s) Unable to set value setting register.\n", __FILE__);
+	  return DC1394_FAILURE;
+	}
+      // wait for value setting to clear:
+      exit_loop=0;
+      while (!exit_loop)// WARNING: there is no timeout in this loop yet.
+	{
+	  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					 &setting_1, &err_flag1, &err_flag2)
+	      != DC1394_SUCCESS)
+	    {
+	      printf("(%s) Unable to read value setting register.\n", __FILE__);
+	      return DC1394_FAILURE;
+	    }
+	  exit_loop=(setting_1==0);
+	  usleep(0); 
+	}
+      if (err_flag1>0)
+	{
+	  printf("(%s) Invalid image position/size-color coding-ISO speed\n", __FILE__);
+	  return DC1394_FAILURE;
+	}
+	
+      // bytes per packet... registers are ready for reading.
+    }
+  return DC1394_SUCCESS;
+}
 
 /*======================================================================*/
 /*! 
@@ -199,8 +253,6 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   dc1394bool_t is_iso_on= DC1394_FALSE;
   unsigned int min_bytes, max_bytes;
   unsigned packet_bytes=0;
-  unsigned int v130handshake, setting_1, err_flag1, err_flag2;
-  unsigned int exit_loop;
   unsigned int recom_bpp;
 
   if (dc1394_get_iso_status(handle, node, &is_iso_on) != DC1394_SUCCESS)
@@ -291,47 +343,6 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       return DC1394_FAILURE;
     }
   
-  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
-					 &setting_1, &err_flag1, &err_flag2)
-      != DC1394_SUCCESS)
-    {
-      printf("(%s) Unable to read value setting register.\n", __FILE__);
-      return DC1394_FAILURE;
-    }
-  
-  if (v130handshake==1)
-    {
-      // we should use advanced IIDC v1.30 handshaking.
-
-      // set value setting to 1
-      if (dc1394_set_format7_value_setting(handle, node, mode) != DC1394_SUCCESS)
-	{
-	  printf("(%s) Unable to set value setting register.\n", __FILE__);
-	  return DC1394_FAILURE;
-	}
-      // wait for value setting to clear:
-      exit_loop=0;
-      while (!exit_loop)// WARNING: there is no timeout in this loop yet.
-	{
-	  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
-					 &setting_1, &err_flag1, &err_flag2)
-	      != DC1394_SUCCESS)
-	    {
-	      printf("(%s) Unable to read value setting register.\n", __FILE__);
-	      return DC1394_FAILURE;
-	    }
-	  exit_loop=(setting_1==0);
-	  usleep(0); 
-	}
-      if (err_flag1>0)
-	{
-	  printf("(%s) Invalid image position/size-color coding-ISO speed\n", __FILE__);
-	  return DC1394_FAILURE;
-	}
-	
-      // bytes per packet... registers are ready for reading.
-    }
-
   if (dc1394_query_format7_recommended_byte_per_packet(handle, node, mode, &recom_bpp) != DC1394_SUCCESS)
     {
       printf("Recommended byte-per-packet inq error\n");
@@ -394,6 +405,9 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
 	  return DC1394_FAILURE;
 	}
     }
+
+  // IIDC v1.30 handshaking:
+  _dc1394_v130_handshake(handle, node, mode);
 
 
   if (dc1394_query_format7_byte_per_packet(handle, node, mode, &packet_bytes) == DC1394_SUCCESS)
@@ -782,6 +796,9 @@ dc1394_set_format7_image_position(raw1394handle_t handle, nodeid_t node,
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_IMAGE_POSITION,
                                          (quadlet_t)((left << 16) | top));
+    // IIDC v1.30 handshaking:
+    retval+=_dc1394_v130_handshake(handle, node, mode);
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
  
@@ -793,6 +810,9 @@ dc1394_set_format7_image_size(raw1394handle_t handle, nodeid_t node,
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_IMAGE_SIZE,
                                          (quadlet_t)((width << 16) | height));
+    // IIDC v1.30 handshaking:
+    retval+=_dc1394_v130_handshake(handle, node, mode);
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
  
@@ -811,6 +831,9 @@ dc1394_set_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
     retval= SetCameraFormat7Register(handle, node, mode,
                                      REG_CAMERA_FORMAT7_COLOR_CODING_ID,
                                      (quadlet_t)color_id);
+    // IIDC v1.30 handshaking:
+    retval+=_dc1394_v130_handshake(handle, node, mode);
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
  
@@ -822,6 +845,9 @@ dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
     int retval= SetCameraFormat7Register(handle, node, mode,
                                          REG_CAMERA_FORMAT7_BYTE_PER_PACKET,
                                          (quadlet_t)(packet_bytes) << 16 );
+    // IIDC v1.30 handshaking:
+    retval+=_dc1394_v130_handshake(handle, node, mode);
+
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
