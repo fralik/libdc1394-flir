@@ -337,7 +337,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
    * examples/dc1394_vloopback.c: add --guid option like grab_color_image
      and renamed some options, and added root detection and reset
 	
-2003-09-15 Damien <ddouxchamps@users.sf.net>
+2003-11-15 Damien <ddouxchamps@users.sf.net>
     * fixes/additions by Johann Schoonees:
     * fixed format7 capture setup function missing some parameters 
     * fixed compil warning in dc1394_absolute.c, line 261.
@@ -346,3 +346,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * changed dc1394_get_camera_misc_info to avoid probing memory psec registers
       if no user memory is available. This is necessary for the iSight camera from Apple,
       which does not implement registers 0x618h thru 0x62Ch.
+	
+2003-12-04 Damien <ddouxchamps@users.sf.net>
+    * little tag commit for version 0.9.2
+
+	
