@@ -210,7 +210,7 @@ int
 dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 {
     octlet_t offset= 0x424UL;
-    quadlet_t quadval;
+    quadlet_t quadval= 0;
     int retval;
 
 #ifdef SHOW_ERRORS
@@ -276,9 +276,9 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
     printf("Node id in dc1394_get_camara_info is %d\n", (int)node);
 #endif
 
+    /* J.A. - tsk tsk - first bug I found.  We pass node, not i!!! */
+    //if ( (retval= dc1394_is_camera(handle, i, &iscamera)) < 0 )
     if ( (retval= dc1394_is_camera(handle, node, &iscamera)) < 0 )
-        /* J.A. - tsk tsk - first bug I found.  We pass node, not i!!! */
-        //    if ( (retval= dc1394_is_camera(handle, i, &iscamera)) < 0 )
     {
 #ifdef SHOW_ERRORS
         printf("Error - this is not a camera (get_camera_info)\n");
@@ -301,6 +301,8 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return(retval);
     }
 
+    /* make sure to strip 1st byte -- bug found by Robert Ficklin */
+    offset&= 0xFFFFFFUL;
     offset<<= 2;
     offset+= (ROM_ROOT_DIRECTORY + 12);
 
@@ -324,6 +326,7 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return(retval);
     }
 
+    offset&= 0xFFFFFFUL;
     offset<<= 2;
     offset+= (ROM_ROOT_DIRECTORY + 16);
 
@@ -334,6 +337,7 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return(retval);
     }
 
+    offset&= 0xFFFFFFUL;
     offset2<<= 2;
     offset2+= (offset + 12);
 
@@ -344,6 +348,7 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return(retval);
     }
 
+    offset&= 0xFFFFFFUL;
     offset<<= 2;
     info->ccr_offset= (octlet_t)offset;
 
@@ -354,6 +359,7 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return(retval);
     }
 
+    offset&= 0xFFFFFFUL;
     offset<<= 2;
     offset+= (offset2 + 8);
 
@@ -399,6 +405,7 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return(retval);
     }
 
+    offset&= 0xFFFFFFUL;
     offset<<= 2;
     offset+= (offset2 + 12);
 
