@@ -180,3 +180,15 @@ Thu Jan 31 23:38:28 2002 <dan@dennedy.org>
           for backwards compatibility.
         * kernel-video1394.h: synchronize with video1394.h changes made
           Oct 21 and included in kernel 2.4.17!!
+
+Fri Mar 15 14:43:31 2002 <douxchamps@ieee.org> 
+	* dc1394_control.h: updated format7 functions
+	* dc1394_format7.c: updated dc1394_query_format7_color_coding_id
+	  so that it now returns a valid COLOR_FORMAT7_X value.
+
+Mon Mar 18 14:43:31 2002 <douxchamps@ieee.org> 
+	* dc1394_control.c: fixed bug in dc1394_set_feature_on_off: it
+	would only set 'on' if the feature was 'off', no matter what
+	was the argument.
+	* dc1394_control.c: fixed quadlet-per-packet for format_0, mode_4,
+	15fps (was 280, should have been 480)

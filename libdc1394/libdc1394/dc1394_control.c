@@ -203,7 +203,7 @@ const int quadlets_per_packet_format_0[42] =
      -1,  20,  40,  80, 160,  -1,
      -1,  60, 120, 240, 480,  -1,
      -1,  80, 160, 320, 640,  -1,
-     -1, 120, 240, 280, 960,  -1,
+     -1, 120, 240, 480, 960,  -1,
      -1,  40,  80, 160, 320, 640,
      -1,  80, 160, 320, 640,  -1
 };
@@ -2406,7 +2406,7 @@ dc1394_feature_on_off(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    if (!(curval & 0x02000000UL))
+    if (value && !(curval & 0x02000000UL))
     {
         int retval;
 
