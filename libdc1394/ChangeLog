@@ -395,6 +395,13 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * print a warning when format7 BPP is zero.
 	
 2004-01-26 Damien <ddouxchamps@users.sf.net>
-    * version is now properly memorized. This caused several problems with format_7
-      cameras.
+    * version is now properly memorized. This caused several problems
+      with format_7 cameras.
+	
+2004-01-28 Damien <ddouxchamps@users.sf.net>
+    * added a polling policy to the DMA capture functions using the
+      patch from Tim Evers.
+    * by popular request, the direct register manipulation functions
+      GetCameraControlRegister and SetCameraControlRegister are now
+      accessible.
 

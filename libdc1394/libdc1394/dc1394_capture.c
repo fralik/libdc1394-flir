@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <errno.h>
 
 #include "config.h"
 #include "dc1394_control.h"
@@ -618,32 +619,24 @@ dc1394_dma_unlisten(raw1394handle_t handle, dc1394_cameracapture *camera)
 }
 
 /****************************************************
- dc1394_dma_single_capture
-
- This captures a frame from the given camera
-*****************************************************/
-int 
-dc1394_dma_single_capture(dc1394_cameracapture *camera) 
-{
-    return dc1394_dma_multi_capture(camera,1);
-
-}
-
-/****************************************************
- dc1394_dma_multi_capture
+ _dc1394_dma_multi_capture_private
 
  This capture a frame from each of the cameras passed
  in cams.  After you are finished with the frame, you
  must return the buffer to the pool by calling
  dc1394_dma_done_with_buffer.
+
+ This function is private.
+
 *****************************************************/
 int
-dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num) 
+_dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394videopolicy_t policy) 
 {
     struct video1394_wait vwait;
     int i;
     int cb;
     int j;
+    int result=-1;
 
     for (i= 0; i < num; i++)
     {
@@ -654,13 +647,34 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 		{
 			vwait.channel = cams[i].channel;
 			vwait.buffer = cb;
-
-			if (ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER, &vwait) != 0) 
-			{
+			switch (policy) {
+			case VIDEO1394_POLL:
+			  result=ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_POLL_BUFFER, &vwait);
+			  break;
+			case VIDEO1394_WAIT:
+			default:
+			  result=ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER, &vwait);
+			  break;
+			}
+			if ( result != 0) 
+			{       /*
 				printf("(%s) VIDEO1394_IOC_LISTEN_WAIT_BUFFER ioctl failed!\n",
 					   __FILE__);
 				cams[i].dma_last_buffer++;
-				return DC1394_FAILURE;
+				return DC1394_FAILURE;*/
+                                if ((policy==VIDEO1394_POLL) && (errno == EINTR))
+				  {                       
+				    // when no frames is present, return a failure. IMHO A better value
+				    // should be returned (e.g. DC1394_NOFRAME)
+				    return DC1394_FAILURE;
+				  }
+				else
+				  {
+				    printf("(%s) VIDEO1394_IOC_LISTEN_WAIT/POLL_BUFFER ioctl failed!\n",
+					   __FILE__);
+				    cams[i].dma_last_buffer++;
+				    return DC1394_FAILURE;
+				  }
 			}
 
 			cams[i].filltime = vwait.filltime;
@@ -716,6 +730,44 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
     }
 
     return DC1394_SUCCESS;
+}
+
+/****************************************************
+ dc1394_dma_single_capture
+
+ This captures a frame from the given camera. Two
+ policies are available: wait for a frame or return
+ if no frame is available (POLL)
+*****************************************************/
+int 
+dc1394_dma_single_capture(dc1394_cameracapture *camera) 
+{
+    return _dc1394_dma_multi_capture_private(camera,1, VIDEO1394_WAIT);
+}
+
+int
+dc1394_dma_single_capture_poll(dc1394_cameracapture *camera)
+{
+    return _dc1394_dma_multi_capture_private(camera,1, VIDEO1394_POLL);
+}
+
+/****************************************************
+ dc1394_dma_multi_capture
+
+ This captures a frame from the given camera. Two
+ policies are available: wait for a frame or return
+ if no frame is available (POLL)
+*****************************************************/
+int 
+dc1394_dma_multi_capture(dc1394_cameracapture *camera, int num) 
+{
+    return _dc1394_dma_multi_capture_private(camera, num, VIDEO1394_WAIT);
+}
+
+int
+dc1394_dma_multi_capture_poll(dc1394_cameracapture *camera, int num)
+{
+    return _dc1394_dma_multi_capture_private(camera, num, VIDEO1394_POLL);
 }
 
 /****************************************************

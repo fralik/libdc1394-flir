@@ -208,6 +208,14 @@ enum
 #define USE_MAX_AVAIL     -2
 #define USE_RECOMMENDED   -3
 
+/* The video1394 policy: blocking (wait for a frame forever)
+   or polling (returns if no frames in buffer */
+typedef enum
+{ 
+  VIDEO1394_WAIT=0,
+  VIDEO1394_POLL
+} dc1394videopolicy_t;
+
 /* Yet another boolean data type */
 typedef enum
 {
@@ -307,6 +315,18 @@ extern const char *dc1394_feature_desc[NUM_FEATURES];
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*****************************************************
+ Direct register manipulation functions.
+ Use with caution, this might wreak your camera.
+ *****************************************************/
+int
+SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
+                         octlet_t offset, quadlet_t value);
+
+int
+GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
+                         octlet_t offset, quadlet_t *value);
 
 /*****************************************************
  dc1394_get_camera_feature_set
@@ -753,25 +773,31 @@ int
 dc1394_dma_unlisten(raw1394handle_t handle,
                           dc1394_cameracapture *camera);
 
-/*****************************************************
+/****************************************************
  dc1394_dma_single_capture
 
- This captures a frame from the given camera
+ This captures a frame from the given camera. Two
+ policies are available: wait for a frame or return
+ if no frame is available (POLL)
 *****************************************************/
 int 
 dc1394_dma_single_capture(dc1394_cameracapture *camera);
 
-/*****************************************************
+int
+dc1394_dma_single_capture_poll(dc1394_cameracapture *camera);
+
+/****************************************************
  dc1394_dma_multi_capture
 
- This capture a frame from each of the cameras passed
- in cams.  After you are finished with the frame, you
- must return the buffer to the pool by calling
- dc1394_dma_done_with_buffer.
+ This captures a frame from the given camera. Two
+ policies are available: wait for a frame or return
+ if no frame is available (POLL)
 *****************************************************/
-int
-dc1394_dma_multi_capture(dc1394_cameracapture *cams,int num);
+int 
+dc1394_dma_multi_capture(dc1394_cameracapture *camera, int num);
 
+int
+dc1394_dma_multi_capture_poll(dc1394_cameracapture *camera, int num);
 /*****************************************************
  dc1394_dma_done_with_buffer
 

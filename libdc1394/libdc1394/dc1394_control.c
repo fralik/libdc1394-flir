@@ -590,7 +590,7 @@ GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
     return retval;
 }
 
-static int
+int
 SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
                          octlet_t offset, quadlet_t value)
 {
