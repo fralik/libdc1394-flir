@@ -387,7 +387,7 @@ dc1394_setup_capture(raw1394handle_t handle, nodeid_t node,
       return DC1394_FAILURE;
     }
     camera->capture_buffer= (int*)malloc(camera->quadlets_per_frame*4);
-    
+   
     if (camera->capture_buffer == NULL)
     {
       printf("(%s) unable to allocate memory for capture buffer\n",
@@ -539,23 +539,31 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
  
     if( format == FORMAT_SCALABLE_IMAGE_SIZE)
     {
-      fprintf( stderr, "Wrong function: Use dc1394_dma_setup_format7_capture()\n");
-      return DC1394_FAILURE;
+      return dc1394_dma_setup_format7_capture( handle, node, channel, mode, speed,
+					       QUERY_FROM_CAMERA, /*bytes_per_paket*/
+					       QUERY_FROM_CAMERA, /*left*/
+					       QUERY_FROM_CAMERA, /*top*/
+					       QUERY_FROM_CAMERA, /*width*/
+					       QUERY_FROM_CAMERA, /*height*/
+					       num_dma_buffers,
+					       drop_frames,
+					       dma_device_file,
+					       camera);  
     }
+    else {
+      camera->port = camera_handle->port;
+      camera->dma_device_file = dma_device_file;
+      camera->drop_frames = drop_frames;
 
-    camera->port = camera_handle->port;
-    camera->dma_device_file = dma_device_file;
-    camera->drop_frames = drop_frames;
+      if (_dc1394_basic_setup(handle,node, channel, format, mode,
+			      speed,frame_rate, camera) != DC1394_SUCCESS)
+	{
+	  return DC1394_FAILURE;
+	}
 
-    if (_dc1394_basic_setup(handle,node, channel, format, mode,
-                            speed,frame_rate, camera) != DC1394_SUCCESS)
-    {
-        return DC1394_FAILURE;
+      return _dc1394_dma_basic_setup (channel, num_dma_buffers, camera);
     }
-
-    return _dc1394_dma_basic_setup (channel, num_dma_buffers, camera);
 }
-
 
 /*****************************************************
  dc1394_dma_release_camera
@@ -638,6 +646,7 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
     int j;
     int result=-1;
     int last_buffer_orig;
+    int extra_buf;
 
     for (i= 0; i < num; i++)
     {
@@ -664,7 +673,6 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
                                 if ((policy==VIDEO1394_POLL) && (errno == EINTR))
 				  {                       
 				    // when no frames is present, say so.
-				    cams[i].dma_last_buffer = last_buffer_orig;
 				    return DC1394_NO_FRAME;
 				  }
 				else
@@ -699,7 +707,6 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 			}
 			else
 			{
-				int extra_buf;
 				extra_buf = vwait.buffer;
 				if (extra_buf > 0)
  				{
@@ -728,8 +735,8 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 				}
 
 				cams[i].capture_buffer  = (int*)(cams[i].dma_ring_buffer +
-											   (cams[i].dma_last_buffer) *
-											   cams[i].dma_frame_size);
+								 cams[i].dma_last_buffer *
+								 cams[i].dma_frame_size);
 			}
 		}
 		else 

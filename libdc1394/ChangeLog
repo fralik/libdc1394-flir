@@ -435,3 +435,18 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed trigger polarity bug
     * fixed default format7 csr value bug (was "-1" instead of the new "0")
     * revert FORMAT_STILL_IMAGE change.
+	
+2004-02-06 Kristoffer Delforge <delforge@users.sf.net>
+    * use FEATURE_TO_ABS_VALUE_OFFSET in QueryAbsoluteCSROffset
+    * check that mode id is within boundaries in GetCameraFormat7Register
+      and SetCameraFormat7Register
+    * moved declarations to beginning of the function
+    * removed unnecessary 'if's.
+    * removed unnecessary 'else's.
+	
+2004-02-10 Kristoffer Delforge <delforge@users.sf.net>
+    * dc1394_dma_setup_capture uses F7 setup if necessary. Image parameters
+      are default to QUERY_FROM_CAMERA, as in dc1394_setup_capture
+    * remove duplicate "cams[i].dma_last_buffer = last_buffer_orig;" in
+      dc1394_capture.c
+    * moved declarations to the beginning of functions.

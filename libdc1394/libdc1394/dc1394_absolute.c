@@ -68,23 +68,11 @@ QueryAbsoluteCSROffset(raw1394handle_t handle, nodeid_t node, int feature,
 		       quadlet_t *value)
 {
     int retval;
-    int base_offset;
+    int offset;
 
-    if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) )
-    {
-        return DC1394_FAILURE;
-    }
+    FEATURE_TO_ABS_VALUE_OFFSET(feature, offset)
 
-    if (feature>=FEATURE_ZOOM)
-      base_offset=REG_CAMERA_FEATURE_ABS_LO_BASE;
-    else
-      base_offset=REG_CAMERA_FEATURE_ABS_HI_BASE;
-      
-    feature-= FEATURE_MIN;
-
-    retval= GetCameraControlRegister(handle, node,
-                                     base_offset +
-                                     (feature * 0x04U), value);
+    retval= GetCameraControlRegister(handle, node, offset, value);
     return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
 }
 
