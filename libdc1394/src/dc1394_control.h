@@ -835,8 +835,7 @@ dc1394_memory_load(raw1394handle_t handle, nodeid_t node,
 
 
 /*************************************************
- Functions to get/set the trigger polarity and
- determine if the camera has such a feature
+ Functions to control the trigger feature.
 **************************************************/
 
 int
@@ -850,6 +849,14 @@ dc1394_get_trigger_polarity(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_trigger_has_polarity(raw1394handle_t handle, nodeid_t node,
                             dc1394bool_t *polarity);
+
+int
+dc1394_set_trigger_on_off(raw1394handle_t handle, nodeid_t node,
+                          dc1394bool_t on_off);
+
+int
+dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
+                          dc1394bool_t *on_off);
 
 
 /*************************************************

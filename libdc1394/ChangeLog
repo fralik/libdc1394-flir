@@ -148,3 +148,10 @@ Thu Jun  7 12:29:26 2001   <GordPeters@smarttech.com>
 
 	* Applied Dan Dennedy's patch which fixes image capture with newest
 	  version of libraw1394 (0.9) and fixes a small spelling mistake
+
+Tue Jul  3 16:33:50 2001   <GordPeters@smarttech.com>
+
+	* Added functions to control the trigger feature:
+	     -dc1394_set_trigger_on_off()
+	     -dc1394_get_trigger_on_off()
+	  (addition by Audun Jan Myrhol <audun.myrhol@q-free.com>)
