@@ -336,4 +336,10 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
    * examples/grab_color_image.c: fix locating cam by guid on any port
    * examples/dc1394_vloopback.c: add --guid option like grab_color_image
      and renamed some options, and added root detection and reset
-
+	
+2003-09-15 Damien <ddouxchamps@users.sf.net>
+    * fixes/additions by Johann Schoonees:
+    * fixed format7 capture setup function missing some parameters 
+    * fixed compil warning in dc1394_absolute.c, line 261.
+    * fixed harmless but misleading bug in dc1394_format7.c: line 802 should be removed.
+    * add functions dc1394_get_one_shot and dc1394_get_multi_shot.
