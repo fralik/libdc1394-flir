@@ -644,8 +644,6 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 	
 			/* get the number of buffers by which we are behind */
 			_dc1394_dma_extra_buf = vwait.buffer;
-			if (_dc1394_dma_extra_buf > 0)
-				printf("libdc1394: extra video1394 buffers: %d\n", _dc1394_dma_extra_buf);
 	
 			/* if all buffers are behind, requeue them all and wait for
 			   a freshly captured buffer */
