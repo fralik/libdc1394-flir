@@ -132,3 +132,8 @@ Mon Apr 16 11:56:17 2001   <GordPeters@smarttech.com>
 	  new enumerations (Damien Douxchamps)
 	* Fixed color coding ID functions in dc1394_format7.c to conform to new
 	  enumerations (Damien Douxchamps)
+
+Tue Apr 24 15:12:19 2001   <GordPeters@smarttech.com>
+
+	* Fixed problem with dc1394_auto_on_off() ignoring the value passed in
+	  when setting auto mode on or off (fix by Ming <ming@mpi-sb.mpg.de>)
