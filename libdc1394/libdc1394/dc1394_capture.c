@@ -190,7 +190,7 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
 
         if (dc1394_start_iso_transmission(handle,node) != DC1394_SUCCESS)
         {
-            printf("(%s) Unable to stop iso transmission!\n", __FILE__);
+            printf("(%s) Unable to restart iso transmission!\n", __FILE__);
             return DC1394_FAILURE;
         }
 
@@ -240,10 +240,13 @@ _dc1394_dma_basic_setup(int channel,
     struct video1394_wait vwait;
     int i;
 
-    if (_dc1394_num_using_fd == 0)
+    if (camera->dma_device_file == NULL) 
+		camera->dma_device_file = "/dev/video1394";
+	
+	if (_dc1394_num_using_fd == 0)
     {
 
-        if ( (_dc1394_dma_fd= open("/dev/video1394",O_RDONLY)) < 0 )
+        if ( (_dc1394_dma_fd= open(camera->dma_device_file,O_RDONLY)) < 0 )
         {
             printf("(%s) unable to open video1394 device!\n", __FILE__);
             return DC1394_FAILURE;

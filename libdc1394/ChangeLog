@@ -169,3 +169,14 @@ Mon Sept 24 22:36:12 2001 <dan@dennedy.org>
 Fri Nov 23 15:48:00 2001 <douxchamps@ieee.org>
 	* use dc1394 feature-indexed function in
 	  dc1394_(get/set)_trigger_on_off
+
+Thu Jan 31 23:38:28 2002 <dan@dennedy.org>
+        * dc1394_control.h: added dma_device_member to struct 
+          dc1394_cameracapture. This enables support for mutliple
+          host adapters as well as the new video1394 devfs names.
+        * dc1394_capture.c: _dc1394_dma_basic_setup() uses 
+          above struct member to open video1394 device. If the
+          char pointer is null, then it defaults to "/dev/video1394"
+          for backwards compatibility.
+        * kernel-video1394.h: synchronize with video1394.h changes made
+          Oct 21 and included in kernel 2.4.17!!
