@@ -468,3 +468,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Attempt to fix the BPP arithmetic (floating point) exception that occurs
       with weird hardware.
 	
+2004-08-10 Damien <ddouxchamps@users.sf.net>
+    * Applied patch from Johann Schoonees to remove extra buffering.
+      Yet another compatibility break.
