@@ -536,13 +536,13 @@ These routines will be much faster
 than the above capture routines.
 *****************************/
 /*****************************************************
-dc1394_dma_setup_camera
+dc1394_dma_setup_capture
 this sets up the given camera to capture images using 
 the dma engine.  Should be much faster than the above
 routines
 *****************************************************/
 int
-dc1394_dma_setup_camera(raw1394handle_t handle, nodeid_t node,
+dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                         int channel, int format, int mode,
                         int speed, int frame_rate, 
                         int num_dma_buffers,
@@ -605,7 +605,7 @@ to free memory allocated by this routine- if you don't,
 your application WILL leak memory
 *****************************************************/
 int 
-dc1394_setup_camera(raw1394handle_t handle, nodeid_t node, 
+dc1394_setup_capture(raw1394handle_t handle, nodeid_t node, 
                     int channel, int format, int mode, 
                     int speed, int frame_rate, 
                     dc1394_cameracapture * camera);
