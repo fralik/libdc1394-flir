@@ -356,5 +356,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2003-12-17 Damien <ddouxchamps@users.sf.net>
     * temporary fix for bpp settings in dc1394_format7_basic_setup
+	
+2003-12-24 Damien <ddouxchamps@users.sf.net>
+    * updated the IOCTLs for kernels 2.4.23+ and 2.6.0+. This breaks compatibility with
+      previous kernel versions.
 
 	
