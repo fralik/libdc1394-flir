@@ -223,7 +223,6 @@ typedef struct __dc1394_cam_cap_struct
     unsigned char * dma_ring_buffer;
     int dma_buffer_size;
     int dma_frame_size;
-    int dma_fd;
     int num_dma_buffers;
     int dma_last_buffer;
 } dc1394_cameracapture ;
