@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.7  2004/01/20 16:14:01  ddennedy
+**  fix segfault in dc1394_multiview
+**
 **  Revision 1.6  2004/01/20 04:12:27  ddennedy
 **  added dc1394_free_camera_nodes and applied to examples
 **
@@ -392,20 +395,23 @@ int main(int argc,char *argv[])
 	{
 		int camCount;
 		
-		handles[numCameras] = dc1394_create_handle(p);
-		if (handles[numCameras]==NULL) {
-			perror("Unable to aquire a raw1394 handle\n");
-			perror("did you load the drivers?\n");
-			cleanup();
-			exit(-1);
-		}
-
 		/* get the camera nodes and describe them as we find them */
-		camera_nodes = dc1394_get_camera_nodes(handles[numCameras], &camCount, 1);
+		raw_handle = raw1394_new_handle();
+		raw1394_set_port( raw_handle, p );
+		camera_nodes = dc1394_get_camera_nodes(raw_handle, &camCount, 1);
+		raw1394_destroy_handle(raw_handle);
 
 		/* setup cameras for capture */
 		for (i = 0; i < camCount; i++)
 		{	
+			handles[numCameras] = dc1394_create_handle(p);
+			if (handles[numCameras]==NULL) {
+				perror("Unable to aquire a raw1394 handle\n");
+				perror("did you load the drivers?\n");
+				cleanup();
+				exit(-1);
+			}
+
 			cameras[numCameras].node = camera_nodes[i];
 		
 			if(dc1394_get_camera_feature_set(handles[numCameras], cameras[numCameras].node, &features) !=DC1394_SUCCESS) 

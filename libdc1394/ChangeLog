@@ -388,3 +388,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * examples/dc1394_vloopback.c: workaround potential linux/videodev.h
       problems on some distros' kernel headers.
 
+2004-01-20 Dan Dennedy <dan@dennedy.org>
+	* dc1394_multiview.c: bugfix segfault
+
