@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.3  2003/09/23 13:44:12  ddennedy
+**  fix camera location by guid for all ports, add camera guid option to vloopback, add root detection and reset to vloopback
+**
 **  Revision 1.2  2003/09/15 17:21:28  ddennedy
 **  add features to examples
 **
@@ -83,6 +86,7 @@ int main(int argc, char *argv[])
   int i, j;
   raw1394handle_t handle;
   nodeid_t * camera_nodes = NULL;
+  int found = 0;
 
   get_options(argc, argv);
   
@@ -103,10 +107,10 @@ int main(int argc, char *argv[])
   raw1394_destroy_handle(handle);
   handle = NULL;
   
-  for (j = 0; j < MAX_RESETS; j++)
+  for (j = 0; j < MAX_RESETS && found == 0; j++)
   {
     /* look across all ports for cameras */
-    for (i = 0; i < numPorts && numCameras == 0; i++)
+    for (i = 0; i < numPorts && found == 0; i++)
     {
       if (handle != NULL)
         dc1394_destroy_handle(handle);
@@ -116,58 +120,66 @@ int main(int argc, char *argv[])
         fprintf( stderr, "Unable to aquire a raw1394 handle for port %i\n", i);
         exit(1);
       }
+      numCameras = 0;
       camera_nodes = dc1394_get_camera_nodes(handle, &numCameras, 0);
-    }
-    if (numCameras > 0)
-    {
-      if (g_guid == 0)
+      if (numCameras > 0)
       {
-        /* use the first camera found */
-        camera.node = camera_nodes[0];
-        printf("working with the first camera on the bus\n");
-      }
-      else
-      {
-        /* attempt to locate camera by guid */
-        int k;
-        for (k = 0; k < numCameras; k++)
+        if (g_guid == 0)
         {
           dc1394_camerainfo info;
-          if (dc1394_get_camera_info(handle, camera_nodes[k], &info) == DC1394_SUCCESS)
+          /* use the first camera found */
+          camera.node = camera_nodes[0];
+          if (dc1394_get_camera_info(handle, camera_nodes[0], &info) == DC1394_SUCCESS)
+            dc1394_print_camera_info(&info);
+          found = 1;
+        }
+        else
+        {
+          /* attempt to locate camera by guid */
+          int k;
+          for (k = 0; k < numCameras && found == 0; k++)
           {
-            if (info.euid_64 == g_guid)
+            dc1394_camerainfo info;
+            if (dc1394_get_camera_info(handle, camera_nodes[k], &info) == DC1394_SUCCESS)
             {
-              dc1394_print_camera_info(&info);
-              camera.node = camera_nodes[k];
-              break;
+              if (info.euid_64 == g_guid)
+              {
+                dc1394_print_camera_info(&info);
+                camera.node = camera_nodes[k];
+                found = 1;
+              }
             }
           }
         }
-        if (k == numCameras)
+        if (found == 1)
         {
-          fprintf( stderr, "Unable to locate camera by node guid\n");
-          exit(1);
-		}
-      }
-      numNodes = raw1394_get_nodecount(handle);
-      /* camera can not be root--highest order node */
-      if (camera.node != numNodes-1)
-          break;
-      /* reset and retry if root */
-      raw1394_reset_bus(handle);
-      sleep(2);
-      numCameras = 0;
-    }
-  }
-  if (j == MAX_RESETS)
+          /* camera can not be root--highest order node */
+          if (camera.node == raw1394_get_nodecount(handle)-1)
+          {
+            /* reset and retry if root */
+            raw1394_reset_bus(handle);
+            sleep(2);
+            found = 0;
+          }
+        }
+      } /* cameras >0 */
+    } /* next port */
+  } /* next reset retry */
+  
+  if (found == 0 && g_guid != 0)
   {
-    fprintf( stderr, "failed to not make camera root node :(\n");
-    dc1394_destroy_handle(handle);
+    fprintf( stderr, "Unable to locate camera node by guid\n");
     exit(1);
   }
   else if (numCameras == 0)
   {
     fprintf( stderr, "no cameras found :(\n");
+    dc1394_destroy_handle(handle);
+    exit(1);
+  }
+  if (j == MAX_RESETS)
+  {
+    fprintf( stderr, "failed to not make camera root node :(\n");
     dc1394_destroy_handle(handle);
     exit(1);
   }

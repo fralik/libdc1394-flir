@@ -20,6 +20,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5  2003/09/23 13:44:12  ddennedy
+**  fix camera location by guid for all ports, add camera guid option to vloopback, add root detection and reset to vloopback
+**
 **  Revision 1.4  2003/09/15 17:21:27  ddennedy
 **  add features to examples
 **
@@ -58,6 +61,7 @@
 #define MAX_HEIGHT 480
 #define MAX_BPP 3
 #define V4L_BUFFERS 2
+#define MAX_RESETS 5
 
 /* declarations for libdc1394 */
 raw1394handle_t handle = NULL;
@@ -84,12 +88,14 @@ char *v4l_dev_name = NULL;
 int g_v4l_fmt = VIDEO_PALETTE_YUV422;
 int g_width = MAX_WIDTH;
 int g_height = MAX_HEIGHT;
+u_int64_t g_guid = 0;
 
 static struct option long_options[]={
 	{"daemon",0,NULL,0},
 	{"pipe",0,NULL,0},
-	{"dc_dev",1,NULL,0},
-	{"v4l_dev",1,NULL,0},
+	{"guid",1,NULL,0},
+	{"video1394",1,NULL,0},
+	{"vloopback",1,NULL,0},
 	{"palette",1,NULL,0},
 	{"width",1,NULL,0},
 	{"height",1,NULL,0},
@@ -111,39 +117,45 @@ void get_options(int argc,char *argv[])
 					g_v4l_mode = V4L_MODE_PIPE;
 					break;
 				case 2:
-					dc_dev_name=strdup(optarg);
+					sscanf(optarg, "%llx", &g_guid);
 					break;
 				case 3:
-					v4l_dev_name=strdup(optarg);
+					dc_dev_name=strdup(optarg);
 					break;
 				case 4:
+					v4l_dev_name=strdup(optarg);
+					break;
+				case 5:
 					if (strcasecmp(optarg, "rgb24") == 0)
 						g_v4l_fmt = VIDEO_PALETTE_RGB24;
 					break;
-				case 5:
+				case 6:
 					g_width = atoi(optarg);
 					break;
-				case 6:
+				case 7:
 					g_height = atoi(optarg);
 					break;
 				default:
 					printf( "\n"
 						"%s - send video from dc1394 through vloopback\n\n"
 						"Usage:\n"
-						"    %s [--daemon] [--pipe] [--dc_dev=/dev/video1394/x]\n"
-						"       [--v4l_dev=/dev/video0] [--palette=yuv422|rgb24] [--width=n] [--height=n]\n\n"
-						"    --daemon  - run as a daemon, detached from console (optional)\n"
-						"    --pipe    - write images to vloopback device instead of using\n"
-						"                zero-copy mmap mode (optional)\n"
-						"    --dc_dev  - specifies video1394 device to use (optional)\n"
-						"                default = /dev/video1394/<port#>\n"
-						"    --v4l_dev - specifies video4linux device to use (optional)\n"
-						"                by default, this is automatically determined!\n"
-						"    --palette - specified the video palette to use (optional)\n"
-						"                yuv422 (default) or rgb24\n"
-						"    --width   - set the initial width (default=640)\n"
-						"    --height  - set the initial height (default=480)\n"
-						"    --help    - prints this message\n\n"
+						"    %s [--daemon] [--pipe] [--guid=camera-euid]\n"
+						"       [--video1394=/dev/video1394/x] [--vloopback=/dev/video0]\n"
+						"       [--palette=yuv422|rgb24] [--width=n] [--height=n]\n\n"
+						"    --daemon    - run as a daemon, detached from console (optional)\n"
+						"    --pipe      - write images to vloopback device instead of using\n"
+						"                  zero-copy mmap mode (optional)\n"
+						"    --guid      - select camera to use (optional)\n"
+						"                  default is first camera on any port\n"
+						"    --video1394 - specifies video1394 device to use (optional)\n"
+						"                  default = /dev/video1394/<port#>\n"
+						"    --vloopback - specifies video4linux device to use (optional)\n"
+						"                  by default, this is automatically determined!\n"
+						"    --palette   - specified the video palette to use (optional)\n"
+						"                  yuv422 (default) or rgb24\n"
+						"    --width     - set the initial width (default=640)\n"
+						"    --height    - set the initial height (default=480)\n"
+						"    --help      - prints this message\n\n"
 						,argv[0],argv[0]);
 					exit(0);
 			}
@@ -289,8 +301,9 @@ int dc_init()
 {
 	struct raw1394_portinfo ports[MAX_PORTS];
 	int numPorts = MAX_PORTS;
-	int port;
+	int port, reset;
 	int camCount = 0;
+	int found = 0;
 
 	/* get the number of ports (cards) */
 	handle = raw1394_new_handle();
@@ -302,36 +315,79 @@ int dc_init()
 	
 	numPorts = raw1394_get_port_info(handle, ports, numPorts);
 	raw1394_destroy_handle(handle);
+	handle = NULL;
 
-	/* get dc1394 handle to each port */
-	for (port = 0; port < numPorts; port++)
-	{
-		
-		handle = dc1394_create_handle(port);
-		if (handle==NULL) {
-			perror("Unable to aquire a raw1394 handle\n");
-			perror("did you load the drivers?\n");
-			exit(-1);
-		}
-
-		/* get the camera nodes and describe them as we find them */
-		camera_nodes = dc1394_get_camera_nodes(handle, &camCount, 1);
-		
-		if (camCount > 0)
-		{
-			/* select the camera */
-			camera.node = camera_nodes[0];
-			
-			/*have the camera start sending us data*/
-			if (dc1394_start_iso_transmission(handle, camera.node) !=DC1394_SUCCESS) 
-			{
-				perror("unable to start camera iso transmission\n");
+	for (reset = 0; reset < MAX_RESETS && !found; reset++) {
+		/* get dc1394 handle to each port */
+		for (port = 0; port < numPorts && !found; port++) {
+			if (handle != NULL)
+				dc1394_destroy_handle(handle);
+			handle = dc1394_create_handle(port);
+			if (handle==NULL) {
+				perror("Unable to aquire a raw1394 handle\n");
+				perror("did you load the drivers?\n");
 				exit(-1);
 			}
-			break;
+	
+			/* get the camera nodes and describe them as we find them */
+			camCount = 0;
+			camera_nodes = dc1394_get_camera_nodes(handle, &camCount, 0);
+			
+			if (camCount > 0) {
+				if (g_guid == 0) {
+					dc1394_camerainfo info;
+					/* use the first camera found */
+					camera.node = camera_nodes[0];
+					if (dc1394_get_camera_info(handle, camera_nodes[0], &info) == DC1394_SUCCESS)
+						dc1394_print_camera_info(&info);
+					found = 1;
+				}
+				else {
+					/* attempt to locate camera by guid */
+					int cam;
+					for (cam = 0; cam < camCount && found == 0; cam++) {
+						dc1394_camerainfo info;
+						if (dc1394_get_camera_info(handle, camera_nodes[cam], &info) == DC1394_SUCCESS)	{
+							if (info.euid_64 == g_guid)	{
+								dc1394_print_camera_info(&info);
+								camera.node = camera_nodes[cam];
+								found = 1;
+							}
+						}
+					}
+				}
+				if (found == 1)	{
+					/* camera can not be root--highest order node */
+					if (camera.node == raw1394_get_nodecount(handle)-1)	{
+						/* reset and retry if root */
+						raw1394_reset_bus(handle);
+						sleep(2);
+						found = 0;
+					}
+				}
+			} /* camCount > 0 */
+		} /* next port */
+	} /* next reset retry */
+	if (found) {
+		/*have the camera start sending us data*/
+		if (dc1394_start_iso_transmission(handle, camera.node) !=DC1394_SUCCESS) {
+			perror("unable to start camera iso transmission\n");
+			exit(-1);
 		}
 	}
-	return camCount;
+	if (found == 0 && g_guid != 0) {
+		fprintf( stderr, "Unable to locate camera node by guid\n");
+		exit(-1);
+	}
+	else if (camCount == 0) {
+		fprintf( stderr, "no cameras found :(\n");
+		exit(-1);
+	}
+	if (reset == MAX_RESETS) {
+		fprintf( stderr, "failed to not make camera root node :(\n");
+		exit(-1);
+	}
+	return found;
 }
 
 int dc_start(int palette)
