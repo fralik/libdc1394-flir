@@ -97,7 +97,7 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
     {
       int copy_n_quadlets = _dc1394_quadlets_per_packet[channel];
       if( _dc1394_offset[channel] + copy_n_quadlets
-          >= _dc1394_quadlets_per_frame[channel])
+          > _dc1394_quadlets_per_frame[channel])
       {
         /* this is the last packet. Maybe, we just need a part of its data */
         copy_n_quadlets= _dc1394_quadlets_per_frame[channel]
@@ -109,7 +109,7 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
 
         _dc1394_offset[channel]+= copy_n_quadlets;
 
-        if (_dc1394_offset[channel] >= _dc1394_quadlets_per_frame[channel])
+        if (_dc1394_offset[channel] == _dc1394_quadlets_per_frame[channel])
         {
             _dc1394_frame_captured[channel]= 1;
             _dc1394_all_captured--;
@@ -243,11 +243,10 @@ _dc1394_dma_basic_setup(int channel,
     struct video1394_mmap vmmap;
     struct video1394_wait vwait;
     int i;
-    char *device;
+
     if (camera->dma_device_file == NULL) {
-		device = malloc(32);
-		sprintf( device, "/dev/video1394/%d", camera->port );
-		camera->dma_device_file = device;
+		camera->dma_device_file = malloc(32);
+		sprintf((char*)camera->dma_device_file, "/dev/video1394/%d", camera->port );
     }
 
     /* using_fd counter array NULL if not used yet -- initialize */
@@ -325,7 +324,8 @@ _dc1394_dma_basic_setup(int channel,
 
     /* allocate extra buffers to properly multiplex cameras */
     camera->dma_extra_count = 0;
-	if (camera->drop_frames == 0)
+    camera->num_dma_buffers_behind = 0;
+	if (camera->do_extra_buffering)
 	{
 		camera->dma_extra_buffer = (unsigned char *) malloc(camera->dma_buffer_size*sizeof(unsigned char));
 		if (camera->dma_extra_buffer == NULL)
@@ -529,6 +529,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                          int channel, int format, int mode,
                          int speed, int frame_rate,
                          int num_dma_buffers, 
+			 int do_extra_buffering,
 			 int drop_frames,
 			 const char *dma_device_file,
 			 dc1394_cameracapture *camera)
@@ -546,6 +547,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
 					       QUERY_FROM_CAMERA, /*width*/
 					       QUERY_FROM_CAMERA, /*height*/
 					       num_dma_buffers,
+					       do_extra_buffering,
 					       drop_frames,
 					       dma_device_file,
 					       camera);  
@@ -553,6 +555,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
     else {
       camera->port = camera_handle->port;
       camera->dma_device_file = dma_device_file;
+      camera->do_extra_buffering = do_extra_buffering;
       camera->drop_frames = drop_frames;
 
       if (_dc1394_basic_setup(handle,node, channel, format, mode,
@@ -684,17 +687,13 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 				  }
 			}
 
-			cams[i].filltime = vwait.filltime;
+			extra_buf = vwait.buffer;
 
-			if (cams[i].drop_frames == 0)
+			if (cams[i].do_extra_buffering)
 			{
-				/* point to the next buffer in the dma ringbuffer */
-				cams[i].capture_buffer= (int*)(cams[i].dma_ring_buffer +
-							       cams[i].dma_last_buffer *
-							       cams[i].dma_frame_size);
-	
 				/* get the number of buffers by which we are behind */
 				cams[i].dma_extra_count = vwait.buffer;
+				extra_buf = 0; 	/* do_extra_buffering has precedence over drop_frames.*/
 	
 				/* copy the extra frames into internal buffer */
 				for (j = cams[i].dma_extra_count-1; j >= 0; j--)
@@ -705,9 +704,9 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 							cams[i].dma_frame_size );
 				}
 			}
-			else
+
+			if (cams[i].drop_frames)
 			{
-				extra_buf = vwait.buffer;
 				if (extra_buf > 0)
  				{
 				    for (j = 0; j < extra_buf; j++)
@@ -731,17 +730,21 @@ _dc1394_dma_multi_capture_private(dc1394_cameracapture *cams, int num, dc1394vid
 					       __FILE__);
 					return DC1394_FAILURE;
 				    }
-				    cams[i].filltime = vwait.filltime;
 				}
-
-				cams[i].capture_buffer  = (int*)(cams[i].dma_ring_buffer +
-								 cams[i].dma_last_buffer *
-								 cams[i].dma_frame_size);
 			}
+
+			/* point to the next buffer in the dma ringbuffer */
+			cams[i].capture_buffer = (int*)(cams[i].dma_ring_buffer +
+							cams[i].dma_last_buffer *
+							cams[i].dma_frame_size);
+
+			cams[i].filltime = vwait.filltime;
+			cams[i].num_dma_buffers_behind = extra_buf;
 		}
 		else 
 		{
             /* point to an internal extra buffer */
+		    /* Note that filltimes have been lost.*/
             cams[i].capture_buffer = (int*)(cams[i].dma_extra_buffer + 
                                             (cams[i].dma_extra_count-1) *
                                             cams[i].dma_frame_size);

@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.8  2004/03/09 08:41:44  ddouxchamps
+**  patch from Johann Schoonees for extra buffering
+**
 **  Revision 1.7  2004/01/20 16:14:01  ddennedy
 **  fix segfault in dc1394_multiview
 **
@@ -431,7 +434,7 @@ int main(int argc,char *argv[])
 			 
 			if (dc1394_dma_setup_capture(handles[numCameras], cameras[numCameras].node, i+1 /*channel*/,
 									FORMAT_VGA_NONCOMPRESSED, res,
-									SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
+									SPEED_400, fps, NUM_BUFFERS, 1, DROP_FRAMES,
 									device_name, &cameras[numCameras]) != DC1394_SUCCESS) 
 			{
 				fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",

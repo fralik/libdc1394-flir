@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.10  2004/03/09 08:41:44  ddouxchamps
+**  patch from Johann Schoonees for extra buffering
+**
 **  Revision 1.9  2004/01/20 04:15:34  ddennedy
 **  workaround some potential V4L compilation error
 **
@@ -551,7 +554,7 @@ int dc_start(int palette)
 	 
 	if (dc1394_dma_setup_capture(handle, camera.node,  channel,
 							FORMAT_VGA_NONCOMPRESSED, mode,
-							speed, FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES,
+							speed, FRAMERATE_15, DC1394_BUFFERS, 1, DROP_FRAMES,
 							dc_dev_name, &camera) != DC1394_SUCCESS) 
 	{
 		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",

@@ -453,3 +453,13 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2004-02-16 Damien <ddouxchamps@users.sf.net>
     * fixed an endianess issue. Thanks to Tim Canham for spotting this bug.
+
+2004-02-20 Kristoffer Delforge <delforge@users.sf.net>
+    * changed a >= to > in dc1394_capture.c:99
+    * changed a >= to = in dc1394_capture.c:112
+    * don't use intermediate "char* device" in dc1394_capture.c:247
+	
+2004-02-20 Damien <ddouxchamps@users.sf.net>
+    * applied patch from Johann Schoonees for extra buffering option.
+      This breaks compatibility for the capture functions. Examples have
+      been updated.

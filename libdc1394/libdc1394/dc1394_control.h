@@ -250,13 +250,15 @@ typedef struct __dc1394_cam_cap_struct
     int dma_frame_size;
     int num_dma_buffers;
     int dma_last_buffer;
+    int num_dma_buffers_behind;
     const char * dma_device_file;
     int dma_fd;
     int port;
     struct timeval filltime;
-	int dma_extra_count;
+    int dma_extra_count;
     unsigned char * dma_extra_buffer;
-	int drop_frames;
+    int do_extra_buffering;
+    int drop_frames;
 } dc1394_cameracapture ;
 
 typedef struct __dc1394_misc_info
@@ -751,6 +753,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
                          int channel, int format, int mode,
                          int speed, int frame_rate, 
                          int num_dma_buffers,
+			 int do_extra_buffering,
                          int drop_frames,
                          const char *dma_device_file,
                          dc1394_cameracapture *camera);
@@ -1006,6 +1009,7 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                                  unsigned int left, unsigned int top,
                                  unsigned int width, unsigned int height,
                                  int num_dma_buffers,
+				 int do_extra_buffering,
 				 int drop_frames,
 				 const char *dma_device_file,
                                  dc1394_cameracapture *camera);

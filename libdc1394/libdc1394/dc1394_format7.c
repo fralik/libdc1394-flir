@@ -642,6 +642,7 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                                  unsigned int left, unsigned int top,
                                  unsigned int width, unsigned int height,
                                  int num_dma_buffers,
+				 int do_extra_buffering,
 				 int drop_frames,
 				 const char *dma_device_file,
                                  dc1394_cameracapture *camera)
@@ -658,6 +659,7 @@ dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
 
     camera->port = camera_handle->port;
     camera->dma_device_file = dma_device_file;
+    camera->do_extra_buffering = do_extra_buffering;
     camera->drop_frames = drop_frames;
 
     return _dc1394_dma_basic_setup(channel,num_dma_buffers, camera);
