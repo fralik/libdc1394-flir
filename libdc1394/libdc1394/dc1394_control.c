@@ -3296,14 +3296,20 @@ dc1394_get_bandwidth_usage(raw1394handle_t handle, nodeid_t node, unsigned int *
     // get camera ISO speed:
     if (dc1394_get_iso_channel_and_speed(handle, node, &channel, &speed)!= DC1394_SUCCESS)
       return DC1394_FAILURE;
+
+    //fprintf(stderr,"(%s) qpp is %d, speed is %d\n",__FILE__,qpp,speed);
     
     // mutiply by 4 anyway because the best speed is SPEED_400 only
     if (speed>=SPEED_1600)
-      *bandwidth = qpp << (SPEED_1600-speed);
-    else
       *bandwidth = qpp >> (speed-SPEED_1600);
+    else
+      *bandwidth = qpp << (SPEED_1600-speed);
+
+    //fprintf(stderr,"(%s) bandwidth is %d\n",__FILE__, *bandwidth);
+    
   }
   else {
+    //fprintf(stderr,"(%s) iso is off\n",__FILE__);
     *bandwidth=0;
   }
   return DC1394_SUCCESS;

@@ -517,3 +517,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-03-25 Damien <ddouxchamps@users.sf.net>
     * added missing feature strings (thx to Obelix for spotting this)
+	
+2005-04-06 Damien <ddouxchamps@users.sf.net>
+    * fixed bandwidth usage estimation
