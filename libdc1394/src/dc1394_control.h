@@ -28,7 +28,8 @@
 #include <stdio.h>
 
 /* Enumeration of data speeds */
-enum {
+enum 
+{
     SPEED_100 = 0,
     SPEED_200,
     SPEED_400
@@ -38,7 +39,8 @@ enum {
 #define NUM_SPEEDS	(SPEED_MAX - SPEED_MIN + 1)
 
 /* Enumeration of camera framerates */
-enum {
+enum 
+{
 	FRAMERATE_1_875 = 0,
 	FRAMERATE_3_75,
 	FRAMERATE_7_5,
@@ -51,7 +53,8 @@ enum {
 #define NUM_FRAMERATES	(FRAMERATE_MAX - FRAMERATE_MIN + 1)
 
 /* Enumeration of camera modes */
-enum {
+enum 
+{
 	MODE_160x120_YUV444 = 0,
 	MODE_320x240_YUV422,
 	MODE_640x480_YUV411,
@@ -64,7 +67,8 @@ enum {
 #define NUM_MODES	(MODE_MAX - MODE_MIN + 1)
 
 /* Enumeration of camera image formats */
-enum {
+enum 
+{
 	FORMAT_VGA_NONCOMPRESSED = 0,
 	FORMAT_SVGA_NONCOMPRESSED_1,
 	FORMAT_SVGA_NONCOMPRESSED_2,
@@ -79,7 +83,7 @@ enum {
 #define NUM_FORMATS	(FORMAT_MAX - FORMAT_MIN + 1)
 
 /* Enumeration of camera features */
-enum
+enum 
 {
     FEATURE_BRIGHTNESS= 0,
     FEATURE_EXPOSURE,
@@ -137,9 +141,9 @@ typedef struct __dc1394_camerainfo
     char model[MAX_CHARS + 1];
 } dc1394_camerainfo;
 
-/* Camera capture structure- contains all information 
-   about where to capture data to and how it should be captured*/
-typedef struct __dc1394_cam_cap_struct {
+
+typedef struct __dc1394_cam_cap_struct 
+{
   nodeid_t node;
   int channel;
   int frame_rate;
@@ -149,10 +153,8 @@ typedef struct __dc1394_cam_cap_struct {
   int quadlets_per_packet;
 } dc1394_cameracapture ;
 
-/*Feature info- contains the generic feature information-
-  currently not supported are TEMPERATURE, TRIGGER and WHITE_BALANCE
-*/
-typedef struct __dc1394_feature_info_struct {
+typedef struct __dc1394_feature_info_struct 
+{
   int feature_id;
   dc1394bool_t available;
   dc1394bool_t one_push;
@@ -173,8 +175,9 @@ typedef struct __dc1394_feature_info_struct {
 } dc1394_feature_info;
 
 /*This structure contains all of the info above for everything except
-  temperature, trigger and white balance...*/
-typedef struct __dc1394_feature_set_struct {
+  trigger and white balance...*/
+typedef struct __dc1394_feature_set_struct 
+{
   dc1394_feature_info feature[NUM_FEATURES];
 } dc1394_feature_set;
 
@@ -185,42 +188,44 @@ extern "C" {
 
 /*****************************************************
 dc1394_get_camera_feature_set
-this returns the complete feature set of the camera
-the only things that aren't probably represented are
-TRIGGER, WHITE_BALANCE and TEMPERATURE
-*****************************************************/
-int dc1394_get_camera_feature_set(raw1394handle_t handle, nodeid_t node,dc1394_feature_set *features);
+collects the available features for the camera
+described by node and stores them in features.
+*****************************************************/  
+int 
+dc1394_get_camera_feature_set(raw1394handle_t handle, nodeid_t node,dc1394_feature_set *features);
 
 /*****************************************************
 dc1394_get_camera_feature
-this returns the current configuration and options
-of the feature specified in the feature->feature_id 
-passed in, currently not represented completely are:
-TRIGGER, WHITE_BALANCE and TEMPERATURE
+stores the bounds and options associated with the
+feature described by feature->feature_id
 *****************************************************/
-int dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,dc1394_feature_info *feature);
+int 
+dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,dc1394_feature_info *feature);
 
 /*****************************************************
 dc1394_print_feature
-prints the bounds and current values of the given feature
-previously retrieved
+displays the bounds and options of the given feature
 *****************************************************/
-void dc1394_print_feature(dc1394_feature_info *feature);
+void 
+dc1394_print_feature(dc1394_feature_info *feature);
 
 /*****************************************************
 dc1394_print_feature_set
-outputs to stdout a list of the cameras capabilities
-and current settings
- *****************************************************/
-void dc1394_print_feature_set(dc1394_feature_set *features);
+displays the entire feature set stored in features
+*****************************************************/
+void 
+dc1394_print_feature_set(dc1394_feature_set *features);
 	
 
 /*****************************************************
 dc1394_create_handle
 this creates a raw1394_handle
+Port should be 0 unless you have multiple firewire cards in your
+system
 if a handle can't be created, it returns NULL
 *****************************************************/
-raw1394handle_t dc1394_create_handle(void);
+raw1394handle_t 
+dc1394_create_handle(int port);
 
 
 /*****************************************************
@@ -229,7 +234,8 @@ this returns the available cameras on the bus.
 returns -1 in numCameras and NULL from the call if there is a problem, 
 otherwise the number of cameras and the nodeid_t array from the call
 *****************************************************/
-  nodeid_t* dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
+nodeid_t* 
+dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
 				    int showCameras);
 
 /*****************************************************
@@ -241,7 +247,8 @@ ids.
 returns -1 in numCameras and NULL from the call if there is a problem, 
 otherwise the number of cameras and the nodeid_t array from the call
 *****************************************************/
-  nodeid_t* dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numids, 
+nodeid_t* 
+dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numids, 
 				    int *ids,int * numCameras,
 				    int showCameras);
 
@@ -520,8 +527,12 @@ dc1394_setup_camera
 sets up both the camera and the cameracapture structure
 to be used other places.
 returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
+NOTE: it is important to call dc1394_release_camera 
+to free memory allocated by this routine- if you don't,
+your application WILL leak memory
 *****************************************************/
-  int dc1394_setup_camera(raw1394handle_t handle, nodeid_t node, 
+int 
+dc1394_setup_camera(raw1394handle_t handle, nodeid_t node, 
 			  int channel, int format, int mode, 
 			  int speed, int frame_rate, 
 			  dc1394_cameracapture * camera);
@@ -529,8 +540,19 @@ returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
 dc1394_release_camera
 frees buffer space contained in the cameracapture structure
 *****************************************************/
-  int dc1394_release_camera(raw1394handle_t handle,
-			    dc1394_cameracapture *camera);
+int 
+dc1394_release_camera(raw1394handle_t handle,
+                              dc1394_cameracapture *camera);
+
+
+/*****************************************************
+dc1394_single_capture
+captures a frame of vide from the camera specified
+*****************************************************/
+int 
+dc1394_single_capture(raw1394handle_t handle,
+                      dc1394_cameracapture *camera);
+
 
 /*****************************************************
 dc1394_multi_capture
@@ -538,10 +560,18 @@ this routine captures a frame from each camera specified
 in the cams array.  Cameras must be set up first using dc1394_setup_camera
 returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it scucceeds
 *****************************************************/
-int dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture * cams, int num);
+int 
+dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture * cams, int num);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* _DC1394_CAMERA_CONTROL_H */
+
+
+
+
+
+
+
