@@ -270,6 +270,7 @@ typedef struct __dc1394_feature_info_struct
     unsigned int feature_id;
     dc1394bool_t available;
     dc1394bool_t one_push;
+    dc1394bool_t absolute_capable;
     dc1394bool_t readout_capable;
     dc1394bool_t on_off_capable;
     dc1394bool_t auto_capable;
@@ -287,6 +288,11 @@ typedef struct __dc1394_feature_info_struct
     int BU_value;
     int RV_value;
     int target_value;
+    
+    float abs_value;
+    float abs_max;
+    float abs_min;
+
 } dc1394_feature_info;
 
 typedef struct __dc1394_feature_set_struct 
@@ -1063,6 +1069,33 @@ dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
 				   unsigned int mode,
 				   unsigned int *horizontal_pos,
 				   unsigned int *vertical_pos);
+
+/**********************************
+ *   ABSOLUTE SETTING FUNCTIONS   *		     
+ **********************************/
+
+
+int
+dc1394_query_absolute_feature_min_max(raw1394handle_t handle, nodeid_t node,
+				      unsigned int feature,
+				      float *min, float *max);
+
+int
+dc1394_query_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
+				    int feature, float *value);
+
+int
+dc1394_set_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
+				  int feature, float value);
+
+int
+dc1394_has_absolute_setting(raw1394handle_t handle, nodeid_t node,
+			    unsigned int feature, dc1394bool_t *value);
+
+int
+dc1394_absolute_setting_on_off(raw1394handle_t handle, nodeid_t node,
+			       unsigned int feature, unsigned int value);
+
 #ifdef __cplusplus
 }
 #endif

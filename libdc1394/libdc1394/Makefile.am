@@ -9,6 +9,7 @@ libdc1394_control_la_SOURCES =  \
 	dc1394_capture.c	\
         dc1394_control.h	\
 	dc1394_format7.c        \
+	dc1394_absolute.c	\
 	dc1394_internal.h       \
 	kernel-video1394.h
 

@@ -111,6 +111,7 @@
 #define REG_CAMERA_CAPTURE_SIZE	       0x8C0U
 #define REG_CAMERA_CAPTURE_QUALITY     0x8C4U 
 
+
 /***********************/
 /*  Macro definitions  */
 /***********************/
@@ -139,6 +140,7 @@
     }                                                                 \
                                                                       \
     offset+= feature * 0x04U;
+
 
 #define FEATURE_TO_INQUIRY_OFFSET(feature, offset)                    \
                                                                       \
@@ -1279,6 +1281,8 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
         feature->trigger_mode_capable_mask= ((value >> 12) & 0x0f);
     }
 
+    feature->absolute_capable=
+        (value & 0x40000000UL) ? DC1394_TRUE : DC1394_FALSE;
     feature->readout_capable=
         (value & 0x08000000UL) ? DC1394_TRUE : DC1394_FALSE;
     feature->on_off_capable=
@@ -1349,6 +1353,14 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
 	feature->target_value= value & 0xFFF000UL;
     }
 
+    if (feature->absolute_capable>0)
+      {
+	dc1394_query_absolute_feature_min_max(handle, node, orig_fid,
+					      &feature->abs_min, &feature->abs_max);
+	dc1394_query_absolute_feature_value(handle, node, orig_fid,
+					    &feature->abs_value);
+      }
+
     return DC1394_SUCCESS;
 }
 
@@ -1387,6 +1399,8 @@ dc1394_print_feature(dc1394_feature_info *f)
         printf("AC  ");
     if (f->manual_capable)
         printf("MC  ");
+    if (f->absolute_capable)
+        printf("ABS  ");
     printf("\n");
 
     if (f->on_off_capable) 
@@ -1463,7 +1477,9 @@ dc1394_print_feature(dc1394_feature_info *f)
     {
         printf("\tcurrent value is: %d\n",f->value);
     }
-
+    if (f->absolute_capable)
+      printf("\tabsolute settings:\n\t value: %f\n\t min: %f\n\t max: %f\n",
+	     f->abs_value,f->abs_min,f->abs_max);
 }
 
 /*****************************************************
@@ -1482,6 +1498,7 @@ dc1394_print_feature_set(dc1394_feature_set *features)
     printf("O/OC- on/off capable\n");
     printf("AC- auto capable\n");
     printf("MC- manual capable\n");
+    printf("ABS- absolute capable\n");
     printf("==================================\n");
 
     for (i= FEATURE_MIN, j= 0; i <= FEATURE_MAX; i++, j++) 
@@ -2781,4 +2798,56 @@ dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
                           dc1394bool_t *on_off)
 {
   return dc1394_is_feature_on(handle, node, FEATURE_TRIGGER, on_off);
+}
+
+int
+dc1394_has_absolute_setting(raw1394handle_t handle, nodeid_t node,
+			    unsigned int feature, dc1394bool_t *value)
+{
+    octlet_t offset;
+    quadlet_t quadval;
+
+    FEATURE_TO_INQUIRY_OFFSET(feature, offset);
+
+    if (GetCameraControlRegister(handle, node, offset, &quadval) < 0)
+    {
+        return DC1394_FAILURE;
+    }
+
+    if (quadval & 0x40000000UL)
+    {
+        *value= DC1394_TRUE;
+    }
+    else
+    {
+        *value= DC1394_FALSE;
+    }
+
+    return DC1394_SUCCESS;
+}
+
+int
+dc1394_absolute_setting_on_off(raw1394handle_t handle, nodeid_t node,
+			       unsigned int feature, unsigned int value)
+{
+    octlet_t offset;
+    quadlet_t curval;
+
+    FEATURE_TO_VALUE_OFFSET(feature, offset);
+
+    if (GetCameraControlRegister(handle, node, offset, &curval) < 0)
+    {
+        return DC1394_FAILURE;
+    }
+
+    if (!(curval & 0x40000000UL))
+    {
+        int retval;
+
+        curval|= 0x40000000UL;
+        retval= SetCameraControlRegister(handle, node, offset, curval);
+        return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
+    }
+
+    return DC1394_SUCCESS;
 }
