@@ -1,3 +1,7 @@
+Mon Jul 24 16:41:31 2000   <GordPeters@smarttech.com>
+
+	* Fixed dc1394_get_camera_info() (it finally works)
+
 Mon Jul 24 14:59:18 2000   <GordPeters@smarttech.com>
 
 	* Fixed quadval initialization bug in dc1394_is_camera() that appears
