@@ -136,4 +136,10 @@ Mon Apr 16 11:56:17 2001   <GordPeters@smarttech.com>
 Tue Apr 24 15:12:19 2001   <GordPeters@smarttech.com>
 
 	* Fixed problem with dc1394_auto_on_off() ignoring the value passed in
-	  when setting auto mode on or off (fix by Ming <ming@mpi-sb.mpg.de>)
+	  when setting auto mode on or off (fix by Li Ming
+	  <ming@mpi-sb.mpg.de>)
+
+Mon Apr 30 12:46:22 2001   <GordPeters@smarttech.com>
+
+	* Fixed problem with dc1394_get_camera_feature() failing due to feature
+	  id being modified by feature to offset macros (fix by Li Ming)

@@ -1169,10 +1169,11 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
 {
     octlet_t offset;
     quadlet_t value;
-    unsigned int f;
+    unsigned int orig_fid, updated_fid;
 
-    f= feature->feature_id;
-    FEATURE_TO_INQUIRY_OFFSET(f, offset);
+    orig_fid= feature->feature_id;
+    updated_fid= feature->feature_id;
+    FEATURE_TO_INQUIRY_OFFSET(updated_fid, offset);
 
     if (GetCameraControlRegister(handle, node, offset, &value) < 0)
     {
@@ -1186,7 +1187,7 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
         return DC1394_SUCCESS;
     }
 
-    if (f != FEATURE_TRIGGER) 
+    if (orig_fid != FEATURE_TRIGGER) 
     {
         feature->polarity_capable= 0;
         feature->trigger_mode= 0;
@@ -1205,7 +1206,7 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
     feature->on_off_capable=
         (value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
 
-    if (f != FEATURE_TRIGGER) 
+    if (orig_fid != FEATURE_TRIGGER) 
     {
         feature->auto_capable=
             (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -1221,14 +1222,15 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
         feature->manual_capable= DC1394_FALSE;
     }
 
-    FEATURE_TO_VALUE_OFFSET(f, offset);
+    updated_fid= orig_fid;
+    FEATURE_TO_VALUE_OFFSET(updated_fid, offset);
 
     if (GetCameraControlRegister(handle, node, offset, &value) < 0)
     {
         return DC1394_FAILURE;
     }
 
-    if (f != FEATURE_TRIGGER) 
+    if (orig_fid != FEATURE_TRIGGER) 
     {
         feature->one_push_active=
             (value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -1240,7 +1242,7 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
 
     feature->is_on= (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
 
-    if (f != FEATURE_TRIGGER)
+    if (orig_fid != FEATURE_TRIGGER)
     {
         feature->auto_active=
             (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -1254,7 +1256,7 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
         feature->auto_active= DC1394_FALSE;
     }
 
-    if (f == FEATURE_WHITE_BALANCE) 
+    if (orig_fid == FEATURE_WHITE_BALANCE) 
     {
         feature->BU_value= (value & 0xFFF000UL) >> 12;
         feature->RV_value= value & 0xFFFUL;
@@ -1264,7 +1266,7 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
         feature->value= value & 0xFFFUL;
     }
 
-    if (f == FEATURE_TEMPERATURE)
+    if (orig_fid == FEATURE_TEMPERATURE)
     {
 	feature->target_value= value & 0xFFF000UL;
     }
