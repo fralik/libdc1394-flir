@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.2  2001/09/14 08:10:41  ronneber
+**  - some cosmetic changes
+**
 **  Revision 1.1  2001/07/24 13:50:59  ronneber
 **  - simple test programs to demonstrate the use of libdc1394 (based
 **    on 'samplegrab' of Chris Urmson
@@ -23,6 +26,9 @@
 #include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
 #include <stdlib.h>
+
+
+#define IMAGE_FILE_NAME "Image.pgm"
 
 int main(int argc, char *argv[]) 
 {
@@ -172,14 +178,23 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  save image as 'Image.pgm'
    *-----------------------------------------------------------------------*/
-  imagefile=fopen("Image.pgm","w");
+  imagefile=fopen(IMAGE_FILE_NAME, "w");
+
+  if( imagefile == NULL)
+  {
+    perror( "Can't create '" IMAGE_FILE_NAME "'");
+    dc1394_release_camera(handle,&camera);
+    raw1394_destroy_handle(handle);
+    exit( 1);
+  }
+  
     
   fprintf(imagefile,"P5\n%u %u 255\n", camera.frame_width,
           camera.frame_height );
   fwrite((const char *)camera.capture_buffer, 1,
          camera.frame_height*camera.frame_width, imagefile);
   fclose(imagefile);
-  printf("wrote: Image.pgm\n");
+  printf("wrote: " IMAGE_FILE_NAME "\n");
 
   /*-----------------------------------------------------------------------
    *  Close camera
