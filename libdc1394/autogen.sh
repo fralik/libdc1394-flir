@@ -55,5 +55,5 @@ aclocal $ACLOCAL_FLAGS
 automake -a $am_opt
 autoconf
 cd $ORIGDIR
-
+libtoolize --force --copy
 $srcdir/configure --enable-maintainer-mode "$@"

@@ -21,7 +21,8 @@
 #ifndef _VIDEO_1394_H
 #define _VIDEO_1394_H
 
-#include "ieee1394-ioctl.h"
+#include <asm/ioctl.h>
+#include <asm/types.h>
 
 #define VIDEO1394_DRIVER_NAME "video1394"
 
@@ -63,5 +64,24 @@ struct video1394_wait {
 	struct timeval filltime;	/* time of buffer full */
 };
 
+#define VIDEO1394_IOC_LISTEN_CHANNEL		\
+	_IOWR('#', 0x10, struct video1394_mmap)
+#define VIDEO1394_IOC_UNLISTEN_CHANNEL		\
+	_IOW ('#', 0x11, int)
+#define VIDEO1394_IOC_LISTEN_QUEUE_BUFFER	\
+	_IOW ('#', 0x12, struct video1394_wait)
+#define VIDEO1394_IOC_LISTEN_WAIT_BUFFER	\
+	_IOWR('#', 0x13, struct video1394_wait)
+#define VIDEO1394_IOC_TALK_CHANNEL		\
+	_IOWR('#', 0x14, struct video1394_mmap)
+#define VIDEO1394_IOC_UNTALK_CHANNEL		\
+	_IOW ('#', 0x15, int)
+#define VIDEO1394_IOC_TALK_QUEUE_BUFFER 	\
+	_IOW ('#', 0x16, sizeof (struct video1394_wait) + \
+		sizeof (struct video1394_queue_variable))
+#define VIDEO1394_IOC_TALK_WAIT_BUFFER		\
+	_IOW ('#', 0x17, struct video1394_wait)
+#define VIDEO1394_IOC_LISTEN_POLL_BUFFER	\
+	_IOWR('#', 0x18, struct video1394_wait)
 
 #endif

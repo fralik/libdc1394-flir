@@ -358,7 +358,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * temporary fix for bpp settings in dc1394_format7_basic_setup
 	
 2003-12-24 Damien <ddouxchamps@users.sf.net>
-    * updated the IOCTLs for kernels 2.4.23+ and 2.6.0+. This breaks compatibility with
+    * updated the IOCTLs for kernels 2.4.21+ and 2.6.0+. This breaks compatibility with
       previous kernel versions.
 
-	
+2004-01-04 Dan Dennedy <dan@dennedy.org>
+    * simplify video1394 includes and correct Damien's ChangLog entry about kernel 2.4
+      compatibility.
+    * examples/dc1394_vloopback.c: minor bugfixes.
+    * autogen.sh: add missing libtoolize.

@@ -20,6 +20,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.6  2004/01/04 21:27:56  ddennedy
+**  simplify video1394 includes and other minor corrections
+**
 **  Revision 1.5  2003/09/23 13:44:12  ddennedy
 **  fix camera location by guid for all ports, add camera guid option to vloopback, add root detection and reset to vloopback
 **
@@ -550,8 +553,8 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			vidcap->audios = 0;
 			vidcap->maxwidth = MAX_WIDTH;
 			vidcap->maxheight = MAX_HEIGHT;
-			vidcap->minwidth = 1;
-			vidcap->minheight = 1;
+			vidcap->minwidth = MAX_WIDTH/4;
+			vidcap->minheight = MAX_HEIGHT/4;
 			break;
 		}
 		case VIDIOCGCHAN:
@@ -580,9 +583,9 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			
 			vidpic->palette = g_v4l_fmt;
 			if (g_v4l_fmt == VIDEO_PALETTE_RGB24)
-				vidpic->depth = 3;
+				vidpic->depth = 24;
 			else if (g_v4l_fmt == VIDEO_PALETTE_YUV422)
-				vidpic->depth = 2;
+				vidpic->depth = 16;
 			else
 				return 1;
 			break;
@@ -671,7 +674,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 		}
 		default:
 		{
-			//printf("ioctl %ld unhandled\n", cmd & 0xff);
+			printf("ioctl %ld unhandled\n", cmd & 0xff);
 			break;
 		}
 	}
