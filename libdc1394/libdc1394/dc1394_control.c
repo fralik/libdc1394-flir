@@ -1259,19 +1259,25 @@ dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
         != DC1394_SUCCESS)
         return DC1394_FAILURE;
 
-    if (dc1394_get_memory_load_ch(handle, node, &info->load_channel)
-        != DC1394_SUCCESS)
-        return DC1394_FAILURE;
-
-    if (dc1394_get_memory_save_ch(handle, node, &info->save_channel)
-        != DC1394_SUCCESS)
-        return DC1394_FAILURE;
-
     if (dc1394_query_basic_functionality(handle,node,&value) != DC1394_SUCCESS)
         return DC1394_FAILURE;
     else
         info->mem_channel_number= (value & 0xF);
-  
+
+    if (info->mem_channel_number>0) {
+      if (dc1394_get_memory_load_ch(handle, node, &info->load_channel)
+	  != DC1394_SUCCESS)
+        return DC1394_FAILURE;
+      
+      if (dc1394_get_memory_save_ch(handle, node, &info->save_channel)
+	  != DC1394_SUCCESS)
+        return DC1394_FAILURE;
+    }
+    else {
+      info->load_channel=0;
+      info->save_channel=0;
+    }
+
     return DC1394_SUCCESS;
 } 
 

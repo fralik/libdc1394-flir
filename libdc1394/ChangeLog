@@ -343,3 +343,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed compil warning in dc1394_absolute.c, line 261.
     * fixed harmless but misleading bug in dc1394_format7.c: line 802 should be removed.
     * add functions dc1394_get_one_shot and dc1394_get_multi_shot.
+    * changed dc1394_get_camera_misc_info to avoid probing memory psec registers
+      if no user memory is available. This is necessary for the iSight camera from Apple,
+      which does not implement registers 0x618h thru 0x62Ch.
