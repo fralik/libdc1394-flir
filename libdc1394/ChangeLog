@@ -412,3 +412,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-01-31 Damien <ddouxchamps@users.sf.net>
     * Version 0.9.3
 	
+2004-02-04 Damien <ddouxchamps@users.sf.net>
+    * fixed bpp issue in _dc1394_basic_format7_setup
+    * fixed missing *4 in boundary check of GetConfigROMTaggedRegister

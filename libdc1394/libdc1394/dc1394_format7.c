@@ -225,7 +225,7 @@ _dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
   
   if (v130handshake==1) {
     // we should use advanced IIDC v1.30 handshaking.
-    
+    //fprintf(stderr,"using handshaking\n");
     // set value setting to 1
     if (dc1394_set_format7_value_setting(handle, node, mode) != DC1394_SUCCESS) {
       printf("(%s) Unable to set value setting register.\n", __FILE__);
@@ -278,6 +278,7 @@ _dc1394_v130_errflag2(raw1394handle_t handle, nodeid_t node, int mode)
       
   
   if (v130handshake==1) {
+    //fprintf(stderr,"using handshaking, bpperrflag\n");
     if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
 					   &setting_1, &err_flag1, &err_flag2)
 	!= DC1394_SUCCESS) {
@@ -373,9 +374,13 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
     return DC1394_FAILURE;
   }
 
-  // Don't know why, but it seems to be necessaey to query BPP value at this point.
-  // otherwise, the maximum bpp is used regardless of any other setting...
-  dc1394_query_format7_byte_per_packet(handle, node, mode, &bytes_per_packet);
+  // get BPP before setting sizes,...
+  if (bytes_per_packet==QUERY_FROM_CAMERA) {
+    if (dc1394_query_format7_byte_per_packet(handle, node, mode, &bytes_per_packet) != DC1394_SUCCESS){
+      printf("(%s) Unable to get F7 bpp %d!\n", __FILE__, mode);
+      return DC1394_FAILURE;
+    }
+  }
 
   /*-----------------------------------------------------------------------
    *  set image position. If QUERY_FROM_CAMERA was given instead of a
@@ -481,12 +486,13 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   case USE_MAX_AVAIL:
     bytes_per_packet = max_bytes;
     break;
+  //this case was handled by a previous call. Show error if we get in there. 
   case QUERY_FROM_CAMERA:
-    if (dc1394_query_format7_byte_per_packet(handle, node, mode, &bytes_per_packet) != DC1394_SUCCESS) {
+    /*if (dc1394_query_format7_byte_per_packet(handle, node, mode, &bytes_per_packet) != DC1394_SUCCESS) {
       printf("(%s) Bytes_per_packet query failure\n", __FILE__);
       return DC1394_FAILURE;
-    }
-    //fprintf(stderr,"libdc bpp: %d\n",bytes_per_packet);
+    }*/
+    printf("(%s:%d) Bytes_per_packet error: we should not reach this code region\n", __FILE__,__LINE__);
     break;
   default:
     if (bytes_per_packet > max_bytes) {

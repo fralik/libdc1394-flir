@@ -394,7 +394,7 @@ _dc1394_quadlets_from_format(int format, int mode)
         case MODE_320x240_YUV422:
             return 38400;   //320x240/2
         case MODE_640x480_YUV411:
-            return 115200;  //640x480x12/32
+            return 115200;  //640x480x1.5/4
         case MODE_640x480_YUV422:
             return 153600;  //640x480/2
         case MODE_640x480_RGB:
@@ -726,7 +726,7 @@ GetConfigROMTaggedRegister(raw1394handle_t handle, nodeid_t node,
   
   block_length=*value>>16;
 
-  if (*offset+block_length>CSR_CONFIG_ROM_END) {
+  if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
     block_length=(CSR_CONFIG_ROM_END-*offset)/4;
   }
 
