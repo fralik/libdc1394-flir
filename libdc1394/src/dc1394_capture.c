@@ -68,10 +68,10 @@ _dc1394_quadlets_from_format(int format, int mode);
 ***************************************************************/
 int 
 _dc1394_video_iso_handler(raw1394handle_t handle,  
-                          int channel,size_t length, quadlet_t *data) 
+                          int channel, size_t length, quadlet_t *data) 
 {
 
-    /*the first packet of a frame has a 1 in the lsb of the header */
+    /* the first packet of a frame has a 1 in the lsb of the header */
     if ( (data[0] & 0x1) && (_dc1394_frame_captured[channel] != 1) )
     {
         _dc1394_offset[channel]= 0;
@@ -81,8 +81,6 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
         memcpy((char*)_dc1394_buffer[channel], (char*)(data+1),
                4*_dc1394_quadlets_per_packet[channel]);
         _dc1394_offset[channel]+=_dc1394_quadlets_per_packet[channel];
-/*        printf("ch: %d:\n",channel);
-          printf("%08x\n%08x\n%08x\n%08x\n",data[0],data[1],data[2],data[3]);*/
         
     }
     else if (_dc1394_frame_captured[channel] == 2)
@@ -101,7 +99,7 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
         }
     
     }
-    //  printf("offset is: %d\n",offset);
+
     return 1;
 }
 
@@ -114,10 +112,11 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
 *************************************************************/
 int 
 _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
-                       int channel, int format, int mode,
-                       int speed, int frame_rate, 
-                       dc1394_cameracapture * camera)
+                    int channel, int format, int mode,
+                    int speed, int frame_rate, 
+                    dc1394_cameracapture * camera)
 {
+    dc1394bool_t is_iso_on= DC1394_FALSE;
 
     if (dc1394_init_camera(handle,node) != DC1394_SUCCESS) 
     {
@@ -130,10 +129,19 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
        up the camera properly.  Setting camera parameters "on the fly"
        while they are sending data doesn't seem to work.  I don't think
        this will cause any problems for other cameras. */
-    if (dc1394_stop_iso_transmission(handle,node) != DC1394_SUCCESS)
-    {
-        printf("(%s) Unable to stop iso transmission!\n", __FILE__);
+    /* Addition by Dan Dennedy: Restart iso transmission later if it is on */
+    if (dc1394_get_iso_status(handle, node, &is_iso_on) != DC1394_SUCCESS)
         return DC1394_FAILURE;
+
+    if (is_iso_on)
+    {
+
+        if (dc1394_stop_iso_transmission(handle, node) != DC1394_SUCCESS)
+        {
+            printf("(%s) Unable to stop iso transmission!\n", __FILE__);
+            return DC1394_FAILURE;
+        }
+
     }
 
     if (dc1394_set_video_format(handle,node,format) != DC1394_SUCCESS) 
@@ -160,6 +168,17 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
         printf("(%s) Unable to set channel %d and speed %d!\n", __FILE__,
                channel,speed);
         return DC1394_FAILURE;
+    }
+
+    if (is_iso_on)
+    {
+
+        if (dc1394_start_iso_transmission(handle,node) != DC1394_SUCCESS)
+        {
+            printf("(%s) Unable to stop iso transmission!\n", __FILE__);
+            return DC1394_FAILURE;
+        }
+
     }
 
     camera->node= node;
@@ -397,10 +416,6 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-/*    printf("requested %d bytes buffer, got %d bytes buffer\n",
-      camera->quadlets_per_frame*4,vmmap.buf_size);
-      printf("vmmap fields are: nb_buffers:%d, buf_sze: %d\n",vmmap.nb_buffers,
-      vmmap.buf_size);*/
     camera->dma_frame_size= vmmap.buf_size;
     camera->num_dma_buffers= vmmap.nb_buffers;
     camera->dma_last_buffer= -1;
@@ -424,6 +439,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
 
     camera->dma_ring_buffer= mmap(0, vmmap.nb_buffers * vmmap.buf_size,
                            PROT_READ,MAP_SHARED, _dc1394_dma_fd, 0);
+
     if (camera->dma_ring_buffer == (unsigned char *)(-1))
     {
         printf("mmap failed!\n");
@@ -431,8 +447,6 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
     }
 
     camera->dma_buffer_size= vmmap.buf_size * vmmap.nb_buffers;
-/*    printf("allocated %d bytes at %p\n",vmmap.nb_buffers*vmmap.buf_size,
-      camera->dma_ring_buffer);*/
     
     /* makesure the ring buffer was allocated */
     if (camera->dma_ring_buffer == (unsigned char*)-1) {
@@ -454,8 +468,9 @@ int
 dc1394_dma_release_camera(raw1394handle_t handle,
                           dc1394_cameracapture *camera) 
 {
-  //dc1394_stop_iso_transmission(handle,camera->node);
-//    ioctl(_dc1394_dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &(camera->channel));
+    //dc1394_stop_iso_transmission(handle,camera->node);
+    //ioctl(_dc1394_dma_fd,VIDEO1394_UNLISTEN_CHANNEL, &(camera->channel));
+
     if (camera->dma_ring_buffer)
     {
         munmap(camera->dma_ring_buffer,camera->dma_buffer_size);
@@ -475,6 +490,27 @@ dc1394_dma_release_camera(raw1394handle_t handle,
     }
 
     return DC1394_SUCCESS;
+}
+
+/*****************************************************
+ dc1394_dma_unlisten
+
+ This tells video1394 to halt iso reception.
+*****************************************************/
+int 
+dc1394_dma_unlisten(raw1394handle_t handle, dc1394_cameracapture *camera)
+{
+
+    if (ioctl(_dc1394_dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &(camera->channel))
+        < 0)
+    {
+        return DC1394_FAILURE;
+    }
+    else
+    {
+        return DC1394_SUCCESS;
+    }
+
 }
 
 /****************************************************
@@ -510,7 +546,7 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
         vwait.channel= cams[i].channel;
         cb= (cams[i].dma_last_buffer + 1) % cams[i].num_dma_buffers;
         vwait.buffer= cb;
-        //        cams[i].dma_last_buffer = cb;
+        //cams[i].dma_last_buffer = cb;
 
         if (ioctl(_dc1394_dma_fd, VIDEO1394_LISTEN_WAIT_BUFFER, &vwait) != 0) 
         {
@@ -526,7 +562,6 @@ dc1394_dma_multi_capture(dc1394_cameracapture *cams, int num)
 
         if (extra_buf) 
         {
-//            printf("extrabuffers: %d\n",extra_buf);
 
             for (j= 0; j < extra_buf; j++) 
             {
@@ -568,7 +603,6 @@ dc1394_dma_done_with_buffer(dc1394_cameracapture *camera)
 
     vwait.channel= camera->channel;
     vwait.buffer= camera->dma_last_buffer;
-    //    printf("trying to return buffer: %d for channel: %d\n", vwait.buffer, vwait.channel);
 
     if (ioctl(_dc1394_dma_fd, VIDEO1394_LISTEN_QUEUE_BUFFER, &vwait) < 0) 
     {

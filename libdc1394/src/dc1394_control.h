@@ -29,60 +29,59 @@
 #include <stdio.h>
 
 /* General definitions: */
+#define CONFIG_ROM_BASE             0xFFFFF0000000ULL
+#define CCR_BASE                    0xFFFFF0F00000ULL
 
-#define CONFIG_ROM_BASE                0xFFFFF0000000ULL
-#define CCR_BASE                       0xFFFFF0F00000ULL
-
-#define ON_VALUE                       0x80000000UL
-#define OFF_VALUE                      0x00000000UL
+#define ON_VALUE                    0x80000000UL
+#define OFF_VALUE                   0x00000000UL
 
 /* Maximum number of write/read retries */
-#define MAX_RETRIES                    20
+#define MAX_RETRIES                 20
 
 /* A hard compiled factor that makes sure async read and writes don't happen
    too fast */
-#define SLOW_DOWN 20
+#define SLOW_DOWN                   20
 
 /* transaction acknowldegements (this should be in the raw1394 headers) */
-#define ACK_COMPLETE   0x0001U
-#define ACK_PENDING    0x0002U
-#define ACK_LOCAL      0x0010U
+#define ACK_COMPLETE                0x0001U
+#define ACK_PENDING                 0x0002U
+#define ACK_LOCAL                   0x0010U
 
 /*Response codes (this should be in the raw1394 headers) */
 //not currently used
-#define RESP_COMPLETE    0x0000U
-#define RESP_SONY_HACK   0x000fU
+#define RESP_COMPLETE               0x0000U
+#define RESP_SONY_HACK              0x000fU
 
 
 /* Enumeration of data speeds */
 enum 
 {
-    SPEED_100 = 0,
+    SPEED_100= 0,
     SPEED_200,
     SPEED_400
 };
-#define SPEED_MIN	SPEED_100
-#define SPEED_MAX	SPEED_400
-#define NUM_SPEEDS	(SPEED_MAX - SPEED_MIN + 1)
+#define SPEED_MIN                   SPEED_100
+#define SPEED_MAX                   SPEED_400
+#define NUM_SPEEDS                  (SPEED_MAX - SPEED_MIN + 1)
 
 /* Enumeration of camera framerates */
 enum 
 {
-    FRAMERATE_1_875 = 0,
+    FRAMERATE_1_875= 0,
     FRAMERATE_3_75,
     FRAMERATE_7_5,
     FRAMERATE_15,
     FRAMERATE_30,
     FRAMERATE_60
 };
-#define FRAMERATE_MIN	FRAMERATE_1_875
-#define FRAMERATE_MAX	FRAMERATE_60
-#define NUM_FRAMERATES	(FRAMERATE_MAX - FRAMERATE_MIN + 1)
+#define FRAMERATE_MIN               FRAMERATE_1_875
+#define FRAMERATE_MAX               FRAMERATE_60
+#define NUM_FRAMERATES              (FRAMERATE_MAX - FRAMERATE_MIN + 1)
 
-/* Enumeration of camera modes for Format_0*/
+/* Enumeration of camera modes for Format_0 */
 enum 
 {
-    MODE_160x120_YUV444 = 0,
+    MODE_160x120_YUV444= 32,
     MODE_320x240_YUV422,
     MODE_640x480_YUV411,
     MODE_640x480_YUV422,
@@ -90,14 +89,14 @@ enum
     MODE_640x480_MONO,
     MODE_640x480_MONO16
 };
-#define MODE_FORMAT0_MIN	MODE_160x120_YUV444
-#define MODE_FORMAT0_MAX	MODE_640x480_MONO16
-#define NUM_FORMAT0_MODES	(MODE_FORMAT0_MAX - MODE_FORMAT0_MIN + 1)
+#define MODE_FORMAT0_MIN	    MODE_160x120_YUV444
+#define MODE_FORMAT0_MAX	    MODE_640x480_MONO16
+#define NUM_FORMAT0_MODES	    (MODE_FORMAT0_MAX - MODE_FORMAT0_MIN + 1)
 
-/* Enumeration of camera modes for Format_1*/
+/* Enumeration of camera modes for Format_1 */
 enum 
 {
-    MODE_800x600_YUV422 = 0,
+    MODE_800x600_YUV422= 64,
     MODE_800x600_RGB,
     MODE_800x600_MONO,
     MODE_1024x768_YUV422,
@@ -106,15 +105,15 @@ enum
     MODE_800x600_MONO16,
     MODE_1024x768_MONO16
 };
-#define MODE_FORMAT1_MIN	MODE_800x600_YUV422
-#define MODE_FORMAT1_MAX	MODE_1024x768_MONO16
-#define NUM_FORMAT1_MODES	(MODE_FORMAT1_MAX - MODE_FORMAT1_MIN + 1)
+#define MODE_FORMAT1_MIN	    MODE_800x600_YUV422
+#define MODE_FORMAT1_MAX	    MODE_1024x768_MONO16
+#define NUM_FORMAT1_MODES	    (MODE_FORMAT1_MAX - MODE_FORMAT1_MIN + 1)
 
 
-/* Enumeration of camera modes for Format_2*/
+/* Enumeration of camera modes for Format_2 */
 enum 
 {
-    MODE_1280x960_YUV422 = 0,
+    MODE_1280x960_YUV422= 96,
     MODE_1280x960_RGB,
     MODE_1280x960_MONO,
     MODE_1600x1200_YUV422,
@@ -123,24 +122,63 @@ enum
     MODE_1280x960_MONO16,
     MODE_1600x1200_MONO16
 };
-#define MODE_FORMAT2_MIN	MODE_1280x960_YUV422
-#define MODE_FORMAT2_MAX	MODE_1600x1200_MONO16
-#define NUM_FORMAT2_MODES	(MODE_FORMAT2_MAX - MODE_FORMAT2_MIN + 1)
+#define MODE_FORMAT2_MIN	    MODE_1280x960_YUV422
+#define MODE_FORMAT2_MAX	    MODE_1600x1200_MONO16
+#define NUM_FORMAT2_MODES	    (MODE_FORMAT2_MAX - MODE_FORMAT2_MIN + 1)
 
-/* Enumeration of camera modes for Format_6*/
+/* Enumeration of camera modes for Format_6 */
 enum 
 {
-    MODE_EXIF = 0
+    MODE_EXIF= 128
 };
-#define MODE_FORMAT6_MIN	MODE_EXIF
-#define MODE_FORMAT6_MAX	MODE_EXIF
-#define NUM_FORMAT6_MODES	(MODE_FORMAT6_MAX - MODE_FORMAT6_MIN + 1)
+#define MODE_FORMAT6_MIN            MODE_EXIF
+#define MODE_FORMAT6_MAX            MODE_EXIF
+#define NUM_FORMAT6_MODES           (MODE_FORMAT6_MAX - MODE_FORMAT6_MIN + 1)
 
+/* Enumeration of camera modes for Format_7 */
+enum {
+    MODE_FORMAT7_0= 160,
+    MODE_FORMAT7_1,
+    MODE_FORMAT7_2,
+    MODE_FORMAT7_3,
+    MODE_FORMAT7_4,
+    MODE_FORMAT7_5,
+    MODE_FORMAT7_6,
+    MODE_FORMAT7_7
+};
+#define MODE_FORMAT7_MIN            MODE_FORMAT7_0
+#define MODE_FORMAT7_MAX            MODE_FORMAT7_7
+#define NUM_MODE_FORMAT7            (MODE_FORMAT7_MAX - MODE_FORMAT7_MIN + 1)
+
+/* Enumeration of Format_7 color modes */
+enum {
+    COLOR_FORMAT7_MONO8= 192,
+    COLOR_FORMAT7_YUV411,
+    COLOR_FORMAT7_YUV422,
+    COLOR_FORMAT7_YUV444,
+    COLOR_FORMAT7_RGB8,
+    COLOR_FORMAT7_MONO16,
+    COLOR_FORMAT7_RGB16
+};
+#define COLOR_FORMAT7_MIN           COLOR_FORMAT7_MONO8
+#define COLOR_FORMAT7_MAX           COLOR_FORMAT7_RGB16
+#define NUM_COLOR_FORMAT7           (COLOR_FORMAT7_MAX - COLOR_FORMAT7_MIN + 1)
+
+/* Enumeration of trigger modes */
+enum {
+    TRIGGER_MODE_0= 224,
+    TRIGGER_MODE_1,
+    TRIGGER_MODE_2,
+    TRIGGER_MODE_3
+};
+#define TRIGGER_MODE_MIN            TRIGGER_MODE_0
+#define TRIGGER_MODE_MAX            TRIGGER_MODE_3
+#define NUM_TRIGGER_MODE            (TRIGGER_MODE_3 - TRIGGER_MODE_0 + 1)
 
 /* Enumeration of camera image formats */
 enum 
 {
-    FORMAT_VGA_NONCOMPRESSED = 0,
+    FORMAT_VGA_NONCOMPRESSED= 256,
     FORMAT_SVGA_NONCOMPRESSED_1,
     FORMAT_SVGA_NONCOMPRESSED_2,
     FORMAT_RESERVED_1,
@@ -149,14 +187,14 @@ enum
     FORMAT_STILL_IMAGE,
     FORMAT_SCALABLE_IMAGE_SIZE
 };
-#define FORMAT_MIN	FORMAT_VGA_NONCOMPRESSED
-#define FORMAT_MAX	FORMAT_SCALABLE_IMAGE_SIZE
-#define NUM_FORMATS	(FORMAT_MAX - FORMAT_MIN + 1)
+#define FORMAT_MIN                  FORMAT_VGA_NONCOMPRESSED
+#define FORMAT_MAX                  FORMAT_SCALABLE_IMAGE_SIZE
+#define NUM_FORMATS                 (FORMAT_MAX - FORMAT_MIN + 1)
 
 /* Enumeration of camera features */
 enum 
 {
-    FEATURE_BRIGHTNESS= 0,
+    FEATURE_BRIGHTNESS= 288,
     FEATURE_EXPOSURE,
     FEATURE_SHARPNESS,
     FEATURE_WHITE_BALANCE,
@@ -176,60 +214,17 @@ enum
     FEATURE_CAPTURE_SIZE,
     FEATURE_CAPTURE_QUALITY
 };
-#define FEATURE_MIN              FEATURE_BRIGHTNESS
-#define FEATURE_MAX              FEATURE_CAPTURE_QUALITY
-#define NUM_FEATURES             (FEATURE_MAX - FEATURE_MIN + 1)
-
-/* Enumeration of Format_7 color modes */
-enum {
-    COLOR_FORMAT7_MONO8 = 0,
-    COLOR_FORMAT7_YUV411,
-    COLOR_FORMAT7_YUV422,
-    COLOR_FORMAT7_YUV444,
-    COLOR_FORMAT7_RGB8,
-    COLOR_FORMAT7_MONO16,
-    COLOR_FORMAT7_RGB16
-};
-#define COLOR_FORMAT7_MIN    COLOR_FORMAT7_MONO8
-#define COLOR_FORMAT7_MAX    COLOR_FORMAT7_RGB16
-#define NUM_COLOR_FORMAT7   (COLOR_FORMAT7_MAX - COLOR_FORMAT7_MIN + 1)
-
-/* Enumeration of Format_7 camera modes */
-enum {
-    MODE_FORMAT7_0 = 0,
-    MODE_FORMAT7_1,
-    MODE_FORMAT7_2,
-    MODE_FORMAT7_3,
-    MODE_FORMAT7_4,
-    MODE_FORMAT7_5,
-    MODE_FORMAT7_6,
-    MODE_FORMAT7_7
-};
-#define MODE_FORMAT7_MIN    MODE_FORMAT7_0
-#define MODE_FORMAT7_MAX    MODE_FORMAT7_7
-#define NUM_MODE_FORMAT7   (MODE_FORMAT7_MAX - MODE_FORMAT7_MIN + 1)
-
-/* Enumeration of trigger modes */
-enum {
-    TRIGGER_MODE_0 = 0,
-    TRIGGER_MODE_1,
-    TRIGGER_MODE_2,
-    TRIGGER_MODE_3
-};
-#define TRIGGER_MODE_MIN    TRIGGER_MODE_0
-#define TRIGGER_MODE_MAX    TRIGGER_MODE_3
-#define NUM_TRIGGER_MODE   (TRIGGER_MODE_3 - TRIGGER_MODE_0 + 1)
-
+#define FEATURE_MIN                 FEATURE_BRIGHTNESS
+#define FEATURE_MAX                 FEATURE_CAPTURE_QUALITY
+#define NUM_FEATURES                (FEATURE_MAX - FEATURE_MIN + 1)
 
 /* Maximum number of characters in vendor and model strings */
-#define MAX_CHARS                32
-
+#define MAX_CHARS                   32
 
 /* Return values for visible functions*/
-#define DC1394_SUCCESS 1
-#define DC1394_FAILURE -1
-#define DC1394_NO_CAMERA 0xffff
-
+#define DC1394_SUCCESS               1
+#define DC1394_FAILURE              -1
+#define DC1394_NO_CAMERA            0xffff
 
 
 /* Yet another boolean data type */
@@ -238,7 +233,6 @@ typedef enum
     DC1394_FALSE= 0,
     DC1394_TRUE
 } dc1394bool_t;
-
 
 /* Camera structure */
 typedef struct __dc1394_camerainfo
@@ -250,7 +244,6 @@ typedef struct __dc1394_camerainfo
     char vendor[MAX_CHARS + 1];
     char model[MAX_CHARS + 1];
 } dc1394_camerainfo;
-
 
 typedef struct __dc1394_cam_cap_struct 
 {
@@ -269,7 +262,6 @@ typedef struct __dc1394_cam_cap_struct
     int dma_last_buffer;
 } dc1394_cameracapture ;
 
-
 typedef struct __dc1394_misc_info
 {
   int format;
@@ -285,10 +277,9 @@ typedef struct __dc1394_misc_info
   int load_channel;
 } dc1394_miscinfo;
 
-
 typedef struct __dc1394_feature_info_struct 
 {
-    int feature_id;
+    unsigned int feature_id;
     dc1394bool_t available;
     dc1394bool_t one_push;
     dc1394bool_t readout_capable;
@@ -309,7 +300,6 @@ typedef struct __dc1394_feature_info_struct
     int RV_value;
     int target_value;
 } dc1394_feature_info;
-
 
 typedef struct __dc1394_feature_set_struct 
 {
@@ -716,6 +706,15 @@ dc1394_dma_release_camera(raw1394handle_t handle,
                           dc1394_cameracapture *camera);
 
 /*****************************************************
+ dc1394_dma_unlisten
+
+ This tells video1394 to halt iso reception.
+*****************************************************/
+int 
+dc1394_dma_unlisten(raw1394handle_t handle,
+                          dc1394_cameracapture *camera);
+
+/*****************************************************
 dc1394_dma_single_capture
 This captures a frame from the given camera
 *****************************************************/
@@ -750,7 +749,7 @@ should be used instead.
 *****************************/
 
 /*****************************************************
-dc1394_setup_capture
+dc1394_setup_camera
 sets up both the camera and the cameracapture structure
 to be used other places.
 returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise

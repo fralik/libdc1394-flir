@@ -34,9 +34,11 @@
 #define REG_CAMERA_FORMAT7_TOTAL_BYTES_LO_INQ  0x03CU
 #define REG_CAMERA_FORMAT7_PACKET_PARA_INQ     0x040U
 #define REG_CAMERA_FORMAT7_BYTE_PER_PACKET     0x044U
- 
+
+/**********************/ 
 /* Internal functions */
- 
+/**********************/
+
 static int
 GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
                          unsigned int mode, octlet_t offset, quadlet_t *value)
@@ -55,16 +57,37 @@ GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
         retval= raw1394_read(handle, 0xffc0 | node,
                              CONFIG_ROM_BASE + csr + offset, 4, value);
 
+#ifdef LIBRAW1394_OLD
+        if (retval >= 0)
+        {
+            int ack= retval >> 16;
+            int rcode= retval & 0xffff;
+
+#ifdef SHOW_ERRORS
+            printf("Format 7 reg read ack of %x rcode of %x\n", ack, rcode);
+#endif
+
+            if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL)) &&
+                 (rcode == RESP_COMPLETE) )
+            { 
+                /* conditionally byte swap the value */
+                *value= ntohl(*value); 
+                return 0;
+            }
+
+        }
+#else
         if (!retval)
         {
-            /* conditionally byte swap the value (addition by PDJ) */
-            *value= ntohl(*value);  
-            return retval; 
+            /* conditionally byte swap the value */
+            *value= ntohl(*value);
+            return retval;
         }
         else if (errno != EAGAIN)
         {
             return retval;
         }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
 
         usleep(SLOW_DOWN);
     }
@@ -94,10 +117,31 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
         retval= raw1394_write(handle, 0xffc0 | node,
                               CONFIG_ROM_BASE + offset + csr, 4, &value);
 
+#ifdef LIBRAW1394_OLD
+        if (retval >= 0)
+        {
+            int ack= retval >> 16;
+            int rcode= retval & 0xffff;
+
+#ifdef SHOW_ERRORS
+            printf("Format 7 reg write ack of %x rcode of %x\n", ack, rcode);
+#endif
+
+            if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL) ||
+                  (ack == ACK_COMPLETE)) &&
+                 ((rcode == RESP_COMPLETE) || (rcode == RESP_SONY_HACK)) ) 
+            {
+                return 0;
+            }
+            
+            
+        }
+#else
         if (!retval || (errno != EAGAIN))
         {
             return retval;
         }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
 
  	usleep(SLOW_DOWN);
     }
@@ -105,7 +149,9 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     return retval;
 }
 
+/**********************/
 /* External functions */
+/**********************/
 
 int
 dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
@@ -116,7 +162,7 @@ dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
     
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -141,7 +187,7 @@ dc1394_query_format7_unit_size(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
    
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -166,7 +212,7 @@ dc1394_query_format7_image_position(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
    
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -191,7 +237,7 @@ dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
 
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -212,7 +258,7 @@ dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
 {
     int retval;
    
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -232,7 +278,7 @@ dc1394_query_format7_color_coding(raw1394handle_t handle, nodeid_t node,
 {
     int retval;
 
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -253,7 +299,7 @@ dc1394_query_format7_pixel_number(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
    
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -275,7 +321,7 @@ dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value_hi, value_lo;
    
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -302,7 +348,7 @@ dc1394_query_format7_packet_para(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
 
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
@@ -326,7 +372,7 @@ dc1394_query_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
    
-    if (mode > MODE_FORMAT7_MAX)
+    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     {
         return DC1394_FAILURE;
     }
