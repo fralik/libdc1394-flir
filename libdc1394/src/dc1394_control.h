@@ -863,6 +863,36 @@ dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
   FORMAT_7 access functions
 **************************************************/
 
+/*======================================================================*/
+/*! 
+ *   setup capture for format7 (FORMAT_SCALABLE_IMAGE_SIZE) mode.
+ *
+ *   \param handle   handle for raw1394 port
+ *   \param node     node of the camera
+ *   \param channel  iso channel for data transmission (0 ... 15)
+ *   \param mode     mode for camera operation 
+ *                   (MODE_FORMAT7_0 ... MODE_FORMAT7_7)
+ *   \param speed    transmission speed (SPEED_100 ... SPEED_400)
+ *   \param bytes_per_packet number of bytes per packet can be used to
+ *                   control the framerate. -1 means query max speed
+ *                   from camera and use this
+ *   \param left     area of interest start column
+ *   \param top      area of interest start row
+ *   \param width    area of interest width
+ *   \param height   area of interest height
+ *
+ *   \return DC1394_SUCCESS or DC1394_FAILURE
+ *
+ *======================================================================*/
+int
+dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
+                             int channel, int mode, int speed,
+                             int bytes_per_packet,
+                             unsigned int left, unsigned int top,
+                             unsigned int width, unsigned int height, 
+                             dc1394_cameracapture * camera);
+  
+
 int
 dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
 				    unsigned int mode,
