@@ -191,60 +191,50 @@ _dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
 {
   int setting_1, err_flag1, err_flag2, v130handshake;
   int exit_loop;
-  quadlet_t value;
 
-  if (dc1394_get_sw_version(handle, node, &value) != DC1394_SUCCESS) {
-    printf("(%s) Unable to read software revision\n", __FILE__);
-    return DC1394_FAILURE;
+  dc1394_camerahandle *camera;
+  camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+
+  if (camera->sw_version == 0x102UL) { // if version is 1.30.
+    // We don't use > because 114 is for ptgrey cameras which are not 1.30 but 1.20
+    if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					   &setting_1, &err_flag1, &err_flag2)
+	!= DC1394_SUCCESS) {
+      printf("(%s) Unable to read value setting register.\n", __FILE__);
+      return DC1394_FAILURE;
+    }
   }
   else {
-    if (value == 0x000102UL) { // if version is 1.30.
-      // We don't use > because 114 is for ptgrey cameras which are not 1.30 but 1.20
+    v130handshake=0;
+  }   
+  
+  if (v130handshake==1) {
+    // we should use advanced IIDC v1.30 handshaking.
+    
+    // set value setting to 1
+    if (dc1394_set_format7_value_setting(handle, node, mode) != DC1394_SUCCESS) {
+      printf("(%s) Unable to set value setting register.\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+    // wait for value setting to clear:
+    exit_loop=0;
+    while (!exit_loop) { // WARNING: there is no timeout in this loop yet.
       if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
 					     &setting_1, &err_flag1, &err_flag2)
 	  != DC1394_SUCCESS) {
 	printf("(%s) Unable to read value setting register.\n", __FILE__);
 	return DC1394_FAILURE;
       }
+      exit_loop=(setting_1==0);
+      usleep(0); 
     }
-    else {
-      v130handshake=0;
+    if (err_flag1>0) {
+      printf("(%s) Invalid image position, size, color coding, ISO speed or bpp\n", __FILE__);
+      return DC1394_FAILURE;
     }
+    
+    // bytes per packet... registers are ready for reading.
   }
-      
-  
-  if (v130handshake==1)
-    {
-      // we should use advanced IIDC v1.30 handshaking.
-
-      // set value setting to 1
-      if (dc1394_set_format7_value_setting(handle, node, mode) != DC1394_SUCCESS)
-	{
-	  printf("(%s) Unable to set value setting register.\n", __FILE__);
-	  return DC1394_FAILURE;
-	}
-      // wait for value setting to clear:
-      exit_loop=0;
-      while (!exit_loop)// WARNING: there is no timeout in this loop yet.
-	{
-	  if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
-						 &setting_1, &err_flag1, &err_flag2)
-	      != DC1394_SUCCESS)
-	    {
-	      printf("(%s) Unable to read value setting register.\n", __FILE__);
-	      return DC1394_FAILURE;
-	    }
-	  exit_loop=(setting_1==0);
-	  usleep(0); 
-	}
-      if (err_flag1>0)
-	{
-	  printf("(%s) Invalid image position, size, color coding, ISO speed or bpp\n", __FILE__);
-	  return DC1394_FAILURE;
-	}
-	
-      // bytes per packet... registers are ready for reading.
-    }
   return DC1394_SUCCESS;
 }
 
@@ -252,45 +242,40 @@ int
 _dc1394_v130_errflag2(raw1394handle_t handle, nodeid_t node, int mode)
 {
   int setting_1, err_flag1, err_flag2, v130handshake;
-  quadlet_t value;
+
+  dc1394_camerahandle *camera;
+  camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
 
   //fprintf(stderr,"Checking error flags\n");
 
-  if (dc1394_get_sw_version(handle, node, &value) != DC1394_SUCCESS) {
-    printf("(%s) Unable to read software revision\n", __FILE__);
-    return DC1394_FAILURE;
+  if (camera->sw_version == 0x102UL) { // if version is 1.30.
+    // We don't use > because 0x114 is for ptgrey cameras which are not 1.30 but 1.20
+    if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					   &setting_1, &err_flag1, &err_flag2)
+	!= DC1394_SUCCESS) {
+      printf("(%s) Unable to read value setting register.\n", __FILE__);
+      return DC1394_FAILURE;
+    }
   }
   else {
-    if (value == 0x000102UL) { // if version is 1.30.
-      // We don't use > because 0x114 is for ptgrey cameras which are not 1.30 but 1.20
-      if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
-					     &setting_1, &err_flag1, &err_flag2)
-	  != DC1394_SUCCESS) {
-	printf("(%s) Unable to read value setting register.\n", __FILE__);
-	return DC1394_FAILURE;
-      }
-    }
-    else {
-      v130handshake=0;
-    }
+    v130handshake=0;
   }
       
   
-  if (v130handshake==1)
-    {
-      if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
-					     &setting_1, &err_flag1, &err_flag2)
-	  != DC1394_SUCCESS) {
-	printf("(%s) Unable to read value setting register.\n", __FILE__);
-	return DC1394_FAILURE;
-      }
-      if (err_flag2==0)
-	return DC1394_SUCCESS;
-      else {
-	printf("(%s) Error flag 2 is set: proposed bytes per packet is not a valid value.\n", __FILE__);
-	return DC1394_FAILURE;
-      }
+  if (v130handshake==1) {
+    if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
+					   &setting_1, &err_flag1, &err_flag2)
+	!= DC1394_SUCCESS) {
+      printf("(%s) Unable to read value setting register.\n", __FILE__);
+      return DC1394_FAILURE;
     }
+    if (err_flag2==0)
+      return DC1394_SUCCESS;
+    else {
+      printf("(%s) Error flag 2 is set: proposed bytes per packet is not a valid value.\n", __FILE__);
+      return DC1394_FAILURE;
+    }
+  }
 
   return DC1394_SUCCESS;
 }
@@ -335,15 +320,17 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
                             int bytes_per_packet,
                             int left, int top,
                             int width, int height, 
-                            dc1394_cameracapture * camera)
+                            dc1394_cameracapture *camera)
 {
   dc1394bool_t is_iso_on= DC1394_FALSE;
   unsigned int unit_bytes, max_bytes;
   unsigned packet_bytes=0;
   unsigned int recom_bpp;
   int packets_per_frame;
-  int version;
   int color_coding;
+
+  dc1394_camerahandle *camerahandle;
+  camerahandle = (dc1394_camerahandle*) raw1394_get_userdata( handle );
 
   if (dc1394_get_iso_status(handle, node, &is_iso_on) != DC1394_SUCCESS) {
     return DC1394_FAILURE;
@@ -530,48 +517,43 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
    *  ensure that quadlet aligned buffers are big enough, still expect
    *  problems when width*height  != quadlets_per_frame*4
    *-----------------------------------------------------------------------*/
-  if (dc1394_get_sw_version(handle, node, &version) != DC1394_SUCCESS) {
-    printf("(%s) Unable to read software revision\n", __FILE__);
-    return DC1394_FAILURE;
+  if (camerahandle->sw_version == 0x102UL) { // if version is 1.30
+    if (dc1394_query_format7_packet_per_frame(handle, node, mode, &packets_per_frame)!=DC1394_SUCCESS) {
+      printf("(%s) Unable to get format 7 packets per frame %d \n", __FILE__, mode);
+      return DC1394_FAILURE;
+    }
+    camera->quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
   }
   else {
-    if (version == 0x000102UL) { // if version is 1.30
-      if (dc1394_query_format7_packet_per_frame(handle, node, mode, &packets_per_frame)!=DC1394_SUCCESS) {
-	printf("(%s) Unable to get format 7 packets per frame %d \n", __FILE__, mode);
-	return DC1394_FAILURE;
-      }
-      camera->quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
+    // For other specs revisions, we use a trick to determine the total bytes.
+    // We don't use the total_bytes register in 1.20 as it has been interpreted in
+    // different ways by manufacturers. Thanks to Martin Gramatke for pointing this trick out.
+    if (dc1394_query_format7_color_coding_id(handle, node, mode, &color_coding)!=DC1394_SUCCESS) {
+      printf("(%s) Unable to get format 7 color coding for mode %d \n", __FILE__, mode);
+      return DC1394_FAILURE;
     }
     else {
-      // For other specs revisions, we use a trick to determine the total bytes.
-      // We don't use the total_bytes register in 1.20 as it has been interpreted in
-      // different ways by manufacturers. Thanks to Martin Gramatke for pointing this trick out.
-      if (dc1394_query_format7_color_coding_id(handle, node, mode, &color_coding)!=DC1394_SUCCESS) {
-	printf("(%s) Unable to get format 7 color coding for mode %d \n", __FILE__, mode);
-	return DC1394_FAILURE;
-      }
-      else {
-	//fprintf(stderr,"color coding: %d\n",color_coding);
-	packets_per_frame = ((int)(width * height * _Format7BytePerPixel(color_coding)) +
-			     bytes_per_packet -1) / bytes_per_packet;
-	camera->quadlets_per_frame=(packets_per_frame*bytes_per_packet)/4;
-      }
-      /*
-	if (dc1394_query_format7_total_bytes(handle, node, mode, &camera->quadlets_per_frame)!= DC1394_SUCCESS) {
-	  printf("(%s) Unable to get format 7 total bytes per frame %d \n", __FILE__, mode);
-	  return DC1394_FAILURE;
-	}
-	camera->quadlets_per_frame/=4;
-      */
-      //fprintf(stderr,"quadlets per frame: %d\n",camera->quadlets_per_frame);
+      //fprintf(stderr,"color coding: %d\n",color_coding);
+      packets_per_frame = ((int)(width * height * _Format7BytePerPixel(color_coding)) +
+			   bytes_per_packet -1) / bytes_per_packet;
+      camera->quadlets_per_frame=(packets_per_frame*bytes_per_packet)/4;
     }
+    /*
+      if (dc1394_query_format7_total_bytes(handle, node, mode, &camera->quadlets_per_frame)!= DC1394_SUCCESS) {
+      printf("(%s) Unable to get format 7 total bytes per frame %d \n", __FILE__, mode);
+      return DC1394_FAILURE;
+      }
+      camera->quadlets_per_frame/=4;
+    */
+    //fprintf(stderr,"quadlets per frame: %d\n",camera->quadlets_per_frame);
   }
+
   if (camera->quadlets_per_frame<=0) {
     return DC1394_FAILURE;
   }
   camera->frame_width = width; /* irrespective of pixel depth */
   camera->frame_height= height;
-
+  
   if (is_iso_on){
     if (dc1394_start_iso_transmission(handle,node) != DC1394_SUCCESS) {
       printf("(%s) Unable to start iso transmission!\n", __FILE__);
@@ -991,19 +973,29 @@ dc1394_query_format7_value_setting(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
    
-    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
-    {
-        return DC1394_FAILURE;
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+   
+    if (camera->sw_version==0x102UL) {
+
+      if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+	{
+	  return DC1394_FAILURE;
+	}
+      else
+	{
+	  retval= GetCameraFormat7Register(handle, node, mode,
+					   REG_CAMERA_FORMAT7_VALUE_SETTING,
+					   &value);
+	  *present= (unsigned int) ( value & 0x80000000UL ) >> 31;
+	  *setting1= (unsigned int) ( value & 0x40000000UL ) >> 30;
+	  *err_flag1= (unsigned int) ( value & 0x00800000UL ) >> 23;
+	  *err_flag2= (unsigned int) ( value & 0x00400000UL ) >> 22;
+	}
     }
-    else
-    {
-        retval= GetCameraFormat7Register(handle, node, mode,
-                                         REG_CAMERA_FORMAT7_VALUE_SETTING,
-                                         &value);
-        *present= (unsigned int) ( value & 0x80000000UL ) >> 31;
-        *setting1= (unsigned int) ( value & 0x40000000UL ) >> 30;
-        *err_flag1= (unsigned int) ( value & 0x00800000UL ) >> 23;
-        *err_flag2= (unsigned int) ( value & 0x00400000UL ) >> 22;
+    else {
+      *present=0;
+      return DC1394_SUCCESS;
     }
 
     return retval;
@@ -1048,17 +1040,36 @@ dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
 {
     int retval;
     quadlet_t value;
+    unsigned int packet_bytes;
+    unsigned long long int total_bytes;
+
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
    
-    if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
-    {
-        return DC1394_FAILURE;
+    if (camera->sw_version==0x102UL) {
+
+      if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
+	{
+	  return DC1394_FAILURE;
+	}
+      else
+	{
+	  retval= GetCameraFormat7Register(handle, node, mode,
+					   REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ,
+					   &value);
+	  *ppf= (unsigned int) (value);
+	}
     }
-    else
-    {
-        retval= GetCameraFormat7Register(handle, node, mode,
-                                         REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ,
-                                         &value);
-        *ppf= (unsigned int) (value);
+    else {
+      // return an estimate, NOT TAKING ANY PADDING INTO ACCOUNT
+      if (dc1394_query_format7_byte_per_packet(handle, node, mode, &packet_bytes)!=DC1394_SUCCESS) {
+	return DC1394_FAILURE;
+      }
+      if (dc1394_query_format7_total_bytes(handle, node, mode, &total_bytes)!=DC1394_SUCCESS) {
+	return DC1394_FAILURE;
+      }
+      *ppf=total_bytes/packet_bytes;
+      retval=DC1394_SUCCESS;
     }
 
     return retval;
@@ -1073,18 +1084,30 @@ dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
     int retval;
     quadlet_t value;
    
+    dc1394_camerahandle *camera;
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+   
     if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
-    {
-        return DC1394_FAILURE;
-    }
+      {
+	return DC1394_FAILURE;
+      }
     else
-    {
-        retval= GetCameraFormat7Register(handle, node, mode,
-                                         REG_CAMERA_FORMAT7_UNIT_POSITION_INQ,
-                                         &value);
-        *horizontal_pos = (unsigned int) (( value & 0xFFFF0000UL )>>16);
-        *vertical_pos   = (unsigned int) ( value & 0x0000FFFFUL );
-    }
+      {
+	if (camera->sw_version==0x102UL) {
+	  retval= GetCameraFormat7Register(handle, node, mode,
+					   REG_CAMERA_FORMAT7_UNIT_POSITION_INQ,
+					   &value);
+	}
+	else {
+	  // if version is not 1.30, use the UNIT_SIZE_INQ register
+	  retval= GetCameraFormat7Register(handle, node, mode,
+					   REG_CAMERA_FORMAT7_UNIT_SIZE_INQ,
+					   &value);
+	}
+
+	*horizontal_pos = (unsigned int) (( value & 0xFFFF0000UL )>>16);
+	*vertical_pos   = (unsigned int) ( value & 0x0000FFFFUL );
+      }
 
     return retval;
 }
