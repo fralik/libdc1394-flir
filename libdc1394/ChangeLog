@@ -405,8 +405,10 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       GetCameraControlRegister and SetCameraControlRegister are now
       accessible.
 
-2004-01-29  Tim Evers  <tim@klimt.gom.com>
+2004-01-29 Tim Evers <tim@klimt.gom.com>
     * libdc1394/dc1394_capture.c (_dc1394_dma_multi_capture_private):
       in Poll-mode return DC1394_NO_FRAME not FAILURE
 
+2004-01-31 Damien <ddouxchamps@users.sf.net>
+    * Version 0.9.3
 	

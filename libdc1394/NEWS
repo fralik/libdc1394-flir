@@ -65,3 +65,9 @@ Version 0.9.2:
 - a lot of bugfixes
 - better camera detection
 - vloopback example
+
+Version 0.9.3:
+- more debug and enhancements. This is probably the last release before
+  1.0.0
+- Compatibility break: this release of libdc1394, as well as further
+  releases, will be compatible only with kernels 2.4.21+ and 2.6.0+

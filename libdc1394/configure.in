@@ -1,7 +1,7 @@
 # process this file with autoconf to get a configure script
 AC_INIT(libdc1394/dc1394_control.c)
 
-AM_INIT_AUTOMAKE(libdc1394, 0.9.2)
+AM_INIT_AUTOMAKE(libdc1394, 0.9.3)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -25,7 +25,7 @@ AC_FUNC_MMAP
 
 # set the libtool shared library version numbers
 lt_major=9
-lt_revision=1
+lt_revision=3
 lt_age=0
 
 AC_SUBST(lt_major)
