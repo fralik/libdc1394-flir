@@ -201,3 +201,12 @@ Mon March 26 0:41:50 2002 <dan@dennedy.org>
       NOTE: the new dc1394_destroy_handle() in dc1394_control.h
       NOTE: the dma device file defaults to the video1394 devfs default
       naming convention when not specified: /dev/video1394/<port>
+
+Fri May 10 16:12:00 2002 <dan@dennedy.org>
+    * dc1394_capture.c, dc1394_control.h:
+      bugfixes in dc1394_cameracapture, dc1394_dma_multi_capture(),
+      and _dc1394_dma_basic_setup() to better support grabbing all
+      frames.
+    * dc1394_capture.c: dc1394_dma_setup_capture() modified to take
+      dma_device_file as a param to force users to set it.
+      
