@@ -156,10 +156,32 @@ Tue Jul  3 16:33:50 2001   <GordPeters@smarttech.com>
 	     -dc1394_get_trigger_on_off()
 	  (addition by Audun Jan Myrhol <audun.myrhol@q-free.com>)
 
+Tue Jul 24 13:44:31 2001   <Olaf@Ronneberger.net>
+
+	* added simple test programs to demonstrate the use of libdc1394
+	  (based on 'samplegrab' of Chris Urmson
+	* added _dc1394_basic_format7_setup() and 
+	  dc1394_setup_format7_capture() from Audun Myrhol with some 
+	  slight fixes from me. Format 7 now works (at least for the 
+	  Basler A101f camera)
+
+
 Sat Sept 08 02:19:48 2001 <dan@dennedy.org>
 
     * Updated kernel-video1394.h against current CVS version
-    
+
+
+Fri Sep 14 07:52:24 2001   <Olaf@Ronneberger.net>
+
+	* added USE_MAX_AVAIL and QUERY_FROM_CAMERA #defines, which
+	  can be passed instead of several parameters in
+	  dc1394_setup_format7_capture(). See description in
+	  dc1394_control.h for details
+
+	* dc1394_setup_capture() now works also for format7
+
+	* adapted grab_partial_image to new dc1394_setup_format7_capture()
+
 Mon Sept 24 22:36:12 2001 <dan@dennedy.org>
 	* moved src -> libdc1394
 	* included examples subdir in autoconf and automake
