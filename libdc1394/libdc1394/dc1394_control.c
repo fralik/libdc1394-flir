@@ -889,6 +889,20 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 {
     octlet_t offset= 0x424UL;
     quadlet_t quadval;
+    dc1394bool_t ptgrey;
+
+    /* Note on Point Grey  (PG) cameras:
+       Although not advertised, PG cameras are 'sometimes' compatible with
+       IIDC specs. The following modifications have been tested with a stereo
+       head, the BumbleBee. More cameras should be compatible, please consider
+       contributing to the lib if your PG camera is not recognized.
+
+       PG cams have a Unit_Spec_ID of 0xB09D, instead of the 0xA02D of classic
+       IIDC cameras. Also, their software revision differs. I could only
+       get a 1.14 version from my BumbleBee, other versions might exist.
+
+       Damien
+     */
 
     /* get the unit_directory offset */
     if (GetCameraROMValue(handle, node, offset, &quadval) < 0)
@@ -906,17 +920,20 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
         *value= DC1394_FALSE;
         return DC1394_FAILURE;
     }
+    quadval&=0xFFFFFFUL;
 
-    if ((quadval & 0xFFFFFFUL) != 0x00A02DUL)
-    {
-        *value= DC1394_FALSE;
-    }
-    else
+    ptgrey=(quadval == 0x00B09DUL);
+      
+    if ((quadval == 0x00A02DUL)||ptgrey)
     {
         *value= DC1394_TRUE;
     }
+    else
+    {
+        *value= DC1394_FALSE;
+    }
 
-	quadval = 0;
+    quadval = 0;
     offset += 4;
     usleep(1000);
 
@@ -927,11 +944,12 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
         *value= DC1394_FALSE;
         return DC1394_FAILURE;
     }
+    quadval &= 0xFFFFFFUL;
 
-	quadval &= 0xFFFFFFUL;
     if ((quadval == 0x000100UL) || 
-		(quadval == 0x000101UL) ||
-		(quadval == 0x000102UL) )
+	(quadval == 0x000101UL) ||
+	(quadval == 0x000102UL) ||
+	((quadval == 0x000114UL) && ptgrey))
     {
         *value= DC1394_TRUE;
     }
