@@ -23,3 +23,12 @@ Version 0.2.2:
   dc1394_set_feature_value() (breaking compatibility with old library)
 - added target_temperature parameter to dc1394_get_temperature() (again
   breaking compatibility with old library)
+
+
+Version 0.8
+- new features added
+        - two types of image capture (raw1394 and DMA based)
+        - Format 7 functions
+        - data types to make feature querying easier
+- more code cleanup and restructuring
+- some bugfixes (things should be getting quite stable)

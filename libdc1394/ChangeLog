@@ -97,3 +97,9 @@ Thu Feb  1 02:39:22 2000   <GordPeters@smarttech.com>
 	* Updated to use new version of libraw1394
 	* Changed error handling to use new libraw1394 error handling
 	* Code beautification
+
+Tue Feb  6 03:19:07 2001   <GordPeters@smarttech.com>
+
+	* Added libraw1394 version detection to configuration process
+	* Added compile options for different versions of libraw1394
+	* Cleaned things up a bit
