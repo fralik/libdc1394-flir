@@ -732,11 +732,12 @@ dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
             }
 
         }
-        else 
+        /*
+	  else 
         {
             printf("node %d is not a camera\n", i);
         }
-
+	*/
     }
 
     return nodes; 
@@ -1041,7 +1042,8 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    len= (int)((value[0] >> 15) & 0xFFFFUL);// Damien: >>15, not >>16!
+    len= (int)((value[0] >> 16) & 0xFFFFUL)-8;
+    /* Tim Evers corrected length value */ 
 
     if (len > MAX_CHARS)
     {
@@ -1085,7 +1087,8 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return DC1394_FAILURE;
     }
 
-    len= (int)((value[0] >> 15) & 0xFFFFUL);// Damien: >>15, not >>16!
+    len= (int)((value[0] >> 16) & 0xFFFFUL)-8;
+    /* Tim Evers corrected length value */ 
 
     if (len > MAX_CHARS)
     {
