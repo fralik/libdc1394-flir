@@ -1046,43 +1046,122 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
 }
 
 int
-dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value)
+dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, int *version)
 {
-    dc1394_camerahandle *camera;
-    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+  dc1394_camerahandle *camera;
+  octlet_t offset;
+  octlet_t ud_offset = 0;
+  octlet_t udd_offset = 0;
+  quadlet_t quadval = 0;
+
+  camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );  
+  if (camera != NULL && camera->sw_version > 0) {
+    *version = camera->sw_version;
+  }
+  else {
     
-    if (camera != NULL && camera->sw_version != 0)
-    {
-        *value = camera->sw_version;
+    /* get the unit_directory offset */
+    offset= ROM_ROOT_DIRECTORY;
+    if (GetConfigROMTaggedRegister(handle, node, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
+      *version= -1;
+      return DC1394_FAILURE;
     }
-    else
-    {
-        octlet_t offset;
-        octlet_t ud_offset = 0;
-        quadlet_t quadval = 0;
-    
-        /* get the unit_directory offset */
-        offset= ROM_ROOT_DIRECTORY;
-        if (GetConfigROMTaggedRegister(handle, node, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
-          *value= DC1394_FALSE;
-          return DC1394_FAILURE;
-        }
-        else {
-          ud_offset=(quadval & 0xFFFFFFUL)*4+offset;
-        }
+    else {
+      ud_offset=(quadval & 0xFFFFFFUL)*4+offset;
+    }
       
-        /* get the unit_sw_version  */
-        offset = ud_offset;
-        if (GetConfigROMTaggedRegister(handle, node, 0x13, &offset, &quadval)!=DC1394_SUCCESS) {
-          *value= DC1394_FALSE;
-          return DC1394_FAILURE;
-        }
-        else {
-          *value=quadval&0xFFFFFFUL;
-	  camera->sw_version=*value;
-        }
+    /* get the unit_sw_version  */
+    offset = ud_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0x13, &offset, &quadval)!=DC1394_SUCCESS) {
+      *version = -1;
+      return DC1394_FAILURE;
     }
-    return DC1394_SUCCESS;
+    else {
+      switch (quadval&0xFFFFFFUL) {
+      case 0x100:
+	*version=IIDC_VERSION_1_04;
+	break;
+      case 0x101:
+	*version=IIDC_VERSION_1_20;
+	break;
+      case 0x102:
+	*version=IIDC_VERSION_1_30;
+	break;
+      case 0x114:
+      case 0x800002:
+	/* get the unit_spec_ID (should be 0x00A02D for 1394 digital camera) */
+	if (GetConfigROMTaggedRegister(handle, node, 0x12, &ud_offset, &quadval)!=DC1394_SUCCESS) {
+	  *version = -1;
+	  return DC1394_FAILURE;
+	}
+	else {
+	  quadval&=0xFFFFFFUL;
+	}
+	if (quadval == 0x00B09DUL)
+	  *version=IIDC_VERSION_PTGREY;
+	else
+	  *version = -1;
+	break;
+      }
+    }
+  }
+  //fprintf(stderr,"sw version is %d\n",*version);
+  /*IIDC 1.31 check*/
+  if (*version==IIDC_VERSION_1_30) {
+    
+    /* get the unit_dependent_directory offset */
+    offset= ud_offset;
+    if (GetConfigROMTaggedRegister(handle, node, 0xD4, &offset, &quadval)!=DC1394_SUCCESS) {
+      *version = -1;
+      return DC1394_FAILURE;
+    }
+    else {
+      udd_offset=(quadval & 0xFFFFFFUL)*4+offset;
+    }
+    
+    if (GetConfigROMTaggedRegister(handle, node, 0x38, &udd_offset, &quadval)!=DC1394_SUCCESS) {
+      *version=-1;
+      return DC1394_FAILURE;
+    }
+    else {
+      //fprintf(stderr,"1.3x register is 0x%x\n",quadval);
+      switch (quadval&0xFFFFFFUL) {
+      case 0x10:
+	*version=IIDC_VERSION_1_31;
+	break;
+      case 0x20:
+	*version=IIDC_VERSION_1_32;
+	break;
+      case 0x30:
+	*version=IIDC_VERSION_1_33;
+	break;
+      case 0x40:
+	*version=IIDC_VERSION_1_34;
+	break;
+      case 0x50:
+	*version=IIDC_VERSION_1_35;
+	break;
+      case 0x60:
+	*version=IIDC_VERSION_1_36;
+	break;
+      case 0x70:
+	*version=IIDC_VERSION_1_37;
+	break;
+      case 0x80:
+	*version=IIDC_VERSION_1_38;
+	break;
+      case 0x90:
+	*version=IIDC_VERSION_1_39;
+	break;
+      default:
+	*version=IIDC_VERSION_1_30;
+	break;
+      }
+    }
+  }
+  camera->sw_version=*version;
+  
+  return DC1394_SUCCESS;
 }
 
 void

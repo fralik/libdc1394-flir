@@ -481,5 +481,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2004-09-17 Damien <ddouxchamps@users.sf.net>
     * Added most IIDC 1.31 functions and definitions
-
+	
+2004-09-30 Damien <ddouxchamps@users.sf.net>
+    * Introduced the IIDC_VERSION_X_XX definitions. Interface version is now 12.
 	

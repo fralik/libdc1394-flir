@@ -223,7 +223,7 @@ _dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
   dc1394_camerahandle *camera;
   camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
 
-  if (camera->sw_version == 0x102UL) { // if version is 1.30.
+  if (camera->sw_version >= IIDC_VERSION_1_30) {
     // We don't use > because 114 is for ptgrey cameras which are not 1.30 but 1.20
     if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
 					   &setting_1, &err_flag1, &err_flag2)
@@ -276,7 +276,7 @@ _dc1394_v130_errflag2(raw1394handle_t handle, nodeid_t node, int mode)
 
   //fprintf(stderr,"Checking error flags\n");
 
-  if (camera->sw_version == 0x102UL) { // if version is 1.30.
+  if (camera->sw_version >= IIDC_VERSION_1_30) { // if version is 1.30.
     // We don't use > because 0x114 is for ptgrey cameras which are not 1.30 but 1.20
     if (dc1394_query_format7_value_setting(handle, node, mode, &v130handshake,
 					   &setting_1, &err_flag1, &err_flag2)
@@ -556,7 +556,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
    *  ensure that quadlet aligned buffers are big enough, still expect
    *  problems when width*height  != quadlets_per_frame*4
    *-----------------------------------------------------------------------*/
-  if (camerahandle->sw_version == 0x102UL) { // if version is 1.30
+  if (camerahandle->sw_version >= IIDC_VERSION_1_30) { // if version is 1.30
     if (dc1394_query_format7_packet_per_frame(handle, node, mode, &packets_per_frame)!=DC1394_SUCCESS) {
       printf("(%s) Unable to get format 7 packets per frame %d \n", __FILE__, mode);
       return DC1394_FAILURE;
@@ -998,7 +998,7 @@ dc1394_query_format7_value_setting(raw1394handle_t handle, nodeid_t node,
     dc1394_camerahandle *camera;
     camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
    
-    if (camera->sw_version==0x102UL) {
+    if (camera->sw_version>=IIDC_VERSION_1_30) {
 
       if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
 	{
@@ -1064,7 +1064,7 @@ dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
     dc1394_camerahandle *camera;
     camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
    
-    if (camera->sw_version==0x102UL) {
+    if (camera->sw_version>=IIDC_VERSION_1_30) {
 
       if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
 	{
@@ -1116,7 +1116,7 @@ dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
 	return DC1394_FAILURE;
       }
 
-    if (camera->sw_version==0x102UL) {
+    if (camera->sw_version>=IIDC_VERSION_1_30) {
       retval= GetCameraFormat7Register(handle, node, mode,
 				       REG_CAMERA_FORMAT7_UNIT_POSITION_INQ,
 				       &value);

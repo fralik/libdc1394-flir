@@ -226,6 +226,26 @@ enum
 #define COLOR_FILTER_FORMAT7_MAX                 COLOR_FILTER_FORMAT7_BGGR
 #define NUM_COLOR_FILTER_FORMAT7                (COLOR_FILTER_FORMAT7_MAX - COLOR_FILTER_FORMAT7_MIN + 1)
 
+/* IIDC versions*/
+enum
+{
+  IIDC_VERSION_1_04 = 544,
+  IIDC_VERSION_1_20,
+  IIDC_VERSION_PTGREY,
+  IIDC_VERSION_1_30,
+  IIDC_VERSION_1_31,
+  IIDC_VERSION_1_32,
+  IIDC_VERSION_1_33,
+  IIDC_VERSION_1_34,
+  IIDC_VERSION_1_35,
+  IIDC_VERSION_1_36,
+  IIDC_VERSION_1_37,
+  IIDC_VERSION_1_38,
+  IIDC_VERSION_1_39
+};
+#define IIDC_VERSION_MIN                 IIDC_VERSION_1_02
+#define IIDC_VERSION_MAX                 IIDC_VERSION_1_39
+#define NUM_IIDC_VERSION                (IIDC_VERSION_MAX - IIDC_VERSION_MIN + 1)
 
 /* Maximum number of characters in vendor and model strings */
 #define MAX_CHARS                   32
@@ -486,7 +506,7 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value);
 
 /* Determine the IIDC Specification version */
 int
-dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, quadlet_t *value);
+dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, int *version);
 
 /* Get the camera information and print that structure*/
 void 
