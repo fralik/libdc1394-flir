@@ -308,12 +308,12 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
     offset+= (ROM_ROOT_DIRECTORY + 12);
 
     /* now get the EUID-64 */
-    if ( (retval= GetCameraROMValue(handle, node, offset, value)) < 0 )
+    if ( (retval= GetCameraROMValue(handle, node, offset + 4, value)) < 0 )
     {
         return(retval);
     }
 
-    if ( (retval= GetCameraROMValue(handle, node, offset + 4, &value[1])) < 0 )
+    if ( (retval= GetCameraROMValue(handle, node, offset + 8, &value[1])) < 0 )
     {
         return(retval);
     }
@@ -338,7 +338,7 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         return(retval);
     }
 
-    offset&= 0xFFFFFFUL;
+    offset2&= 0xFFFFFFUL;
     offset2<<= 2;
     offset2+= (offset + 12);
 
@@ -362,28 +362,12 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
 
     offset&= 0xFFFFFFUL;
     offset<<= 2;
-    offset+= (offset2 + 8);
-
-    /* read in the length of the vendor name */
-    if ( (retval= GetCameraROMValue(handle, node, offset, value)) < 0 )
-    {
-        return(retval);
-    }
-
-    len= (int)((value[0] >> 16) & 0xFFFFUL);
-
-    if (len > MAX_CHARS)
-    {
-        len= MAX_CHARS;
-    }
-
-    offset+= 12;
+    offset+= (offset2 + 20);
     count= 0;
 
     /* grab the vendor name */
-    while (len > 0)
+    do
     {
-
         if ( (retval= GetCameraROMValue(handle, node, offset + count,
                                         value)) < 0 )
         {
@@ -394,10 +378,13 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         info->vendor[count++]= (value[0] >> 16) & 0xFFUL;
         info->vendor[count++]= (value[0] >> 8) & 0xFFUL;
         info->vendor[count++]= value[0] & 0xFFUL;
-        len-= 4;
     }
+    while ( (value[0] & 0xFFFFUL) && (count < MAX_CHARS) );
 
-    info->vendor[count]= '\0';
+    if (count == MAX_CHARS)
+    {
+        info->vendor[count]= '\0';
+    }
 
     /* get the model_name_leaf offset */
     if ( (retval= GetCameraROMValue(handle, node, (offset2 + 12),
@@ -408,28 +395,12 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
 
     offset&= 0xFFFFFFUL;
     offset<<= 2;
-    offset+= (offset2 + 12);
-
-    /* read in the length of the model name */
-    if ( (retval= GetCameraROMValue(handle, node, offset, value)) < 0 )
-    {
-        return(retval);
-    }
-
-    len= (int)((value[0] >> 16) & 0xFFFFUL);
-
-    if (len > MAX_CHARS)
-    {
-        len= MAX_CHARS;
-    }
-
-    offset+= 12;
+    offset+= (offset2 + 24);
     count= 0;
 
     /* grab the model name */
-    while (len > 0)
+    do
     {
-
         if ( (retval= GetCameraROMValue(handle, node, offset + count,
                                         value)) < 0 )
         {
@@ -440,10 +411,14 @@ dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
         info->model[count++]= (value[0] >> 16) & 0xFFUL;
         info->model[count++]= (value[0] >> 8) & 0xFFUL;
         info->model[count++]= value[0] & 0xFFUL;
-        len-= 4;
+    }
+    while ( (value[0] & 0xFFFFUL) && (count < MAX_CHARS) );
+
+    if (count == MAX_CHARS)
+    {
+        info->model[count]= '\0';
     }
 
-    info->model[count]= '\0';
     return(0);
 }
 
