@@ -214,6 +214,19 @@ enum
   OPERATION_MODE_1394B
 };
 
+/* Format 7 sensor layouts*/
+enum
+{
+  COLOR_FILTER_FORMAT7_RGGB = 512,
+  COLOR_FILTER_FORMAT7_GBRG,
+  COLOR_FILTER_FORMAT7_GRBG,
+  COLOR_FILTER_FORMAT7_BGGR
+};
+#define COLOR_FILTER_FORMAT7_MIN                 COLOR_FILTER_FORMAT7_RGGB
+#define COLOR_FILTER_FORMAT7_MAX                 COLOR_FILTER_FORMAT7_BGGR
+#define NUM_COLOR_FILTER_FORMAT7                (COLOR_FILTER_FORMAT7_MAX - COLOR_FILTER_FORMAT7_MIN + 1)
+
+
 /* Maximum number of characters in vendor and model strings */
 #define MAX_CHARS                   32
 
