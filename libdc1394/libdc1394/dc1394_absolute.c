@@ -224,7 +224,6 @@ dc1394_query_absolute_feature_min_max(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraAbsoluteRegister(handle, node, feature,
 					  REG_CAMERA_ABS_MIN,
 					  (quadlet_t*)min);
-        //*max=value;
     }
 
     return retval;
@@ -246,7 +245,6 @@ dc1394_query_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
         retval= GetCameraAbsoluteRegister(handle, node, feature,
 					  REG_CAMERA_ABS_VALUE,
 					  (quadlet_t*)value);
-        //*max=value;
     }
 
     return retval;
@@ -257,10 +255,8 @@ int
 dc1394_set_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
 				  int feature, float value)
 {
-  quadlet_t tmp;
-  tmp=(quadlet_t)value;
   if (SetCameraAbsoluteRegister(handle, node, feature, REG_CAMERA_ABS_VALUE,
-				&tmp) != DC1394_SUCCESS)
+				(quadlet_t*)&value) != DC1394_SUCCESS)
     {
       printf("(%s) Absolute value setting failure \n", __FILE__);
       return DC1394_FAILURE;
