@@ -81,3 +81,8 @@ Version 1.0.0:
 - few bug fixes
 - removed extra buffering (COMPATIBILITY BREAK)
 - raw1394 capture fixed
+
+Version 1.1.0:
+- IIDC 1.31
+- 1394b modes supported (800+ MB/s)
+- a few fixes
