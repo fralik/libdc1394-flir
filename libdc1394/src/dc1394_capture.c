@@ -91,10 +91,19 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
     }
     else if (_dc1394_frame_captured[channel] == 2)
     {
+      int copy_n_quadlets = _dc1394_quadlets_per_packet[channel];
+      if( _dc1394_offset[channel] + copy_n_quadlets
+          >= _dc1394_quadlets_per_frame[channel])
+      {
+        /* this is the last packet. Maybe, we just need a part of its data */
+        copy_n_quadlets= _dc1394_quadlets_per_frame[channel]
+            - _dc1394_offset[channel];
+      }
+      
         memcpy((char*)(_dc1394_buffer[channel]+_dc1394_offset[channel]),
-               (char*)(data+1), 4*_dc1394_quadlets_per_packet[channel]);
+               (char*)(data+1), 4*copy_n_quadlets);
 
-        _dc1394_offset[channel]+= _dc1394_quadlets_per_packet[channel];
+        _dc1394_offset[channel]+= copy_n_quadlets;
 
         if (_dc1394_offset[channel] >= _dc1394_quadlets_per_frame[channel])
         {
@@ -150,6 +159,14 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
 
     }
 
+    if (dc1394_set_iso_channel_and_speed(handle,node,channel,speed)
+        != DC1394_SUCCESS) 
+    {
+        printf("(%s) Unable to set channel %d and speed %d!\n", __FILE__,
+               channel,speed);
+        return DC1394_FAILURE;
+    }
+
     if (dc1394_set_video_format(handle,node,format) != DC1394_SUCCESS) 
     {
         printf("(%s) Unable to set video format %d!\n", __FILE__, format);
@@ -165,14 +182,6 @@ _dc1394_basic_setup(raw1394handle_t handle, nodeid_t node,
     if (dc1394_set_video_framerate(handle,node,frame_rate) != DC1394_SUCCESS) 
     {
         printf("(%s) Unable to set framerate %d!\n", __FILE__, frame_rate);
-        return DC1394_FAILURE;
-    }
-
-    if (dc1394_set_iso_channel_and_speed(handle,node,channel,speed)
-        != DC1394_SUCCESS) 
-    {
-        printf("(%s) Unable to set channel %d and speed %d!\n", __FILE__,
-               channel,speed);
         return DC1394_FAILURE;
     }
 
