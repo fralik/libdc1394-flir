@@ -4,7 +4,7 @@
  *
  * Written by Gord Peters <GordPeters@smarttech.com>
  * Additions by Chris Urmson <curmson@ri.cmu.edu>
- * Additions by Damien Douxchamps <douxchamps@ieee.org>
+ * Additions by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -51,21 +51,7 @@
 
 /* Internal functions required by two different source files */
 int
-GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
-			 octlet_t offset, quadlet_t *value);
-
-int
 _dc1394_dma_basic_setup(int channel, int num_dma_buffers,
-                        dc1394_cameracapture *camera);
-						
-						
-typedef struct __dc1394_camerahandle
-{
-	int       port;
-	octlet_t  ccr_base;
-	int       sw_version;
-        octlet_t  format7_csr[NUM_MODE_FORMAT7];
-
-} dc1394_camerahandle;
-						
+                        dc1394capture_t *capture);
+										
 #endif /* _DC1394_INTERNAL_H */

@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.1  2005/02/13 07:02:47  ddouxchamps
+**  Creation of the Version_2_0 branch
+**
 **  Revision 1.9  2004/08/10 07:57:22  ddouxchamps
 **  Removed extra buffering (Johann Schoonees)
 **
@@ -89,9 +92,10 @@
 int numPorts = MAX_PORTS;
 raw1394handle_t handles[MAX_CAMERAS];
 int numCameras = 0;
-dc1394_cameracapture cameras[MAX_CAMERAS];
+dc1394capture_t captures[MAX_CAMERAS];
+dc1394camera_t cameras[MAX_CAMERAS];
 nodeid_t *camera_nodes;
-dc1394_feature_set features;
+dc1394featureset_t features;
 
 /* declarations for video1394 */
 char *device_name=NULL;
@@ -261,7 +265,7 @@ void display_frames()
 		{
 			switch (res) {
 			case MODE_640x480_YUV411:
-				iyu12yuy2( (unsigned char *) cameras[i].capture_buffer,
+				iyu12yuy2( (unsigned char *) captures[i].capture_buffer,
 					frame_buffer + (i * frame_length),
 					(device_width*device_height) );
 				break;
@@ -269,11 +273,11 @@ void display_frames()
 			case MODE_320x240_YUV422:
 			case MODE_640x480_YUV422:
 				memcpy( frame_buffer + (i * frame_length),
-					cameras[i].capture_buffer, device_width*device_height*2);
+					captures[i].capture_buffer, device_width*device_height*2);
 				break;
 					
 			case MODE_640x480_RGB:
-				rgb2yuy2( (unsigned char *) cameras[i].capture_buffer,
+				rgb2yuy2( (unsigned char *) captures[i].capture_buffer,
 					frame_buffer + (i * frame_length),
 					(device_width*device_height) );
 				break;
@@ -322,8 +326,8 @@ void cleanup(void) {
 	int i;
 	for (i=0; i < numCameras; i++)
 	{
-		dc1394_dma_unlisten( handles[i], &cameras[i] );
-		dc1394_dma_release_camera( handles[i], &cameras[i]);
+		dc1394_dma_unlisten( &captures[i] );
+		dc1394_dma_release_camera( &captures[i]);
 		dc1394_destroy_handle(handles[i]);
 	}
 	if ((void *)window != NULL)
@@ -419,26 +423,27 @@ int main(int argc,char *argv[])
 			}
 
 			cameras[numCameras].node = camera_nodes[i];
+			captures[numCameras].node = camera_nodes[i];
+			cameras[numCameras].handle = handles[i];
 		
-			if(dc1394_get_camera_feature_set(handles[numCameras], cameras[numCameras].node, &features) !=DC1394_SUCCESS) 
+			if(dc1394_get_camera_feature_set(&cameras[numCameras], &features) !=DC1394_SUCCESS) 
 			{
 				printf("unable to get feature set\n");
 			} else {
 				dc1394_print_feature_set(&features);
 			}
 		
-			if (dc1394_get_iso_channel_and_speed(handles[numCameras], cameras[numCameras].node,
-										 &channel, &speed) != DC1394_SUCCESS) 
+			if (dc1394_get_iso_channel_and_speed(&cameras[numCameras], &channel, &speed) != DC1394_SUCCESS) 
 			{
 				printf("unable to get the iso channel number\n");
 				cleanup();
 				exit(-1);
 			}
 			 
-			if (dc1394_dma_setup_capture(handles[numCameras], cameras[numCameras].node, i+1 /*channel*/,
+			if (dc1394_dma_setup_capture( &cameras[numCameras], i+1 /*channel*/,
 									FORMAT_VGA_NONCOMPRESSED, res,
 									SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
-									device_name, &cameras[numCameras]) != DC1394_SUCCESS) 
+									device_name, &captures[numCameras]) != DC1394_SUCCESS) 
 			{
 				fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 					   __LINE__,__FILE__);
@@ -450,7 +455,7 @@ int main(int argc,char *argv[])
 		
 		
 			/*have the camera start sending us data*/
-			if (dc1394_start_iso_transmission(handles[numCameras], cameras[numCameras].node) !=DC1394_SUCCESS) 
+			if (dc1394_start_iso_transmission(&cameras[numCameras]) !=DC1394_SUCCESS) 
 			{
 				perror("unable to start camera iso transmission\n");
 				cleanup();
@@ -516,7 +521,7 @@ int main(int argc,char *argv[])
 	/* main event loop */	
 	while(1){
 
-		dc1394_dma_multi_capture(cameras, numCameras);
+		dc1394_dma_multi_capture(captures, numCameras);
 		
 		display_frames();
 		XFlush(display);
@@ -556,27 +561,27 @@ int main(int argc,char *argv[])
 						case XK_1:
 							fps =	FRAMERATE_1_875; 
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
+								dc1394_set_video_framerate(&cameras[i], fps);
 							break;
 						case XK_2:
 							fps =	FRAMERATE_3_75; 
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
+								dc1394_set_video_framerate(&cameras[i], fps);
 							break;
 						case XK_4:
 							fps = FRAMERATE_15; 
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
+								dc1394_set_video_framerate(&cameras[i], fps);
 							break;
 						case XK_5: 
 							fps = FRAMERATE_30;
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
+								dc1394_set_video_framerate(&cameras[i], fps);
 							break;
 						case XK_3:
 							fps = FRAMERATE_7_5; 
 							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(handles[i], cameras[i].node, fps);
+								dc1394_set_video_framerate(&cameras[i], fps);
 							break;
 						}
 					break;
@@ -585,7 +590,7 @@ int main(int argc,char *argv[])
 
 			for (i = 0; i < numCameras; i++)
 			{
-				dc1394_dma_done_with_buffer(&cameras[i]);
+				dc1394_dma_done_with_buffer(&captures[i]);
 			}
 		
 		} /* while not interrupted */

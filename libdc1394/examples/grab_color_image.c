@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.1  2005/02/13 07:02:47  ddouxchamps
+**  Creation of the Version_2_0 branch
+**
 **  Revision 1.5  2004/01/20 04:12:27  ddennedy
 **  added dc1394_free_camera_nodes and applied to examples
 **
@@ -84,7 +87,8 @@ void get_options(int argc,char *argv[])
 int main(int argc, char *argv[]) 
 {
   FILE* imagefile;
-  dc1394_cameracapture camera;
+  dc1394camera_t camera;
+  dc1394capture_t capture;
   struct raw1394_portinfo ports[MAX_PORTS];
   int numPorts = 0;
   int numCameras = 0;
@@ -131,26 +135,28 @@ int main(int argc, char *argv[])
       {
         if (g_guid == 0)
         {
-          dc1394_camerainfo info;
           /* use the first camera found */
           camera.node = camera_nodes[0];
-          if (dc1394_get_camera_info(handle, camera_nodes[0], &info) == DC1394_SUCCESS)
-            dc1394_print_camera_info(&info);
+	  camera.handle=handle;
+	  capture.node=camera_nodes[0];
+          if (dc1394_get_camera_info(&camera) == DC1394_SUCCESS)
+            dc1394_print_camera_info(&camera);
           found = 1;
         }
         else
         {
           /* attempt to locate camera by guid */
           int k;
+	  camera.handle=handle;
           for (k = 0; k < numCameras && found == 0; k++)
           {
-            dc1394_camerainfo info;
-            if (dc1394_get_camera_info(handle, camera_nodes[k], &info) == DC1394_SUCCESS)
+	    camera.node = camera_nodes[k];
+            if (dc1394_get_camera_info(&camera) == DC1394_SUCCESS)
             {
-              if (info.euid_64 == g_guid)
+              if (camera.euid_64 == g_guid)
               {
-                dc1394_print_camera_info(&info);
-                camera.node = camera_nodes[k];
+                dc1394_print_camera_info(&camera);
+                capture.node = camera_nodes[k];
                 found = 1;
               }
             }
@@ -159,7 +165,7 @@ int main(int argc, char *argv[])
         if (found == 1)
         {
           /* camera can not be root--highest order node */
-          if (camera.node == raw1394_get_nodecount(handle)-1)
+          if (capture.node == raw1394_get_nodecount(handle)-1)
           {
             /* reset and retry if root */
             raw1394_reset_bus(handle);
@@ -193,20 +199,20 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
-  if (dc1394_setup_capture(handle, camera.node,
+  if (dc1394_setup_capture(&camera,
                            0, /* channel */ 
                            FORMAT_VGA_NONCOMPRESSED,
                            MODE_640x480_RGB,
                            SPEED_400,
                            FRAMERATE_7_5,
-                           &camera)!=DC1394_SUCCESS) 
+                           &capture)!=DC1394_SUCCESS) 
   {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode,framerate and format are\n"
              "supported by your camera\n",
              __LINE__,__FILE__);
-    dc1394_release_camera(handle,&camera);
+    dc1394_release_camera(&capture);
     dc1394_destroy_handle(handle);
     exit(1);
   }
@@ -214,11 +220,11 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
-  if (dc1394_start_iso_transmission(handle,camera.node)
+  if (dc1394_start_iso_transmission(&camera)
       !=DC1394_SUCCESS) 
   {
     fprintf( stderr, "unable to start camera iso transmission\n");
-    dc1394_release_camera(handle,&camera);
+    dc1394_release_camera(&capture);
     dc1394_destroy_handle(handle);
     exit(1);
   }
@@ -226,10 +232,10 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  capture one frame
    *-----------------------------------------------------------------------*/
-  if (dc1394_single_capture(handle,&camera)!=DC1394_SUCCESS) 
+  if (dc1394_single_capture(&capture)!=DC1394_SUCCESS) 
   {
     fprintf( stderr, "unable to capture a frame\n");
-    dc1394_release_camera(handle,&camera);
+    dc1394_release_camera(&capture);
     dc1394_destroy_handle(handle);
     exit(1);
   }
@@ -242,23 +248,23 @@ int main(int argc, char *argv[])
   if( imagefile == NULL)
   {
     perror( "Can't create output file");
-    dc1394_release_camera(handle,&camera);
+    dc1394_release_camera(&capture);
     dc1394_destroy_handle(handle);
     exit( 1);
   }
   
     
-  fprintf(imagefile,"P6\n%u %u\n255\n", camera.frame_width,
-          camera.frame_height );
-  fwrite((const char *)camera.capture_buffer, 1,
-         camera.frame_height*camera.frame_width*3, imagefile);
+  fprintf(imagefile,"P6\n%u %u\n255\n", capture.frame_width,
+          capture.frame_height );
+  fwrite((const char *)capture.capture_buffer, 1,
+         capture.frame_height*capture.frame_width*3, imagefile);
   fclose(imagefile);
   printf("wrote: %s\n", g_filename);
 
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
-  dc1394_release_camera(handle,&camera);
+  dc1394_release_camera(&capture);
   dc1394_destroy_handle(handle);
   return 0;
 }
