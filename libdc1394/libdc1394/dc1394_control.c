@@ -227,16 +227,16 @@ const int quadlets_per_packet_format_1[64] =
    96, 192, 384,  768, 1536, 3072, 6144,   -1
 };
  
-const int quadlets_per_packet_format_2[56] = 
+const int quadlets_per_packet_format_2[64] = 
 {
-  160, 320,  640, 1280, 2560, 5120,   -1,
-  240, 480,  960, 1920, 3840, 7680,   -1,
-   80, 160,  320,  640, 1280, 2560, 5120,
-  250, 500, 1000, 2000, 4000, 8000,   -1,
-  375, 750, 1500, 3000, 6000,   -1,   -1,
-  125, 250,  500, 1000, 2000, 4000, 8000,
-  160, 320,  640, 1280, 2560, 5120,   -1,
-  250, 500, 1000, 2000, 4000, 8000,   -1
+  160, 320,  640, 1280, 2560, 5120,   -1,  -1,
+  240, 480,  960, 1920, 3840, 7680,   -1,  -1,
+   80, 160,  320,  640, 1280, 2560, 5120,  -1,
+  250, 500, 1000, 2000, 4000, 8000,   -1,  -1,
+  375, 750, 1500, 3000, 6000,   -1,   -1,  -1,
+  125, 250,  500, 1000, 2000, 4000, 8000,  -1,
+  160, 320,  640, 1280, 2560, 5120,   -1,  -1,
+  250, 500, 1000, 2000, 4000, 8000,   -1,  -1
 };
    
 
@@ -330,7 +330,7 @@ _dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate)
         if ( ((mode >= MODE_FORMAT0_MIN) && (mode <= MODE_FORMAT0_MAX)) && 
              ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) )
         {
-            return quadlets_per_packet_format_0[8*mode_index+frame_rate_index];
+            return quadlets_per_packet_format_0[NUM_FRAMERATES*mode_index+frame_rate_index];
         }
         else
         {
@@ -345,7 +345,7 @@ _dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate)
         if ( ((mode >= MODE_FORMAT1_MIN) && (mode <= MODE_FORMAT1_MAX)) && 
              ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) )
         {
-            return quadlets_per_packet_format_1[8*mode_index+frame_rate_index];
+            return quadlets_per_packet_format_1[NUM_FRAMERATES*mode_index+frame_rate_index];
         }
         else
         {
@@ -360,7 +360,7 @@ _dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate)
         if ( ((mode >= MODE_FORMAT2_MIN) && (mode <= MODE_FORMAT2_MAX)) && 
              ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) )
         {
-            return quadlets_per_packet_format_2[7*mode_index+frame_rate_index];
+            return quadlets_per_packet_format_2[NUM_FRAMERATES*mode_index+frame_rate_index];
         }
         else
         {
