@@ -246,23 +246,35 @@ dc1394_setup_capture(raw1394handle_t handle, nodeid_t node,
                      int speed, int frame_rate, 
                      dc1394_cameracapture * camera) 
 {
-
+  if( format == FORMAT_SCALABLE_IMAGE_SIZE)
+  {
+    return dc1394_setup_format7_capture( handle, node, channel, mode,
+                                         speed,
+                                         QUERY_FROM_CAMERA, /*bytes_per_paket*/
+                                         QUERY_FROM_CAMERA, /*left*/
+                                         QUERY_FROM_CAMERA, /*top*/
+                                         QUERY_FROM_CAMERA, /*width*/
+                                         QUERY_FROM_CAMERA, /*height*/
+                                         camera);  
+  }
+  else
+  {
     if (_dc1394_basic_setup(handle,node, channel, format, mode, 
                             speed,frame_rate, camera) == DC1394_FAILURE)
     {
-        return DC1394_FAILURE;
+      return DC1394_FAILURE;
     }
-
     camera->capture_buffer= (int*)malloc(camera->quadlets_per_frame*4);
-
+    
     if (camera->capture_buffer == NULL)
     {
-        printf("(%s) unable to allocate memory for capture buffer\n",
-               __FILE__);
-        return DC1394_FAILURE;
+      printf("(%s) unable to allocate memory for capture buffer\n",
+             __FILE__);
+      return DC1394_FAILURE;
     }
-
-    return DC1394_SUCCESS;
+  }
+  
+  return DC1394_SUCCESS;
 }
 
 /****************************************************
@@ -400,6 +412,12 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
     struct video1394_wait vwait;
     int i;
 
+    if( format == FORMAT_SCALABLE_IMAGE_SIZE)
+    {
+      fprintf( stderr, "Format 7 DMA capture not yet supported!\n");
+      return DC1394_FAILURE;
+    }
+    
     if (_dc1394_basic_setup(handle,node, channel, format, mode, 
                             speed,frame_rate, camera) == DC1394_FAILURE)
     {
@@ -411,7 +429,7 @@ dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
 
         if ( (_dc1394_dma_fd= open("/dev/video1394",O_RDONLY)) < 0 )
         {
-            printf("(%s) unable to open vide1394 device!\n", __FILE__);
+            printf("(%s) unable to open video1394 device!\n", __FILE__);
             return DC1394_FAILURE;
         }
 
