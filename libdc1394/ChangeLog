@@ -491,3 +491,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2004-10-28 Damien <ddouxchamps@users.sf.net>
     * Applied a patch from F. Devernay to allow compilation on x86_64.
 	
+2004-11-11 Damien <ddouxchamps@users.sf.net>
+    * fixed format quadlets per packet access in _dc1394_get_quadlets_per_packet()
+	

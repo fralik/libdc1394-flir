@@ -330,7 +330,7 @@ _dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate)
         if ( ((mode >= MODE_FORMAT0_MIN) && (mode <= MODE_FORMAT0_MAX)) && 
              ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) )
         {
-            return quadlets_per_packet_format_0[6*mode_index+frame_rate_index];
+            return quadlets_per_packet_format_0[8*mode_index+frame_rate_index];
         }
         else
         {
@@ -345,7 +345,7 @@ _dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate)
         if ( ((mode >= MODE_FORMAT1_MIN) && (mode <= MODE_FORMAT1_MAX)) && 
              ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) )
         {
-            return quadlets_per_packet_format_1[6*mode_index+frame_rate_index];
+            return quadlets_per_packet_format_1[8*mode_index+frame_rate_index];
         }
         else
         {
@@ -360,7 +360,7 @@ _dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate)
         if ( ((mode >= MODE_FORMAT2_MIN) && (mode <= MODE_FORMAT2_MAX)) && 
              ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) )
         {
-            return quadlets_per_packet_format_2[6*mode_index+frame_rate_index];
+            return quadlets_per_packet_format_2[7*mode_index+frame_rate_index];
         }
         else
         {
