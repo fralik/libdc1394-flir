@@ -28,30 +28,6 @@
 #include <libraw1394/raw1394.h>
 #include <stdio.h>
 
-/* General definitions: */
-#define CONFIG_ROM_BASE             0xFFFFF0000000ULL
-#define CCR_BASE                    0xFFFFF0F00000ULL
-
-#define ON_VALUE                    0x80000000UL
-#define OFF_VALUE                   0x00000000UL
-
-/* Maximum number of write/read retries */
-#define MAX_RETRIES                 20
-
-/* A hard compiled factor that makes sure async read and writes don't happen
-   too fast */
-#define SLOW_DOWN                   20
-
-/* transaction acknowldegements (this should be in the raw1394 headers) */
-#define ACK_COMPLETE                0x0001U
-#define ACK_PENDING                 0x0002U
-#define ACK_LOCAL                   0x0010U
-
-/*Response codes (this should be in the raw1394 headers) */
-//not currently used
-#define RESP_COMPLETE               0x0000U
-#define RESP_SONY_HACK              0x000fU
-
 
 /* Enumeration of data speeds */
 enum

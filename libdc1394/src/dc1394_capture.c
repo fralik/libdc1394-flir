@@ -17,8 +17,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "dc1394_control.h"
-#include "kernel-video1394.h"
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
@@ -28,6 +26,9 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+
+#include "dc1394_control.h"
+#include "kernel-video1394.h"
 
 #define NUM_ISO_CHANNELS 64
 

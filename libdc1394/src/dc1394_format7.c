@@ -22,6 +22,7 @@
 #include <errno.h>
  
 #include "dc1394_control.h"
+#include "dc1394_internal.h"
  
 #define REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ  0x000U
 #define REG_CAMERA_FORMAT7_UNIT_SIZE_INQ       0x004U
