@@ -311,7 +311,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   /*
    * TODO: bytes_per_packet must be full quadlet
    */
-  printf( "Trying to set bytes per packet to %d\n",  bytes_per_packet);
+  //printf( "Trying to set bytes per packet to %d\n",  bytes_per_packet);
   
   if (dc1394_set_format7_byte_per_packet(handle, node, mode, bytes_per_packet) != DC1394_SUCCESS)
   {
@@ -327,7 +327,7 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       printf("(%s) No format 7 bytes per packet %d \n", __FILE__, mode);
       return DC1394_FAILURE;
     }
-    printf("Camera has now %d bytes per packet\n\n", packet_bytes);
+    //printf("Camera has now %d bytes per packet\n\n", packet_bytes);
     
   }
   else
@@ -348,9 +348,9 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
    *  ensure that quadlet aligned buffers are big enough, still expect
    *  problems when width*height  != quadlets_per_frame*4
    *-----------------------------------------------------------------------*/
-  if (dc1394_query_format7_total_bytes( handle, node, mode, &camera->quadlets_per_frame))
+  if (dc1394_query_format7_total_bytes( handle, node, mode, &camera->quadlets_per_frame)!= DC1394_SUCCESS)
     {
-      printf("(%s) Unable to get format 7 bytes per packet %d \n", __FILE__, mode);
+      printf("(%s) Unable to get format 7 total bytes per frame %d \n", __FILE__, mode);
       return DC1394_FAILURE;
     }
   camera->quadlets_per_frame=camera->quadlets_per_frame/4;
@@ -395,13 +395,13 @@ dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
                              dc1394_cameracapture * camera)
 
 {
-  printf( "trying to setup format7 with \n"
+  /* printf( "trying to setup format7 with \n"
           "bpp    = %d\n"
           "pos_x  = %d\n"
           "pos_y  = %d\n"
           "size_x = %d\n"
           "size_y = %d\n",
-          bytes_per_packet, left, top, width, height);
+          bytes_per_packet, left, top, width, height);*/
   
   if (_dc1394_basic_format7_setup(handle,node, channel, mode,
                                   speed, bytes_per_packet,
