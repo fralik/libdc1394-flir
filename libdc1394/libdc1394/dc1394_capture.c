@@ -309,26 +309,21 @@ _dc1394_dma_basic_setup(int channel,
     camera->dma_ring_buffer= mmap(0, vmmap.nb_buffers * vmmap.buf_size,
                            PROT_READ,MAP_SHARED, camera->dma_fd, 0);
 
-    if (camera->dma_ring_buffer == (unsigned char *)(-1))
-    {
-        printf("mmap failed!\n");
-        return DC1394_FAILURE;
-    }
-
-    camera->dma_buffer_size= vmmap.buf_size * vmmap.nb_buffers;
 
     /* make sure the ring buffer was allocated */
-    if (camera->dma_ring_buffer == (unsigned char*)-1) {
+    if (camera->dma_ring_buffer == (unsigned char*)(-1)) {
         printf("(%s) mmap failed!\n", __FILE__);
         ioctl(camera->dma_fd, VIDEO1394_UNLISTEN_CHANNEL, &vmmap.channel);
         return DC1394_FAILURE;
     }
 
+    camera->dma_buffer_size= vmmap.buf_size * vmmap.nb_buffers;
+
     /* allocate extra buffers to properly multiplex cameras */
     camera->dma_extra_count = 0;
 	if (camera->drop_frames == 0)
 	{
-		camera->dma_extra_buffer = (unsigned char *) malloc( camera->dma_buffer_size );
+		camera->dma_extra_buffer = (unsigned char *) malloc(camera->dma_buffer_size*sizeof(unsigned char));
 		if (camera->dma_extra_buffer == NULL)
 		{
 			printf("(%s) failed to allocate internal buffers!\n", __FILE__);

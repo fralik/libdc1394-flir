@@ -258,3 +258,6 @@ Mon Sep 23 10:10:00 2002 <ddouxchamps@users.sf.net>
 Fri Sep 27 13:00:00 2002 <ddouxchamps@users.sf.net>
     * more v1.30 handshake update to handle backward compatibility
       with v1.20
+
+Fri Oct 22 15:10:00 2002 <ddouxchamps@users.sf.net>
+    * applied Christophe Achard patch, with some modifications.
