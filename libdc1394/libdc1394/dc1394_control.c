@@ -1368,10 +1368,10 @@ dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
     if (dc1394_query_basic_functionality(handle,node,&value) != DC1394_SUCCESS)
         return DC1394_FAILURE;
     else {
-      info->mem_channel_number = (value & 0xF);
-      info->bmode_capable      = (value & (0x1 << 22)) != 0;
-      info->one_shot_capable   = (value & (0x1 << 12)) != 0;
-      info->multi_shot_capable = (value & (0x1 << 11)) != 0;
+      info->mem_channel_number = (value & 0x0000000F);
+      info->bmode_capable      = (value & 0x00800000) != 0;
+      info->one_shot_capable   = (value & 0x00000800) != 0;
+      info->multi_shot_capable = (value & 0x00001000) != 0;
     }
 
     if (info->mem_channel_number>0) {
