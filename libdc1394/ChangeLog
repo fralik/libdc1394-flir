@@ -103,3 +103,24 @@ Tue Feb  6 03:19:07 2001   <GordPeters@smarttech.com>
 	* Added libraw1394 version detection to configuration process
 	* Added compile options for different versions of libraw1394
 	* Cleaned things up a bit
+
+Wed Apr 11 14:24:19 2001   <GordPeters@smarttech.com>
+
+	* Added patch from Dan Dennedy which included:
+	   - resume iso receive in camera setup
+	   - new dc1394_dma_unlisten() function in dc1394_capture.c
+	   - mutually exclusive format enumerations
+	* Made all enumerations mutually exclusive by 32 rather that 16
+	* Fixed code which broke due to enumeration change
+	* Added macros for feature to offset querying in dc1394_control.c
+	* Added backwards compatibility to Format 7 register access code
+
+Thu Apr 12 12:52:30 2001   <GordPeters@smarttech.com>
+
+	* Fixed dc1394_get/set_video_mode/format/framerate to work with new
+	  enumerations.
+	* Fixed FEATURE_TO_VALUE/INQUIRY_OFFSET macros to work for both
+	  FEATURE_HI and FEATURE_LO queries.
+	* Exposed dc1394_feature_desc (feature description array).
+	* Created dc1394_internal.h for definitions internal to the library
+	* Moved some definitions from dc1394_control.h to dc1394_internal.h
