@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4  2002/07/27 21:24:51  ddennedy
+**  just increase buffers some to reduce chance of hangs
+**
 **  Revision 1.3  2002/07/27 04:45:07  ddennedy
 **  added drop_frames option to dma capture, prepare versions/NEWS for 0.9 release
 **
@@ -51,7 +54,7 @@
 #define DROP_FRAMES 1
 #define MAX_PORTS 3
 #define MAX_CAMERAS 8
-#define NUM_BUFFERS 2
+#define NUM_BUFFERS 8
 
 /* ok the following constant should be by right included thru in Xvlib.h */
 #ifndef XV_YV12
