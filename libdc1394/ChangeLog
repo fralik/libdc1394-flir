@@ -474,3 +474,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2004-09-07 Damien <ddouxchamps@users.sf.net>
     * Applied a patch from David Ergo to fix broken raw capture in libdc0.9.5.
+
+2004-09-13 Damien <ddouxchamps@users.sf.net>
+    * Corrected library version
