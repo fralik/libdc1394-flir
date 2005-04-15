@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.7  2005/04/15 01:09:48  ddouxchamps
+**  added the AVT extensions of Pierre Moos
+**
 **  Revision 1.6  2005/03/17 03:13:20  ddouxchamps
 **  updated grab_gray_image example to work with all 8bit-mono formats
 **
@@ -52,7 +55,7 @@ int main(int argc, char *argv[])
   raw1394handle_t handle;
   nodeid_t * camera_nodes;
   dc1394_feature_set features;
-  int format, mode;
+  int format=-1, mode=-1;
   quadlet_t quadlet;
 
   /*-----------------------------------------------------------------------

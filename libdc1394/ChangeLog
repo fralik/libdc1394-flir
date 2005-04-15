@@ -520,3 +520,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-04-06 Damien <ddouxchamps@users.sf.net>
     * fixed bandwidth usage estimation
+	
+2005-04-15 Damien <ddouxchamps@users.sf.net>
+    * Merged the Allied Vision Tech extensions of Pierre Moos.

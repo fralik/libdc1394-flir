@@ -660,6 +660,137 @@ SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
     return retval;
 }
 
+/********************************************************************************/
+/* Get Advanced Features Registers                                              */
+/********************************************************************************/
+int
+GetCameraAdvControlRegister(raw1394handle_t handle, nodeid_t node,
+                         octlet_t offset, quadlet_t *value)
+{
+    int retval, retry= MAX_RETRIES;
+    dc1394_camerahandle *camera;
+    quadlet_t adv_temp;
+    
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+    
+     
+    if(!camera->adv_csr)
+    {
+      if(GetCameraControlRegister(handle, node,REG_CAMERA_ADV_FEATURE_INQ, &adv_temp))
+ return -1;
+
+      camera->adv_csr= adv_temp*4 + CONFIG_ROM_BASE;
+    }
+
+    /* retry a few times if necessary (addition by PDJ) */
+    while(retry--) 
+    {
+        retval= raw1394_read(handle, 0xffc0 | node, camera->adv_csr + offset,
+                             4, value);
+
+/*        printf(" Get Adv debug : base = %Lux, offset = %Lux, base + offset = %Lux\n",camera->adv_csr,offset, camera->adv_csr+offset);*/
+
+#ifdef LIBRAW1394_OLD
+        if (retval >= 0)
+        {
+            int ack= retval >> 16;
+            int rcode= retval & 0xffff;
+
+#ifdef SHOW_ERRORS
+            printf("CCR read ack of %x rcode of %x\n", ack, rcode);
+#endif
+
+            if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL)) &&
+                 (rcode == RESP_COMPLETE) )
+            { 
+                /* conditionally byte swap the value */
+                *value= ntohl(*value); 
+                return 0;
+            }
+
+        }
+#else
+        if (!retval)
+        {
+            /* conditionally byte swap the value (addition by PDJ) */
+            *value= ntohl(*value);  
+            return retval; 
+        }
+        else if (errno != EAGAIN)
+        {
+            return retval;
+        }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
+
+        usleep(SLOW_DOWN);
+    }
+    
+    *value= ntohl(*value);
+    return retval;
+}
+
+
+/********************************************************************************/
+/* Set Advanced Features Registers                                              */
+/********************************************************************************/
+int
+SetCameraAdvControlRegister(raw1394handle_t handle, nodeid_t node,
+                         octlet_t offset, quadlet_t value)
+{
+    int retval, retry= MAX_RETRIES;
+    dc1394_camerahandle *camera;
+    quadlet_t adv_temp;
+    
+    camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
+    
+    if(!camera->adv_csr)
+    {
+      if(GetCameraControlRegister(handle, node,REG_CAMERA_ADV_FEATURE_INQ, &adv_temp))
+ return -1;
+
+      camera->adv_csr= adv_temp*4 + CONFIG_ROM_BASE;
+    }
+
+    /* conditionally byte swap the value (addition by PDJ) */
+    value= htonl(value);
+
+    /* retry a few times if necessary */
+    while(retry--)
+    {
+        retval= raw1394_write(handle, 0xffc0 | node, camera->adv_csr + offset, 4,
+                              &value);
+/*        printf(" Set Adv debug : base = %Lux, offset = %Lux, base + offset = %Lux\n",camera->adv_csr,offset, camera->adv_csr+offset); */
+#ifdef LIBRAW1394_OLD
+        if (retval >= 0)
+        {
+            int ack= retval >> 16;
+            int rcode= retval & 0xffff;
+
+#ifdef SHOW_ERRORS
+            printf("CCR write ack of %x rcode of %x\n", ack, rcode);
+#endif
+
+            if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL) ||
+                  (ack == ACK_COMPLETE)) &&
+                 ((rcode == RESP_COMPLETE) || (rcode == RESP_SONY_HACK)) ) 
+            {
+                return 0;
+            }
+            
+        }
+#else
+        if (!retval || (errno != EAGAIN))
+        {
+            return retval;
+        }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
+
+        usleep(SLOW_DOWN);
+    }
+
+    return retval;
+}
+
 static int
 IsFeatureBitSet(quadlet_t value, unsigned int feature)
 {
