@@ -20,15 +20,23 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _DC1394_CAMERA_CONTROL_H
-#define _DC1394_CAMERA_CONTROL_H
+#ifndef __DC1394_CAMERA_CONTROL_H__
+#define __DC1394_CAMERA_CONTROL_H__
 
-#include <stddef.h>
-#include <sys/types.h>
-#include <libraw1394/raw1394.h>
-#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <netinet/in.h>
+#include <libraw1394/raw1394.h>
  
 /* Enumeration of data speeds */
 enum {
@@ -272,11 +280,11 @@ typedef struct __dc1394_camera
   nodeid_t           node;
   int                port;
   u_int64_t          euid_64;
-  octlet_t           command_registers_base;
-  octlet_t           unit_directory;
-  octlet_t           unit_dependent_directory;
-  octlet_t           advanced_features_csr;
-  octlet_t           format7_csr[NUM_MODE_FORMAT7];
+  quadlet_t          command_registers_base;
+  quadlet_t          unit_directory;
+  quadlet_t          unit_dependent_directory;
+  quadlet_t          advanced_features_csr;
+  quadlet_t          format7_csr[NUM_MODE_FORMAT7];
   int                sw_version;
   char               vendor[MAX_CHARS + 1];
   char               model[MAX_CHARS + 1];

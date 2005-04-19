@@ -18,21 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <unistd.h>
-#include <netinet/in.h>
-#include <errno.h>
-#include <stdlib.h>
-
 #include "dc1394_control.h"
+#include "dc1394_offsets.h"
 #include "dc1394_internal.h"
-#include "config.h"
-
-#define REG_CAMERA_FEATURE_ABS_HI_BASE 0x700U
-#define REG_CAMERA_FEATURE_ABS_LO_BASE 0x780U
-
-#define REG_CAMERA_ABS_MIN             0x000U
-#define REG_CAMERA_ABS_MAX             0x004U
-#define REG_CAMERA_ABS_VALUE           0x008U
 
 #define FEATURE_TO_ABS_VALUE_OFFSET(feature, offset)                  \
                                                                       \

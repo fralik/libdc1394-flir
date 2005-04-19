@@ -20,11 +20,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _DC1394_INTERNAL_H
-#define _DC1394_INTERNAL_H
+#ifndef __DC1394_INTERNAL_H__
+#define __DC1394_INTERNAL_H__
 
 #include <libraw1394/raw1394.h>
-
 
 /* Definitions which application developers shouldn't care about */
 #define CONFIG_ROM_BASE             0xFFFFF0000000ULL
@@ -50,18 +49,6 @@
 #define RESP_SONY_HACK              0x000fU
 
 /* Internal functions required by two different source files */
-
-int
-GetCameraControlRegister(dc1394camera_t *camera,
-			 octlet_t offset, quadlet_t *value);
-
-int
-GetCameraAdvControlRegister(dc1394camera_t *camera,
-			    octlet_t offset, quadlet_t *value);
-
-int
-SetCameraAdvControlRegister(dc1394camera_t *camera,
-			    octlet_t offset, quadlet_t value);
 
 int
 _dc1394_dma_basic_setup(int channel, int num_dma_buffers,

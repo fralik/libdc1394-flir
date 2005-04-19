@@ -19,11 +19,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _DC1394_VENDOR_AVT_H
-#define _DC1394_VENDOR_AVT_H
+#ifndef __DC1394_VENDOR_AVT_H__
+#define __DC1394_VENDOR_AVT_H__
 
 #include <libraw1394/raw1394.h>
 #include "dc1394_control.h"
+#include "dc1394_register.h"
 #include "dc1394_internal.h"
 #include "config.h"
 
