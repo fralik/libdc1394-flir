@@ -50,6 +50,19 @@
 #define RESP_SONY_HACK              0x000fU
 
 /* Internal functions required by two different source files */
+
+int
+GetCameraControlRegister(dc1394camera_t *camera,
+			 octlet_t offset, quadlet_t *value);
+
+int
+GetCameraAdvControlRegister(dc1394camera_t *camera,
+			    octlet_t offset, quadlet_t *value);
+
+int
+SetCameraAdvControlRegister(dc1394camera_t *camera,
+			    octlet_t offset, quadlet_t value);
+
 int
 _dc1394_dma_basic_setup(int channel, int num_dma_buffers,
                         dc1394capture_t *capture);

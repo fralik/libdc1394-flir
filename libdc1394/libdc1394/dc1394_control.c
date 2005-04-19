@@ -521,7 +521,7 @@ GetCameraControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t *val
   if (camera == NULL)
     return -1;
   
-  if (camera->ccr_base == 0) {
+  if (camera->command_registers_base == 0) {
     if ( dc1394_get_camera_info(camera) != DC1394_SUCCESS )
       return -1;
   }
@@ -529,7 +529,7 @@ GetCameraControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t *val
   /* retry a few times if necessary (addition by PDJ) */
   while(retry--) {
     retval= raw1394_read(camera->handle, 0xffc0 | camera->node,
-			 camera->ccr_base + offset, 4, value);
+			 camera->command_registers_base + offset, 4, value);
 
 #ifdef LIBRAW1394_OLD
     if (retval >= 0) {
@@ -579,7 +579,7 @@ SetCameraControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t valu
   if (camera == NULL)
     return -1;
   
-  if (camera->ccr_base == 0) {
+  if (camera->command_registers_base == 0) {
     if ( dc1394_get_camera_info(camera) != DC1394_SUCCESS )
       return -1;
   }
@@ -590,7 +590,7 @@ SetCameraControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t valu
   /* retry a few times if necessary */
   while(retry--) {
     retval= raw1394_write(camera->handle, 0xffc0 | camera->node,
-			  camera->ccr_base + offset, 4, &value);
+			  camera->command_registers_base + offset, 4, &value);
     
 #ifdef LIBRAW1394_OLD
     if (retval >= 0) {
@@ -608,6 +608,105 @@ SetCameraControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t valu
       }
       
             
+    }
+#else
+    if (!retval || (errno != EAGAIN)) {
+      return retval;
+    }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
+    
+    usleep(SLOW_DOWN);
+  }
+  
+  return retval;
+}
+
+/********************************************************************************/
+/* Get Advanced Features Registers                                              */
+/********************************************************************************/
+int
+GetCameraAdvControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
+{
+  int retval, retry= MAX_RETRIES;
+#ifdef LIBRAW1394_OLD
+  int ack=0;
+  int rcode=0;
+#endif
+  
+  /* retry a few times if necessary (addition by PDJ) */
+  while(retry--) {
+    retval= raw1394_read(camera->handle, 0xffc0 | camera->node, camera->advanced_features_csr + offset, 4, value);
+    
+    /* printf(" Get Adv debug : base = %Lux, offset = %Lux, base + offset = %Lux\n",camera->adv_csr,offset, camera->adv_csr+offset);*/
+    
+#ifdef LIBRAW1394_OLD
+    if (retval >= 0) {
+      ack= retval >> 16;
+      rcode= retval & 0xffff;
+      
+#ifdef SHOW_ERRORS
+      printf("CCR read ack of %x rcode of %x\n", ack, rcode);
+#endif
+      
+      if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL)) && (rcode == RESP_COMPLETE) ) { 
+	/* conditionally byte swap the value */
+	*value= ntohl(*value); 
+	return 0;
+      }
+      
+    }
+#else
+    if (!retval) {
+      /* conditionally byte swap the value (addition by PDJ) */
+      *value= ntohl(*value);  
+      return retval; 
+    }
+    else if (errno != EAGAIN) {
+      return retval;
+    }
+#endif /* LIBRAW1394_VERSION <= 0.8.2 */
+    
+    usleep(SLOW_DOWN);
+  }
+  
+  *value= ntohl(*value);
+  return retval;
+}
+
+
+/********************************************************************************/
+/* Set Advanced Features Registers                                              */
+/********************************************************************************/
+int
+SetCameraAdvControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
+{
+  int retval, retry= MAX_RETRIES;
+#ifdef LIBRAW1394_OLD
+  int ack=0;
+  int rcode=0;
+#endif
+
+  /* conditionally byte swap the value (addition by PDJ) */
+  value= htonl(value);
+  
+  /* retry a few times if necessary */
+  while(retry--) {
+    retval= raw1394_write(camera->handle, 0xffc0 | camera->node, camera->advanced_features_csr + offset, 4, &value);
+    /* printf(" Set Adv debug : base = %Lux, offset = %Lux, base + offset = %Lux\n",camera->adv_csr,offset, camera->adv_csr+offset); */
+#ifdef LIBRAW1394_OLD
+    if (retval >= 0) {
+      ack= retval >> 16;
+      rcode= retval & 0xffff;
+      
+#ifdef SHOW_ERRORS
+      printf("CCR write ack of %x rcode of %x\n", ack, rcode);
+#endif
+      
+      if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL) || (ack == ACK_COMPLETE)) &&
+	   ((rcode == RESP_COMPLETE) || (rcode == RESP_SONY_HACK)) ) {
+	return 0;
+      }
+      
     }
 #else
     if (!retval || (errno != EAGAIN)) {
@@ -707,7 +806,6 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *o
   return DC1394_FAILURE;
 
 }
-
 
 /**********************/
 /* External functions */
@@ -1081,7 +1179,7 @@ dc1394_print_camera_info(dc1394camera_t *camera)
   value[1]= (camera->euid_64 >>32) & 0xffffffff;
   printf("CAMERA INFO\n===============\n");
   printf("Node: %x\n", camera->node);
-  printf("CCR_Offset: %Lux\n", camera->ccr_offset);
+  printf("CCR_Offset: %Lux\n", camera->command_registers_base);
   //L added by tim evers 
   printf("UID: 0x%08x%08x\n", value[1], value[0]);
   printf("Vendor: %s\tModel: %s\n\n", camera->vendor, camera->model);
@@ -1096,7 +1194,6 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   octlet_t offset;
   quadlet_t value[2], quadval;
   unsigned int count;
-  octlet_t ud_offset, udd_offset;
   
   if ( (retval= dc1394_is_camera(camera, &iscamera)) !=
        DC1394_SUCCESS ) {
@@ -1126,30 +1223,32 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   /* get the unit_directory offset */
   offset= ROM_ROOT_DIRECTORY;
   if (GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
-      return DC1394_FAILURE;
+    return DC1394_FAILURE;
   }
-  ud_offset=(quadval & 0xFFFFFFUL)*4+offset;
+  camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset+CONFIG_ROM_BASE;
 
-  
   /* get the unit_dependent_directory offset */
-  offset= ud_offset;
+  offset= camera->unit_directory;
   if (GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval)!=DC1394_SUCCESS) {
     return DC1394_FAILURE;
   }
-  udd_offset=(quadval & 0xFFFFFFUL)*4+offset;
+  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset+CONFIG_ROM_BASE;
   
   /* now get the command_regs_base */
-  offset= udd_offset;
+  offset= camera->unit_dependent_directory;
   if (GetConfigROMTaggedRegister(camera, 0x40, &offset, &quadval)!=DC1394_SUCCESS) {
     return DC1394_FAILURE;
   }
+  camera->command_registers_base= (octlet_t)(quadval & 0xFFFFFFUL)*4 + CONFIG_ROM_BASE;
 
-  camera->ccr_offset= (octlet_t)(quadval & 0xFFFFFFUL)*4;
-  if (camera != NULL)
-    camera->ccr_base = CONFIG_ROM_BASE + camera->ccr_offset;
-
+  /* get advanced features CSR */
+  if(GetCameraControlRegister(camera,REG_CAMERA_ADV_FEATURE_INQ, &quadval)){
+    return DC1394_FAILURE;
+  }
+  camera->advanced_features_csr= (octlet_t)(quadval & 0xFFFFFFUL)*4 + CONFIG_ROM_BASE;
+  
   /* get the vendor_name_leaf offset (optional) */
-  offset= udd_offset;
+  offset= camera->unit_dependent_directory;
   camera->vendor[0] = '\0';
   if (GetConfigROMTaggedRegister(camera, 0x81, &offset, &quadval)==DC1394_SUCCESS) {
     offset=(quadval & 0xFFFFFFUL)*4+offset;
@@ -1182,7 +1281,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   }
   
   /* get the model_name_leaf offset (optional) */
-  offset= udd_offset;
+  offset= camera->unit_dependent_directory;
   camera->model[0] = '\0';
   if (GetConfigROMTaggedRegister(camera, 0x82, &offset, &quadval)==DC1394_SUCCESS) {
     offset=(quadval & 0xFFFFFFUL)*4+offset;
@@ -1312,25 +1411,20 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_t *feature)
     feature->manual_capable= DC1394_FALSE;
     break;
   default:
-    feature->polarity_capable= 0;
-    feature->trigger_mode= 0;
-    feature->one_push= (value & 0x10000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->auto_capable=
-      (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->manual_capable=
-      (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
+    feature->polarity_capable = 0;
+    feature->trigger_mode     = 0;
+    feature->one_push         = (value & 0x10000000UL) ? DC1394_TRUE : DC1394_FALSE;
+    feature->auto_capable     = (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
+    feature->manual_capable   = (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
     
     feature->min= (value & 0xFFF000UL) >> 12;
     feature->max= (value & 0xFFFUL);
     break;
   }
   
-  feature->absolute_capable=
-    (value & 0x40000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  feature->readout_capable=
-    (value & 0x08000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  feature->on_off_capable=
-    (value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  feature->absolute_capable = (value & 0x40000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  feature->readout_capable  = (value & 0x08000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  feature->on_off_capable   = (value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
   
   // get current values
   updated_fid= orig_fid;

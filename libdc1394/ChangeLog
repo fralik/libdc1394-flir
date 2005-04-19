@@ -520,3 +520,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-04-06 Damien <ddouxchamps@users.sf.net>
     * fixed bandwidth usage estimation
+	
+2005-04-19 Damien <ddouxchamps@users.sf.net>
+    * added AVT advanced functions and cleaned up the registers/offsets detection

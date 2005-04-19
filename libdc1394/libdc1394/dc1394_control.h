@@ -272,15 +272,17 @@ typedef struct __dc1394_camera
   nodeid_t           node;
   int                port;
   u_int64_t          euid_64;
+  octlet_t           command_registers_base;
+  octlet_t           unit_directory;
+  octlet_t           unit_dependent_directory;
+  octlet_t           advanced_features_csr;
+  octlet_t           format7_csr[NUM_MODE_FORMAT7];
   int                sw_version;
   char               vendor[MAX_CHARS + 1];
   char               model[MAX_CHARS + 1];
   dc1394bool_t       bmode_capable;
   dc1394bool_t       one_shot_capable;
   dc1394bool_t       multi_shot_capable;
-  octlet_t           ccr_offset;
-  octlet_t           ccr_base;
-  octlet_t           format7_csr[NUM_MODE_FORMAT7];
   
   // some current values
   int                format;
