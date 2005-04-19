@@ -527,3 +527,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-04-19 Damien <ddouxchamps@users.sf.net>
     * more cleaning and reordering. files dc1394_offsets.h and dc1394_register.c/h
       created to avoid a big mess in dc1394_control.c.
+	
+2005-04-19 Damien <ddouxchamps@users.sf.net>
+    * fixed big addressing problem

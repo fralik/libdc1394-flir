@@ -36,7 +36,7 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 
   /* retry a few times if necessary (addition by PDJ) */
   while(retry--)  {
-    retval= raw1394_read(camera->handle, 0xffc0 | camera->node, CONFIG_ROM_BASE + offset, 4, value);
+    retval= raw1394_read(camera->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, value);
     
 #ifdef LIBRAW1394_OLD
     if (retval >= 0) {
@@ -87,7 +87,7 @@ SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
   
   /* retry a few times if necessary */
   while(retry--) {
-    retval= raw1394_write(camera->handle, 0xffc0 | camera->node, offset, 4, &value);
+    retval= raw1394_write(camera->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, &value);
     /* printf(" Set Adv debug : base = %Lux, offset = %Lux, base + offset = %Lux\n",camera->adv_csr,offset, camera->adv_csr+offset); */
 #ifdef LIBRAW1394_OLD
     if (retval >= 0) {
@@ -253,9 +253,10 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *o
 }
 
 int
-QueryFormat7CSROffset(dc1394camera_t *camera, int mode, quadlet_t *value)
+QueryFormat7CSROffset(dc1394camera_t *camera, int mode, octlet_t *offset)
 {
   int retval;
+  quadlet_t temp;
 
   if (camera == NULL) {
     return DC1394_FAILURE;
@@ -266,8 +267,8 @@ QueryFormat7CSROffset(dc1394camera_t *camera, int mode, quadlet_t *value)
   }
   
   mode-= MODE_FORMAT7_MIN;
-  retval=GetCameraControlRegister(camera, REG_CAMERA_V_CSR_INQ_BASE + (mode * 0x04U), value);
-  *value+= CONFIG_ROM_BASE;
+  retval=GetCameraControlRegister(camera, REG_CAMERA_V_CSR_INQ_BASE + (mode * 0x04U), &temp);
+  *offset=temp;
 
   return retval;
 }

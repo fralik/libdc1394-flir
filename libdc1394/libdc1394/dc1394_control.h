@@ -280,11 +280,11 @@ typedef struct __dc1394_camera
   nodeid_t           node;
   int                port;
   u_int64_t          euid_64;
-  quadlet_t          command_registers_base;
-  quadlet_t          unit_directory;
-  quadlet_t          unit_dependent_directory;
-  quadlet_t          advanced_features_csr;
-  quadlet_t          format7_csr[NUM_MODE_FORMAT7];
+  octlet_t           command_registers_base;
+  octlet_t           unit_directory;
+  octlet_t           unit_dependent_directory;
+  octlet_t           advanced_features_csr;
+  octlet_t           format7_csr[NUM_MODE_FORMAT7];
   int                sw_version;
   char               vendor[MAX_CHARS + 1];
   char               model[MAX_CHARS + 1];

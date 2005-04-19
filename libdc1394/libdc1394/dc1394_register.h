@@ -69,6 +69,6 @@ int
 GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *offset, quadlet_t *value);
 
 int
-QueryFormat7CSROffset(dc1394camera_t *camera, int mode, quadlet_t *value);
+QueryFormat7CSROffset(dc1394camera_t *camera, int mode, octlet_t *offset);
 
 #endif /* __DC1394_REGISTER_H__ */

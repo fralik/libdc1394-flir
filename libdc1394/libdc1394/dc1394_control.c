@@ -861,27 +861,27 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   if (GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval)!=DC1394_SUCCESS) {
     return DC1394_FAILURE;
   }
-  camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset+CONFIG_ROM_BASE;
+  camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
 
   /* get the unit_dependent_directory offset */
   offset= camera->unit_directory;
   if (GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval)!=DC1394_SUCCESS) {
     return DC1394_FAILURE;
   }
-  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset+CONFIG_ROM_BASE;
+  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
   
   /* now get the command_regs_base */
   offset= camera->unit_dependent_directory;
   if (GetConfigROMTaggedRegister(camera, 0x40, &offset, &quadval)!=DC1394_SUCCESS) {
     return DC1394_FAILURE;
   }
-  camera->command_registers_base= (octlet_t)(quadval & 0xFFFFFFUL)*4 + CONFIG_ROM_BASE;
+  camera->command_registers_base= (octlet_t)(quadval & 0xFFFFFFUL)*4;
 
   /* get advanced features CSR */
   if(GetCameraControlRegister(camera,REG_CAMERA_ADV_FEATURE_INQ, &quadval)){
     return DC1394_FAILURE;
   }
-  camera->advanced_features_csr= (octlet_t)(quadval & 0xFFFFFFUL)*4 + CONFIG_ROM_BASE;
+  camera->advanced_features_csr= (octlet_t)(quadval & 0xFFFFFFUL)*4;
   
   /* get the vendor_name_leaf offset (optional) */
   offset= camera->unit_dependent_directory;
