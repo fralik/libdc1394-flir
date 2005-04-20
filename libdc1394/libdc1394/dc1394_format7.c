@@ -196,7 +196,7 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
     printf("(%s) Unable to set channel %d and speed %d!\n",__FILE__,channel,speed);
     return DC1394_FAILURE;
   }
-  
+
   if (dc1394_set_video_format(camera,FORMAT_SCALABLE_IMAGE_SIZE)!=DC1394_SUCCESS) {
     printf("(%s) Unable to set video format %d!\n",__FILE__, FORMAT_SCALABLE_IMAGE_SIZE);
     return DC1394_FAILURE;
@@ -544,11 +544,11 @@ dc1394_query_format7_image_position(dc1394camera_t *camera,
   if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) ) {
     return DC1394_FAILURE;
   }
-  
+
   retval=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_IMAGE_POSITION, &value);
   *left_position = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
   *top_position= (unsigned int) ( value & 0x0000FFFFUL );       
-  
+
   return retval;
 }
 
@@ -685,7 +685,6 @@ dc1394_query_format7_byte_per_packet(dc1394camera_t *camera,
     printf("(%s): BYTES_PER_PACKET is zero. This should not happen.\n", __FILE__);
     return DC1394_FAILURE;
   }
-  
   return retval;
 }
 

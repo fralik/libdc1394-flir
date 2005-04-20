@@ -55,12 +55,20 @@ SetCameraAdvControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t v
 /********************************************************************************/
 /* Get/Set Format_7 Registers                                                   */
 /********************************************************************************/
-
 int
 GetCameraFormat7Register(dc1394camera_t *camera, unsigned int mode, octlet_t offset, quadlet_t *value);
 
 int
 SetCameraFormat7Register(dc1394camera_t *camera, unsigned int mode, octlet_t offset, quadlet_t value);
+
+/********************************************************************************/
+/* Get/Set Absolute Control Registers                                           */
+/********************************************************************************/
+int
+GetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, octlet_t offset, quadlet_t *value);
+
+int
+SetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, octlet_t offset, quadlet_t value);
 
 /********************************************************************************/
 /* Find a register with a specific tag                                          */
@@ -69,6 +77,6 @@ int
 GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *offset, quadlet_t *value);
 
 int
-QueryFormat7CSROffset(dc1394camera_t *camera, int mode, octlet_t *offset);
+QueryFormat7CSROffset(dc1394camera_t *camera, unsigned int mode, octlet_t *offset);
 
 #endif /* __DC1394_REGISTER_H__ */

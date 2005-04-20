@@ -530,3 +530,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-04-19 Damien <ddouxchamps@users.sf.net>
     * fixed big addressing problem
+	
+2005-04-20 Damien <ddouxchamps@users.sf.net>
+    * after the latest updates everything works except RAW capture.

@@ -132,12 +132,6 @@ _dc1394_basic_setup(dc1394camera_t *camera,
 {
   dc1394bool_t is_iso_on= DC1394_FALSE;
 
-/*    if (dc1394_init_camera(handle,node) != DC1394_SUCCESS) 
-    {
-        printf("(%s) Unable to initialize camera!\n", __FILE__);
-        return DC1394_FAILURE;
-    }
-*/
   /* Addition by Alexis Weiland: Certain cameras start sending iso
      data when they are reset, so we need to stop them so we can set
      up the camera properly.  Setting camera parameters "on the fly"
@@ -148,12 +142,10 @@ _dc1394_basic_setup(dc1394camera_t *camera,
     return DC1394_FAILURE;
   
   if (is_iso_on) {
-    
     if (dc1394_stop_iso_transmission(camera) != DC1394_SUCCESS) {
       printf("(%s) Unable to stop iso transmission!\n", __FILE__);
       return DC1394_FAILURE;
     }
-    
   }
 
   if (dc1394_set_iso_channel_and_speed(camera,channel,speed) != DC1394_SUCCESS)  {
@@ -187,7 +179,8 @@ _dc1394_basic_setup(dc1394camera_t *camera,
   capture->frame_rate= frame_rate;
   capture->channel= channel;
   capture->quadlets_per_packet= _dc1394_get_quadlets_per_packet(format, mode, frame_rate);
-  capture->handle=raw1394_new_handle();
+  capture->handle=dc1394_create_handle(camera->port);
+  fprintf(stderr,"handle: 0x%x\n",capture->handle);
 
   if (capture->quadlets_per_packet < 0) {
     return DC1394_FAILURE;
@@ -357,11 +350,14 @@ dc1394_release_camera(dc1394capture_t *capture)
 {
   //dc1394_unset_one_shot(camera);
   
+  fprintf(stderr,"a\n");
   if (capture->capture_buffer != NULL) {
     free(capture->capture_buffer);
   }
-
-  raw1394_destroy_handle(capture->handle);
+  fprintf(stderr,"b\n");
+  fprintf(stderr,"handle: 0x%x\n",capture->handle);
+  dc1394_destroy_handle(capture->handle);
+  fprintf(stderr,"c\n");
   
   return DC1394_SUCCESS;
 }
@@ -414,10 +410,12 @@ dc1394_multi_capture(dc1394capture_t *cams, int num)
       return DC1394_FAILURE;
     }
 
+    fprintf(stderr,"handle: 0x%x\n",cams[i].handle);
     _dc1394_frame_captured[cams[i].channel] = 0;
     _dc1394_quadlets_per_frame[cams[i].channel] = cams[i].quadlets_per_frame;
     _dc1394_quadlets_per_packet[cams[i].channel] = cams[i].quadlets_per_packet;
 
+    fprintf(stderr,"handle: 0x%x\n",cams[i].handle);
     if (raw1394_start_iso_rcv(cams[i].handle,cams[i].channel) < 0)  {
       /* error handling- for some reason something didn't work, 
 	 so we have to reset everything....*/

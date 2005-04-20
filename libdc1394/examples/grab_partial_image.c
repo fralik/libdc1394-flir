@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.3  2005/04/20 08:54:02  ddouxchamps
+**  another big update. everything seem to work, except RAW capture.
+**
 **  Revision 1.4.2.2  2005/04/06 05:52:33  ddouxchamps
 **  fixed bandwidth usage estimation and missing strings
 **
@@ -127,8 +130,14 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  setup capture for format 7
    *-----------------------------------------------------------------------*/
+
   camera.handle=handle;
   camera.node=camera_nodes[0];
+
+  if( dc1394_get_camera_info(&camera) != DC1394_SUCCESS) {
+    fprintf(stderr,"could not get basic info\n");
+  }
+    
   if( dc1394_setup_format7_capture(&camera,
                                    0, /* channel */
                                    MODE_FORMAT7_0, 
@@ -138,7 +147,7 @@ int main(int argc, char *argv[])
                                    200, 100,  /* width, height */
                                    &capture) != DC1394_SUCCESS)
   {
-    fprintf( stderr,"unable to setup camera in format 7 mode 0-\n"
+    fprintf( stderr,"unable to setup camera in format 7 mode 0 -\n"
              "check line %d of %s to make sure\n"
              "that the video mode,framerate and format are\n"
              "supported by your camera\n",
@@ -215,7 +224,9 @@ int main(int argc, char *argv[])
     {
       fprintf( stderr, "unable to capture a frame\n");
       dc1394_release_camera(&capture);
+      fprintf(stderr,"1\n");
       dc1394_destroy_handle(handle);
+      fprintf(stderr,"2\n");
       exit(1);
     }
 

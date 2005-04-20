@@ -291,7 +291,8 @@ typedef struct __dc1394_camera
   dc1394bool_t       bmode_capable;
   dc1394bool_t       one_shot_capable;
   dc1394bool_t       multi_shot_capable;
-  
+  dc1394bool_t       adv_features_capable;
+
   // some current values
   int                format;
   int                mode;

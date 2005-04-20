@@ -21,206 +21,41 @@
 #include "dc1394_control.h"
 #include "dc1394_offsets.h"
 #include "dc1394_internal.h"
+#include "dc1394_register.h"
 
-#define FEATURE_TO_ABS_VALUE_OFFSET(feature, offset)                  \
-                                                                      \
-    if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) )         \
-    {                                                                 \
-	return DC1394_FAILURE;                                        \
-    }                                                                 \
-    else if (feature < FEATURE_ZOOM)                                  \
-    {                                                                 \
-	offset= REG_CAMERA_FEATURE_ABS_HI_BASE;                       \
-        feature-= FEATURE_MIN;                                        \
-    }                                                                 \
-    else                                                              \
-    {                                                                 \
-	offset= REG_CAMERA_FEATURE_ABS_LO_BASE;                       \
-	feature-= FEATURE_ZOOM;                                       \
-                                                                      \
-	if (feature >= FEATURE_CAPTURE_SIZE)                          \
-	{                                                             \
-	    feature+= 12;                                             \
-	}                                                             \
-                                                                      \
-    }                                                                 \
-                                                                      \
-    offset+= feature * 0x04U;
-
-/**********************/ 
-/* Internal functions */
-/**********************/
-
-static int
-QueryAbsoluteCSROffset(dc1394camera_t *camera,
-		       int feature, quadlet_t *value)
-{
-  int retval;
-  int offset;
-  
-  FEATURE_TO_ABS_VALUE_OFFSET(feature, offset);
-    
-  retval= GetCameraControlRegister(camera, offset, value);
-  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-}
-
-static int
-GetCameraAbsoluteRegister(dc1394camera_t *camera,
-			  int feature, octlet_t offset, quadlet_t *value)
-{
-  int retval, retry= MAX_RETRIES;
-  quadlet_t csr;
-#ifdef LIBRAW1394_OLD
-  int ack;
-  int rcode;
-#endif
-
-  
-  if (QueryAbsoluteCSROffset(camera, feature, &csr) != DC1394_SUCCESS) {
-    return DC1394_FAILURE;
-  }
-  
-  csr*= 0x04UL;
-  
-  /* retry a few times if necessary (addition by PDJ) */
-  while(retry--) {
-    retval= raw1394_read(camera->handle, 0xffc0 | camera->node,
-			 CONFIG_ROM_BASE + csr + offset, 4, value);
-    
-#ifdef LIBRAW1394_OLD
-    if (retval >= 0) {
-      ack= retval >> 16;
-      rcode= retval & 0xffff;
-      
-#ifdef SHOW_ERRORS
-      printf("Absolute reg read ack of %x rcode of %x\n", ack, rcode);
-#endif
-      
-      if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL)) &&
-	   (rcode == RESP_COMPLETE) ) { 
-	/* conditionally byte swap the value */
-	*value= ntohl(*value); 
-	return DC1394_SUCCESS;
-      }
-      
-    }
-#else
-    if (!retval) {
-      /* conditionally byte swap the value */
-      *value= ntohl(*value);
-      return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-    }
-    if (errno != EAGAIN) {
-      return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-    }
-#endif /* LIBRAW1394_VERSION <= 0.8.2 */
-
-    usleep(SLOW_DOWN);
-  }
-  
-  *value = ntohl(*value);
-  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-}
-
-static int
-SetCameraAbsoluteRegister(dc1394camera_t *camera,
-			  int feature, octlet_t offset, quadlet_t* value)
-{
-  int retval, retry= MAX_RETRIES;
-  quadlet_t csr;
-#ifdef LIBRAW1394_OLD
-  int ack, rcode;
-#endif
-  
-
-  if (QueryAbsoluteCSROffset(camera, feature, &csr)!=DC1394_SUCCESS) {
-    return DC1394_FAILURE;
-  }
-  csr*= 0x04UL;
-  
-  /* conditionally byte swap the value (addition by PDJ) */
-  *value= htonl(*value);
-  
-  /* retry a few times if necessary (addition by PDJ) */
-  while(retry--) {
-    retval= raw1394_write(camera->handle, 0xffc0 | camera->node,
-			  CONFIG_ROM_BASE + offset + csr, 4, value);
-    
-#ifdef LIBRAW1394_OLD
-    if (retval >= 0) {
-      ack= retval >> 16;
-      rcode= retval & 0xffff;
-      
-#ifdef SHOW_ERRORS
-      printf("Absolute reg write ack of %x rcode of %x\n", ack, rcode);
-#endif
-      
-      if ( ((ack == ACK_PENDING) || (ack == ACK_LOCAL) ||
-	    (ack == ACK_COMPLETE)) &&
-	   ((rcode == RESP_COMPLETE) || (rcode == RESP_SONY_HACK)) )  {
-	return DC1394_SUCCESS;
-      }
-      
-      
-    }
-#else
-    if (!retval || (errno != EAGAIN)) {
-      return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-    }
-#endif /* LIBRAW1394_VERSION <= 0.8.2 */
-    
-    usleep(SLOW_DOWN);
-  }
-  return (retval ? DC1394_FAILURE : DC1394_SUCCESS);
-  
-}
-
-/**************************
- *   EXTERNAL FUNCTIONS   *
- **************************/
 
 int
-dc1394_query_absolute_feature_min_max(dc1394camera_t *camera,
-				      unsigned int feature, float *min, float *max)
+dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, unsigned int feature, float *min, float *max)
 {
-  int retval;
-  
   if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
   
-  retval= GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MAX, (quadlet_t*)max);
-  retval= GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MIN, (quadlet_t*)min);
+  if (GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MAX, (quadlet_t*)max) != DC1394_SUCCESS)
+    return DC1394_FAILURE;
   
-  
-  return retval;
+  return GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MIN, (quadlet_t*)min);
 }
 
 
 int
-dc1394_query_absolute_feature_value(dc1394camera_t *camera,
-				    int feature, float *value)
+dc1394_query_absolute_feature_value(dc1394camera_t *camera, int feature, float *value)
 {
-  int retval;
-  
   if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
-  retval= GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t*)value);
-  
-  return retval;
+  return GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t*)value);
 }
 
 
 int
-dc1394_set_absolute_feature_value(dc1394camera_t *camera,
-				  int feature, float value)
+dc1394_set_absolute_feature_value(dc1394camera_t *camera, int feature, float value)
 {
-  if (SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE,
-				(quadlet_t*)(&value)) != DC1394_SUCCESS) {
-    printf("(%s) Absolute value setting failure \n", __FILE__);
+  if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
-  return DC1394_SUCCESS;
+  
+  return SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t)((quadlet_t*)(&value)));
+
 }
  
