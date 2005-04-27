@@ -23,7 +23,6 @@
 #include "dc1394_internal.h"
 #include "dc1394_offsets.h"
 #include "config.h"
-#include "dc1394_register.h"
 
 #define FEATURE_TO_ABS_VALUE_OFFSET(feature, offset)                  \
                                                                       \

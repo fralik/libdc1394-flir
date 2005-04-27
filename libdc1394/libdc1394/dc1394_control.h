@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <libraw1394/raw1394.h>
+#include "dc1394_control.h"
  
 /* Enumeration of data speeds */
 enum {

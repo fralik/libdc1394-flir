@@ -180,7 +180,7 @@ _dc1394_basic_setup(dc1394camera_t *camera,
   capture->channel= channel;
   capture->quadlets_per_packet= _dc1394_get_quadlets_per_packet(format, mode, frame_rate);
   capture->handle=dc1394_create_handle(camera->port);
-  fprintf(stderr,"handle: 0x%x\n",capture->handle);
+  fprintf(stderr,"handle: 0x%x\n",(unsigned int)capture->handle);
 
   if (capture->quadlets_per_packet < 0) {
     return DC1394_FAILURE;
@@ -355,7 +355,7 @@ dc1394_release_camera(dc1394capture_t *capture)
     free(capture->capture_buffer);
   }
   fprintf(stderr,"b\n");
-  fprintf(stderr,"handle: 0x%x\n",capture->handle);
+  fprintf(stderr,"handle: 0x%x\n",(unsigned int)capture->handle);
   dc1394_destroy_handle(capture->handle);
   fprintf(stderr,"c\n");
   
@@ -410,12 +410,12 @@ dc1394_multi_capture(dc1394capture_t *cams, int num)
       return DC1394_FAILURE;
     }
 
-    fprintf(stderr,"handle: 0x%x\n",cams[i].handle);
+    fprintf(stderr,"handle: 0x%x\n",(unsigned int)cams[i].handle);
     _dc1394_frame_captured[cams[i].channel] = 0;
     _dc1394_quadlets_per_frame[cams[i].channel] = cams[i].quadlets_per_frame;
     _dc1394_quadlets_per_packet[cams[i].channel] = cams[i].quadlets_per_packet;
 
-    fprintf(stderr,"handle: 0x%x\n",cams[i].handle);
+    fprintf(stderr,"handle: 0x%x\n",(unsigned int)cams[i].handle);
     if (raw1394_start_iso_rcv(cams[i].handle,cams[i].channel) < 0)  {
       /* error handling- for some reason something didn't work, 
 	 so we have to reset everything....*/

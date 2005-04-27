@@ -533,3 +533,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-04-20 Damien <ddouxchamps@users.sf.net>
     * after the latest updates everything works except RAW capture.
+
+2005-04-27 Damien <ddouxchamps@users.sf.net>
+    * updated error checking in AVT functions
+    * separated private functions in dc1394_internal.c
+    * added "_AVT" in the AVT offset names to avoid conflicts
+

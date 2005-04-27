@@ -23,6 +23,8 @@
 #ifndef __DC1394_INTERNAL_H__
 #define __DC1394_INTERNAL_H__
 
+#include "dc1394_control.h"
+#include "dc1394_offsets.h"
 #include <libraw1394/raw1394.h>
 
 /* Definitions which application developers shouldn't care about */
@@ -48,10 +50,63 @@
 #define RESP_COMPLETE               0x0000U
 #define RESP_SONY_HACK              0x000fU
 
+#define FEATURE_TO_VALUE_OFFSET(feature, offset)                      \
+                                                                      \
+    if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {       \
+      return DC1394_FAILURE;                                          \
+    }                                                                 \
+    else if (feature < FEATURE_ZOOM) {                                \
+      offset= REG_CAMERA_FEATURE_HI_BASE;                             \
+      feature-= FEATURE_MIN;                                          \
+    }                                                                 \
+    else {                                                            \
+      offset= REG_CAMERA_FEATURE_LO_BASE;                             \
+      if (feature >= FEATURE_CAPTURE_SIZE) {                          \
+        feature+= 12;                                                 \
+      }                                                               \
+      feature-= FEATURE_ZOOM;                                         \
+    }                                                                 \
+    offset+= feature * 0x04U;
+
+#define FEATURE_TO_INQUIRY_OFFSET(feature, offset)                    \
+                                                                      \
+    if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {       \
+      return DC1394_FAILURE;                                          \
+    }                                                                 \
+    else if (feature < FEATURE_ZOOM) {                                \
+      offset= REG_CAMERA_FEATURE_HI_BASE_INQ;                         \
+      feature-= FEATURE_MIN;                                          \
+    }                                                                 \
+    else {                                                            \
+      offset= REG_CAMERA_FEATURE_LO_BASE_INQ;                         \
+      if (feature >= FEATURE_CAPTURE_SIZE) {                          \
+        feature+= 12;                                                 \
+      }                                                               \
+      feature-= FEATURE_ZOOM;                                         \
+    }                                                                 \
+    offset+= feature * 0x04U;
+
 /* Internal functions required by two different source files */
 
 int
-_dc1394_dma_basic_setup(int channel, int num_dma_buffers,
-                        dc1394capture_t *capture);
-										
+_dc1394_dma_basic_setup(int channel, int num_dma_buffers, dc1394capture_t *capture);
+			
+int
+_dc1394_get_wh_from_format(int format, int mode, int *w, int *h);
+		
+int 
+_dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate);
+
+int
+_dc1394_quadlets_from_format(int format, int mode);
+		
+int
+IsFeatureBitSet(quadlet_t value, unsigned int feature);
+
+int 
+SetFeatureValue(dc1394camera_t *camera, unsigned int feature, unsigned int value);
+		
+int
+GetFeatureValue(dc1394camera_t *camera, unsigned int feature, unsigned int *value);
+	
 #endif /* _DC1394_INTERNAL_H */

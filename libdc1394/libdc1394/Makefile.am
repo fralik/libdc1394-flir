@@ -15,6 +15,7 @@ libdc1394_control_la_SOURCES =  \
 	dc1394_absolute.c	\
 	dc1394_register.c       \
 	dc1394_register.h       \
+	dc1394_internal.c       \
 	dc1394_internal.h       \
 	kernel-video1394.h
 
