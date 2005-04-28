@@ -52,18 +52,6 @@ int *_dc1394_num_using_fd = NULL;
 /* Internal functions */
 /**********************/
 
-/*****************************************/
-/* Functions defined in dc1394_control.c */
-/*****************************************/
-extern int
-_dc1394_get_wh_from_format(int format, int mode, int *w, int *h);
-
-extern int 
-_dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate); 
-
-extern int 
-_dc1394_quadlets_from_format(int format, int mode);
-
 /**************************************************************
  _dc1394_video_iso_handler
 
@@ -114,7 +102,7 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
     
   }
   
-  return 1;
+  return DC1394_SUCCESS;
 }
 
 /************************************************************
@@ -130,6 +118,7 @@ _dc1394_basic_setup(dc1394camera_t *camera,
                     int speed, int frame_rate, 
                     dc1394capture_t * capture)
 {
+  int err;
   dc1394bool_t is_iso_on= DC1394_FALSE;
 
   /* Addition by Alexis Weiland: Certain cameras start sending iso
@@ -138,41 +127,30 @@ _dc1394_basic_setup(dc1394camera_t *camera,
      while they are sending data doesn't seem to work.  I don't think
      this will cause any problems for other cameras. */
   /* Addition by Dan Dennedy: Restart iso transmission later if it is on */
-  if (dc1394_get_iso_status(camera, &is_iso_on) != DC1394_SUCCESS)
-    return DC1394_FAILURE;
+
+  err=dc1394_get_iso_status(camera, &is_iso_on);
+  DC1394_ERR_CHK(err,"Unable to get ISO status");
   
   if (is_iso_on) {
-    if (dc1394_stop_iso_transmission(camera) != DC1394_SUCCESS) {
-      printf("(%s) Unable to stop iso transmission!\n", __FILE__);
-      return DC1394_FAILURE;
-    }
-  }
-
-  if (dc1394_set_iso_channel_and_speed(camera,channel,speed) != DC1394_SUCCESS)  {
-    printf("(%s) Unable to set channel %d and speed %d!\n", __FILE__, channel,speed);
-    return DC1394_FAILURE;
-  }
-
-  if (dc1394_set_video_format(camera,format) != DC1394_SUCCESS) {
-    printf("(%s) Unable to set video format %d!\n", __FILE__, format);
-    return DC1394_FAILURE;
+    err=dc1394_stop_iso_transmission(camera);
+    DC1394_ERR_CHK(err,"Unable to pause iso transmission");
   }
   
-  if (dc1394_set_video_mode(camera,mode) != DC1394_SUCCESS) {
-    printf("(%s) Unable to set video mode %d!\n", __FILE__, mode);
-    return DC1394_FAILURE;
-  }
+  err=dc1394_set_iso_channel_and_speed(camera,channel,speed);
+  DC1394_ERR_CHK(err, "Unable to set channel and speed");
+  
+  err=dc1394_set_video_format(camera,format);
+  DC1394_ERR_CHK(err, "Unable to set video format %d!", format);
+  
+  err=dc1394_set_video_mode(camera,mode);
+  DC1394_ERR_CHK(err, "Unable to set video mode %d!", mode);
 
-  if (dc1394_set_video_framerate(camera,frame_rate) != DC1394_SUCCESS) {
-    printf("(%s) Unable to set framerate %d!\n", __FILE__, frame_rate);
-    return DC1394_FAILURE;
-  }
+  err=dc1394_set_video_framerate(camera,frame_rate);
+  DC1394_ERR_CHK(err, "Unable to set framerate %d!", frame_rate);
   
   if (is_iso_on) {
-    if (dc1394_start_iso_transmission(camera) != DC1394_SUCCESS) {
-      printf("(%s) Unable to restart iso transmission!\n", __FILE__);
-      return DC1394_FAILURE;
-    }  
+    err=dc1394_start_iso_transmission(camera);
+    DC1394_ERR_CHK(err,"Unable to restart iso transmission");
   }
 
   capture->node= camera->node;
@@ -192,12 +170,10 @@ _dc1394_basic_setup(dc1394camera_t *camera,
     return DC1394_FAILURE;
   }
   
-  if (_dc1394_get_wh_from_format(format,mode,&capture->frame_width,
-				 &capture->frame_height) != DC1394_SUCCESS)  {
-    return DC1394_FAILURE;
-  }
+  err=_dc1394_get_wh_from_format(format,mode,&capture->frame_width,&capture->frame_height);
+  DC1394_ERR_CHK(err," ");
   
-  return DC1394_SUCCESS;
+  return err;
 }
 
 
@@ -314,20 +290,21 @@ dc1394_setup_capture(dc1394camera_t *camera,
                      int speed, int frame_rate, 
                      dc1394capture_t *capture) 
 {
+  int err;
   if( format == FORMAT_SCALABLE_IMAGE_SIZE) {
-    return dc1394_setup_format7_capture( camera, channel, mode, speed,
+    err=dc1394_setup_format7_capture( camera, channel, mode, speed,
                                          QUERY_FROM_CAMERA, /*bytes_per_paket*/
                                          QUERY_FROM_CAMERA, /*left*/
                                          QUERY_FROM_CAMERA, /*top*/
                                          QUERY_FROM_CAMERA, /*width*/
                                          QUERY_FROM_CAMERA, /*height*/
-                                         capture);  
+                                         capture);
+    DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
   else {
-    if (_dc1394_basic_setup(camera, channel, format, mode, 
-                            speed,frame_rate, capture) != DC1394_SUCCESS) {
-      return DC1394_FAILURE;
-    }
+    err=_dc1394_basic_setup(camera, channel, format, mode, speed,frame_rate, capture);
+    DC1394_ERR_CHK(err,"Could not setup capture");
+    
     capture->capture_buffer= (int*)malloc(capture->quadlets_per_frame*4);
    
     if (capture->capture_buffer == NULL) {
@@ -336,7 +313,7 @@ dc1394_setup_capture(dc1394camera_t *camera,
     }
   }
   
-  return DC1394_SUCCESS;
+  return err;
 }
 
 /****************************************************
@@ -348,18 +325,16 @@ dc1394_setup_capture(dc1394camera_t *camera,
 int 
 dc1394_release_camera(dc1394capture_t *capture)
 {
+  int err;
   //dc1394_unset_one_shot(camera);
   
-  fprintf(stderr,"a\n");
   if (capture->capture_buffer != NULL) {
     free(capture->capture_buffer);
   }
-  fprintf(stderr,"b\n");
-  fprintf(stderr,"handle: 0x%x\n",(unsigned int)capture->handle);
-  dc1394_destroy_handle(capture->handle);
-  fprintf(stderr,"c\n");
+  err=dc1394_destroy_handle(capture->handle);
+  DC1394_ERR_CHK(err,"Could not destroy handle");
   
-  return DC1394_SUCCESS;
+  return err;
 }
 
 /*****************************************************
@@ -370,7 +345,11 @@ dc1394_release_camera(dc1394capture_t *capture)
 int 
 dc1394_single_capture(dc1394capture_t *capture)
 {
-  return dc1394_multi_capture(capture, 1);
+  int err;
+  err=dc1394_multi_capture(capture, 1);
+  DC1394_ERR_CHK(err,"Could not perform single capture");
+
+  return err;
 }
 
 /***************************************************************************
@@ -468,9 +447,9 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
 			 const char *dma_device_file,
 			 dc1394capture_t *capture)
 {
- 
+  int err;
   if( format == FORMAT_SCALABLE_IMAGE_SIZE) {
-    return dc1394_dma_setup_format7_capture( camera, channel, mode, speed,
+    err=dc1394_dma_setup_format7_capture( camera, channel, mode, speed,
 					     QUERY_FROM_CAMERA, /*bytes_per_paket*/
 					     QUERY_FROM_CAMERA, /*left*/
 					     QUERY_FROM_CAMERA, /*top*/
@@ -479,20 +458,22 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
 					     num_dma_buffers,
 					     drop_frames,
 					     dma_device_file,
-					     capture);  
+					     capture); 
+    DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
   else {
     capture->port = camera->port;
     capture->dma_device_file = dma_device_file;
     capture->drop_frames = drop_frames;
     
-    if (_dc1394_basic_setup(camera, channel, format, mode,
-			    speed,frame_rate, capture) != DC1394_SUCCESS) {
-      return DC1394_FAILURE;
-    }
+    err=_dc1394_basic_setup(camera, channel, format, mode, speed,frame_rate, capture);
+    DC1394_ERR_CHK(err,"Could not setup capture");
     
-    return _dc1394_dma_basic_setup (channel, num_dma_buffers, capture);
+    err=_dc1394_dma_basic_setup (channel, num_dma_buffers, capture);
+    DC1394_ERR_CHK(err,"Could not setup DMA capture");
   }
+
+  return err;
 }
 
 /*****************************************************
@@ -535,13 +516,10 @@ dc1394_dma_release_camera(dc1394capture_t *capture)
 int 
 dc1394_dma_unlisten(dc1394capture_t *capture) 
 {
-  if (ioctl(capture->dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(capture->channel)) < 0) {
+  if (ioctl(capture->dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(capture->channel)) < 0)
     return DC1394_FAILURE;
-  }
-  else {
+  else
     return DC1394_SUCCESS;
-  }
-  
 }
 
 /****************************************************
@@ -641,13 +619,21 @@ _dc1394_dma_multi_capture_private(dc1394capture_t *cams,
 int 
 dc1394_dma_single_capture(dc1394capture_t *capture) 
 {
-  return _dc1394_dma_multi_capture_private(capture,1, VIDEO1394_WAIT);
+  int err;
+  err=_dc1394_dma_multi_capture_private(capture,1, VIDEO1394_WAIT);
+  DC1394_ERR_CHK(err," ");
+
+  return err;
 }
 
 int
 dc1394_dma_single_capture_poll(dc1394capture_t *capture)
 {
-  return _dc1394_dma_multi_capture_private(capture,1, VIDEO1394_POLL);
+  int err;
+  err=_dc1394_dma_multi_capture_private(capture,1, VIDEO1394_POLL);
+  DC1394_ERR_CHK(err," ");
+
+  return err;
 }
 
 /****************************************************
@@ -660,13 +646,21 @@ dc1394_dma_single_capture_poll(dc1394capture_t *capture)
 int 
 dc1394_dma_multi_capture(dc1394capture_t *capture, int num) 
 {
-  return _dc1394_dma_multi_capture_private(capture, num, VIDEO1394_WAIT);
+  int err;
+  err=_dc1394_dma_multi_capture_private(capture, num, VIDEO1394_WAIT);
+  DC1394_ERR_CHK(err," ");
+
+  return err;
 }
 
 int
 dc1394_dma_multi_capture_poll(dc1394capture_t *capture, int num)
 {
-  return _dc1394_dma_multi_capture_private(capture, num, VIDEO1394_POLL);
+  int err;
+  err=_dc1394_dma_multi_capture_private(capture, num, VIDEO1394_POLL);
+  DC1394_ERR_CHK(err," ");
+
+  return err;
 }
 
 /****************************************************

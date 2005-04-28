@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.3  2005/04/28 14:45:08  ddouxchamps
+**  new error reporting mechanism
+**
 **  Revision 1.9.2.2  2005/04/06 05:52:33  ddouxchamps
 **  fixed bandwidth usage estimation and missing strings
 **
@@ -411,7 +414,7 @@ int main(int argc,char *argv[])
 		/* get the camera nodes and describe them as we find them */
 		raw_handle = raw1394_new_handle();
 		raw1394_set_port( raw_handle, p );
-		camera_nodes = dc1394_get_camera_nodes(raw_handle, &camCount, 1);
+		dc1394_get_camera_nodes(raw_handle, &camera_nodes, &camCount, 1);
 		raw1394_destroy_handle(raw_handle);
 
 		/* setup cameras for capture */

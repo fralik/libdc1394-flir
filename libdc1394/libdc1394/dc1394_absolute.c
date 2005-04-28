@@ -27,35 +27,48 @@
 int
 dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, unsigned int feature, float *min, float *max)
 {
+  int err=0;
+  
   if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
-  
-  if (GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MAX, (quadlet_t*)max) != DC1394_SUCCESS)
-    return DC1394_FAILURE;
-  
-  return GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MIN, (quadlet_t*)min);
+
+  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MAX, (quadlet_t*)max);
+  DC1394_ERR_CHK(err," ");
+  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MIN, (quadlet_t*)min);
+  DC1394_ERR_CHK(err," ");
+
+  return err;
 }
 
 
 int
 dc1394_query_absolute_feature_value(dc1394camera_t *camera, int feature, float *value)
 {
+  int err=0;
+
   if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
-  return GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t*)value);
+  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t*)value);
+  DC1394_ERR_CHK(err," ");
+
+  return err;
 }
 
 
 int
 dc1394_set_absolute_feature_value(dc1394camera_t *camera, int feature, float value)
 {
+  int err=0;
+
   if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
-  
-  return SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t)((quadlet_t*)(&value)));
 
+  SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t)((void*)(&value)));
+  DC1394_ERR_CHK(err," ");
+
+  return err;
 }
  

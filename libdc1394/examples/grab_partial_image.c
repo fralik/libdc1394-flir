@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.4  2005/04/28 14:45:11  ddouxchamps
+**  new error reporting mechanism
+**
 **  Revision 1.4.2.3  2005/04/20 08:54:02  ddouxchamps
 **  another big update. everything seem to work, except RAW capture.
 **
@@ -84,7 +87,7 @@ int main(int argc, char *argv[])
    *  get the camera nodes and describe them as we find them
    *-----------------------------------------------------------------------*/
   numNodes = raw1394_get_nodecount(handle);
-  camera_nodes = dc1394_get_camera_nodes(handle,&numCameras,1);
+  dc1394_get_camera_nodes(handle,&camera_nodes, &numCameras,1);
   fflush(stdout);
   if (numCameras<1)
   {

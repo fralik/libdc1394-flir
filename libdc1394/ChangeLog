@@ -538,4 +538,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * updated error checking in AVT functions
     * separated private functions in dc1394_internal.c
     * added "_AVT" in the AVT offset names to avoid conflicts
-
+	
+2005-04-28 Damien <ddouxchamps@users.sf.net>
+    * new error reporting mechanism. compiles but untested.

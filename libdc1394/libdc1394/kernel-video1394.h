@@ -18,8 +18,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _VIDEO_1394_H
-#define _VIDEO_1394_H
+#ifndef __VIDEO_1394_H__
+#define __VIDEO_1394_H__
 
 #include <sys/ioctl.h>
 

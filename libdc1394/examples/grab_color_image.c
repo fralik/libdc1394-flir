@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.3  2005/04/28 14:45:11  ddouxchamps
+**  new error reporting mechanism
+**
 **  Revision 1.5.2.2  2005/04/06 05:52:33  ddouxchamps
 **  fixed bandwidth usage estimation and missing strings
 **
@@ -133,7 +136,7 @@ int main(int argc, char *argv[])
         exit(1);
       }
       numCameras = 0;
-      camera_nodes = dc1394_get_camera_nodes(handle, &numCameras, 0);
+      dc1394_get_camera_nodes(handle, &camera_nodes, &numCameras, 0);
       if (numCameras > 0)
       {
         if (g_guid == 0)

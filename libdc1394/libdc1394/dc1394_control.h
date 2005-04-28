@@ -247,13 +247,28 @@ enum {
 #define NUM_IIDC_VERSION                (IIDC_VERSION_MAX - IIDC_VERSION_MIN + 1)
 
 /* Maximum number of characters in vendor and model strings */
-#define MAX_CHARS                   32
+#define MAX_CHARS                      256
 
 /* Return values for visible functions*/
-#define DC1394_SUCCESS               1
-#define DC1394_FAILURE              -1
-#define DC1394_NO_FRAME             -2
-#define DC1394_NO_CAMERA            0xffff
+#define DC1394_SUCCESS                     0
+#define DC1394_FAILURE                     1
+#define DC1394_NO_FRAME                   -2
+#define DC1394_NO_CAMERA                   3
+#define DC1394_FUNCTION_NOT_SUPPORTED      4
+#define DC1394_CAMERA_NOT_INITITIALIZED    5
+#define DC1394_INVALID_FEATURE             6
+#define DC1394_INVALID_FORMAT              7
+#define DC1394_INVALID_MODE                8
+#define DC1394_INVALID_FRAMERATE           9
+#define DC1394_INVALID_TRIGGER_MODE       10
+#define DC1394_INVALID_ISO_SPEED          11
+#define DC1394_INVALID_IIDC_VERSION       12
+#define DC1394_INVALID_FORMAT7_COLOR      13
+#define DC1394_INVALID_FORMAT7_COLOR_TILE 14
+#define DC1394_REQ_VALUE_OUTSIDE_RANGE    15
+#define DC1394_INVALID_ERROR_CODE         17
+
+#define NUM_ERRORS                        18
 
 /* Parameter flags for dc1394_setup_format7_capture() */
 #define QUERY_FROM_CAMERA -1
@@ -373,6 +388,26 @@ typedef struct __dc1394featureset_t_struct
 /* Feature descriptions */
 extern const char *dc1394_feature_desc[NUM_FEATURES];
 
+extern const char *dc1394_error_strings[NUM_ERRORS];
+
+/* Error checking function. displays an error string on stderr and exit current function
+   if error is positive. Neg errors are messages and are thus ignored */
+
+#define DC1394_ERR_CHK(err, err_string...)                   \
+                                                             \
+    if ((err<0)||(err>NUM_ERRORS))                           \
+      err=DC1394_INVALID_ERROR_CODE;                         \
+                                                             \
+    if (err>DC1394_SUCCESS) {                                \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s",       \
+	      __FILE__, __FUNCTION__, __LINE__,              \
+	      dc1394_error_strings[err]);                    \
+      fprintf(stderr, err_string);                           \
+      fprintf(stderr,"\n");                                  \
+      return err;                                            \
+    }
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -414,7 +449,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera,
 
  Displays the bounds and options of the given feature
 *****************************************************/
-void 
+int
 dc1394_print_feature(dc1394feature_t *feature);
 
 /*****************************************************
@@ -422,7 +457,7 @@ dc1394_print_feature(dc1394feature_t *feature);
 
  Displays the entire feature set stored in features
 *****************************************************/
-void 
+int 
 dc1394_print_feature_set(dc1394featureset_t *features);
 	
 
@@ -459,8 +494,8 @@ dc1394_destroy_handle(raw1394handle_t handle);
  there is a problem, otherwise the number of cameras
  and the nodeid_t array from the call
 *****************************************************/
-nodeid_t* 
-dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
+int
+dc1394_get_camera_nodes(raw1394handle_t handle, nodeid_t **nodeid, int *numCameras,
                         int showCameras);
 
 #define dc1394_free_camera_nodes free
@@ -481,9 +516,9 @@ dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
  there is a problem, otherwise the number of cameras
  and the nodeid_t array from the call
 *****************************************************/
-nodeid_t* 
+int
 dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numids, 
-                               int *ids,int * numCameras,
+                               int *ids, nodeid_t **nodeid,int * numCameras,
                                int showCameras);
 
 /* Initialize camera to factory default settings */
@@ -500,7 +535,7 @@ int
 dc1394_get_sw_version(dc1394camera_t *camera, int *version);
 
 /* Get the camera information and print that structure*/
-void 
+int 
 dc1394_print_camera_info(dc1394camera_t *camera); 
 
 int

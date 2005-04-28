@@ -20,34 +20,51 @@
 #include <libraw1394/raw1394.h>
 #include "dc1394_internal.h"
 
-/**************************/
-/*  Constant definitions  */
-/**************************/
-
 const char *dc1394_feature_desc[NUM_FEATURES] =
 {
-    "Brightness",
-    "Exposure",
-    "Sharpness",
-    "White Balance",
-    "Hue",
-    "Saturation",
-    "Gamma",
-    "Shutter",
-    "Gain",
-    "Iris",
-    "Focus",
-    "Temperature",
-    "Trigger",
-    "Trigger Delay",
-    "White Shading",
-    "Frame Rate",
-    "Zoom",
-    "Pan",
-    "Tilt",
-    "Optical Filter",
-    "Capture Size",
-    "Capture Quality"
+  "Brightness",
+  "Exposure",
+  "Sharpness",
+  "White Balance",
+  "Hue",
+  "Saturation",
+  "Gamma",
+  "Shutter",
+  "Gain",
+  "Iris",
+  "Focus",
+  "Temperature",
+  "Trigger",
+  "Trigger Delay",
+  "White Shading",
+  "Frame Rate",
+  "Zoom",
+  "Pan",
+  "Tilt",
+  "Optical Filter",
+  "Capture Size",
+  "Capture Quality"
+};
+
+const char *dc1394_error_strings[NUM_ERRORS] =
+{
+  "Success",
+  "Generic failure",
+  "No frame",
+  "No camera",
+  "Function not supported",
+  "Camera not initialized",
+  "Invalid feature",
+  "Invalid format",
+  "Invalid mode",
+  "Invalid framerate",
+  "Invalid trigger mode",
+  "Invalid ISO speed",
+  "Invalid IIDC version",
+  "Invalid Format_7 color coding",
+  "Invalid Format_7 elementary Bayer tile",
+  "Requested value is out of range",
+  "Invalid error code"
 };
 
 /*
