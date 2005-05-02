@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.5  2005/05/02 04:37:58  ddouxchamps
+**  debugged everything. AFAIK code is 99.99% ok now.
+**
 **  Revision 1.5.2.4  2005/05/02 01:00:02  ddouxchamps
 **  cleanup, error handling and new camera detection
 **
@@ -104,9 +107,10 @@ int dc_init()
   int err, i;
   int cam=-1;
 
-  err=dc1394_find_cameras(cameras, &camCount);
-  
   for (reset=0;reset<MAX_RESETS;reset++) {
+    err=dc1394_find_cameras(&cameras, &camCount);
+    DC1394_ERR_CHK(err,"failed to find cameras");
+
     if (camCount > 0) {
       if (g_guid == 0) {
 	/* use the first camera found */
@@ -123,6 +127,7 @@ int dc_init()
 	}
       }
     }
+
     if (found == 1) {
       camera=cameras[cam];
       for (i=0;i<camCount;i++) {
@@ -130,16 +135,22 @@ int dc_init()
 	  dc1394_free_camera(cameras[i]);
       }
       free(cameras);
+      cameras=NULL;
+
       capture.node = camera->node;
       dc1394_print_camera_info(camera);
     
       /* camera can not be root--highest order node */
       if (capture.node == raw1394_get_nodecount(camera->handle)-1) {
 	/* reset and retry if root */
+	//fprintf(stderr,"reset\n");
 	raw1394_reset_bus(camera->handle);
 	sleep(2);
 	found = 0;
+	free(camera);
       }
+      else
+	break;
     }
   } /* next reset retry */
 

@@ -347,7 +347,8 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *o
   int i;
   
   // get the block length
-  if (GetCameraROMValue(camera,*offset,value)!=DC1394_SUCCESS) {
+  //fprintf(stderr,"Getting register tag 0x%x starting at offset 0x%x\n",tag,*offset);
+  if (GetCameraROMValue(camera, *offset, value)!=DC1394_SUCCESS) {
     return DC1394_FAILURE;
   }
   

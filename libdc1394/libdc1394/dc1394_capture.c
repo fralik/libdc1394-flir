@@ -262,6 +262,8 @@ _dc1394_dma_basic_setup(int channel,
   
   capture->dma_buffer_size= vmmap.buf_size * vmmap.nb_buffers;
   capture->num_dma_buffers_behind = 0;
+
+  //fprintf(stderr,"num dma buffers in setup: %d\n",capture->num_dma_buffers);
   return DC1394_SUCCESS;
 }
 
@@ -525,6 +527,7 @@ dc1394_dma_capture(dc1394capture_t *cams, int num, dc1394videopolicy_t policy)
   int last_buffer_orig;
   int extra_buf;
   
+  //fprintf(stderr,"test0\n");
   for (i= 0; i < num; i++) {
     last_buffer_orig = cams[i].dma_last_buffer;
     cb = (cams[i].dma_last_buffer + 1) % cams[i].num_dma_buffers;
@@ -541,7 +544,7 @@ dc1394_dma_capture(dc1394capture_t *cams, int num, dc1394videopolicy_t policy)
       result=ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER, &vwait);
       break;
     }
-
+    //fprintf(stderr,"test1\n");
     if ( result != 0) {       
       cams[i].dma_last_buffer = last_buffer_orig;
       if ((policy==VIDEO1394_POLL) && (errno == EINTR)) {                       
@@ -554,6 +557,7 @@ dc1394_dma_capture(dc1394capture_t *cams, int num, dc1394videopolicy_t policy)
 	return DC1394_FAILURE;
       }
     }
+    //fprintf(stderr,"test2\n");
 
     extra_buf = vwait.buffer;
     
@@ -576,6 +580,7 @@ dc1394_dma_capture(dc1394capture_t *cams, int num, dc1394videopolicy_t policy)
 	}
       }
     }
+    //fprintf(stderr,"test3\n");
     
     /* point to the next buffer in the dma ringbuffer */
     cams[i].capture_buffer = (int*)(cams[i].dma_ring_buffer +

@@ -51,7 +51,7 @@
 #include "dc1394_offsets.h"
 
 dc1394camera_t*
-dc1394_new_camera(int port)
+dc1394_new_camera(int port, nodeid_t node)
 {
   dc1394camera_t *cam;
 
@@ -62,6 +62,7 @@ dc1394_new_camera(int port)
 
   cam->handle=raw1394_new_handle();
   cam->port=port;
+  cam->node=node;
 
   raw1394_set_port(cam->handle, cam->port);
 
@@ -79,17 +80,21 @@ dc1394_free_camera(dc1394camera_t *camera)
 }
 
 int
-dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras)
+dc1394_find_cameras(dc1394camera_t ***cameras_ptr, int* numCameras)
 {
   // get the number the ports
   raw1394handle_t handle;
   int port_num, port;
   int allocated_size;
+  dc1394camera_t **cameras;
   int numCam, err=DC1394_SUCCESS, i, numNodes;
   nodeid_t node;
+  
   //dc1394bool_t isCamera;
   dc1394camera_t *tmpcam=NULL;
   dc1394camera_t **newcam;
+
+  cameras=*cameras_ptr;
 
   handle=raw1394_new_handle();
   port_num=raw1394_get_port_info(handle, NULL, 0);
@@ -102,6 +107,7 @@ dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras)
   // scan each port for cameras. When a camera is found add it.
   // if the number of cameras is not enough the array is re-allocated.
 
+  //fprintf(stderr,"port num: %d\n",port_num);
   for (port=0;port<port_num;port++) {
     // get a handle to the current interface card
     raw1394_set_port(handle, port);
@@ -109,11 +115,12 @@ dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras)
 
     // find the cameras on this card
     numNodes = raw1394_get_nodecount(handle);
-    for (node=0;node<numNodes;i++){
+    //fprintf(stderr,"nodes num for port %d: %d\n",port_num,numNodes);
+    for (node=0;node<numNodes;node++){
 
       // create a camera struct for probing
       if (tmpcam==NULL) {
-	tmpcam=dc1394_new_camera(port);
+	tmpcam=dc1394_new_camera(port,node);
 
 	if (tmpcam==NULL) {
 
@@ -122,14 +129,15 @@ dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras)
 	  free(cameras);
 
 	  raw1394_destroy_handle(handle);
-	  fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s",
+	  fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
 		  __FILE__, __FUNCTION__, __LINE__,
 		  "Can't allocate camera structure");
 	  return DC1394_MEMORY_ALLOCATION_FAILURE;
 	}
       }
-	
+      //fprintf(stderr,"test1\n");
       err=dc1394_get_camera_info(tmpcam);
+      //fprintf(stderr,"camera info err code: %d\n",err);
       if ((err != DC1394_SUCCESS) && (err != DC1394_NOT_A_CAMERA)) {
 
 	for (i=0;i<numCam;i++)
@@ -139,17 +147,19 @@ dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras)
 	dc1394_free_camera(tmpcam);
 
 	raw1394_destroy_handle(handle);
-	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s",
+	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
 		__FILE__, __FUNCTION__, __LINE__,
 		"Can't check if node is a camera");
 	return err;
       }
+      //fprintf(stderr,"test2\n");
 
       if (err == DC1394_SUCCESS) {
 	cameras[numCam]=tmpcam;
 	tmpcam=NULL;
 	numCam++;
       }
+      //fprintf(stderr,"test3\n");
 
       if (numCam>=allocated_size) {
 	allocated_size*=2;
@@ -164,7 +174,7 @@ dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras)
 	  if (tmpcam!=NULL)
 	    dc1394_free_camera(tmpcam);
 
-	  fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s",
+	  fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
 		  __FILE__, __FUNCTION__, __LINE__,
 		  "Can't reallocate camera array");
 	  return DC1394_MEMORY_ALLOCATION_FAILURE;
@@ -173,6 +183,7 @@ dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras)
 	  cameras=newcam;
 	}
       }
+      //fprintf(stderr,"test4\n");
     }
   }
 
@@ -180,7 +191,11 @@ dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras)
 
   *numCameras=numCam;
 
-  return err;
+  *cameras_ptr=cameras;
+
+  //fprintf(stderr,"Found %d cameras\n",*numCameras);
+
+  return DC1394_SUCCESS;
 }
 
 /*****************************************************
@@ -225,44 +240,12 @@ dc1394_destroy_handle(raw1394handle_t handle)
   return DC1394_SUCCESS;
 }
 */
-/*
-int
-dc1394_is_camera(dc1394camera_t *camera, dc1394bool_t *value)
-{
-  octlet_t offset;
-  octlet_t ud_offset = 0;
-  quadlet_t quadval = 0;
-  dc1394bool_t ptgrey;
-  int err;
-
-  ptgrey=(camera->ud_reg_tag_12 == 0x00B09DUL);
-  
-  if ( ! ( (camera->ud_reg_tag_12 == 0x00A02DUL) || ptgrey) ) {
-    return DC1394_NOT_A_CAMERA;
-  }
-  
-  quadval = 0;
-  // get the unit_iidc_version (should be 0x000100 - 0x000102 for 1394 digital camera)
-  // DRD> without this check, AV/C cameras show up as well
-  if ((quadval == 0x000100UL) || 
-      (quadval == 0x000101UL) ||
-      (quadval == 0x000102UL) ||
-      ((quadval == 0x000114UL) && ptgrey) ||
-      ((quadval == 0x800002UL) && ptgrey)) {
-    *value= DC1394_TRUE;
-  }
-  else {
-    *value= DC1394_FALSE;
-  }
-  
-  return err;
-}
-*/
 int
 _dc1394_get_iidc_version(dc1394camera_t *camera)
 {
   int err=DC1394_SUCCESS;
   quadlet_t quadval;
+  octlet_t offset;
 
   if (camera == NULL)
     return DC1394_FAILURE;
@@ -289,7 +272,7 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
   */
   
   if ( (camera->ud_reg_tag_12 != 0x000A02DUL) &&
-       (camera->ud_reg_tag_12 == 0x000B09DUL) ) {
+       (camera->ud_reg_tag_12 != 0x000B09DUL) ) {
     camera->iidc_version=-1;
     return DC1394_NOT_A_CAMERA;
   }
@@ -316,7 +299,8 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
   /* IIDC 1.31 check */
   if (camera->iidc_version==IIDC_VERSION_1_30) {
     
-    err=GetConfigROMTaggedRegister(camera, 0x38, &camera->unit_dependent_directory, &quadval);
+    offset=camera->unit_dependent_directory;
+    err=GetConfigROMTaggedRegister(camera, 0x38, &offset, &quadval);
     if (err!=DC1394_SUCCESS) {
       if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
 	// if it fails here we return success with the most accurate version estimation: 1.30.
@@ -393,9 +377,6 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   quadlet_t value[2], quadval;
   unsigned int count;
 
-  //err= dc1394_is_camera(camera, &iscamera);
-  //DC1394_ERR_CHK(err, "Error - this is not a camera");
-
   //if (iscamera != DC1394_TRUE) {
   //  return DC1394_FAILURE;
   //}
@@ -414,10 +395,8 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   /* now get the EUID-64 */
   err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
   DC1394_ERR_CHK(err, "Could not get EUID-LSB");
-
   err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x10, &value[1]);
   DC1394_ERR_CHK(err, "Could not get EUID-MSB");
-  
   camera->euid_64= ((u_int64_t)value[0] << 32) | (u_int64_t)value[1];
   
   /* get the unit_directory offset */
@@ -425,23 +404,20 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   err=GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval);
   DC1394_ERR_CHK(err, "Could not get unit directory offset");
   camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
-  
+  //fprintf(stderr,"UD: 0x%x, found at 0x%x\n",camera->unit_directory,offset);
+
   /* get the spec_id value */
+  offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x12, &offset, &quadval);
-  DC1394_ERR_CHK(err, "COuld not get spec ID");
+  DC1394_ERR_CHK(err, "Could not get spec ID");
   camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
 
   /* get the iidc revision */
+  offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x13, &offset, &quadval);
   DC1394_ERR_CHK(err, "Could not get IIDC revision");
   camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
 
-  /* get the unit_dependent_directory offset */
-  offset= camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get unit dependent directory");
-  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
-  
   /* verify the version/revision and find the IIDC_REVISION value from that */
   err=_dc1394_get_iidc_version(camera);
   if (err==DC1394_NOT_A_CAMERA)
@@ -449,6 +425,12 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   else
     DC1394_ERR_CHK(err, "Problem inferring the IIDC version");
 
+  /* get the unit_dependent_directory offset */
+  offset= camera->unit_directory;
+  err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
+  DC1394_ERR_CHK(err, "Could not get unit dependent directory");
+  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
+  
   /* now get the command_regs_base */
   offset= camera->unit_dependent_directory;
   err=GetConfigROMTaggedRegister(camera, 0x40, &offset, &quadval);
@@ -729,7 +711,7 @@ dc1394_print_feature(dc1394feature_t *f)
   
   if (!f->available) {
     printf("NOT AVAILABLE\n");
-    return DC1394_FAILURE;
+    return DC1394_SUCCESS;
   }
   
   if (f->one_push) 

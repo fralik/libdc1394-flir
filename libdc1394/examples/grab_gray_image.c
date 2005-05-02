@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.5  2005/05/02 04:37:58  ddouxchamps
+**  debugged everything. AFAIK code is 99.99% ok now.
+**
 **  Revision 1.5.2.4  2005/05/02 01:00:02  ddouxchamps
 **  cleanup, error handling and new camera detection
 **
@@ -62,7 +65,7 @@ int main(int argc, char *argv[])
   dc1394featureset_t features;
   
   /* Find cameras */
-  int err=dc1394_find_cameras(cameras, &numCameras);
+  int err=dc1394_find_cameras(&cameras, &numCameras);
 
   if (err!=DC1394_SUCCESS) {
     fprintf( stderr, "Unable to look for cameras\n\n"
@@ -71,6 +74,8 @@ int main(int argc, char *argv[])
 	     "  - if you have read/write access to /dev/raw1394\n\n");
     exit(1);
   }
+
+  //fprintf(stderr,"got cam info\n");
 
   /*-----------------------------------------------------------------------
    *  get the camera nodes and describe them as we find them

@@ -551,3 +551,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       functions with a variable number of arguments to handle white
       balance, temperature and white shading.
     * wrote all comments for the error reporting function DC1394_ERR_CHK
+	
+2005-05-02 Damien <ddouxchamps@users.sf.net>
+    * debugged everything. Both RAW and VIDEO1394 caoture are OK.

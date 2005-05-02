@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.5  2005/05/02 04:37:58  ddouxchamps
+**  debugged everything. AFAIK code is 99.99% ok now.
+**
 **  Revision 1.9.2.4  2005/05/02 01:00:01  ddouxchamps
 **  cleanup, error handling and new camera detection
 **
@@ -358,7 +361,7 @@ int main(int argc,char *argv[])
   long background=0x010203;
   unsigned int channel;
   unsigned int speed;
-  int i;
+  int i,err;
   
   get_options(argc,argv);
   /* process options */
@@ -391,22 +394,26 @@ int main(int argc,char *argv[])
     break;
   }
   
-  if (dc1394_find_cameras(cameras,&numCameras)!=DC1394_SUCCESS) {
+  if (dc1394_find_cameras(&cameras,&numCameras)!=DC1394_SUCCESS) {
     fprintf(stderr,"Error: can't find cameras");
     exit(0);
   }
 
-  if (numCameras>MAX_CAMERAS)
-    numCameras=MAX_CAMERAS; // optential leak since we loose the real number of cams.
+  if (numCameras>MAX_CAMERAS) {
+    for (i=MAX_CAMERAS;i<numCameras;i++)
+      free(cameras[i]);
+    numCameras=MAX_CAMERAS;
+  }
+
+  //fprintf(stderr,"Cameras found: %d\n",numCameras);
 
   /* setup cameras for capture */
   for (i = 0; i < numCameras; i++) {	
-    captures[i].node = cameras[i]->node;
     
     if(dc1394_get_camera_feature_set(cameras[i], &features) !=DC1394_SUCCESS) {
       printf("unable to get feature set\n");
     } else {
-      dc1394_print_feature_set(&features);
+      //dc1394_print_feature_set(&features);
     }
     
     if (dc1394_get_iso_channel_and_speed(cameras[i], &channel, &speed) != DC1394_SUCCESS) {
@@ -418,7 +425,7 @@ int main(int argc,char *argv[])
     if (dc1394_dma_setup_capture(cameras[i], i+1 /*channel*/,
 				 FORMAT_VGA_NONCOMPRESSED, res,
 				 SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
-				 device_name, &captures[numCameras]) != DC1394_SUCCESS) {
+				 device_name, &captures[i]) != DC1394_SUCCESS) {
       fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 	      __LINE__,__FILE__);
       perror("that the video mode,framerate and format are supported\n");
@@ -426,7 +433,7 @@ int main(int argc,char *argv[])
       cleanup();
       exit(-1);
     }
-		
+    
 		
     /*have the camera start sending us data*/
     if (dc1394_start_iso_transmission(cameras[i]) !=DC1394_SUCCESS) {
@@ -443,6 +450,7 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
+  //fprintf(stderr,"setup finished\n");
 
   switch(format){
   case XV_YV12:
@@ -484,15 +492,19 @@ int main(int argc,char *argv[])
   connection=ConnectionNumber(display);
 	
   gc=XCreateGC(display,window,0,&xgcv);
-  
+
+  //fprintf(stderr,"event loop\n");
   
   /* main event loop */	
   while(1){
 
-    dc1394_dma_capture(captures, numCameras, VIDEO1394_WAIT);
+    //fprintf(stderr,"capturing...\n");
+    err=dc1394_dma_capture(captures, numCameras, VIDEO1394_WAIT);
+    DC1394_ERR_CHK(err,"failed to capture\n");
 		
     display_frames();
     XFlush(display);
+    //fprintf(stderr,"displayed\n");
     
     while(XPending(display)>0){
       XNextEvent(display,&xev);

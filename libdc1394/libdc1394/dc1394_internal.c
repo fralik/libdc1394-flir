@@ -121,14 +121,17 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
     switch(mode) {
     case MODE_160x120_YUV444:
       *w = 160;*h=120;
+      return DC1394_SUCCESS;
     case MODE_320x240_YUV422:
       *w = 320;*h=240;
+      return DC1394_SUCCESS;
     case MODE_640x480_YUV411:
     case MODE_640x480_YUV422:
     case MODE_640x480_RGB:
     case MODE_640x480_MONO:
     case MODE_640x480_MONO16:
       *w =640;*h=480;
+      return DC1394_SUCCESS;
     default:
       return DC1394_INVALID_MODE;
     }
@@ -139,11 +142,13 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
     case MODE_800x600_MONO:
     case MODE_800x600_MONO16:
       *w=800;*h=600;
+      return DC1394_SUCCESS;
     case MODE_1024x768_YUV422:
     case MODE_1024x768_RGB:
     case MODE_1024x768_MONO:
     case MODE_1024x768_MONO16:
       *w=1024;*h=768;
+      return DC1394_SUCCESS;
     default:
       return DC1394_INVALID_MODE;
     }
@@ -154,11 +159,13 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
     case MODE_1280x960_MONO:
     case MODE_1280x960_MONO16:
       *w=1280;*h=960;
+      return DC1394_SUCCESS;
     case MODE_1600x1200_YUV422:
     case MODE_1600x1200_RGB:
     case MODE_1600x1200_MONO:
     case MODE_1600x1200_MONO16:
       *w=1600;*h=1200;
+      return DC1394_SUCCESS;
     default:
       return DC1394_INVALID_MODE;
     }
@@ -166,7 +173,6 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
     return DC1394_INVALID_FORMAT;
   }
 
-  return DC1394_SUCCESS;
 }
 	
 /********************************************************

@@ -404,7 +404,7 @@ extern const char *dc1394_error_strings[NUM_ERRORS];
       err=DC1394_INVALID_ERROR_CODE;                         \
                                                              \
     if (err>DC1394_SUCCESS) {                                \
-      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s",       \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
 	      __FILE__, __FUNCTION__, __LINE__,              \
 	      dc1394_error_strings[err]);                    \
       fprintf(stderr, err_string);                           \
@@ -418,7 +418,7 @@ extern const char *dc1394_error_strings[NUM_ERRORS];
       err=DC1394_INVALID_ERROR_CODE;                                 \
                                                                      \
     if (err>DC1394_SUCCESS) {                                        \
-      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s",               \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
 	      __FILE__, __FUNCTION__, __LINE__,                      \
 	      dc1394_error_strings[err]);                            \
       fprintf(stderr, err_string);                                   \
@@ -436,10 +436,10 @@ extern "C" {
  ***************************************************************************/
 
 /* locate and initialise the cameras */
-int dc1394_find_cameras(dc1394camera_t **cameras, int* numCameras);
+int dc1394_find_cameras(dc1394camera_t ***cameras_ptr, int* numCameras);
 
 /* create / free camera structure */
-dc1394camera_t* dc1394_new_camera(int port);
+dc1394camera_t* dc1394_new_camera(int port, nodeid_t node);
 void dc1394_free_camera(dc1394camera_t *camera);
 
 /* get / print the camera information */
