@@ -19,6 +19,7 @@
 
 #include <libraw1394/raw1394.h>
 #include "dc1394_internal.h"
+#include "dc1394_register.h"
 
 const char *dc1394_feature_desc[NUM_FEATURES] =
 {
@@ -52,7 +53,8 @@ const char *dc1394_error_strings[NUM_ERRORS] =
   "Generic failure",
   "No frame",
   "No camera",
-  "Function not supported",
+  "This node is not a camera",
+  "Function not supported by this camera",
   "Camera not initialized",
   "Invalid feature",
   "Invalid format",
@@ -64,7 +66,11 @@ const char *dc1394_error_strings[NUM_ERRORS] =
   "Invalid Format_7 color coding",
   "Invalid Format_7 elementary Bayer tile",
   "Requested value is out of range",
-  "Invalid error code"
+  "Invalid error code",
+  "Memory allocation failure",
+  "Tagged register not found",
+  "Format_7 Error_flag_1 is set",
+  "Format_7 Error_flag_2 is set"
 };
 
 /*
@@ -115,19 +121,16 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
     switch(mode) {
     case MODE_160x120_YUV444:
       *w = 160;*h=120;
-      return DC1394_SUCCESS;
     case MODE_320x240_YUV422:
       *w = 320;*h=240;
-      return DC1394_SUCCESS;
     case MODE_640x480_YUV411:
     case MODE_640x480_YUV422:
     case MODE_640x480_RGB:
     case MODE_640x480_MONO:
     case MODE_640x480_MONO16:
       *w =640;*h=480;
-      return DC1394_SUCCESS;
     default:
-      return DC1394_FAILURE;
+      return DC1394_INVALID_MODE;
     }
   case FORMAT_SVGA_NONCOMPRESSED_1:
     switch(mode) {
@@ -136,15 +139,13 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
     case MODE_800x600_MONO:
     case MODE_800x600_MONO16:
       *w=800;*h=600;
-      return DC1394_SUCCESS;
     case MODE_1024x768_YUV422:
     case MODE_1024x768_RGB:
     case MODE_1024x768_MONO:
     case MODE_1024x768_MONO16:
       *w=1024;*h=768;
-      return DC1394_SUCCESS;
     default:
-      return DC1394_FAILURE;
+      return DC1394_INVALID_MODE;
     }
   case FORMAT_SVGA_NONCOMPRESSED_2:
     switch(mode) {
@@ -153,20 +154,19 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
     case MODE_1280x960_MONO:
     case MODE_1280x960_MONO16:
       *w=1280;*h=960;
-      return DC1394_SUCCESS;
     case MODE_1600x1200_YUV422:
     case MODE_1600x1200_RGB:
     case MODE_1600x1200_MONO:
     case MODE_1600x1200_MONO16:
       *w=1600;*h=1200;
-      return DC1394_SUCCESS;
     default:
-      return DC1394_FAILURE;
+      return DC1394_INVALID_MODE;
     }
   default:
-    return DC1394_FAILURE;
+    return DC1394_INVALID_FORMAT;
   }
 
+  return DC1394_SUCCESS;
 }
 	
 /********************************************************

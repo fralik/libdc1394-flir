@@ -37,7 +37,7 @@
 #define MAX_NUM_PORTS 8
 
 /*Variables used for simultaneous capture of video from muliple cameras*/
-int * _dc1394_buffer[NUM_ISO_CHANNELS];
+int *_dc1394_buffer[NUM_ISO_CHANNELS];
 int _dc1394_frame_captured[NUM_ISO_CHANNELS];
 int _dc1394_offset[NUM_ISO_CHANNELS];
 int _dc1394_quadlets_per_frame[NUM_ISO_CHANNELS];
@@ -116,7 +116,7 @@ int
 _dc1394_basic_setup(dc1394camera_t *camera,
                     int channel, int format, int mode,
                     int speed, int frame_rate, 
-                    dc1394capture_t * capture)
+                    dc1394capture_t *capture)
 {
   int err;
   dc1394bool_t is_iso_on= DC1394_FALSE;
@@ -157,8 +157,9 @@ _dc1394_basic_setup(dc1394camera_t *camera,
   capture->frame_rate= frame_rate;
   capture->channel= channel;
   capture->quadlets_per_packet= _dc1394_get_quadlets_per_packet(format, mode, frame_rate);
-  capture->handle=dc1394_create_handle(camera->port);
-  fprintf(stderr,"handle: 0x%x\n",(unsigned int)capture->handle);
+  capture->handle=raw1394_new_handle();
+  raw1394_set_port(capture->handle,camera->port);
+  //fprintf(stderr,"handle: 0x%x\n",(unsigned int)capture->handle);
 
   if (capture->quadlets_per_packet < 0) {
     return DC1394_FAILURE;
@@ -171,7 +172,7 @@ _dc1394_basic_setup(dc1394camera_t *camera,
   }
   
   err=_dc1394_get_wh_from_format(format,mode,&capture->frame_width,&capture->frame_height);
-  DC1394_ERR_CHK(err," ");
+  DC1394_ERR_CHK(err,"Could not get width/height from format/mode");
   
   return err;
 }
@@ -251,7 +252,6 @@ _dc1394_dma_basic_setup(int channel,
   
   capture->dma_ring_buffer= mmap(0, vmmap.nb_buffers * vmmap.buf_size,
 				 PROT_READ,MAP_SHARED, capture->dma_fd, 0);
-
   
   /* make sure the ring buffer was allocated */
   if (capture->dma_ring_buffer == (unsigned char*)(-1)) {
@@ -292,13 +292,13 @@ dc1394_setup_capture(dc1394camera_t *camera,
 {
   int err;
   if( format == FORMAT_SCALABLE_IMAGE_SIZE) {
-    err=dc1394_setup_format7_capture( camera, channel, mode, speed,
-                                         QUERY_FROM_CAMERA, /*bytes_per_paket*/
-                                         QUERY_FROM_CAMERA, /*left*/
-                                         QUERY_FROM_CAMERA, /*top*/
-                                         QUERY_FROM_CAMERA, /*width*/
-                                         QUERY_FROM_CAMERA, /*height*/
-                                         capture);
+    err=dc1394_setup_format7_capture(camera, channel, mode, speed,
+				     QUERY_FROM_CAMERA, /*bytes_per_paket*/
+				     QUERY_FROM_CAMERA, /*left*/
+				     QUERY_FROM_CAMERA, /*top*/
+				     QUERY_FROM_CAMERA, /*width*/
+				     QUERY_FROM_CAMERA, /*height*/
+				     capture);
     DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
   else {
@@ -323,33 +323,14 @@ dc1394_setup_capture(dc1394camera_t *camera,
  structure
 *****************************************************/
 int 
-dc1394_release_camera(dc1394capture_t *capture)
+dc1394_release_capture(dc1394capture_t *capture)
 {
-  int err;
-  //dc1394_unset_one_shot(camera);
-  
   if (capture->capture_buffer != NULL) {
     free(capture->capture_buffer);
   }
-  err=dc1394_destroy_handle(capture->handle);
-  DC1394_ERR_CHK(err,"Could not destroy handle");
+  raw1394_destroy_handle(capture->handle);
   
-  return err;
-}
-
-/*****************************************************
- dc1394_single_capture
-
- Captures a frame of video from the camera specified
-******************************************************/
-int 
-dc1394_single_capture(dc1394capture_t *capture)
-{
-  int err;
-  err=dc1394_multi_capture(capture, 1);
-  DC1394_ERR_CHK(err,"Could not perform single capture");
-
-  return err;
+  return DC1394_SUCCESS;
 }
 
 /***************************************************************************
@@ -361,7 +342,7 @@ dc1394_single_capture(dc1394capture_t *capture)
  Returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it succeeds
 ****************************************************************************/
 int 
-dc1394_multi_capture(dc1394capture_t *cams, int num) 
+dc1394_capture(dc1394capture_t *cams, int num) 
 {
   int i, j;
   _dc1394_all_captured= num;
@@ -389,12 +370,12 @@ dc1394_multi_capture(dc1394capture_t *cams, int num)
       return DC1394_FAILURE;
     }
 
-    fprintf(stderr,"handle: 0x%x\n",(unsigned int)cams[i].handle);
+    //fprintf(stderr,"handle: 0x%x\n",(unsigned int)cams[i].handle);
     _dc1394_frame_captured[cams[i].channel] = 0;
     _dc1394_quadlets_per_frame[cams[i].channel] = cams[i].quadlets_per_frame;
     _dc1394_quadlets_per_packet[cams[i].channel] = cams[i].quadlets_per_packet;
 
-    fprintf(stderr,"handle: 0x%x\n",(unsigned int)cams[i].handle);
+    //fprintf(stderr,"handle: 0x%x\n",(unsigned int)cams[i].handle);
     if (raw1394_start_iso_rcv(cams[i].handle,cams[i].channel) < 0)  {
       /* error handling- for some reason something didn't work, 
 	 so we have to reset everything....*/
@@ -449,16 +430,16 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
 {
   int err;
   if( format == FORMAT_SCALABLE_IMAGE_SIZE) {
-    err=dc1394_dma_setup_format7_capture( camera, channel, mode, speed,
-					     QUERY_FROM_CAMERA, /*bytes_per_paket*/
-					     QUERY_FROM_CAMERA, /*left*/
-					     QUERY_FROM_CAMERA, /*top*/
-					     QUERY_FROM_CAMERA, /*width*/
-					     QUERY_FROM_CAMERA, /*height*/
-					     num_dma_buffers,
-					     drop_frames,
-					     dma_device_file,
-					     capture); 
+    err=dc1394_dma_setup_format7_capture(camera, channel, mode, speed,
+					 QUERY_FROM_CAMERA, /*bytes_per_paket*/
+					 QUERY_FROM_CAMERA, /*left*/
+					 QUERY_FROM_CAMERA, /*top*/
+					 QUERY_FROM_CAMERA, /*width*/
+					 QUERY_FROM_CAMERA, /*height*/
+					 num_dma_buffers,
+					 drop_frames,
+					 dma_device_file,
+					 capture); 
     DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
   else {
@@ -483,7 +464,7 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
  dc1394_dma_setup_camera
 *****************************************************/
 int 
-dc1394_dma_release_camera(dc1394capture_t *capture) 
+dc1394_dma_release_capture(dc1394capture_t *capture) 
 {
   //dc1394_stop_iso_transmission(handle,camera->node);
   //ioctl(_dc1394_dma_fd,VIDEO1394_IOC_UNLISTEN_CHANNEL, &(camera->channel));
@@ -534,8 +515,7 @@ dc1394_dma_unlisten(dc1394capture_t *capture)
 
 *****************************************************/
 int
-_dc1394_dma_multi_capture_private(dc1394capture_t *cams,
-				  int num, dc1394videopolicy_t policy) 
+dc1394_dma_capture(dc1394capture_t *cams, int num, dc1394videopolicy_t policy) 
 {
   struct video1394_wait vwait;
   int i;
@@ -607,60 +587,6 @@ _dc1394_dma_multi_capture_private(dc1394capture_t *cams,
   }
   
   return DC1394_SUCCESS;
-}
-
-/****************************************************
- dc1394_dma_single_capture
-
- This captures a frame from the given camera. Two
- policies are available: wait for a frame or return
- if no frame is available (POLL)
-*****************************************************/
-int 
-dc1394_dma_single_capture(dc1394capture_t *capture) 
-{
-  int err;
-  err=_dc1394_dma_multi_capture_private(capture,1, VIDEO1394_WAIT);
-  DC1394_ERR_CHK(err," ");
-
-  return err;
-}
-
-int
-dc1394_dma_single_capture_poll(dc1394capture_t *capture)
-{
-  int err;
-  err=_dc1394_dma_multi_capture_private(capture,1, VIDEO1394_POLL);
-  DC1394_ERR_CHK(err," ");
-
-  return err;
-}
-
-/****************************************************
- dc1394_dma_multi_capture
-
- This captures a frame from the given camera. Two
- policies are available: wait for a frame or return
- if no frame is available (POLL)
-*****************************************************/
-int 
-dc1394_dma_multi_capture(dc1394capture_t *capture, int num) 
-{
-  int err;
-  err=_dc1394_dma_multi_capture_private(capture, num, VIDEO1394_WAIT);
-  DC1394_ERR_CHK(err," ");
-
-  return err;
-}
-
-int
-dc1394_dma_multi_capture_poll(dc1394capture_t *capture, int num)
-{
-  int err;
-  err=_dc1394_dma_multi_capture_private(capture, num, VIDEO1394_POLL);
-  DC1394_ERR_CHK(err," ");
-
-  return err;
 }
 
 /****************************************************

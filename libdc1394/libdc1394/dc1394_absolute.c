@@ -34,9 +34,9 @@ dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, unsigned int featu
   }
 
   err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MAX, (quadlet_t*)max);
-  DC1394_ERR_CHK(err," ");
+  DC1394_ERR_CHK(err,"Could not get maximal absolute value");
   err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MIN, (quadlet_t*)min);
-  DC1394_ERR_CHK(err," ");
+  DC1394_ERR_CHK(err,"Could not get minimal absolute value");
 
   return err;
 }
@@ -51,7 +51,7 @@ dc1394_query_absolute_feature_value(dc1394camera_t *camera, int feature, float *
     return DC1394_FAILURE;
   }
   err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t*)value);
-  DC1394_ERR_CHK(err," ");
+  DC1394_ERR_CHK(err,"Could not get current absolute value");
 
   return err;
 }
@@ -67,7 +67,7 @@ dc1394_set_absolute_feature_value(dc1394camera_t *camera, int feature, float val
   }
 
   SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t)((void*)(&value)));
-  DC1394_ERR_CHK(err," ");
+  DC1394_ERR_CHK(err,"Could not get current absolute value");
 
   return err;
 }

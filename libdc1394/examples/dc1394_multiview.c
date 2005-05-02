@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.4  2005/05/02 01:00:01  ddouxchamps
+**  cleanup, error handling and new camera detection
+**
 **  Revision 1.9.2.3  2005/04/28 14:45:08  ddouxchamps
 **  new error reporting mechanism
 **
@@ -95,12 +98,9 @@
 
 
 /* declarations for libdc1394 */
-int numPorts = MAX_PORTS;
-raw1394handle_t handles[MAX_CAMERAS];
 int numCameras = 0;
 dc1394capture_t captures[MAX_CAMERAS];
-dc1394camera_t cameras[MAX_CAMERAS];
-nodeid_t *camera_nodes;
+dc1394camera_t **cameras;
 dc1394featureset_t features;
 
 /* declarations for video1394 */
@@ -333,8 +333,7 @@ void cleanup(void) {
 	for (i=0; i < numCameras; i++)
 	{
 		dc1394_dma_unlisten( &captures[i] );
-		dc1394_dma_release_camera( &captures[i]);
-		dc1394_destroy_handle(handles[i]);
+		dc1394_dma_release_capture( &captures[i]);
 	}
 	if ((void *)window != NULL)
 		XUnmapWindow(display,window);
@@ -354,252 +353,214 @@ void signal_handler( int sig) {
 
 int main(int argc,char *argv[])
 {
-	XEvent xev;
-	XGCValues xgcv;
-	long background=0x010203;
-	unsigned int channel;
-	unsigned int speed;
-	int i, p;
-	raw1394handle_t raw_handle;
-	struct raw1394_portinfo ports[MAX_PORTS];
+  XEvent xev;
+  XGCValues xgcv;
+  long background=0x010203;
+  unsigned int channel;
+  unsigned int speed;
+  int i;
+  
+  get_options(argc,argv);
+  /* process options */
+  switch(fps) {
+  case 1: fps =	FRAMERATE_1_875; break;
+  case 3: fps =	FRAMERATE_3_75; break;
+  case 15: fps = FRAMERATE_15; break;
+  case 30: fps = FRAMERATE_30; break;
+  case 60: fps = FRAMERATE_60; break;
+  default: fps = FRAMERATE_7_5; break;
+  }
+  switch(res) {
+  case 1: 
+    res = MODE_640x480_YUV411; 
+    device_width=640;
+    device_height=480;
+    format=XV_YUY2;
+    break;
+  case 2: 
+    res = MODE_640x480_RGB; 
+    device_width=640;
+    device_height=480;
+    format=XV_YUY2;
+    break;
+  default: 
+    res = MODE_320x240_YUV422;
+    device_width=320;
+    device_height=240;
+    format=XV_UYVY;
+    break;
+  }
+  
+  if (dc1394_find_cameras(cameras,&numCameras)!=DC1394_SUCCESS) {
+    fprintf(stderr,"Error: can't find cameras");
+    exit(0);
+  }
 
-	get_options(argc,argv);
-	/* process options */
-	switch(fps) {
-		case 1: fps =	FRAMERATE_1_875; break;
-		case 3: fps =	FRAMERATE_3_75; break;
-		case 15: fps = FRAMERATE_15; break;
-		case 30: fps = FRAMERATE_30; break;
-		case 60: fps = FRAMERATE_60; break;
-		default: fps = FRAMERATE_7_5; break;
-	}
-	switch(res) {
-		case 1: 
-			res = MODE_640x480_YUV411; 
-			device_width=640;
-			device_height=480;
-			format=XV_YUY2;
-			break;
-		case 2: 
-			res = MODE_640x480_RGB; 
-			device_width=640;
-			device_height=480;
-			format=XV_YUY2;
-			break;
-		default: 
-			res = MODE_320x240_YUV422;
-			device_width=320;
-			device_height=240;
-			format=XV_UYVY;
-			break;
-	}
+  if (numCameras>MAX_CAMERAS)
+    numCameras=MAX_CAMERAS; // optential leak since we loose the real number of cams.
 
-	/* get the number of ports (cards) */
-	raw_handle = raw1394_new_handle();
-    if (raw_handle==NULL) {
-        perror("Unable to aquire a raw1394 handle\n");
-        perror("did you load the drivers?\n");
-        exit(-1);
+  /* setup cameras for capture */
+  for (i = 0; i < numCameras; i++) {	
+    captures[i].node = cameras[i]->node;
+    
+    if(dc1394_get_camera_feature_set(cameras[i], &features) !=DC1394_SUCCESS) {
+      printf("unable to get feature set\n");
+    } else {
+      dc1394_print_feature_set(&features);
     }
+    
+    if (dc1394_get_iso_channel_and_speed(cameras[i], &channel, &speed) != DC1394_SUCCESS) {
+      printf("unable to get the iso channel number\n");
+      cleanup();
+      exit(-1);
+    }
+    
+    if (dc1394_dma_setup_capture(cameras[i], i+1 /*channel*/,
+				 FORMAT_VGA_NONCOMPRESSED, res,
+				 SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
+				 device_name, &captures[numCameras]) != DC1394_SUCCESS) {
+      fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
+	      __LINE__,__FILE__);
+      perror("that the video mode,framerate and format are supported\n");
+      printf("is one supported by your camera\n");
+      cleanup();
+      exit(-1);
+    }
+		
+		
+    /*have the camera start sending us data*/
+    if (dc1394_start_iso_transmission(cameras[i]) !=DC1394_SUCCESS) {
+      perror("unable to start camera iso transmission\n");
+      cleanup();
+      exit(-1);
+    }
+  }
+  
+  fflush(stdout);
+  if (numCameras < 1) {
+    perror("no cameras found :(\n");
+    cleanup();
+    exit(-1);
+  }
+
+
+  switch(format){
+  case XV_YV12:
+    set_frame_length(device_width*device_height*3/2, numCameras);
+    break;
+  case XV_YUY2:
+  case XV_UYVY:
+    set_frame_length(device_width*device_height*2, numCameras);
+    break;
+  default:
+    fprintf(stderr,"Unknown format set (internal error)\n");
+    exit(255);
+  }
+
+  /* make the window */
+  display=XOpenDisplay(getenv("DISPLAY"));
+  if(display==NULL) {
+    fprintf(stderr,"Could not open display \"%s\"\n",getenv("DISPLAY"));
+    cleanup();
+    exit(-1);
+  }
+  
+  QueryXv();
+  
+  if ( adaptor < 0 ) {
+    cleanup();
+    exit(-1);
+  }
+  
+  width=device_width;
+  height=device_height * numCameras;
+  
+  window=XCreateSimpleWindow(display,DefaultRootWindow(display),0,0,width,height,0,
+			     WhitePixel(display,DefaultScreen(display)),
+			     background);
+  
+  XSelectInput(display,window,StructureNotifyMask|KeyPressMask);
+  XMapWindow(display,window);
+  connection=ConnectionNumber(display);
 	
-	numPorts = raw1394_get_port_info(raw_handle, ports, numPorts);
-	raw1394_destroy_handle(raw_handle);
-	printf("number of ports = %d\n", numPorts);
+  gc=XCreateGC(display,window,0,&xgcv);
+  
+  
+  /* main event loop */	
+  while(1){
 
-	/* get dc1394 handle to each port */
-	for (p = 0; p < numPorts; p++)
-	{
-		int camCount;
+    dc1394_dma_capture(captures, numCameras, VIDEO1394_WAIT);
 		
-		/* get the camera nodes and describe them as we find them */
-		raw_handle = raw1394_new_handle();
-		raw1394_set_port( raw_handle, p );
-		dc1394_get_camera_nodes(raw_handle, &camera_nodes, &camCount, 1);
-		raw1394_destroy_handle(raw_handle);
-
-		/* setup cameras for capture */
-		for (i = 0; i < camCount; i++)
-		{	
-			handles[numCameras] = dc1394_create_handle(p);
-			if (handles[numCameras]==NULL) {
-				perror("Unable to aquire a raw1394 handle\n");
-				perror("did you load the drivers?\n");
-				cleanup();
-				exit(-1);
-			}
-
-			cameras[numCameras].node = camera_nodes[i];
-			captures[numCameras].node = camera_nodes[i];
-			cameras[numCameras].handle = handles[i];
-		
-			if(dc1394_get_camera_feature_set(&cameras[numCameras], &features) !=DC1394_SUCCESS) 
-			{
-				printf("unable to get feature set\n");
-			} else {
-				dc1394_print_feature_set(&features);
-			}
-		
-			if (dc1394_get_iso_channel_and_speed(&cameras[numCameras], &channel, &speed) != DC1394_SUCCESS) 
-			{
-				printf("unable to get the iso channel number\n");
-				cleanup();
-				exit(-1);
-			}
-			 
-			if (dc1394_dma_setup_capture( &cameras[numCameras], i+1 /*channel*/,
-									FORMAT_VGA_NONCOMPRESSED, res,
-									SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
-									device_name, &captures[numCameras]) != DC1394_SUCCESS) 
-			{
-				fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
-					   __LINE__,__FILE__);
-				perror("that the video mode,framerate and format are supported\n");
-				printf("is one supported by your camera\n");
-				cleanup();
-				exit(-1);
-			}
-		
-		
-			/*have the camera start sending us data*/
-			if (dc1394_start_iso_transmission(&cameras[numCameras]) !=DC1394_SUCCESS) 
-			{
-				perror("unable to start camera iso transmission\n");
-				cleanup();
-				exit(-1);
-			}
-			numCameras++;
-		}
-		dc1394_free_camera_nodes(camera_nodes);
+    display_frames();
+    XFlush(display);
+    
+    while(XPending(display)>0){
+      XNextEvent(display,&xev);
+      switch(xev.type){
+      case ConfigureNotify:
+	width=xev.xconfigure.width;
+	height=xev.xconfigure.height;
+	display_frames();
+	break;
+      case KeyPress:
+	switch(XKeycodeToKeysym(display,xev.xkey.keycode,0)){
+	case XK_q:
+	case XK_Q:
+	  cleanup();
+	  exit(0);
+	  break;
+	case XK_comma:
+	case XK_less:
+	  width=width/2;
+	  height=height/2;
+	  XResizeWindow(display,window,width,height);
+	  display_frames();
+	  break;
+	case XK_period:
+	case XK_greater:
+	  width=2*width;
+	  height=2*height;
+	  XResizeWindow(display,window,width,height);
+	  display_frames();
+	  break;
+	case XK_0:
+	  freeze = !freeze;
+	  break;
+	case XK_1:
+	  fps =	FRAMERATE_1_875; 
+	  for (i = 0; i < numCameras; i++)
+	    dc1394_set_video_framerate(cameras[i], fps);
+	  break;
+	case XK_2:
+	  fps =	FRAMERATE_3_75; 
+	  for (i = 0; i < numCameras; i++)
+	    dc1394_set_video_framerate(cameras[i], fps);
+	  break;
+	case XK_4:
+	  fps = FRAMERATE_15; 
+	  for (i = 0; i < numCameras; i++)
+	    dc1394_set_video_framerate(cameras[i], fps);
+	  break;
+	case XK_5: 
+	  fps = FRAMERATE_30;
+	  for (i = 0; i < numCameras; i++)
+	    dc1394_set_video_framerate(cameras[i], fps);
+	  break;
+	case XK_3:
+	  fps = FRAMERATE_7_5; 
+	  for (i = 0; i < numCameras; i++)
+	    dc1394_set_video_framerate(cameras[i], fps);
+	  break;
 	}
-
-	fflush(stdout);
-	if (numCameras < 1) {
-		perror("no cameras found :(\n");
-		cleanup();
-		exit(-1);
-	}
-
-
-	switch(format){
-		case XV_YV12:
-			set_frame_length(device_width*device_height*3/2, numCameras);
-			break;
-		case XV_YUY2:
-		case XV_UYVY:
-			set_frame_length(device_width*device_height*2, numCameras);
-			break;
-		default:
-			fprintf(stderr,"Unknown format set (internal error)\n");
-			exit(255);
-	}
-
-	/* make the window */
-	display=XOpenDisplay(getenv("DISPLAY"));
-	if(display==NULL)
-	{
-		fprintf(stderr,"Could not open display \"%s\"\n",getenv("DISPLAY"));
-		cleanup();
-		exit(-1);
-	}
-	
-	QueryXv();
-	
-	if ( adaptor < 0 )
-	{
-		cleanup();
-		exit(-1);
-	}
-	
-	width=device_width;
-	height=device_height * numCameras;
-
-	window=XCreateSimpleWindow(display,DefaultRootWindow(display),0,0,width,height,0,
-		WhitePixel(display,DefaultScreen(display)),
-		background);
-		
-	XSelectInput(display,window,StructureNotifyMask|KeyPressMask);
-	XMapWindow(display,window);
-	connection=ConnectionNumber(display);
-	
-	gc=XCreateGC(display,window,0,&xgcv);
-	
-	
-	/* main event loop */	
-	while(1){
-
-		dc1394_dma_multi_capture(captures, numCameras);
-		
-		display_frames();
-		XFlush(display);
-
-		while(XPending(display)>0){
-			XNextEvent(display,&xev);
-			switch(xev.type){
-				case ConfigureNotify:
-					width=xev.xconfigure.width;
-					height=xev.xconfigure.height;
-					display_frames();
-					break;
-				case KeyPress:
-					switch(XKeycodeToKeysym(display,xev.xkey.keycode,0)){
-						case XK_q:
-						case XK_Q:
-							cleanup();
-							exit(0);
-							break;
-						case XK_comma:
-						case XK_less:
-							width=width/2;
-							height=height/2;
-							XResizeWindow(display,window,width,height);
-							display_frames();
-							break;
-						case XK_period:
-						case XK_greater:
-							width=2*width;
-							height=2*height;
-							XResizeWindow(display,window,width,height);
-							display_frames();
-							break;
-						case XK_0:
-							freeze = !freeze;
-							break;
-						case XK_1:
-							fps =	FRAMERATE_1_875; 
-							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(&cameras[i], fps);
-							break;
-						case XK_2:
-							fps =	FRAMERATE_3_75; 
-							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(&cameras[i], fps);
-							break;
-						case XK_4:
-							fps = FRAMERATE_15; 
-							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(&cameras[i], fps);
-							break;
-						case XK_5: 
-							fps = FRAMERATE_30;
-							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(&cameras[i], fps);
-							break;
-						case XK_3:
-							fps = FRAMERATE_7_5; 
-							for (i = 0; i < numCameras; i++)
-								dc1394_set_video_framerate(&cameras[i], fps);
-							break;
-						}
-					break;
-				}
-			} /* XPending */
-
-			for (i = 0; i < numCameras; i++)
-			{
-				dc1394_dma_done_with_buffer(&captures[i]);
-			}
-		
-		} /* while not interrupted */
-
-	exit(0);
+	break;
+      }
+    } /* XPending */
+    
+    for (i = 0; i < numCameras; i++) {
+      dc1394_dma_done_with_buffer(&captures[i]);
+    }
+    
+  } /* while not interrupted */
+  
+  exit(0);
 }

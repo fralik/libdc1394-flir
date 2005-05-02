@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.5  2005/05/02 01:00:02  ddouxchamps
+**  cleanup, error handling and new camera detection
+**
 **  Revision 1.4.2.4  2005/04/28 14:45:11  ddouxchamps
 **  new error reporting mechanism
 **
@@ -53,11 +56,8 @@ int main(int argc, char *argv[])
 {
   FILE* imagefile;
   dc1394capture_t capture;
-  dc1394camera_t camera;
-  int numNodes;
+  dc1394camera_t *camera, **cameras=NULL;
   int numCameras;
-  raw1394handle_t handle;
-  nodeid_t * camera_nodes;
   int grab_n_frames = 100;
   struct tms tms_buf;
   clock_t start_time;
@@ -67,35 +67,30 @@ int main(int argc, char *argv[])
   unsigned int actual_bytes;
   unsigned long long int total_bytes = 0;
 
-  
-  
-  
+  int err=dc1394_find_cameras(cameras, &numCameras);
 
-  /*-----------------------------------------------------------------------
-   *  Open ohci and asign handle to it
-   *-----------------------------------------------------------------------*/
-  handle = dc1394_create_handle(0);
-  if (handle==NULL)
-  {
-    fprintf( stderr, "Unable to aquire a raw1394 handle\n"
-             "did you insmod the drivers?\n");
+  if (err!=DC1394_SUCCESS) {
+    fprintf( stderr, "Unable to look for cameras\n\n"
+             "Please check \n"
+	     "  - if the kernel modules `ieee1394',`raw1394' and `ohci1394' are loaded \n"
+	     "  - if you have read/write access to /dev/raw1394\n\n");
     exit(1);
   }
 
-  
   /*-----------------------------------------------------------------------
    *  get the camera nodes and describe them as we find them
    *-----------------------------------------------------------------------*/
-  numNodes = raw1394_get_nodecount(handle);
-  dc1394_get_camera_nodes(handle,&camera_nodes, &numCameras,1);
-  fflush(stdout);
-  if (numCameras<1)
-  {
-    fprintf( stderr, "no cameras found :(\n");
-    dc1394_destroy_handle(handle);
+  if (numCameras<1) {
+    fprintf(stderr, "no cameras found :(\n");
     exit(1);
   }
+  camera=cameras[0];
   printf("working with the first camera on the bus\n");
+  
+  // free the other cameras
+  for (i=1;i<numCameras;i++)
+    dc1394_free_camera(cameras[i]);
+  free(cameras);
   
   /*-----------------------------------------------------------------------
    *  to prevent the iso-transfer bug from raw1394 system, check if
@@ -104,8 +99,8 @@ int main(int argc, char *argv[])
    *  and
    *  http://sourceforge.net/tracker/index.php?func=detail&aid=435107&group_id=8157&atid=108157
    *-----------------------------------------------------------------------*/
-  if( camera_nodes[0] == numNodes-1)
-  {
+  /*
+  if( camera_nodes[0] == numNodes-1) {
     fprintf( stderr, "\n"
              "Sorry, your camera is the highest numbered node\n"
              "of the bus, and has therefore become the root node.\n"
@@ -129,19 +124,17 @@ int main(int argc, char *argv[])
     dc1394_destroy_handle(handle);
     exit( 1);
   }
-  
+  */
+
   /*-----------------------------------------------------------------------
    *  setup capture for format 7
    *-----------------------------------------------------------------------*/
 
-  camera.handle=handle;
-  camera.node=camera_nodes[0];
-
-  if( dc1394_get_camera_info(&camera) != DC1394_SUCCESS) {
+  if( dc1394_get_camera_info(camera) != DC1394_SUCCESS) {
     fprintf(stderr,"could not get basic info\n");
   }
     
-  if( dc1394_setup_format7_capture(&camera,
+  if( dc1394_setup_format7_capture(camera,
                                    0, /* channel */
                                    MODE_FORMAT7_0, 
                                    SPEED_400,
@@ -155,61 +148,50 @@ int main(int argc, char *argv[])
              "that the video mode,framerate and format are\n"
              "supported by your camera\n",
              __LINE__,__FILE__);
-    dc1394_destroy_handle(handle);
+    dc1394_free_camera(camera);
     exit(1);
   }
 
   /* set trigger mode */
-  if( dc1394_set_trigger_mode(&camera, TRIGGER_MODE_0)
+  if( dc1394_set_trigger_mode(camera, TRIGGER_MODE_0)
       != DC1394_SUCCESS)
   {
     fprintf( stderr, "unable to set camera trigger mode\n");
-    dc1394_release_camera(&capture);
-    dc1394_destroy_handle(handle);
+    dc1394_release_capture(&capture);
+    dc1394_free_camera(camera);
     exit(1);
   }
   
   /*-----------------------------------------------------------------------
    *  print allowed and used packet size
    *-----------------------------------------------------------------------*/
-  if (dc1394_query_format7_packet_para(&camera, MODE_FORMAT7_0, &min_bytes, &max_bytes) != DC1394_SUCCESS) /* PACKET_PARA_INQ */
-  {
+  if (dc1394_query_format7_packet_para(camera, MODE_FORMAT7_0, &min_bytes, &max_bytes) != DC1394_SUCCESS) { /* PACKET_PARA_INQ */
     printf("Packet para inq error\n");
     return DC1394_FAILURE;
   }
-  printf( "camera reports allowed packet size from %d - %d bytes\n",
-          min_bytes, max_bytes);
+  printf( "camera reports allowed packet size from %d - %d bytes\n", min_bytes, max_bytes);
 
   
-  if (dc1394_query_format7_byte_per_packet(&camera, MODE_FORMAT7_0, &actual_bytes) != DC1394_SUCCESS) 
-  {
+  if (dc1394_query_format7_byte_per_packet(camera, MODE_FORMAT7_0, &actual_bytes) != DC1394_SUCCESS) {
     printf("dc1394_query_format7_byte_per_packet error\n");
     return DC1394_FAILURE;
   }
   printf( "camera reports actual packet size = %d bytes\n",
           actual_bytes);
 
-  if (dc1394_query_format7_total_bytes(&camera, MODE_FORMAT7_0, &total_bytes) != DC1394_SUCCESS) 
-  {
+  if (dc1394_query_format7_total_bytes(camera, MODE_FORMAT7_0, &total_bytes) != DC1394_SUCCESS) {
     printf("dc1394_query_format7_total_bytes error\n");
     return DC1394_FAILURE;
   }
-  printf( "camera reports total bytes per frame = %lld bytes\n",
-          total_bytes);
-
-  
-  
-
+  printf( "camera reports total bytes per frame = %lld bytes\n", total_bytes);
   
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
-  if (dc1394_start_iso_transmission(&camera)
-      !=DC1394_SUCCESS) 
-  {
+  if (dc1394_start_iso_transmission(camera) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to start camera iso transmission\n");
-    dc1394_release_camera(&capture);
-    dc1394_destroy_handle(handle);
+    dc1394_release_capture(&capture);
+    dc1394_free_camera(camera);
     exit(1);
   }
 
@@ -218,18 +200,13 @@ int main(int argc, char *argv[])
    *-----------------------------------------------------------------------*/
   start_time = times(&tms_buf);
 
-  for( i = 0; i < grab_n_frames; ++i)
-  {
+  for( i = 0; i < grab_n_frames; ++i) {
     /*-----------------------------------------------------------------------
      *  capture one frame
      *-----------------------------------------------------------------------*/
-    if (dc1394_single_capture(&capture)!=DC1394_SUCCESS) 
-    {
-      fprintf( stderr, "unable to capture a frame\n");
-      dc1394_release_camera(&capture);
-      fprintf(stderr,"1\n");
-      dc1394_destroy_handle(handle);
-      fprintf(stderr,"2\n");
+    if (dc1394_capture(&capture,1)!=DC1394_SUCCESS) {
+      dc1394_release_capture(&capture);
+      dc1394_free_camera(camera);
       exit(1);
     }
 
@@ -244,8 +221,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  Stop data transmission
    *-----------------------------------------------------------------------*/
-  if (dc1394_stop_iso_transmission(&camera)!=DC1394_SUCCESS) 
-  {
+  if (dc1394_stop_iso_transmission(camera)!=DC1394_SUCCESS) {
     printf("couldn't stop the camera?\n");
   }
 
@@ -260,14 +236,11 @@ int main(int argc, char *argv[])
          capture.frame_height*capture.frame_width, imagefile);
   fclose(imagefile);
   printf("wrote: Part.pgm\n");
-
-  
-
   
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
-  dc1394_release_camera(&capture);
-  dc1394_destroy_handle(handle);
+  dc1394_release_capture(&capture);
+  dc1394_free_camera(camera);
   return 0;
 }

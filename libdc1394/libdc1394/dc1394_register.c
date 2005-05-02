@@ -347,7 +347,7 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *o
   int i;
   
   // get the block length
-  if (GetCameraROMValue(camera,*offset,value)<0) {
+  if (GetCameraROMValue(camera,*offset,value)!=DC1394_SUCCESS) {
     return DC1394_FAILURE;
   }
   
@@ -360,7 +360,7 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *o
   // find the tag and return the result
   for (i=0;i<block_length;i++) {
     *offset+=4;
-    if (GetCameraROMValue(camera,*offset,value)<0) {
+    if (GetCameraROMValue(camera,*offset,value)!=DC1394_SUCCESS) {
       return DC1394_FAILURE;
     }
     if ((*value>>24)==tag) {
@@ -368,5 +368,5 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *o
     }
   }
 
-  return DC1394_FAILURE;
+  return DC1394_TAGGED_REGISTER_NOT_FOUND;
 }

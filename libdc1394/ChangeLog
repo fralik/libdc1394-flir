@@ -538,6 +538,16 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * updated error checking in AVT functions
     * separated private functions in dc1394_internal.c
     * added "_AVT" in the AVT offset names to avoid conflicts
-	
+
 2005-04-28 Damien <ddouxchamps@users.sf.net>
     * new error reporting mechanism. compiles but untested.
+
+2005-05-01 Damien <ddouxchamps@users.sf.net>
+    * new camera detection functions. compiles but untested.
+    * cleaned up dc1394_control.h, removed some capture functions.
+      The latter change has no effect on the available functionalities.
+    * plan to remove all dc1394_get/set_<feature_name>_value since it is
+      a duplicate from dc1394_get_feature_value. This will require
+      functions with a variable number of arguments to handle white
+      balance, temperature and white shading.
+    * wrote all comments for the error reporting function DC1394_ERR_CHK
