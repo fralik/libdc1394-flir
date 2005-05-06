@@ -1,6 +1,5 @@
 /*
  * 1394-Based Digital Camera Capture Code for the Control Library
- *
  * Written by Chris Urmson <curmson@ri.cmu.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -32,6 +31,7 @@
 #include "dc1394_control.h"
 #include "kernel-video1394.h"
 #include "dc1394_internal.h"
+#include "dc1394_utils.h"
 
 #define NUM_ISO_CHANNELS 64
 #define MAX_NUM_PORTS 8
@@ -60,8 +60,7 @@ int *_dc1394_num_using_fd = NULL;
  is used in the non DMA capture routines.
 ***************************************************************/
 int 
-_dc1394_video_iso_handler(raw1394handle_t handle,  
-                          int channel, size_t length, quadlet_t *data) 
+_dc1394_video_iso_handler(raw1394handle_t handle, int channel, size_t length, quadlet_t *data) 
 {
 
     /* the first packet of a frame has a 1 in the lsb of the header */
@@ -114,8 +113,8 @@ _dc1394_video_iso_handler(raw1394handle_t handle,
 *************************************************************/
 int 
 _dc1394_basic_setup(dc1394camera_t *camera,
-                    int channel, int format, int mode,
-                    int speed, int frame_rate, 
+                    uint_t channel, uint_t mode,
+                    uint_t speed, uint_t frame_rate, 
                     dc1394capture_t *capture)
 {
   int err;
@@ -139,9 +138,6 @@ _dc1394_basic_setup(dc1394camera_t *camera,
   err=dc1394_set_iso_channel_and_speed(camera,channel,speed);
   DC1394_ERR_CHK(err, "Unable to set channel and speed");
   
-  err=dc1394_set_video_format(camera,format);
-  DC1394_ERR_CHK(err, "Unable to set video format %d!", format);
-  
   err=dc1394_set_video_mode(camera,mode);
   DC1394_ERR_CHK(err, "Unable to set video mode %d!", mode);
 
@@ -156,22 +152,23 @@ _dc1394_basic_setup(dc1394camera_t *camera,
   capture->node= camera->node;
   capture->frame_rate= frame_rate;
   capture->channel= channel;
-  capture->quadlets_per_packet= _dc1394_get_quadlets_per_packet(format, mode, frame_rate);
+  err=_dc1394_get_quadlets_per_packet(mode, frame_rate, &capture->quadlets_per_packet);
+  DC1394_ERR_CHK(err, "Unable to get quadlets per packet");
   capture->handle=raw1394_new_handle();
   raw1394_set_port(capture->handle,camera->port);
-  //fprintf(stderr,"handle: 0x%x\n",(unsigned int)capture->handle);
 
   if (capture->quadlets_per_packet < 0) {
     return DC1394_FAILURE;
   }
   
-  capture->quadlets_per_frame= _dc1394_quadlets_from_format(format, mode);
+  err= _dc1394_quadlets_from_format(mode, &capture->quadlets_per_frame);
+  DC1394_ERR_CHK(err,"Could not get quadlets from format");
 
   if (capture->quadlets_per_frame < 0)  {
     return DC1394_FAILURE;
   }
   
-  err=_dc1394_get_wh_from_format(format,mode,&capture->frame_width,&capture->frame_height);
+  err=dc1394_get_wh_from_mode(mode,&capture->frame_width,&capture->frame_height);
   DC1394_ERR_CHK(err,"Could not get width/height from format/mode");
   
   return err;
@@ -185,14 +182,14 @@ _dc1394_basic_setup(dc1394camera_t *camera,
 
 ******************************************************/
 int
-_dc1394_dma_basic_setup(int channel,
-                        int num_dma_buffers,
+_dc1394_dma_basic_setup(uint_t channel,
+                        uint_t num_dma_buffers,
                         dc1394capture_t *capture)
 {
 
   struct video1394_mmap vmmap;
   struct video1394_wait vwait;
-  int i;
+  uint_t i;
   
   if (capture->dma_device_file == NULL) {
     capture->dma_device_file = malloc(32);
@@ -201,8 +198,8 @@ _dc1394_dma_basic_setup(int channel,
   
   /* using_fd counter array NULL if not used yet -- initialize */
   if( NULL == _dc1394_num_using_fd ) {
-    _dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(int) );
-    _dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(int) );
+    _dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(uint_t) );
+    _dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(uint_t) );
   }
 	
   if (_dc1394_num_using_fd[capture->port] == 0) {
@@ -254,7 +251,7 @@ _dc1394_dma_basic_setup(int channel,
 				 PROT_READ,MAP_SHARED, capture->dma_fd, 0);
   
   /* make sure the ring buffer was allocated */
-  if (capture->dma_ring_buffer == (unsigned char*)(-1)) {
+  if (capture->dma_ring_buffer == (uchar_t*)(-1)) {
     printf("(%s) mmap failed!\n", __FILE__);
     ioctl(capture->dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
     return DC1394_FAILURE;
@@ -288,12 +285,17 @@ _dc1394_dma_basic_setup(int channel,
 **************************************************************/
 int 
 dc1394_setup_capture(dc1394camera_t *camera, 
-                     int channel, int format, int mode, 
-                     int speed, int frame_rate, 
+                     uint_t channel, uint_t mode, 
+                     uint_t speed, uint_t frame_rate, 
                      dc1394capture_t *capture) 
 {
   int err;
-  if( format == FORMAT_SCALABLE_IMAGE_SIZE) {
+  uint_t format;
+
+  err=_dc1394_get_format_from_mode(mode, &format);
+  DC1394_ERR_CHK(err, "Invalid mode ID");
+
+  if( format == FORMAT7) {
     err=dc1394_setup_format7_capture(camera, channel, mode, speed,
 				     QUERY_FROM_CAMERA, /*bytes_per_paket*/
 				     QUERY_FROM_CAMERA, /*left*/
@@ -304,10 +306,10 @@ dc1394_setup_capture(dc1394camera_t *camera,
     DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
   else {
-    err=_dc1394_basic_setup(camera, channel, format, mode, speed,frame_rate, capture);
+    err=_dc1394_basic_setup(camera, channel, mode, speed,frame_rate, capture);
     DC1394_ERR_CHK(err,"Could not setup capture");
     
-    capture->capture_buffer= (int*)malloc(capture->quadlets_per_frame*4);
+    capture->capture_buffer= (uint_t*)malloc(capture->quadlets_per_frame*4);
    
     if (capture->capture_buffer == NULL) {
       printf("(%s) unable to allocate memory for capture buffer\n", __FILE__);
@@ -344,7 +346,7 @@ dc1394_release_capture(dc1394capture_t *capture)
  Returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it succeeds
 ****************************************************************************/
 int 
-dc1394_capture(dc1394capture_t *cams, int num) 
+dc1394_capture(dc1394capture_t *cams, uint_t num) 
 {
   int i, j;
   _dc1394_all_captured= num;
@@ -358,8 +360,7 @@ dc1394_capture(dc1394capture_t *cams, int num)
   for (i= 0; i < num; i++)  {
     _dc1394_buffer[cams[i].channel]= cams[i].capture_buffer;
     
-    if (raw1394_set_iso_handler(cams[i].handle,cams[i].channel,
-				_dc1394_video_iso_handler) < 0)  {
+    if (raw1394_set_iso_handler(cams[i].handle, cams[i].channel, _dc1394_video_iso_handler) < 0)  {
       /* error handling- for some reason something didn't work, 
 	 so we have to reset everything....*/
       printf("(%s:%d) error!\n",__FILE__, __LINE__);
@@ -423,15 +424,20 @@ dc1394_capture(dc1394capture_t *cams, int num)
 ******************************************************/
 int
 dc1394_dma_setup_capture(dc1394camera_t *camera,
-                         int channel, int format, int mode,
-                         int speed, int frame_rate,
-                         int num_dma_buffers, 
-			 int drop_frames,
+                         uint_t channel, uint_t mode,
+                         uint_t speed, uint_t frame_rate,
+                         uint_t num_dma_buffers, 
+			 uint_t drop_frames,
 			 const char *dma_device_file,
 			 dc1394capture_t *capture)
 {
   int err;
-  if( format == FORMAT_SCALABLE_IMAGE_SIZE) {
+  uint_t format;
+
+  err=_dc1394_get_format_from_mode(mode, &format);
+  DC1394_ERR_CHK(err, "Invalid mode ID");
+
+  if( format == FORMAT7) {
     err=dc1394_dma_setup_format7_capture(camera, channel, mode, speed,
 					 QUERY_FROM_CAMERA, /*bytes_per_paket*/
 					 QUERY_FROM_CAMERA, /*left*/
@@ -449,7 +455,7 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
     capture->dma_device_file = dma_device_file;
     capture->drop_frames = drop_frames;
     
-    err=_dc1394_basic_setup(camera, channel, format, mode, speed,frame_rate, capture);
+    err=_dc1394_basic_setup(camera, channel, mode, speed,frame_rate, capture);
     DC1394_ERR_CHK(err,"Could not setup capture");
     
     err=_dc1394_dma_basic_setup (channel, num_dma_buffers, capture);
@@ -517,7 +523,7 @@ dc1394_dma_unlisten(dc1394capture_t *capture)
 
 *****************************************************/
 int
-dc1394_dma_capture(dc1394capture_t *cams, int num, dc1394videopolicy_t policy) 
+dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy) 
 {
   struct video1394_wait vwait;
   int i;
@@ -583,9 +589,9 @@ dc1394_dma_capture(dc1394capture_t *cams, int num, dc1394videopolicy_t policy)
     //fprintf(stderr,"test3\n");
     
     /* point to the next buffer in the dma ringbuffer */
-    cams[i].capture_buffer = (int*)(cams[i].dma_ring_buffer +
-				    cams[i].dma_last_buffer *
-				    cams[i].dma_frame_size);
+    cams[i].capture_buffer = (uint_t*)(cams[i].dma_ring_buffer +
+				       cams[i].dma_last_buffer *
+				       cams[i].dma_frame_size);
     
     cams[i].filltime = vwait.filltime;
     cams[i].num_dma_buffers_behind = extra_buf;

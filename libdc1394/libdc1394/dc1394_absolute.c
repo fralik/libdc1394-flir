@@ -1,6 +1,5 @@
 /*
  * 1394-Based Digital Camera Absolute Setting functions
- *
  * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -25,7 +24,7 @@
 
 
 int
-dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, unsigned int feature, float *min, float *max)
+dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, uint_t feature, float *min, float *max)
 {
   int err=0;
   
@@ -43,7 +42,7 @@ dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, unsigned int featu
 
 
 int
-dc1394_query_absolute_feature_value(dc1394camera_t *camera, int feature, float *value)
+dc1394_query_absolute_feature_value(dc1394camera_t *camera, uint_t feature, float *value)
 {
   int err=0;
 
@@ -58,7 +57,7 @@ dc1394_query_absolute_feature_value(dc1394camera_t *camera, int feature, float *
 
 
 int
-dc1394_set_absolute_feature_value(dc1394camera_t *camera, int feature, float value)
+dc1394_set_absolute_feature_value(dc1394camera_t *camera, uint_t feature, float value)
 {
   int err=0;
 

@@ -1,6 +1,5 @@
 /*
  * 1394-Based Digital Camera Format_7 functions for the Control Library
- *
  * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -15,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  */
 #include <unistd.h>
 #include <netinet/in.h>
@@ -39,10 +38,10 @@
  *==========================================================================*/
 
 int
-_dc1394_v130_handshake(dc1394camera_t *camera, int mode)
+_dc1394_v130_handshake(dc1394camera_t *camera, uint_t mode)
 {
-  int setting_1, err_flag1, err_flag2, v130handshake;
-  int exit_loop;
+  uint_t setting_1, err_flag1, err_flag2, v130handshake;
+  uint_t exit_loop;
   int err;
 
   if (camera->iidc_version >= IIDC_VERSION_1_30) {
@@ -83,9 +82,10 @@ _dc1394_v130_handshake(dc1394camera_t *camera, int mode)
 }
 
 int
-_dc1394_v130_errflag2(dc1394camera_t *camera, int mode)
+_dc1394_v130_errflag2(dc1394camera_t *camera, uint_t mode)
 {
-  int setting_1, err_flag1, err_flag2, v130handshake, err;
+  uint_t setting_1, err_flag1, err_flag2, v130handshake;
+  int err;
 
   //fprintf(stderr,"Checking error flags\n");
 
@@ -116,37 +116,37 @@ _dc1394_v130_errflag2(dc1394camera_t *camera, int mode)
  *=================================================================================*/
 
 int
-_Format7BytePerPixel(int color_coding, float *bpp)
+_Format7BytePerPixel(uint_t color_coding, float *bpp)
 {
   switch (color_coding) {
-  case COLOR_FORMAT7_RAW8: 
-  case COLOR_FORMAT7_MONO8:
+  case COLOR_FORMAT_RAW8: 
+  case COLOR_FORMAT_MONO8:
     *bpp=1.0;
     return DC1394_SUCCESS;
     break;
-  case COLOR_FORMAT7_YUV411:
+  case COLOR_FORMAT_YUV411:
     *bpp=1.5;
     return DC1394_SUCCESS;
     break;
-  case COLOR_FORMAT7_YUV422:
-  case COLOR_FORMAT7_MONO16:
-  case COLOR_FORMAT7_MONO16S:
-  case COLOR_FORMAT7_RAW16:
+  case COLOR_FORMAT_YUV422:
+  case COLOR_FORMAT_MONO16:
+  case COLOR_FORMAT_MONO16S:
+  case COLOR_FORMAT_RAW16:
     *bpp=2.0;
     return DC1394_SUCCESS;
     break;
-  case COLOR_FORMAT7_YUV444:
-  case COLOR_FORMAT7_RGB8: 
+  case COLOR_FORMAT_YUV444:
+  case COLOR_FORMAT_RGB8: 
     *bpp=3.0;
     return DC1394_SUCCESS;
     break;
-  case COLOR_FORMAT7_RGB16:
-  case COLOR_FORMAT7_RGB16S:
+  case COLOR_FORMAT_RGB16:
+  case COLOR_FORMAT_RGB16S:
     *bpp=6.0;
     return DC1394_SUCCESS;
     break;
   default:
-    return DC1394_INVALID_FORMAT7_COLOR;
+    return DC1394_INVALID_COLOR_MODE;
   }
 }
 
@@ -159,24 +159,24 @@ _Format7BytePerPixel(int color_coding, float *bpp)
  *======================================================================*/
 int
 _dc1394_basic_format7_setup(dc1394camera_t *camera,
-                            int channel, int mode, int speed,
-                            int bytes_per_packet,
-                            int left, int top,
-                            int width, int height, 
+                            uint_t channel, uint_t mode, uint_t speed,
+                            uint_t bytes_per_packet,
+                            uint_t left, uint_t top,
+                            uint_t width, uint_t height, 
                             dc1394capture_t *capture)
 {
   dc1394bool_t is_iso_on= DC1394_FALSE;
-  unsigned int unit_bytes, max_bytes;
-  unsigned packet_bytes=0;
-  unsigned int recom_bpp;
-  int packets_per_frame;
-  int color_coding;
-  unsigned int camera_left = 0;
-  unsigned int camera_top = 0;
-  unsigned int camera_width = 0;
-  unsigned int camera_height = 0;
-  unsigned int max_width = 0;
-  unsigned int max_height = 0;
+  uint_t unit_bytes, max_bytes;
+  uint_t packet_bytes=0;
+  uint_t recom_bpp;
+  uint_t packets_per_frame;
+  uint_t color_coding;
+  uint_t camera_left = 0;
+  uint_t camera_top = 0;
+  uint_t camera_width = 0;
+  uint_t camera_height = 0;
+  uint_t max_width = 0;
+  uint_t max_height = 0;
   float bpp;
   int err;
 
@@ -191,9 +191,6 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
   err=dc1394_set_iso_channel_and_speed(camera,channel,speed);
   DC1394_ERR_CHK(err, "Unable to set channel %d and speed %d",channel,speed);
 
-  err=dc1394_set_video_format(camera,FORMAT_SCALABLE_IMAGE_SIZE);
-  DC1394_ERR_CHK(err, "Unable to set video format %d",FORMAT_SCALABLE_IMAGE_SIZE);
-  
   err=dc1394_set_video_mode(camera,mode);
   DC1394_ERR_CHK(err, "Unable to set video mode %d", mode);
 
@@ -392,10 +389,10 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
  *=======================================================================*/
 int
 dc1394_setup_format7_capture(dc1394camera_t *camera,
-                             int channel, int mode, int speed,
-                             int bytes_per_packet,
-                             unsigned int left, unsigned int top,
-                             unsigned int width, unsigned int height, 
+                             uint_t channel, uint_t mode, uint_t speed,
+                             uint_t bytes_per_packet,
+                             uint_t left, uint_t top,
+                             uint_t width, uint_t height, 
                              dc1394capture_t *capture)
 
 {
@@ -412,7 +409,7 @@ dc1394_setup_format7_capture(dc1394camera_t *camera,
                                   left, top, width, height, capture);
   DC1394_ERR_CHK(err, "COuld not perform basic F7 capture setup");
   
-  capture->capture_buffer= (int*)malloc(capture->quadlets_per_frame*4);
+  capture->capture_buffer= (uint_t*)malloc(capture->quadlets_per_frame*4);
   
   if (capture->capture_buffer == NULL) {
     printf("(%s) unable to allocate memory for capture buffer\n", __FILE__);
@@ -430,12 +427,12 @@ dc1394_setup_format7_capture(dc1394camera_t *camera,
  *=======================================================================*/
 int
 dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
-                                 int channel, int mode, int speed,
-                                 int bytes_per_packet,
-                                 unsigned int left, unsigned int top,
-                                 unsigned int width, unsigned int height,
-                                 int num_dma_buffers,
-				 int drop_frames,
+                                 uint_t channel, uint_t mode, uint_t speed,
+                                 uint_t bytes_per_packet,
+                                 uint_t left, uint_t top,
+                                 uint_t width, uint_t height,
+                                 uint_t num_dma_buffers,
+				 uint_t drop_frames,
 				 const char *dma_device_file,
                                  dc1394capture_t *capture)
 {
@@ -459,9 +456,9 @@ dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
 
 int
 dc1394_query_format7_max_image_size(dc1394camera_t *camera,
- 				    unsigned int mode,
-                                    unsigned int *horizontal_size,
- 				    unsigned int *vertical_size)
+ 				    uint_t mode,
+                                    uint_t *horizontal_size,
+ 				    uint_t *vertical_size)
 {
   int err;
   quadlet_t value;
@@ -473,17 +470,17 @@ dc1394_query_format7_max_image_size(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ, &value);
   DC1394_ERR_CHK(err, "Could not get max image sizes");
 
-  *horizontal_size  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-  *vertical_size= (unsigned int) ( value & 0x0000FFFFUL );
+  *horizontal_size  = (uint_t) ( value & 0xFFFF0000UL ) >> 16;
+  *vertical_size= (uint_t) ( value & 0x0000FFFFUL );
   
   return err;
 }
 
 int
 dc1394_query_format7_unit_size(dc1394camera_t *camera,
- 			       unsigned int mode,
-                               unsigned int *horizontal_unit,
- 			       unsigned int *vertical_unit)
+ 			       uint_t mode,
+                               uint_t *horizontal_unit,
+ 			       uint_t *vertical_unit)
 {
   int err;
   quadlet_t value;
@@ -495,17 +492,17 @@ dc1394_query_format7_unit_size(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_UNIT_SIZE_INQ, &value);
   DC1394_ERR_CHK(err, "COuld not get unit sizes");
 
-  *horizontal_unit  = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-  *vertical_unit= (unsigned int) ( value & 0x0000FFFFUL );
+  *horizontal_unit  = (uint_t) ( value & 0xFFFF0000UL ) >> 16;
+  *vertical_unit= (uint_t) ( value & 0x0000FFFFUL );
   
   return err;
 }
 
 int
 dc1394_query_format7_image_position(dc1394camera_t *camera,
- 				    unsigned int mode,
-                                    unsigned int *left_position,
- 				    unsigned int *top_position)
+ 				    uint_t mode,
+                                    uint_t *left_position,
+ 				    uint_t *top_position)
 {
   int err;
   quadlet_t value;
@@ -517,8 +514,8 @@ dc1394_query_format7_image_position(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_IMAGE_POSITION, &value);
   DC1394_ERR_CHK(err, "Could not get image position");
 
-  *left_position = (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-  *top_position= (unsigned int) ( value & 0x0000FFFFUL );       
+  *left_position = (uint_t) ( value & 0xFFFF0000UL ) >> 16;
+  *top_position= (uint_t) ( value & 0x0000FFFFUL );       
 
   return err;
 }
@@ -526,8 +523,8 @@ dc1394_query_format7_image_position(dc1394camera_t *camera,
 
 int
 dc1394_query_format7_image_size(dc1394camera_t *camera,
- 				unsigned int mode, unsigned int *width,
- 				unsigned int *height)
+ 				uint_t mode, uint_t *width,
+ 				uint_t *height)
 {
   int err;
   quadlet_t value;
@@ -539,15 +536,15 @@ dc1394_query_format7_image_size(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_IMAGE_SIZE, &value);
   DC1394_ERR_CHK(err, "could not get current image size");
 
-  *width= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-  *height = (unsigned int) ( value & 0x0000FFFFUL );       
+  *width= (uint_t) ( value & 0xFFFF0000UL ) >> 16;
+  *height = (uint_t) ( value & 0x0000FFFFUL );       
   
   return err;
 }
 
 int
 dc1394_query_format7_color_coding_id(dc1394camera_t *camera,
- 				     unsigned int mode, unsigned int *color_id)
+ 				     uint_t mode, uint_t *color_id)
 {
   int err;
   quadlet_t value;
@@ -560,14 +557,14 @@ dc1394_query_format7_color_coding_id(dc1394camera_t *camera,
   DC1394_ERR_CHK(err, "Could not get current color_id");
 
   value=value>>24;
-  *color_id= (unsigned int)value+COLOR_FORMAT7_MIN;
+  *color_id= (uint_t)value+COLOR_FORMAT_MIN;
   
   return err;
 }
 
 int
 dc1394_query_format7_color_coding(dc1394camera_t *camera,
- 				  unsigned int mode, quadlet_t *value)
+ 				  uint_t mode, quadlet_t *value)
 {
   int err;
   
@@ -583,7 +580,7 @@ dc1394_query_format7_color_coding(dc1394camera_t *camera,
  
 int
 dc1394_query_format7_pixel_number(dc1394camera_t *camera,
- 				  unsigned int mode, unsigned int *pixnum)
+ 				  uint_t mode, uint_t *pixnum)
 {
   int err;
   quadlet_t value;
@@ -595,17 +592,17 @@ dc1394_query_format7_pixel_number(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_PIXEL_NUMBER_INQ, &value);
   DC1394_ERR_CHK(err, "Could not get pixel number");
 
-  *pixnum= (unsigned int) value;
+  *pixnum= (uint_t) value;
   
   return err;
 }
 
 int
 dc1394_query_format7_total_bytes(dc1394camera_t *camera,
- 				 unsigned int mode, unsigned long long int *total_bytes)
+ 				 uint_t mode, uint64_t *total_bytes)
 {
   int err;
-  unsigned long long int value_hi, value_lo;
+  uint64_t value_hi, value_lo;
   quadlet_t value;
   
   if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) ) {
@@ -629,8 +626,8 @@ dc1394_query_format7_total_bytes(dc1394camera_t *camera,
 
 int
 dc1394_query_format7_packet_para(dc1394camera_t *camera,
- 				 unsigned int mode, unsigned int *min_bytes,
-				 unsigned int *max_bytes)
+ 				 uint_t mode, uint_t *min_bytes,
+				 uint_t *max_bytes)
 {
   int err;
   quadlet_t value;
@@ -642,16 +639,16 @@ dc1394_query_format7_packet_para(dc1394camera_t *camera,
   err= GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_PACKET_PARA_INQ, &value);
   DC1394_ERR_CHK(err, "Could not get F7 packet parameters");
 
-  *min_bytes= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
-  *max_bytes= (unsigned int) ( value & 0x0000FFFFUL );       
+  *min_bytes= (uint_t) ( value & 0xFFFF0000UL ) >> 16;
+  *max_bytes= (uint_t) ( value & 0x0000FFFFUL );       
   
   return err;
 }
 
 int
 dc1394_query_format7_byte_per_packet(dc1394camera_t *camera,
- 				     unsigned int mode,
-                                     unsigned int *packet_bytes)
+ 				     uint_t mode,
+                                     uint_t *packet_bytes)
 {
   int err;
   quadlet_t value;
@@ -663,7 +660,7 @@ dc1394_query_format7_byte_per_packet(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
   DC1394_ERR_CHK(err, "Could not get bytes per packet");
 
-  *packet_bytes= (unsigned int) ( value & 0xFFFF0000UL ) >> 16;
+  *packet_bytes= (uint_t) ( value & 0xFFFF0000UL ) >> 16;
   
   if (packet_bytes==0) {
     printf("(%s): BYTES_PER_PACKET is zero. This should not happen.\n", __FILE__);
@@ -674,8 +671,8 @@ dc1394_query_format7_byte_per_packet(dc1394camera_t *camera,
 
 int
 dc1394_set_format7_image_position(dc1394camera_t *camera,
- 				  unsigned int mode, unsigned int left,
- 				  unsigned int top)
+ 				  uint_t mode, uint_t left,
+ 				  uint_t top)
 {
   int err;
 
@@ -691,8 +688,8 @@ dc1394_set_format7_image_position(dc1394camera_t *camera,
 
 int
 dc1394_set_format7_image_size(dc1394camera_t *camera,
-                              unsigned int mode, unsigned int width,
-                              unsigned int height)
+                              uint_t mode, uint_t width,
+                              uint_t height)
 {
   int err;
   err=SetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_IMAGE_SIZE, (quadlet_t)((width << 16) | height));
@@ -707,15 +704,15 @@ dc1394_set_format7_image_size(dc1394camera_t *camera,
 
 int
 dc1394_set_format7_color_coding_id(dc1394camera_t *camera,
- 				   unsigned int mode, unsigned int color_id)
+ 				   uint_t mode, uint_t color_id)
 {
   int err;
 
-  if ( (color_id < COLOR_FORMAT7_MIN) || (color_id > COLOR_FORMAT7_MAX) ) {
+  if ( (color_id < COLOR_FORMAT_MIN) || (color_id > COLOR_FORMAT_MAX) ) {
     return DC1394_FAILURE;
   }
   
-  color_id-= COLOR_FORMAT7_MIN;
+  color_id-= COLOR_FORMAT_MIN;
   color_id=color_id<<24;
   err=SetCameraFormat7Register(camera, mode,REG_CAMERA_FORMAT7_COLOR_CODING_ID, (quadlet_t)color_id);
   DC1394_ERR_CHK(err, "Format7 color coding ID setting failure");
@@ -729,8 +726,8 @@ dc1394_set_format7_color_coding_id(dc1394camera_t *camera,
 
 int
 dc1394_set_format7_byte_per_packet(dc1394camera_t *camera,
- 				   unsigned int mode,
-                                   unsigned int packet_bytes)
+ 				   uint_t mode,
+                                   uint_t packet_bytes)
 {
   int err;
   err=SetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, (quadlet_t)(packet_bytes) << 16 );
@@ -745,11 +742,11 @@ dc1394_set_format7_byte_per_packet(dc1394camera_t *camera,
 
 int
 dc1394_query_format7_value_setting(dc1394camera_t *camera,
-				   unsigned int mode,
-				   unsigned int *present,
-				   unsigned int *setting1,
-				   unsigned int *err_flag1,
-				   unsigned int *err_flag2)
+				   uint_t mode,
+				   uint_t *present,
+				   uint_t *setting1,
+				   uint_t *err_flag1,
+				   uint_t *err_flag2)
 {
   int err;
   quadlet_t value;
@@ -766,17 +763,17 @@ dc1394_query_format7_value_setting(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_VALUE_SETTING, &value);
   DC1394_ERR_CHK(err, "could note get value setting");
   
-  *present= (unsigned int) ( value & 0x80000000UL ) >> 31;
-  *setting1= (unsigned int) ( value & 0x40000000UL ) >> 30;
-  *err_flag1= (unsigned int) ( value & 0x00800000UL ) >> 23;
-  *err_flag2= (unsigned int) ( value & 0x00400000UL ) >> 22;
+  *present= (uint_t) ( value & 0x80000000UL ) >> 31;
+  *setting1= (uint_t) ( value & 0x40000000UL ) >> 30;
+  *err_flag1= (uint_t) ( value & 0x00800000UL ) >> 23;
+  *err_flag2= (uint_t) ( value & 0x00400000UL ) >> 22;
 
   return err;
 }
 
 int
 dc1394_set_format7_value_setting(dc1394camera_t *camera,
-				 unsigned int mode)
+				 uint_t mode)
 {
   int err;
   err=SetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_VALUE_SETTING, (quadlet_t)0x40000000UL);
@@ -787,7 +784,7 @@ dc1394_set_format7_value_setting(dc1394camera_t *camera,
 
 int
 dc1394_query_format7_recommended_byte_per_packet(dc1394camera_t *camera,
-						  unsigned int mode, unsigned int *bpp)
+						  uint_t mode, uint_t *bpp)
 {
   int err;
   quadlet_t value;
@@ -799,19 +796,19 @@ dc1394_query_format7_recommended_byte_per_packet(dc1394camera_t *camera,
   err= GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
   DC1394_ERR_CHK(err, "Could not get recommended BPP");
 
-  *bpp= (unsigned int) ( value & 0x0000FFFFUL );
+  *bpp= (uint_t) ( value & 0x0000FFFFUL );
   
   return err;
 }
 
 int
 dc1394_query_format7_packet_per_frame(dc1394camera_t *camera,
-				      unsigned int mode, unsigned int *ppf)
+				      uint_t mode, uint_t *ppf)
 {
   int err;
   quadlet_t value;
-  unsigned int packet_bytes;
-  unsigned long long int total_bytes;
+  uint_t packet_bytes;
+  uint64_t total_bytes;
 
   if (camera->iidc_version>=IIDC_VERSION_1_30) {
 
@@ -822,7 +819,7 @@ dc1394_query_format7_packet_per_frame(dc1394camera_t *camera,
     err= GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ, &value);
     DC1394_ERR_CHK(err, "Could not get the number of packets per frame");
 
-    *ppf= (unsigned int) (value);
+    *ppf= (uint_t) (value);
     
     return err;
   }
@@ -850,9 +847,9 @@ dc1394_query_format7_packet_per_frame(dc1394camera_t *camera,
 
 int
 dc1394_query_format7_unit_position(dc1394camera_t *camera,
-				   unsigned int mode,
-				   unsigned int *horizontal_pos,
-				   unsigned int *vertical_pos)
+				   uint_t mode,
+				   uint_t *horizontal_pos,
+				   uint_t *vertical_pos)
 {
   int err;
   quadlet_t value;
@@ -871,15 +868,15 @@ dc1394_query_format7_unit_position(dc1394camera_t *camera,
     DC1394_ERR_CHK(err, "Could not get unit size");
   }
   
-  *horizontal_pos = (unsigned int) (( value & 0xFFFF0000UL )>>16);
-  *vertical_pos   = (unsigned int) ( value & 0x0000FFFFUL );
+  *horizontal_pos = (uint_t) (( value & 0xFFFF0000UL )>>16);
+  *vertical_pos   = (uint_t) ( value & 0x0000FFFFUL );
   
   return err;
 }
 
 int
 dc1394_query_format7_frame_interval(dc1394camera_t *camera,
-				    unsigned int mode, float *interval)
+				    uint_t mode, float *interval)
 {   
   int err;
   quadlet_t value;
@@ -897,7 +894,7 @@ dc1394_query_format7_frame_interval(dc1394camera_t *camera,
     
 int
 dc1394_query_format7_data_depth(dc1394camera_t *camera,
-				unsigned int mode, unsigned int *data_depth)
+				uint_t mode, uint_t *data_depth)
 {   
   int err;
   quadlet_t value;
@@ -914,7 +911,7 @@ dc1394_query_format7_data_depth(dc1394camera_t *camera,
     
 int
 dc1394_query_format7_color_filter_id(dc1394camera_t *camera,
-				     unsigned int mode, unsigned int *color_id)
+				     uint_t mode, uint_t *color_id)
 {   
   int err;
   quadlet_t value;
@@ -925,20 +922,20 @@ dc1394_query_format7_color_filter_id(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID, &value);
   DC1394_ERR_CHK(err, "Could not get color filter ID");
 
-  *color_id= (value >> 24)+COLOR_FORMAT7_MIN;
+  *color_id= (value >> 24)+COLOR_FORMAT_MIN;
   return err;
 }   
      
 int
 dc1394_set_format7_color_filter_id(dc1394camera_t *camera,
-				   unsigned int mode, unsigned int color_id)
+				   uint_t mode, uint_t color_id)
 {   
   int err;
   if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) )
     return DC1394_FAILURE;
   
   err=SetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID,
-			       color_id - COLOR_FORMAT7_MIN);
+			       color_id - COLOR_FORMAT_MIN);
   DC1394_ERR_CHK(err, "Could not set color filter ID");
 
   return err;

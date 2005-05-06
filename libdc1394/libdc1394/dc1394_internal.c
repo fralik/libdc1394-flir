@@ -1,5 +1,5 @@
 /*
- * 1394-Based Digital Camera Control Library
+ * 1394-Based Digital Camera Control Library, internal functions
  * Copyright (C) Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -19,9 +19,10 @@
 
 #include <libraw1394/raw1394.h>
 #include "dc1394_internal.h"
+#include "dc1394_utils.h"
 #include "dc1394_register.h"
 
-const char *dc1394_feature_desc[NUM_FEATURES] =
+const char *dc1394_feature_desc[FEATURE_NUM] =
 {
   "Brightness",
   "Exposure",
@@ -70,7 +71,8 @@ const char *dc1394_error_strings[NUM_ERRORS] =
   "Memory allocation failure",
   "Tagged register not found",
   "Format_7 Error_flag_1 is set",
-  "Format_7 Error_flag_2 is set"
+  "Format_7 Error_flag_2 is set",
+  "Invalid Bayer method code"
 };
 
 /*
@@ -113,68 +115,6 @@ const int quadlets_per_packet_format_2[64] =
   250, 500, 1000, 2000, 4000, 8000,   -1, -1
 };
 
-int
-_dc1394_get_wh_from_format(int format, int mode, int *w, int *h) 
-{
-  switch(format) {
-  case FORMAT_VGA_NONCOMPRESSED:
-    switch(mode) {
-    case MODE_160x120_YUV444:
-      *w = 160;*h=120;
-      return DC1394_SUCCESS;
-    case MODE_320x240_YUV422:
-      *w = 320;*h=240;
-      return DC1394_SUCCESS;
-    case MODE_640x480_YUV411:
-    case MODE_640x480_YUV422:
-    case MODE_640x480_RGB:
-    case MODE_640x480_MONO:
-    case MODE_640x480_MONO16:
-      *w =640;*h=480;
-      return DC1394_SUCCESS;
-    default:
-      return DC1394_INVALID_MODE;
-    }
-  case FORMAT_SVGA_NONCOMPRESSED_1:
-    switch(mode) {
-    case MODE_800x600_YUV422:
-    case MODE_800x600_RGB:
-    case MODE_800x600_MONO:
-    case MODE_800x600_MONO16:
-      *w=800;*h=600;
-      return DC1394_SUCCESS;
-    case MODE_1024x768_YUV422:
-    case MODE_1024x768_RGB:
-    case MODE_1024x768_MONO:
-    case MODE_1024x768_MONO16:
-      *w=1024;*h=768;
-      return DC1394_SUCCESS;
-    default:
-      return DC1394_INVALID_MODE;
-    }
-  case FORMAT_SVGA_NONCOMPRESSED_2:
-    switch(mode) {
-    case MODE_1280x960_YUV422:
-    case MODE_1280x960_RGB:
-    case MODE_1280x960_MONO:
-    case MODE_1280x960_MONO16:
-      *w=1280;*h=960;
-      return DC1394_SUCCESS;
-    case MODE_1600x1200_YUV422:
-    case MODE_1600x1200_RGB:
-    case MODE_1600x1200_MONO:
-    case MODE_1600x1200_MONO16:
-      *w=1600;*h=1200;
-      return DC1394_SUCCESS;
-    default:
-      return DC1394_INVALID_MODE;
-    }
-  default:
-    return DC1394_INVALID_FORMAT;
-  }
-
-}
-	
 /********************************************************
  _dc1394_get_quadlets_per_packet
 
@@ -182,38 +122,46 @@ _dc1394_get_wh_from_format(int format, int mode, int *w, int *h)
  per packet
 *********************************************************/
 int 
-_dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate) 
+_dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // ERROR handling to be updated
 {
-  int mode_index;
-  int frame_rate_index= frame_rate - FRAMERATE_MIN;
+  uint_t mode_index;
+  uint_t frame_rate_index= frame_rate - FRAMERATE_MIN;
+  uint_t format;
+  int err;
+
+  err=_dc1394_get_format_from_mode(mode, &format);
+  DC1394_ERR_CHK(err,"Invalid mode ID");
 
   switch(format) {
-  case FORMAT_VGA_NONCOMPRESSED:
+  case FORMAT0:
     mode_index= mode - MODE_FORMAT0_MIN;
     
     if ( ((mode >= MODE_FORMAT0_MIN) && (mode <= MODE_FORMAT0_MAX)) && 
 	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
-      return quadlets_per_packet_format_0[NUM_FRAMERATES*mode_index+frame_rate_index];
+      *qpp=quadlets_per_packet_format_0[FRAMERATE_NUM*mode_index+frame_rate_index];
     }
-    printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
+    else
+      printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
     break;
-  case FORMAT_SVGA_NONCOMPRESSED_1:
+  case FORMAT1:
     mode_index= mode - MODE_FORMAT1_MIN;
     
     if ( ((mode >= MODE_FORMAT1_MIN) && (mode <= MODE_FORMAT1_MAX)) && 
 	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
-      return quadlets_per_packet_format_1[NUM_FRAMERATES*mode_index+frame_rate_index];
+      *qpp=quadlets_per_packet_format_1[FRAMERATE_NUM*mode_index+frame_rate_index];
     }
-    printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
+    else
+      printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
     break;
-  case FORMAT_SVGA_NONCOMPRESSED_2:
+  case FORMAT2:
     mode_index= mode - MODE_FORMAT2_MIN;
     
     if ( ((mode >= MODE_FORMAT2_MIN) && (mode <= MODE_FORMAT2_MAX)) && 
 	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
-      return quadlets_per_packet_format_2[NUM_FRAMERATES*mode_index+frame_rate_index];
+      *qpp=quadlets_per_packet_format_2[FRAMERATE_NUM*mode_index+frame_rate_index];
     }
-    printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
+    else
+      printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
     break;
   default:
     printf("(%s) Quadlets per packet unkown for format %d!\n", __FILE__, format);
@@ -230,101 +178,29 @@ _dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate)
  frame given the format and mode
 ***********************************************************/
 int
-_dc1394_quadlets_from_format(int format, int mode) 
+_dc1394_quadlets_from_format(uint_t mode, uint_t *quads) 
 {
 
-  switch (format) {
-  case FORMAT_VGA_NONCOMPRESSED:
-    
-    switch(mode) {
-    case MODE_160x120_YUV444:
-      return 14400;   //160x120*3/4
-    case MODE_320x240_YUV422:
-      return 38400;   //320x240/2
-    case MODE_640x480_YUV411:
-      return 115200;  //640x480x1.5/4
-    case MODE_640x480_YUV422:
-      return 153600;  //640x480/2
-    case MODE_640x480_RGB:
-      return 230400;  //640x480x3/4
-    case MODE_640x480_MONO:
-      return 76800;   //640x480/4
-    case MODE_640x480_MONO16:
-      return 153600;  //640x480/2
-    default:
-      printf("(%s) Improper mode specified: %d\n", __FILE__, mode);
-      break;
-    }
-    
-    break;
-  case FORMAT_SVGA_NONCOMPRESSED_1: 
-    
-    switch(mode) {
-    case MODE_800x600_YUV422:
-      return 240000;  //800x600/2
-    case MODE_800x600_RGB:
-      return 360000;  //800x600x3/4
-    case MODE_800x600_MONO:
-      return 120000;  //800x600/4
-    case MODE_1024x768_YUV422:
-      return 393216;  //1024x768/2
-    case MODE_1024x768_RGB:
-      return 589824;  //1024x768x3/4
-    case MODE_1024x768_MONO:
-      return 196608;  //1024x768/4
-    case MODE_800x600_MONO16:
-      return 240000;  //800x600/2
-    case MODE_1024x768_MONO16:
-      return 393216;  //1024x768/2
-    default:
-      printf("(%s) Improper mode specified: %d\n", __FILE__, mode);
-      break;
-    }
-    
-    break;
-  case FORMAT_SVGA_NONCOMPRESSED_2:
-    
-    switch (mode) {
-    case MODE_1280x960_YUV422:
-      return 614400;  //1280x960/2
-    case MODE_1280x960_RGB:
-      return 921600;  //1280x960x3/4
-    case MODE_1280x960_MONO:
-      return 307200;  //1280x960/4
-    case MODE_1600x1200_YUV422:
-      return 960000;  //1600x1200/2
-    case MODE_1600x1200_RGB:
-      return 1440000; //1600x1200x3/4
-    case MODE_1600x1200_MONO:
-      return 480000;  //1600x1200/4
-    case MODE_1280x960_MONO16:
-      return 614400;  //1280x960/2
-    case MODE_1600x1200_MONO16:
-      return 960000;  //1600x1200/2
-    default:
-      printf("(%s) Improper mode specified: %d\n", __FILE__, mode);
-      break;
-    }
-    
-    break;
-  case FORMAT_STILL_IMAGE:
-    printf("(%s) Don't know how many quadlets per frame for FORMAT_STILL_IMAGE mode:%d\n",
-	   __FILE__, mode);
-    break;
-  case FORMAT_SCALABLE_IMAGE_SIZE:
-    printf("(%s) Don't know how many quadlets per frame for FORMAT_SCALABLE_IMAGE mode:%d\n",
-	   __FILE__, mode);
-    break;
-  default:
-    printf("(%s) Improper format specified: %d\n", __FILE__, format);
-    break;
-  }
-  
-  return DC1394_FAILURE;
+  uint_t w, h, color_mode;
+  float bpp;
+  int err;
+
+  err=dc1394_get_wh_from_mode(mode, &w, &h);
+  DC1394_ERR_CHK(err, "Invalid mode ID");
+
+  err=dc1394_get_color_mode_from_mode(mode, &color_mode);
+  DC1394_ERR_CHK(err, "Invalid mode ID");
+
+  err=dc1394_get_bytes_per_pixel(color_mode, &bpp);
+  DC1394_ERR_CHK(err, "Invalid color mode ID");
+
+  *quads=(uint_t)(w*h*bpp/4);
+
+  return err;
 }
 
 int
-IsFeatureBitSet(quadlet_t value, unsigned int feature)
+IsFeatureBitSet(quadlet_t value, uint_t feature)
 {
 
   if (feature >= FEATURE_ZOOM) {
@@ -345,33 +221,31 @@ IsFeatureBitSet(quadlet_t value, unsigned int feature)
     return DC1394_FALSE;
 }
 
-int 
-SetFeatureValue(dc1394camera_t *camera, unsigned int feature, unsigned int value)
+int
+_dc1394_get_format_from_mode(uint_t mode, uint_t *format)
 {
-  quadlet_t curval;
-  octlet_t offset;
-  
-  FEATURE_TO_VALUE_OFFSET(feature, offset);
-  
-  if (GetCameraControlRegister(camera, offset, &curval) < 0) {
-    return DC1394_FAILURE;
+  int err=DC1394_SUCCESS;
+
+  if ((mode>=MODE_FORMAT0_MIN)&&(mode<=MODE_FORMAT0_MAX)) {
+    *format=FORMAT0;
   }
-  
-  return  SetCameraControlRegister(camera, offset, (curval & 0xFFFFF000UL) | (value & 0xFFFUL));
+  else if ((mode>=MODE_FORMAT1_MIN)&&(mode<=MODE_FORMAT1_MAX)) {
+    *format=FORMAT1;
+  }
+  else if ((mode>=MODE_FORMAT2_MIN)&&(mode<=MODE_FORMAT2_MAX)) {
+    *format=FORMAT2;
+  }
+  else if ((mode>=MODE_FORMAT6_MIN)&&(mode<=MODE_FORMAT6_MAX)) {
+    *format=FORMAT6;
+  }
+  else if ((mode>=MODE_FORMAT7_MIN)&&(mode<=MODE_FORMAT7_MAX)) {
+    *format=FORMAT7;
+  }
+  else {
+    err=DC1394_INVALID_MODE;
+    DC1394_ERR_CHK(err, "The supplied mode does not correspond to any format");
+  }
+
+  return err;
 }
 
-int
-GetFeatureValue(dc1394camera_t *camera, unsigned int feature, unsigned int *value)
-{
-  quadlet_t quadval;
-  octlet_t offset;
-  int retval;
-  
-  FEATURE_TO_VALUE_OFFSET(feature, offset);
-  retval= GetCameraControlRegister(camera, offset, &quadval);
-  if (retval == DC1394_SUCCESS) {
-    *value= (unsigned int)(quadval & 0xFFFUL);
-  }
-  
-  return retval;
-}

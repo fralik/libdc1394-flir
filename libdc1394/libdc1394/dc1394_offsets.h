@@ -1,6 +1,5 @@
 /*
- * 1394-Based Digital Camera Absolute Setting functions
- *
+ * 1394-Based Digital Camera standard offsets
  * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or

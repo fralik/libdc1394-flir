@@ -1,10 +1,6 @@
 /*
- * 1394-Based Digital Camera Control Library
- * Copyright (C) 2000 SMART Technologies Inc.
- *
- * Written by Gord Peters <GordPeters@smarttech.com>
- * Additions by Chris Urmson <curmson@ri.cmu.edu>
- * Additions by Damien Douxchamps <ddouxchamps@users.sf.net>
+ * 1394-Based Digital Camera Control Library, internal functions
+ * Copyright (C) Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -89,24 +85,18 @@
 /* Internal functions required by two different source files */
 
 int
-_dc1394_dma_basic_setup(int channel, int num_dma_buffers, dc1394capture_t *capture);
-			
-int
-_dc1394_get_wh_from_format(int format, int mode, int *w, int *h);
-		
-int 
-_dc1394_get_quadlets_per_packet(int format, int mode, int frame_rate);
-
-int
-_dc1394_quadlets_from_format(int format, int mode);
-		
-int
-IsFeatureBitSet(quadlet_t value, unsigned int feature);
-
-int 
-SetFeatureValue(dc1394camera_t *camera, unsigned int feature, unsigned int value);
-		
-int
-GetFeatureValue(dc1394camera_t *camera, unsigned int feature, unsigned int *value);
+_dc1394_dma_basic_setup(uint_t channel, uint_t num_dma_buffers, dc1394capture_t *capture);
 	
+int 
+_dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp);
+
+int
+_dc1394_quadlets_from_format(uint_t mode, uint_t *quads);
+
+int
+_dc1394_get_format_from_mode(uint_t mode, uint_t *format);
+		
+int
+IsFeatureBitSet(quadlet_t value, uint_t feature);
+
 #endif /* _DC1394_INTERNAL_H */

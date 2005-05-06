@@ -15,10 +15,15 @@ libdc1394_control_la_SOURCES =  \
 	dc1394_absolute.c	\
 	dc1394_register.c       \
 	dc1394_register.h       \
+	dc1394_utils.c          \
+	dc1394_utils.h          \
 	dc1394_internal.c       \
 	dc1394_internal.h       \
+	dc1394_conversions.c    \
+	dc1394_conversions.h    \
+	dc1394_bayer.c          \
 	kernel-video1394.h
 
 # headers to be installed
-pkginclude_HEADERS = dc1394_control.h
+pkginclude_HEADERS = dc1394_control.h dc1394_utils.h dc1394_vendor_avt.h dc1394_conversions.h
 

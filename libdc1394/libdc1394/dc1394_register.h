@@ -1,7 +1,5 @@
 /*
- * 1394-Based Digital Camera register access functions for the Control
- *   Library
- *
+ * 1394-Based Digital Camera register access function
  * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -61,6 +59,9 @@ GetCameraFormat7Register(dc1394camera_t *camera, unsigned int mode, octlet_t off
 int
 SetCameraFormat7Register(dc1394camera_t *camera, unsigned int mode, octlet_t offset, quadlet_t value);
 
+int
+QueryFormat7CSROffset(dc1394camera_t *camera, unsigned int mode, octlet_t *offset);
+
 /********************************************************************************/
 /* Get/Set Absolute Control Registers                                           */
 /********************************************************************************/
@@ -75,8 +76,5 @@ SetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, octlet_t
 /********************************************************************************/
 int
 GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *offset, quadlet_t *value);
-
-int
-QueryFormat7CSROffset(dc1394camera_t *camera, unsigned int mode, octlet_t *offset);
 
 #endif /* __DC1394_REGISTER_H__ */

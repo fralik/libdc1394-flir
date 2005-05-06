@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.6  2005/05/06 00:13:37  ddouxchamps
+**  more updates from Golden Week
+**
 **  Revision 1.9.2.5  2005/05/02 04:37:58  ddouxchamps
 **  debugged everything. AFAIK code is 99.99% ok now.
 **
@@ -285,7 +288,7 @@ void display_frames()
 					captures[i].capture_buffer, device_width*device_height*2);
 				break;
 					
-			case MODE_640x480_RGB:
+			case MODE_640x480_RGB8:
 				rgb2yuy2( (unsigned char *) captures[i].capture_buffer,
 					frame_buffer + (i * frame_length),
 					(device_width*device_height) );
@@ -381,7 +384,7 @@ int main(int argc,char *argv[])
     format=XV_YUY2;
     break;
   case 2: 
-    res = MODE_640x480_RGB; 
+    res = MODE_640x480_RGB8; 
     device_width=640;
     device_height=480;
     format=XV_YUY2;
@@ -422,8 +425,7 @@ int main(int argc,char *argv[])
       exit(-1);
     }
     
-    if (dc1394_dma_setup_capture(cameras[i], i+1 /*channel*/,
-				 FORMAT_VGA_NONCOMPRESSED, res,
+    if (dc1394_dma_setup_capture(cameras[i], i+1 /*channel*/, res,
 				 SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
 				 device_name, &captures[i]) != DC1394_SUCCESS) {
       fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",

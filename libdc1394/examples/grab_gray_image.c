@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.6  2005/05/06 00:13:38  ddouxchamps
+**  more updates from Golden Week
+**
 **  Revision 1.5.2.5  2005/05/02 04:37:58  ddouxchamps
 **  debugged everything. AFAIK code is 99.99% ok now.
 **
@@ -129,10 +132,8 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
-  if (dc1394_setup_capture(camera,
-                           0, /* channel */ 
-                           FORMAT_VGA_NONCOMPRESSED,
-                           MODE_640x480_MONO,
+  if (dc1394_setup_capture(camera, 0, /* channel */ 
+                           MODE_640x480_MONO8,
                            SPEED_400,
                            FRAMERATE_7_5,
                            &capture)!=DC1394_SUCCESS) {

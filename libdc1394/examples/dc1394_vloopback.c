@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.6  2005/05/06 00:13:38  ddouxchamps
+**  more updates from Golden Week
+**
 **  Revision 1.11.2.5  2005/05/02 04:37:58  ddouxchamps
 **  debugged everything. AFAIK code is 99.99% ok now.
 **
@@ -534,7 +537,7 @@ int dc_start(int palette)
 
 	switch (palette) {
 		case VIDEO_PALETTE_RGB24:
-			mode = MODE_640x480_RGB;
+			mode = MODE_640x480_RGB8;
 			break;
 			
 		case VIDEO_PALETTE_YUV422:
@@ -553,8 +556,7 @@ int dc_start(int palette)
 		return 0;
 	}
 	 
-	if (dc1394_dma_setup_capture(camera,  channel,
-				     FORMAT_VGA_NONCOMPRESSED, mode,
+	if (dc1394_dma_setup_capture(camera, channel,  mode,
 				     speed, FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES,
 				     dc_dev_name, &capture) != DC1394_SUCCESS) 
 	{

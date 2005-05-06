@@ -554,3 +554,17 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-05-02 Damien <ddouxchamps@users.sf.net>
     * debugged everything. Both RAW and VIDEO1394 caoture are OK.
+    * removed duplicate functions for feature value read/write
+    * updated dc1394_print_camera_info
+    * renamed some constant definitions
+	
+2005-05-03 Damien <ddouxchamps@users.sf.net>
+    * new functions to get modes and framerates
+    * most references to image FORMATS have been removed as we can deduce
+      that from the MODE. Therefore only video modes are presented to the
+      user.
+    * added a bunch of utilities to the file new file dc1394_utils.c/h.
+      Some of these come from Coriander but are so generic that they fit
+      better in libdc1394.
+    * added conversion functions from coriander, including the Bayer stuff.
+    * stronger typing. Fixed confusion between int and unsigned int.

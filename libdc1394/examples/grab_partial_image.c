@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.7  2005/05/06 00:13:38  ddouxchamps
+**  more updates from Golden Week
+**
 **  Revision 1.4.2.6  2005/05/02 04:37:58  ddouxchamps
 **  debugged everything. AFAIK code is 99.99% ok now.
 **
@@ -137,8 +140,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"could not get basic info\n");
   }
     
-  if( dc1394_setup_format7_capture(camera,
-                                   0, /* channel */
+  if( dc1394_setup_format7_capture(camera, 0, /* channel */
                                    MODE_FORMAT7_0, 
                                    SPEED_400,
                                    USE_MAX_AVAIL, /* use max packet size */
