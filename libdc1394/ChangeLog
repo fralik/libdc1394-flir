@@ -568,3 +568,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       better in libdc1394.
     * added conversion functions from coriander, including the Bayer stuff.
     * stronger typing. Fixed confusion between int and unsigned int.
+	
+2005-05-06 Damien <ddouxchamps@users.sf.net>
+    * fixed a few bugs created during the previous changes.

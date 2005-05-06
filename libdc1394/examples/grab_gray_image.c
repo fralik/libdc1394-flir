@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.7  2005/05/06 01:24:46  ddouxchamps
+**  fixed a few bugs created by the previous changes
+**
 **  Revision 1.5.2.6  2005/05/06 00:13:38  ddouxchamps
 **  more updates from Golden Week
 **

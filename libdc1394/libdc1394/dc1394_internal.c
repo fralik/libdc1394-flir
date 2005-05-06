@@ -131,6 +131,8 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
 
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_CHK(err,"Invalid mode ID");
+  
+  //fprintf(stderr,"format: %d\n",format);
 
   switch(format) {
   case FORMAT0:
@@ -140,9 +142,11 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
 	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
       *qpp=quadlets_per_packet_format_0[FRAMERATE_NUM*mode_index+frame_rate_index];
     }
-    else
-      printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
-    break;
+    else {
+      err=DC1394_INVALID_MODE;
+      DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+    }
+    return DC1394_SUCCESS;
   case FORMAT1:
     mode_index= mode - MODE_FORMAT1_MIN;
     
@@ -150,9 +154,11 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
 	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
       *qpp=quadlets_per_packet_format_1[FRAMERATE_NUM*mode_index+frame_rate_index];
     }
-    else
-      printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
-    break;
+    else {
+      err=DC1394_INVALID_MODE;
+      DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+    }
+    return DC1394_SUCCESS;
   case FORMAT2:
     mode_index= mode - MODE_FORMAT2_MIN;
     
@@ -160,12 +166,12 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
 	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
       *qpp=quadlets_per_packet_format_2[FRAMERATE_NUM*mode_index+frame_rate_index];
     }
-    else
-      printf("(%s) Invalid framerate (%d) or mode (%d)!\n", __FILE__, frame_rate, format);
+    else {
+      err=DC1394_INVALID_MODE;
+      DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+    }
     break;
-  default:
-    printf("(%s) Quadlets per packet unkown for format %d!\n", __FILE__, format);
-    break;
+    return DC1394_SUCCESS;
   }
   
   return DC1394_FAILURE;

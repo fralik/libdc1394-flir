@@ -306,17 +306,18 @@ dc1394_print_camera_info(dc1394camera_t *camera)
   value[0]= camera->euid_64 & 0xffffffff;
   value[1]= (camera->euid_64 >>32) & 0xffffffff;
   printf("------ Camera information ------\n");
+  printf("Vendor                            :     %s\n", camera->vendor);
+  printf("Model                             :     %s\n", camera->model);
   printf("Node                              :     0x%x\n", camera->node);
   printf("Handle                            :     0x%x\n", (uint_t)camera->handle);
   printf("Port                              :     %d\n", camera->port);
-  printf("Specifications ID                 :     0x%x\n", camera->ud_reg_tag_12 && 0xFFFFFF);
-  printf("Software revision                 :     0x%x\n", camera->ud_reg_tag_13 && 0xFFFFFF);
+  printf("Specifications ID                 :     0x%x\n", camera->ud_reg_tag_12);
+  printf("Software revision                 :     0x%x\n", camera->ud_reg_tag_13);
   printf("IIDC version code                 :     %d\n", camera->iidc_version);
   printf("Unit directory offset             :     0x%llx\n", (uint64_t)camera->unit_directory);
   printf("Unit dependent directory offset   :     0x%llx\n", (uint64_t)camera->unit_dependent_directory);
   printf("Commands registers base           :     0x%llx\n", (uint64_t)camera->command_registers_base);
-  printf("Unique ID : 0x%08x%08x\n", value[1], value[0]);
-  printf("Vendor: %s\tModel: %s\n\n", camera->vendor, camera->model);
+  printf("Unique ID                         :     0x%08x%08x\n", value[1], value[0]);
   if (camera->adv_features_capable)
     printf("Advanced features found at offset :     0x%llx\n", (uint64_t)camera->advanced_features_csr);
   printf("1394b mode capable (>=800Mbit/s)  :     ");
@@ -362,12 +363,13 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   err=GetConfigROMTaggedRegister(camera, 0x12, &offset, &quadval);
   DC1394_ERR_CHK(err, "Could not get spec ID");
   camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
-
+  //fprintf(stderr,"12: 0x%x\n",camera->ud_reg_tag_12);
   /* get the iidc revision */
   offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x13, &offset, &quadval);
   DC1394_ERR_CHK(err, "Could not get IIDC revision");
   camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
+  //fprintf(stderr,"13: 0x%x\n",camera->ud_reg_tag_13);
 
   /* verify the version/revision and find the IIDC_REVISION value from that */
   err=_dc1394_get_iidc_version(camera);

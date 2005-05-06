@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.8  2005/05/06 01:24:46  ddouxchamps
+**  fixed a few bugs created by the previous changes
+**
 **  Revision 1.4.2.7  2005/05/06 00:13:38  ddouxchamps
 **  more updates from Golden Week
 **
@@ -136,10 +139,6 @@ int main(int argc, char *argv[])
    *  setup capture for format 7
    *-----------------------------------------------------------------------*/
 
-  if( dc1394_get_camera_info(camera) != DC1394_SUCCESS) {
-    fprintf(stderr,"could not get basic info\n");
-  }
-    
   if( dc1394_setup_format7_capture(camera, 0, /* channel */
                                    MODE_FORMAT7_0, 
                                    SPEED_400,
@@ -206,6 +205,7 @@ int main(int argc, char *argv[])
   start_time = times(&tms_buf);
 
   for( i = 0; i < grab_n_frames; ++i) {
+    fprintf(stderr,"capturing frame %d/%d\r",i,grab_n_frames);
     /*-----------------------------------------------------------------------
      *  capture one frame
      *-----------------------------------------------------------------------*/
