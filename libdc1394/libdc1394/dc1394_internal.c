@@ -132,7 +132,7 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_CHK(err,"Invalid mode ID");
   
-  //fprintf(stderr,"format: %d\n",format);
+  fprintf(stderr,"format: %d\n",format);
 
   switch(format) {
   case FORMAT0:
@@ -170,10 +170,16 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
       err=DC1394_INVALID_MODE;
       DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
-    break;
     return DC1394_SUCCESS;
+  case FORMAT6:
+  case FORMAT7:
+    err=DC1394_INVALID_FORMAT;
+    DC1394_ERR_CHK(err,"Format 6 and 7 don't have qpp");
+    break;
   }
   
+  fprintf(stderr,"yorap\n");
+
   return DC1394_FAILURE;
 }
 

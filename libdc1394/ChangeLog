@@ -576,3 +576,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-05-06 Damien <ddouxchamps@users.sf.net>
     * updated the format7 color formats detection.
     * import some more hacks from coriander.
+
+2005-05-09 Damien <ddouxchamps@users.sf.net>
+    * fixed _dc1394_get_quadlets_per_packet
+    * more additional fixes and updates
