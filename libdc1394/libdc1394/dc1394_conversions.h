@@ -70,49 +70,38 @@ enum {
  *  CONVERSION FUNCTIONS TO YUV422
  **********************************************************************/
 
-void
-dc1394_YUV422_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
-void
-dc1394_YUV411_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
-void
-dc1394_YUV444_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
-void
-dc1394_MONO8_to_YUV444(uchar_t *src, uchar_t *dest, 
-		       uint_t src_width, uint_t src_height,
-		       uint_t dest_pitch, uint_t byte_order);
-void
-dc1394_MONO16_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits, uint_t byte_order);
-void
-dc1394_MONO16_to_MONO8(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits);
-void
-dc1394_RGB8_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
-void
-dc1394_RGB16_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
+void dc1394_YUV422_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
+void dc1394_YUV411_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
+void dc1394_YUV444_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
+void dc1394_MONO16_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits, uint_t byte_order);
+void dc1394_RGB8_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
+void dc1394_RGB16_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order);
+void dc1394_MONO8_to_YUV422(uchar_t *src, uchar_t *dest, 
+			    uint_t src_width, uint_t src_height,
+			    uint_t dest_pitch, uint_t byte_order);
+
+/**********************************************************************
+ *  CONVERSION FUNCTIONS TO MONO8
+ **********************************************************************/
+
+void dc1394_MONO16_to_MONO8(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits);
 
 /**********************************************************************
  *  CONVERSION FUNCTIONS TO RGB8 
  **********************************************************************/
 
-void
-dc1394_RGB16_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
-void
-dc1394_YUV444_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
-void
-dc1394_YUV422_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
-void
-dc1394_YUV411_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
-void
-dc1394_MONO8_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
-void
-dc1394_MONO16_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits);
-
+void dc1394_RGB16_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
+void dc1394_YUV444_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
+void dc1394_YUV422_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
+void dc1394_YUV411_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
+void dc1394_MONO8_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
+void dc1394_MONO16_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits);
 
 /**********************************************************************
  *  CONVERSION FUNCTIONS FOR STEREO IMAGES
  **********************************************************************/
 //changes a 16bit stereo image (8bit/channel) into two 8bit images on top of each other
-void
-dc1394_deinterlace_stereo(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
+void dc1394_deinterlace_stereo(uchar_t *src, uchar_t *dest, uint64_t NumPixels);
 
 /************************************************************************************************
  *                                                                                              *
@@ -140,4 +129,5 @@ int dc1394_bayer_decoding_8bit(const uchar_t *bayer, uchar_t *rgb, uint_t sx, ui
 int dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method, uint_t bits);
 
 #endif /* _DC1394_CONVERSIONS_H */
+
 

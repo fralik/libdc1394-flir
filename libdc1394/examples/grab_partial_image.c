@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.9  2005/05/09 00:48:23  ddouxchamps
+**  more fixes and updates
+**
 **  Revision 1.4.2.8  2005/05/06 01:24:46  ddouxchamps
 **  fixed a few bugs created by the previous changes
 **

@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.8  2005/05/09 00:48:22  ddouxchamps
+**  more fixes and updates
+**
 **  Revision 1.9.2.7  2005/05/06 01:24:46  ddouxchamps
 **  fixed a few bugs created by the previous changes
 **
@@ -407,7 +410,7 @@ int main(int argc,char *argv[])
 
   if (numCameras>MAX_CAMERAS) {
     for (i=MAX_CAMERAS;i<numCameras;i++)
-      free(cameras[i]);
+      dc1394_free_camera(cameras[i]);
     numCameras=MAX_CAMERAS;
   }
 

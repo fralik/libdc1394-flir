@@ -89,7 +89,7 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
   dc1394camera_t **cameras;
   uint_t numCam, err=DC1394_SUCCESS, i, numNodes;
   nodeid_t node;
-  
+
   //dc1394bool_t isCamera;
   dc1394camera_t *tmpcam=NULL;
   dc1394camera_t **newcam;
@@ -148,9 +148,19 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
       }
 
       if (err == DC1394_SUCCESS) {
-	cameras[numCam]=tmpcam;
-	tmpcam=NULL;
-	numCam++;
+	// check if this camera was not found yet. (a camera might appear twice with strange bus topologies)
+	// this hack comes from coriander.
+	for (i=0;i<numCam;i++) {
+	  if (tmpcam->euid_64==cameras[i]->euid_64) {
+	    // the camera is already there. don't append.
+	    break;
+	  }
+	}
+	if (tmpcam->euid_64!=cameras[i]->euid_64) {
+	  cameras[numCam]=tmpcam;
+	  tmpcam=NULL;
+	  numCam++;
+	}
       }
 
       if (numCam>=allocated_size) {
@@ -183,6 +193,9 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
   *numCameras=numCam;
 
   *cameras_ptr=cameras;
+
+  if (numCam==0)
+    return DC1394_NO_CAMERA;
 
   return DC1394_SUCCESS;
 }
@@ -489,7 +502,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
     DC1394_ERR_CHK(err, "Could not get current load memory channel");
     
     err=dc1394_get_memory_save_ch(camera, &camera->save_channel);
-    DC1394_ERR_CHK(err, "COuld not get current save memory channel");
+    DC1394_ERR_CHK(err, "Could not get current save memory channel");
   }
   else {
     camera->load_channel=0;
@@ -784,7 +797,7 @@ dc1394_reset_camera(dc1394camera_t *camera)
 }
 
 int
-dc1394_query_supported_image_modes(dc1394camera_t *camera, uint_t **modes, uint_t *numModes)
+dc1394_query_supported_modes(dc1394camera_t *camera, uint_t **modes, uint_t *numModes)
 {
   int err;
   quadlet_t value, sup_formats;

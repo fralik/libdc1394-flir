@@ -220,9 +220,9 @@ enum {
   COLOR_FILTER_FORMAT_GRBG,
   COLOR_FILTER_FORMAT_BGGR
 };
-#define COLOR_FILTER_FORMAT7_MIN                 COLOR_FILTER_FORMAT7_RGGB
-#define COLOR_FILTER_FORMAT7_MAX                 COLOR_FILTER_FORMAT7_BGGR
-#define COLOR_FILTER_FORMAT7_NUM                (COLOR_FILTER_FORMAT7_MAX - COLOR_FILTER_FORMAT7_MIN + 1)
+#define COLOR_FILTER_FORMAT_MIN                 COLOR_FILTER_FORMAT_RGGB
+#define COLOR_FILTER_FORMAT_MAX                 COLOR_FILTER_FORMAT_BGGR
+#define COLOR_FILTER_FORMAT_NUM                (COLOR_FILTER_FORMAT_MAX - COLOR_FILTER_FORMAT_MIN + 1)
 
 /* IIDC versions*/
 enum {
@@ -480,6 +480,7 @@ int dc1394_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polarity);
 int dc1394_set_trigger_on_off(dc1394camera_t *camera, dc1394bool_t on_off);
 int dc1394_get_trigger_on_off(dc1394camera_t *camera, dc1394bool_t *on_off);
 int dc1394_set_trigger_mode(dc1394camera_t *camera, uint_t mode);
+  int dc1394_get_trigger_mode(dc1394camera_t *camera, uint_t *mode);
 /* Turn one software trigger on or off and get state */
 int dc1394_set_soft_trigger(dc1394camera_t *camera);
 int dc1394_unset_soft_trigger(dc1394camera_t *camera);
@@ -541,7 +542,7 @@ int dc1394_get_bandwidth_usage(dc1394camera_t *camera, uint_t *bandwidth);
  ***************************************************************************/
 
 /* functions for querying camera attributes */
-int dc1394_query_supported_image_modes(dc1394camera_t *camera, uint_t **modes, uint_t *numModes);
+int dc1394_query_supported_modes(dc1394camera_t *camera, uint_t **modes, uint_t *numModes);
 int dc1394_query_supported_framerates(dc1394camera_t *camera, uint_t mode, uint_t **framerates, uint_t *numFramerates);
 
 /* get/set the framerate, mode, format, iso channel/speed for the video */
@@ -622,7 +623,7 @@ int dc1394_query_format7_unit_position(dc1394camera_t *camera, uint_t mode, uint
 
 /* color coding */
 int dc1394_query_format7_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
-int dc1394_query_format7_color_coding(dc1394camera_t *camera, uint_t mode, quadlet_t *value);// << to be updated
+int dc1394_query_format7_color_coding(dc1394camera_t *camera, uint_t mode, uint_t **codings, uint_t *numcodings);
 int dc1394_set_format7_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
 int dc1394_set_format7_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
 int dc1394_query_format7_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);

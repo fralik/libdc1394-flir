@@ -25,6 +25,7 @@
 #include "dc1394_internal.h"
 #include "dc1394_register.h"
 #include "dc1394_offsets.h"
+#include "dc1394_utils.h"
 #include "config.h"
 
 /**********************/ 
@@ -110,46 +111,6 @@ _dc1394_v130_errflag2(dc1394camera_t *camera, uint_t mode)
 
   return DC1394_SUCCESS;
 }
-
-/*=================================================================================*
- * The following function returns the bytes per pixel for a defined color coding.  *
- *=================================================================================*/
-
-int
-_Format7BytePerPixel(uint_t color_coding, float *bpp)
-{
-  switch (color_coding) {
-  case COLOR_FORMAT_RAW8: 
-  case COLOR_FORMAT_MONO8:
-    *bpp=1.0;
-    return DC1394_SUCCESS;
-    break;
-  case COLOR_FORMAT_YUV411:
-    *bpp=1.5;
-    return DC1394_SUCCESS;
-    break;
-  case COLOR_FORMAT_YUV422:
-  case COLOR_FORMAT_MONO16:
-  case COLOR_FORMAT_MONO16S:
-  case COLOR_FORMAT_RAW16:
-    *bpp=2.0;
-    return DC1394_SUCCESS;
-    break;
-  case COLOR_FORMAT_YUV444:
-  case COLOR_FORMAT_RGB8: 
-    *bpp=3.0;
-    return DC1394_SUCCESS;
-    break;
-  case COLOR_FORMAT_RGB16:
-  case COLOR_FORMAT_RGB16S:
-    *bpp=6.0;
-    return DC1394_SUCCESS;
-    break;
-  default:
-    return DC1394_INVALID_COLOR_MODE;
-  }
-}
-
  
 /*======================================================================
  *
@@ -347,7 +308,7 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
     DC1394_ERR_CHK(err, "Unable to get format 7 color coding for mode %d \n", mode);
 
     //fprintf(stderr,"color coding: %d\n",color_coding);
-    err=_Format7BytePerPixel(color_coding, &bpp);
+    err=dc1394_get_bytes_per_pixel(color_coding, &bpp);
     DC1394_ERR_CHK(err, "Unable to infer bpp from color coding");
     packets_per_frame = ((int)(width * height * bpp) +
 			 bytes_per_packet -1) / bytes_per_packet;
@@ -564,16 +525,27 @@ dc1394_query_format7_color_coding_id(dc1394camera_t *camera,
 
 int
 dc1394_query_format7_color_coding(dc1394camera_t *camera,
- 				  uint_t mode, quadlet_t *value)
+ 				  uint_t mode, uint_t **codings, uint_t *numcodings)
 {
-  int err;
-  
+  int err, i;
+  quadlet_t value;
+
   if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) ) {
     return DC1394_FAILURE;
   }
-  
-  err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_COLOR_CODING_INQ, value);
+ 
+  *numcodings=0;
+ 
+  *codings=(uint*)malloc(COLOR_FORMAT_NUM*sizeof(uint_t));
+
+  err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_COLOR_CODING_INQ, &value);
   DC1394_ERR_CHK(err, "Could not get available color codings");
+
+  for (i=0;i<COLOR_FORMAT_NUM;i++) {
+    if ((value & (0x1 << (31-i))) > 0)
+      *codings[*numcodings]=i+COLOR_FORMAT_MIN;
+      *numcodings++;
+  }
 
   return err;
 }

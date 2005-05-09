@@ -572,3 +572,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-05-06 Damien <ddouxchamps@users.sf.net>
     * fixed a few bugs created during the previous changes.
     * version set to 2.0.0-pre1
+	
+2005-05-06 Damien <ddouxchamps@users.sf.net>
+    * updated the format7 color formats detection.
+    * import some more hacks from coriander.

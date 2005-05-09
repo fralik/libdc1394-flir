@@ -147,7 +147,7 @@ dc1394_YUV444_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t 
 }
 
 void
-dc1394_MONO8_to_YUV444(uchar_t *src, uchar_t *dest, 
+dc1394_MONO8_to_YUV422(uchar_t *src, uchar_t *dest, 
 		       uint_t src_width, uint_t src_height,
 		       uint_t dest_pitch, uint_t byte_order)
 {
