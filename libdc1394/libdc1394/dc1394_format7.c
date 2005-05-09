@@ -434,6 +434,8 @@ dc1394_query_format7_max_image_size(dc1394camera_t *camera,
   *horizontal_size  = (uint_t) ( value & 0xFFFF0000UL ) >> 16;
   *vertical_size= (uint_t) ( value & 0x0000FFFFUL );
   
+  //fprintf(stderr,"got size: %d %d\n", *horizontal_size, *vertical_size);
+
   return err;
 }
 
@@ -529,23 +531,37 @@ dc1394_query_format7_color_coding(dc1394camera_t *camera,
 {
   int err, i;
   quadlet_t value;
+  uint_t *tmp;
+  uint_t tmpnum;
 
   if ( (mode > MODE_FORMAT7_MAX) || (mode < MODE_FORMAT7_MIN) ) {
     return DC1394_FAILURE;
   }
  
-  *numcodings=0;
+  tmpnum=0;
  
-  *codings=(uint*)malloc(COLOR_FORMAT_NUM*sizeof(uint_t));
+  tmp=(uint_t*)malloc(COLOR_FORMAT_NUM*sizeof(uint_t));
+
+  //fprintf(stderr,"malloc OK\n");
 
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_COLOR_CODING_INQ, &value);
-  DC1394_ERR_CHK(err, "Could not get available color codings");
+  DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp), "Could not get available color codings");
+
+  //fprintf(stderr,"codings reg: 0x%x\n",value);
 
   for (i=0;i<COLOR_FORMAT_NUM;i++) {
-    if ((value & (0x1 << (31-i))) > 0)
-      *codings[*numcodings]=i+COLOR_FORMAT_MIN;
-      *numcodings++;
+    //fprintf(stderr,"test: 0x%x\n",(value & (0x1 << (31-i))));
+    if ((value & (0x1 << (31-i))) > 0) {
+      //fprintf(stderr,"got one coding\n");
+      tmp[tmpnum]=i+COLOR_FORMAT_MIN;
+      tmpnum++;
+    }
   }
+
+  //fprintf(stderr,"got %d color codings\n",tmpnum);
+
+  *codings=tmp;
+  *numcodings=tmpnum;
 
   return err;
 }
