@@ -867,9 +867,8 @@ dc1394_query_supported_modes(dc1394camera_t *camera, uint_t **modes, uint_t *num
     }
   }
   // Format_6
-  if ((sup_formats & (0x1 << (31-(FORMAT6-FORMAT_MIN+3)))) > 0) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT6-FORMAT_MIN+3) * 0x04U), &value);
-    // +3 necessary because there is a gap between F2 and F6/7
+  if ((sup_formats & (0x1 << (31-(FORMAT6-FORMAT_MIN)))) > 0) {
+    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT6-FORMAT_MIN) * 0x04U), &value);
     DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp_formats), "Could not get supported modes for Format_3");
     
     for (mode=MODE_FORMAT6_MIN;mode<=MODE_FORMAT6_MAX;mode++) {
@@ -880,9 +879,8 @@ dc1394_query_supported_modes(dc1394camera_t *camera, uint_t **modes, uint_t *num
     }
   }
   // Format_7
-  if ((sup_formats & (0x1 << (31-(FORMAT7-FORMAT_MIN+3)))) > 0) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT7-FORMAT_MIN+3) * 0x04U), &value);
-    // +3 necessary because there is a gap between F2 and F6/7
+  if ((sup_formats & (0x1 << (31-(FORMAT7-FORMAT_MIN)))) > 0) {
+    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT7-FORMAT_MIN) * 0x04U), &value);
     DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp_formats), "Could not get supported modes for Format_4");
     
     for (mode=MODE_FORMAT7_MIN;mode<=MODE_FORMAT7_MAX;mode++) {
@@ -1044,6 +1042,11 @@ dc1394_get_video_mode(dc1394camera_t *camera, uint_t *mode)
 
   format= (uint_t)((value >> 29) & 0x7UL) + FORMAT_MIN;
   
+  //if (format>FORMAT2)
+  //format-=3;
+
+  //fprintf(stderr,"format: %d\n",format);
+
   err= GetCameraControlRegister(camera, REG_CAMERA_VIDEO_MODE, &value);
   DC1394_ERR_CHK(err, "Could not get video mode");
   
@@ -1100,6 +1103,9 @@ dc1394_set_video_mode(dc1394camera_t *camera, uint_t mode)
     return DC1394_FAILURE;
     break;
   }
+
+  //if (format>FORMAT2)
+  //  format+=DC1394_FORMAT_GAP;
   
   err=SetCameraControlRegister(camera, REG_CAMERA_VIDEO_FORMAT, (quadlet_t)(((format - FORMAT_MIN) & 0x7UL) << 29));
   DC1394_ERR_CHK(err, "Could not set video format");

@@ -152,7 +152,7 @@ GetCameraControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t *val
     return DC1394_FAILURE;
   
   if (camera->command_registers_base == 0) {
-    //fprintf(stderr,"this should not happen\n");
+    fprintf(stderr,"this should not happen\n");
     if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
       return DC1394_FAILURE;
   }

@@ -168,12 +168,13 @@ enum {
   FORMAT0= 384,
   FORMAT1,
   FORMAT2,
-  FORMAT6,
+  FORMAT6=390,
   FORMAT7
 };
 #define FORMAT_MIN                  FORMAT0
 #define FORMAT_MAX                  FORMAT7
-#define FORMAT_NUM                 (FORMAT_MAX - FORMAT_MIN + 1)
+//#define FORMAT_NUM                 (FORMAT_MAX - FORMAT_MIN + 1)
+/* DANGER: FORMAT_NUM devrait etre 5!! FORMAT_NUM est donc non-defini pour etre sur... */
 
 /* Enumeration of camera features */
 enum {

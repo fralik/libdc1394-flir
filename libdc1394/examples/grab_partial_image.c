@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.11  2005/05/09 15:04:27  ddouxchamps
+**  fixed important f7 bug
+**
 **  Revision 1.4.2.10  2005/05/09 02:57:51  ddouxchamps
 **  first debugging with coriander
 **
@@ -73,7 +76,7 @@ int main(int argc, char *argv[])
   dc1394capture_t capture;
   dc1394camera_t *camera, **cameras=NULL;
   int numCameras;
-  int grab_n_frames = 100;
+  int grab_n_frames = 10;
   struct tms tms_buf;
   clock_t start_time;
   float elapsed_time;
@@ -107,43 +110,15 @@ int main(int argc, char *argv[])
     dc1394_free_camera(cameras[i]);
   free(cameras);
   
-  /*-----------------------------------------------------------------------
-   *  to prevent the iso-transfer bug from raw1394 system, check if
-   *  camera is highest node. For details see 
-   *  http://linux1394.sourceforge.net/faq.html#DCbusmgmt
-   *  and
-   *  http://sourceforge.net/tracker/index.php?func=detail&aid=435107&group_id=8157&atid=108157
-   *-----------------------------------------------------------------------*/
-  /*
-  if( camera_nodes[0] == numNodes-1) {
-    fprintf( stderr, "\n"
-             "Sorry, your camera is the highest numbered node\n"
-             "of the bus, and has therefore become the root node.\n"
-             "The root node is responsible for maintaining \n"
-             "the timing of isochronous transactions on the IEEE \n"
-             "1394 bus.  However, if the root node is not cycle master \n"
-             "capable (it doesn't have to be), then isochronous \n"
-             "transactions will not work.  The host controller card is \n"
-             "cycle master capable, however, most cameras are not.\n"
-             "\n"
-             "The quick solution is to add the parameter \n"
-             "attempt_root=1 when loading the OHCI driver as a \n"
-             "module.  So please do (as root):\n"
-             "\n"
-             "   rmmod ohci1394\n"
-             "   insmod ohci1394 attempt_root=1\n"
-             "\n"
-             "for more information see the FAQ at \n"
-             "http://linux1394.sourceforge.net/faq.html#DCbusmgmt\n"
-             "\n");
-    dc1394_destroy_handle(handle);
-    exit( 1);
-  }
-  */
+  //fprintf(stderr,"handle: 0x%x, node: 0x%x\n",camera->handle,camera->node);
 
   /*-----------------------------------------------------------------------
    *  setup capture for format 7
    *-----------------------------------------------------------------------*/
+
+  capture.handle=NULL;
+
+  //fprintf(stderr,"handle: 0x%x\n",capture.handle);
 
   if( dc1394_setup_format7_capture(camera, 0, /* channel */
                                    MODE_FORMAT7_0, 
@@ -161,8 +136,10 @@ int main(int argc, char *argv[])
     dc1394_free_camera(camera);
     exit(1);
   }
+  //fprintf(stderr,"handle: 0x%x\n",capture.handle);
 
   /* set trigger mode */
+  /*
   if( dc1394_set_trigger_mode(camera, TRIGGER_MODE_0)
       != DC1394_SUCCESS)
   {
@@ -171,7 +148,8 @@ int main(int argc, char *argv[])
     dc1394_free_camera(camera);
     exit(1);
   }
-  
+  fprintf(stderr,"handle: 0x%x\n",capture.handle);
+  */
   /*-----------------------------------------------------------------------
    *  print allowed and used packet size
    *-----------------------------------------------------------------------*/
@@ -194,6 +172,8 @@ int main(int argc, char *argv[])
     return DC1394_FAILURE;
   }
   printf( "camera reports total bytes per frame = %lld bytes\n", total_bytes);
+
+  //fprintf(stderr,"handle: 0x%x\n",capture.handle);
   
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
@@ -204,20 +184,26 @@ int main(int argc, char *argv[])
     dc1394_free_camera(camera);
     exit(1);
   }
-
+  //usleep(5000000);
+  //fprintf(stderr,"handle: 0x%x\n",capture.handle);
   /*-----------------------------------------------------------------------
    *  capture 1000 frames and measure the time for this operation
    *-----------------------------------------------------------------------*/
   start_time = times(&tms_buf);
 
   for( i = 0; i < grab_n_frames; ++i) {
-    fprintf(stderr,"capturing frame %d/%d\r",i,grab_n_frames);
+    //fprintf(stderr,"capturing frame %d/%d\r",i,grab_n_frames);
     /*-----------------------------------------------------------------------
      *  capture one frame
      *-----------------------------------------------------------------------*/
     if (dc1394_capture(&capture,1)!=DC1394_SUCCESS) {
+      //fprintf(stderr,"Error 1\n");
+      //fprintf(stderr,"handle: 0x%x\n",capture.handle);
       dc1394_release_capture(&capture);
+      //fprintf(stderr,"Error 2\n");
+      //fprintf(stderr,"handle: 0x%x\n",capture.handle);
       dc1394_free_camera(camera);
+      //fprintf(stderr,"Error 3\n");
       exit(1);
     }
 

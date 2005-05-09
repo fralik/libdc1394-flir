@@ -151,11 +151,13 @@ _dc1394_basic_setup(dc1394camera_t *camera,
 
   capture->node= camera->node;
   capture->frame_rate= frame_rate;
+  capture->port=camera->port;
   capture->channel= channel;
+  capture->handle=raw1394_new_handle();
+  raw1394_set_port(capture->handle,capture->port);
+
   err=_dc1394_get_quadlets_per_packet(mode, frame_rate, &capture->quadlets_per_packet);
   DC1394_ERR_CHK(err, "Unable to get quadlets per packet");
-  capture->handle=raw1394_new_handle();
-  raw1394_set_port(capture->handle,camera->port);
 
   if (capture->quadlets_per_packet < 0) {
     return DC1394_FAILURE;
@@ -329,10 +331,15 @@ dc1394_setup_capture(dc1394camera_t *camera,
 int 
 dc1394_release_capture(dc1394capture_t *capture)
 {
+  //fprintf(stderr,"Error a\n");
   if (capture->capture_buffer != NULL) {
+    //fprintf(stderr,"Error b\n");
     free(capture->capture_buffer);
+    //fprintf(stderr,"Error c\n");
   }
+  //fprintf(stderr,"Error d\n");
   raw1394_destroy_handle(capture->handle);
+  //fprintf(stderr,"Error e\n");
   
   return DC1394_SUCCESS;
 }
@@ -378,27 +385,30 @@ dc1394_capture(dc1394capture_t *cams, uint_t num)
     _dc1394_quadlets_per_frame[cams[i].channel] = cams[i].quadlets_per_frame;
     _dc1394_quadlets_per_packet[cams[i].channel] = cams[i].quadlets_per_packet;
 
+    //fprintf(stderr,"starting reception...\n");
     //fprintf(stderr,"handle: 0x%x\n",(unsigned int)cams[i].handle);
     if (raw1394_start_iso_rcv(cams[i].handle,cams[i].channel) < 0)  {
       /* error handling- for some reason something didn't work, 
 	 so we have to reset everything....*/
-      printf("(%s:%d) error!\n", __FILE__, __LINE__);
+      fprintf(stderr,"(%s:%d) error!\n", __FILE__, __LINE__);
       
       for (j= 0; j < num; j++)  {
 	raw1394_stop_iso_rcv(cams[i].handle, cams[j].channel);
 	raw1394_set_iso_handler(cams[i].handle, cams[j].channel, NULL);
       }
-
       return DC1394_FAILURE;
     }
     
   }
+  //fprintf(stderr,"data loop...\n");
 
   /* now we iterate till the data is here*/
   while (_dc1394_all_captured != 0)  {
+    //fprintf(stderr,"iter ");
     raw1394_loop_iterate(cams[0].handle);
   }
   
+  //fprintf(stderr,"data loop...\n");
   /* now stop the subsystem from listening*/
   for (i= 0; i < num; i++)  {
     raw1394_stop_iso_rcv(cams[i].handle, cams[i].channel);

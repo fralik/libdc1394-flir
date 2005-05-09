@@ -161,6 +161,17 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
     DC1394_ERR_CHK(err, "Unable to get F7 bpp for mode %d", mode);
   }
 
+  /*
+   * TODO: frame_rate not used for format 7, may be calculated
+   */
+  capture->frame_rate= 0;
+  capture->node= camera->node;
+  capture->port=camera->port;
+  capture->channel= channel;
+  capture->handle=raw1394_new_handle();
+  //capture->handle=camera->handle;
+  raw1394_set_port(capture->handle,capture->port);
+
   /*-----------------------------------------------------------------------
    *  set image position. If QUERY_FROM_CAMERA was given instead of a
    *  position, use the actual value from camera
@@ -284,13 +295,6 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
   }
   //printf("Camera has now %d bytes per packet\n", packet_bytes);
   
-  capture->node = camera->node;
-  /*
-   * TODO: frame_rate not used for format 7, may be calculated
-   */
-  capture->frame_rate = 0; 
-  capture->channel=channel;
-  
   /*-----------------------------------------------------------------------
    *  ensure that quadlet aligned buffers are big enough, still expect
    *  problems when width*height  != quadlets_per_frame*4
@@ -321,8 +325,8 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
       }
       camera->quadlets_per_frame/=4;
     */
-    //fprintf(stderr,"quadlets per frame: %d\n",camera->quadlets_per_frame);
   }
+  //fprintf(stderr,"quadlets per frame: %d\n",capture->quadlets_per_frame);
 
   if (capture->quadlets_per_frame<=0) {
     return DC1394_FAILURE;
@@ -368,13 +372,13 @@ dc1394_setup_format7_capture(dc1394camera_t *camera,
   
   err=_dc1394_basic_format7_setup(camera, channel, mode, speed, bytes_per_packet,
                                   left, top, width, height, capture);
-  DC1394_ERR_CHK(err, "COuld not perform basic F7 capture setup");
+  DC1394_ERR_CHK(err, "Could not perform basic F7 capture setup");
   
   capture->capture_buffer= (uint_t*)malloc(capture->quadlets_per_frame*4);
   
   if (capture->capture_buffer == NULL) {
-    printf("(%s) unable to allocate memory for capture buffer\n", __FILE__);
-    return DC1394_FAILURE;
+    err=DC1394_MEMORY_ALLOCATION_FAILURE;
+    DC1394_ERR_CHK(err,"failed to allocate capture buffer");
   }
   
   return err;
@@ -401,7 +405,7 @@ dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
   
   err=_dc1394_basic_format7_setup(camera, channel, mode, speed, bytes_per_packet,
 				  left, top, width, height, capture);
-  DC1394_ERR_CHK(err, "COuld not perform basic F7 capture setup");
+  DC1394_ERR_CHK(err, "Could not perform basic F7 capture setup");
   
   capture->port = camera->port;
   capture->dma_device_file = dma_device_file;
@@ -453,7 +457,7 @@ dc1394_query_format7_unit_size(dc1394camera_t *camera,
   }
   
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_UNIT_SIZE_INQ, &value);
-  DC1394_ERR_CHK(err, "COuld not get unit sizes");
+  DC1394_ERR_CHK(err, "Could not get unit sizes");
 
   *horizontal_unit  = (uint_t) ( value & 0xFFFF0000UL ) >> 16;
   *vertical_unit= (uint_t) ( value & 0x0000FFFFUL );
