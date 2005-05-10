@@ -581,3 +581,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed _dc1394_get_quadlets_per_packet
     * more additional fixes and updates
     * fixed important f7 bug
+	
+2005-05-10 Damien <ddouxchamps@users.sf.net>
+    * introduced structures for lists of framerates, modes,...

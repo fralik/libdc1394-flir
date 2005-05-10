@@ -804,13 +804,12 @@ dc1394_reset_camera(dc1394camera_t *camera)
 }
 
 int
-dc1394_query_supported_modes(dc1394camera_t *camera, uint_t **modes, uint_t *numModes)
+dc1394_query_supported_modes(dc1394camera_t *camera, dc1394videomodes_t *modes)
 {
   int err;
   quadlet_t value, sup_formats;
-  uint_t *tmp_formats;
-  uint_t mode, num=0;
-  
+  uint_t mode;
+
   // get supported formats
   err=GetCameraControlRegister(camera, REG_CAMERA_V_FORMAT_INQ, &sup_formats);
   DC1394_ERR_CHK(err, "Could not get supported formats");
@@ -818,101 +817,83 @@ dc1394_query_supported_modes(dc1394camera_t *camera, uint_t **modes, uint_t *num
   //fprintf(stderr,"supoerted formats: 0x%x\n",sup_formats);
 
   // for each format check supported modes and add them as we find them.
-  
-  // allocate the format vector with its maximum size:
-  tmp_formats=(uint_t*)malloc((MODE_FORMAT0_NUM+
-			       MODE_FORMAT1_NUM+
-			       MODE_FORMAT2_NUM+
-			       MODE_FORMAT6_NUM+
-			       MODE_FORMAT7_NUM)*sizeof(uint_t));
 
+  modes->num=0;
   // Format_0
   //fprintf(stderr,"shiftval=%d, mask=0x%x\n",31-(FORMAT0-FORMAT_MIN),0x1 << (31-(FORMAT0-FORMAT_MIN)));
   if ((sup_formats & (0x1 << (31-(FORMAT0-FORMAT_MIN)))) > 0) {
     //fprintf(stderr,"F0 available\n");
     err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT0-FORMAT_MIN) * 0x04U), &value);
-    DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp_formats), "Could not get supported modes for Format_0");
+    DC1394_ERR_CHK(err, "Could not get supported modes for Format_0");
     
     //fprintf(stderr,"modes 0: 0x%x\n",value);
     for (mode=MODE_FORMAT0_MIN;mode<=MODE_FORMAT0_MAX;mode++) {
       //fprintf(stderr,"mask=0x%x, cond=0x%x\n", 0x1 << (31-(mode-MODE_FORMAT0_MIN)),(value && (0x1<<(31-(mode-MODE_FORMAT0_MIN)))));
       if ((value & (0x1<<(31-(mode-MODE_FORMAT0_MIN)))) > 0) {
-	tmp_formats[num]=mode;
-	num++;
+	modes->modes[modes->num]=mode;
+	modes->num++;
       }
     }
   }
   // Format_1
   if ((sup_formats & (0x1 << (31-(FORMAT1-FORMAT_MIN)))) > 0) {
     err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT1-FORMAT_MIN) * 0x04U), &value);
-    DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp_formats), "Could not get supported modes for Format_1");
+    DC1394_ERR_CHK(err, "Could not get supported modes for Format_1");
     
     for (mode=MODE_FORMAT1_MIN;mode<=MODE_FORMAT1_MAX;mode++) {
       if ((value & (0x1<<(31-(mode-MODE_FORMAT1_MIN)))) > 0) {
-	tmp_formats[num]=mode;
-	num++;
+	modes->modes[modes->num]=mode;
+	modes->num++;
       }
     }
   }
   // Format_2
   if ((sup_formats & (0x1 << (31-(FORMAT2-FORMAT_MIN)))) > 0) {
     err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT2-FORMAT_MIN) * 0x04U), &value);
-    DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp_formats), "Could not get supported modes for Format_2");
+    DC1394_ERR_CHK(err, "Could not get supported modes for Format_2");
     
     for (mode=MODE_FORMAT2_MIN;mode<=MODE_FORMAT2_MAX;mode++) {
       if ((value & (0x1<<(31-(mode-MODE_FORMAT2_MIN)))) > 0) {
-	tmp_formats[num]=mode;
-	num++;
+	modes->modes[modes->num]=mode;
+	modes->num++;
       }
     }
   }
   // Format_6
   if ((sup_formats & (0x1 << (31-(FORMAT6-FORMAT_MIN)))) > 0) {
     err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT6-FORMAT_MIN) * 0x04U), &value);
-    DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp_formats), "Could not get supported modes for Format_3");
+    DC1394_ERR_CHK(err, "Could not get supported modes for Format_3");
     
     for (mode=MODE_FORMAT6_MIN;mode<=MODE_FORMAT6_MAX;mode++) {
       if ((value & (0x1<<(31-(mode-MODE_FORMAT6_MIN))))>0) {
-	tmp_formats[num]=mode;
-	num++;
+	modes->modes[modes->num]=mode;
+	modes->num++;
       }
     }
   }
   // Format_7
   if ((sup_formats & (0x1 << (31-(FORMAT7-FORMAT_MIN)))) > 0) {
     err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((FORMAT7-FORMAT_MIN) * 0x04U), &value);
-    DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp_formats), "Could not get supported modes for Format_4");
+    DC1394_ERR_CHK(err, "Could not get supported modes for Format_4");
     
     for (mode=MODE_FORMAT7_MIN;mode<=MODE_FORMAT7_MAX;mode++) {
       if ((value & (0x1<<(31-(mode-MODE_FORMAT7_MIN))))>0) {
-	tmp_formats[num]=mode;
-	num++;
+	modes->modes[modes->num]=mode;
+	modes->num++;
       }
     }
   }
 
-  *modes=tmp_formats;
-  *numModes=num;
-  /*
-  int i;
-  fprintf(stderr,"Available formats: ");
-  for (i=0;i<num;i++) {
-    fprintf(stderr,"%d ",tmp_formats[i]);
-  }
-  fprintf(stderr,"\n");
-  */
   return err;
 }
 
 int
-dc1394_query_supported_framerates(dc1394camera_t *camera, uint_t mode, uint_t **framerates, uint_t *numFramerates)
+dc1394_query_supported_framerates(dc1394camera_t *camera, uint_t mode, dc1394framerates_t *framerates)
 {
   uint_t framerate;
   int err;
   uint_t format;
   quadlet_t value;
-  uint_t *tmp_framerates;
-  uint_t num=0;
 
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_CHK(err, "Invalid mode code");
@@ -921,8 +902,6 @@ dc1394_query_supported_framerates(dc1394camera_t *camera, uint_t mode, uint_t **
     err=DC1394_INVALID_FORMAT;
     DC1394_ERR_CHK(err, "Modes corresponding for format6 and format7 do not have framerates!"); 
   }
-
-  tmp_framerates=(uint_t *)malloc(FRAMERATE_NUM*sizeof(uint_t));
 
   switch (format) {
   case FORMAT0:
@@ -939,16 +918,15 @@ dc1394_query_supported_framerates(dc1394camera_t *camera, uint_t mode, uint_t **
   
 
   err=GetCameraControlRegister(camera,REG_CAMERA_V_RATE_INQ_BASE + (format * 0x20U) + (mode * 0x04U), &value);
-  DC1394_ERR_CHK_WITH_CLEANUP(err, free(tmp_framerates), "Could not get supported framerates");
+  DC1394_ERR_CHK(err, "Could not get supported framerates");
 
+  framerates->num=0;
   for (framerate=FRAMERATE_MIN;framerate<=FRAMERATE_MAX;framerate++) {
     if ((value & (0x1<<(31-(framerate-FRAMERATE_MIN))))>0) {
-      tmp_framerates[num]=framerate;
-      num++;
+      framerates->framerates[framerates->num]=framerate;
+      framerates->num++;
     }
   }
-  *framerates=tmp_framerates;
-  *numFramerates=num;
 
   return err;
 }

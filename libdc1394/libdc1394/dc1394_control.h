@@ -395,6 +395,24 @@ typedef struct __dc1394featureset_t_struct
   dc1394feature_t    feature[FEATURE_NUM];
 } dc1394featureset_t;
 
+typedef struct
+{
+  uint_t             num;
+  uint_t             modes[COLOR_FORMAT_NUM];
+} dc1394colormodes_t;
+
+typedef struct
+{
+  uint_t             num;
+  uint_t             modes[MODE_FORMAT0_NUM+MODE_FORMAT1_NUM+MODE_FORMAT2_NUM+MODE_FORMAT6_NUM+MODE_FORMAT7_NUM];
+} dc1394videomodes_t;
+
+typedef struct
+{
+  uint_t             num;
+  uint_t             framerates[FRAMERATE_NUM];
+} dc1394framerates_t;
+
 /* Feature descriptions */
 extern const char *dc1394_feature_desc[FEATURE_NUM];
 extern const char *dc1394_error_strings[NUM_ERRORS];
@@ -543,8 +561,8 @@ int dc1394_get_bandwidth_usage(dc1394camera_t *camera, uint_t *bandwidth);
  ***************************************************************************/
 
 /* functions for querying camera attributes */
-int dc1394_query_supported_modes(dc1394camera_t *camera, uint_t **modes, uint_t *numModes);
-int dc1394_query_supported_framerates(dc1394camera_t *camera, uint_t mode, uint_t **framerates, uint_t *numFramerates);
+int dc1394_query_supported_modes(dc1394camera_t *camera, dc1394videomodes_t *modes);
+int dc1394_query_supported_framerates(dc1394camera_t *camera, uint_t mode, dc1394framerates_t *framerates);
 
 /* get/set the framerate, mode, format, iso channel/speed for the video */
 int dc1394_get_video_framerate(dc1394camera_t *camera, uint_t *framerate);
@@ -624,7 +642,7 @@ int dc1394_query_format7_unit_position(dc1394camera_t *camera, uint_t mode, uint
 
 /* color coding */
 int dc1394_query_format7_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
-int dc1394_query_format7_color_coding(dc1394camera_t *camera, uint_t mode, uint_t **codings, uint_t *numcodings);
+int dc1394_query_format7_color_coding(dc1394camera_t *camera, uint_t mode, dc1394colormodes_t *codings);
 int dc1394_set_format7_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
 int dc1394_set_format7_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
 int dc1394_query_format7_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
