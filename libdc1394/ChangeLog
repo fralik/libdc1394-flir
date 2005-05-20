@@ -584,3 +584,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-05-10 Damien <ddouxchamps@users.sf.net>
     * introduced structures for lists of framerates, modes,...
+	
+2005-05-11 Damien <ddouxchamps@users.sf.net>
+    * fixed camera detection: a tagged register that is not found should
+      not make the function dc1394_find_cameras() fail. It should just skip
+      that device.
+	
+2005-05-20 Damien <ddouxchamps@users.sf.net>
+    * all constant definitions now start with DC1394_

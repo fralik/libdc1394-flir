@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.10  2005/05/20 08:58:58  ddouxchamps
+**  all constant definitions now start with DC1394_
+**
 **  Revision 1.11.2.9  2005/05/09 02:57:51  ddouxchamps
 **  first debugging with coriander
 **
@@ -430,7 +433,7 @@ int capture_mmap(int frame)
 	}
 	
 	if (g_v4l_fmt == VIDEO_PALETTE_YUV422P && out_pipe != NULL) {
-		if (dc1394_dma_capture(&capture,1,VIDEO1394_WAIT) == DC1394_SUCCESS) {
+		if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
 			affine_scale( (unsigned char *) capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
 				ppp * bpp, transform);
@@ -439,7 +442,7 @@ int capture_mmap(int frame)
 		yuy2_to_yv16( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
 	else if (g_v4l_fmt == VIDEO_PALETTE_YUV420P && out_pipe != NULL) {
-		if (dc1394_dma_capture(&capture,1,VIDEO1394_WAIT) == DC1394_SUCCESS) {
+		if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
 			affine_scale( (unsigned char *) capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
 				ppp * bpp, transform);
@@ -447,7 +450,7 @@ int capture_mmap(int frame)
 		}
 		yuy2_to_yv12( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
-	else if (dc1394_dma_capture(&capture,1,VIDEO1394_WAIT) == DC1394_SUCCESS) {
+	else if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
 		affine_scale( (unsigned char *) capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 			out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width/ppp, g_height,
 			ppp * bpp, transform);
@@ -546,13 +549,13 @@ int dc_start(int palette)
 
 	switch (palette) {
 		case VIDEO_PALETTE_RGB24:
-			mode = MODE_640x480_RGB8;
+			mode = DC1394_MODE_640x480_RGB8;
 			break;
 			
 		case VIDEO_PALETTE_YUV422:
 		case VIDEO_PALETTE_YUV422P:
 		case VIDEO_PALETTE_YUV420P:
-			mode = MODE_640x480_YUV422;
+			mode = DC1394_MODE_640x480_YUV422;
 			break;
 
 		default:
@@ -566,7 +569,7 @@ int dc_start(int palette)
 	}
 	 
 	if (dc1394_dma_setup_capture(camera, channel,  mode,
-				     speed, FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES,
+				     speed, DC1394_FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES,
 				     dc_dev_name, &capture) != DC1394_SUCCESS) 
 	{
 		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
@@ -1013,7 +1016,7 @@ int main(int argc,char *argv[])
 	
 	while (1) {
 		if (g_v4l_mode == V4L_MODE_PIPE) {
-			if (dc1394_dma_capture(&capture,1,VIDEO1394_WAIT) == DC1394_SUCCESS) {
+			if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
 				capture_pipe( v4l_dev, (char *) capture.capture_buffer );
 				dc1394_dma_done_with_buffer(&capture);
 			}

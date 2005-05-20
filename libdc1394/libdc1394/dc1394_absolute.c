@@ -28,7 +28,7 @@ dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, uint_t feature, fl
 {
   int err=0;
   
-  if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
+  if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
 
@@ -46,7 +46,7 @@ dc1394_query_absolute_feature_value(dc1394camera_t *camera, uint_t feature, floa
 {
   int err=0;
 
-  if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
+  if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
   err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t*)value);
@@ -61,7 +61,7 @@ dc1394_set_absolute_feature_value(dc1394camera_t *camera, uint_t feature, float 
 {
   int err=0;
 
-  if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {
+  if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
 

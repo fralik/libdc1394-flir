@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.10  2005/05/20 08:58:58  ddouxchamps
+**  all constant definitions now start with DC1394_
+**
 **  Revision 1.5.2.9  2005/05/09 02:57:51  ddouxchamps
 **  first debugging with coriander
 **
@@ -200,9 +203,9 @@ int main(int argc, char *argv[])
    *  setup capture
    *-----------------------------------------------------------------------*/
   if (dc1394_setup_capture(camera, 0, /* channel */
-                           MODE_640x480_RGB8,
-                           SPEED_400,
-                           FRAMERATE_7_5,
+                           DC1394_MODE_640x480_RGB8,
+                           DC1394_SPEED_400,
+                           DC1394_FRAMERATE_7_5,
                            &capture)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"

@@ -297,13 +297,13 @@ dc1394_setup_capture(dc1394camera_t *camera,
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_CHK(err, "Invalid mode ID");
 
-  if( format == FORMAT7) {
+  if( format == DC1394_FORMAT7) {
     err=dc1394_setup_format7_capture(camera, channel, mode, speed,
-				     QUERY_FROM_CAMERA, /*bytes_per_paket*/
-				     QUERY_FROM_CAMERA, /*left*/
-				     QUERY_FROM_CAMERA, /*top*/
-				     QUERY_FROM_CAMERA, /*width*/
-				     QUERY_FROM_CAMERA, /*height*/
+				     DC1394_QUERY_FROM_CAMERA, /*bytes_per_paket*/
+				     DC1394_QUERY_FROM_CAMERA, /*left*/
+				     DC1394_QUERY_FROM_CAMERA, /*top*/
+				     DC1394_QUERY_FROM_CAMERA, /*width*/
+				     DC1394_QUERY_FROM_CAMERA, /*height*/
 				     capture);
     DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
@@ -447,13 +447,13 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_CHK(err, "Invalid mode ID");
 
-  if( format == FORMAT7) {
+  if( format == DC1394_FORMAT7) {
     err=dc1394_dma_setup_format7_capture(camera, channel, mode, speed,
-					 QUERY_FROM_CAMERA, /*bytes_per_paket*/
-					 QUERY_FROM_CAMERA, /*left*/
-					 QUERY_FROM_CAMERA, /*top*/
-					 QUERY_FROM_CAMERA, /*width*/
-					 QUERY_FROM_CAMERA, /*height*/
+					 DC1394_QUERY_FROM_CAMERA, /*bytes_per_paket*/
+					 DC1394_QUERY_FROM_CAMERA, /*left*/
+					 DC1394_QUERY_FROM_CAMERA, /*top*/
+					 DC1394_QUERY_FROM_CAMERA, /*width*/
+					 DC1394_QUERY_FROM_CAMERA, /*height*/
 					 num_dma_buffers,
 					 drop_frames,
 					 dma_device_file,
@@ -552,10 +552,10 @@ dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy
     vwait.channel = cams[i].channel;
     vwait.buffer = cb;
     switch (policy) {
-    case VIDEO1394_POLL:
+    case DC1394_VIDEO1394_POLL:
       result=ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_POLL_BUFFER, &vwait);
       break;
-    case VIDEO1394_WAIT:
+    case DC1394_VIDEO1394_WAIT:
     default:
       result=ioctl(cams[i].dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER, &vwait);
       break;
@@ -563,7 +563,7 @@ dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy
     //fprintf(stderr,"test1\n");
     if ( result != 0) {       
       cams[i].dma_last_buffer = last_buffer_orig;
-      if ((policy==VIDEO1394_POLL) && (errno == EINTR)) {                       
+      if ((policy==DC1394_VIDEO1394_POLL) && (errno == EINTR)) {                       
 	// when no frames is present, say so.
 	return DC1394_NO_FRAME;
       }

@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.10  2005/05/20 08:58:58  ddouxchamps
+**  all constant definitions now start with DC1394_
+**
 **  Revision 1.9.2.9  2005/05/09 02:57:51  ddouxchamps
 **  first debugging with coriander
 **
@@ -285,19 +288,19 @@ void display_frames()
 		for (i = 0; i < numCameras; i++)
 		{
 			switch (res) {
-			case MODE_640x480_YUV411:
+			case DC1394_MODE_640x480_YUV411:
 				iyu12yuy2( (unsigned char *) captures[i].capture_buffer,
 					frame_buffer + (i * frame_length),
 					(device_width*device_height) );
 				break;
 				
-			case MODE_320x240_YUV422:
-			case MODE_640x480_YUV422:
+			case DC1394_MODE_320x240_YUV422:
+			case DC1394_MODE_640x480_YUV422:
 				memcpy( frame_buffer + (i * frame_length),
 					captures[i].capture_buffer, device_width*device_height*2);
 				break;
 					
-			case MODE_640x480_RGB8:
+			case DC1394_MODE_640x480_RGB8:
 				rgb2yuy2( (unsigned char *) captures[i].capture_buffer,
 					frame_buffer + (i * frame_length),
 					(device_width*device_height) );
@@ -378,28 +381,28 @@ int main(int argc,char *argv[])
   get_options(argc,argv);
   /* process options */
   switch(fps) {
-  case 1: fps =	FRAMERATE_1_875; break;
-  case 3: fps =	FRAMERATE_3_75; break;
-  case 15: fps = FRAMERATE_15; break;
-  case 30: fps = FRAMERATE_30; break;
-  case 60: fps = FRAMERATE_60; break;
-  default: fps = FRAMERATE_7_5; break;
+  case 1: fps =	DC1394_FRAMERATE_1_875; break;
+  case 3: fps =	DC1394_FRAMERATE_3_75; break;
+  case 15: fps = DC1394_FRAMERATE_15; break;
+  case 30: fps = DC1394_FRAMERATE_30; break;
+  case 60: fps = DC1394_FRAMERATE_60; break;
+  default: fps = DC1394_FRAMERATE_7_5; break;
   }
   switch(res) {
   case 1: 
-    res = MODE_640x480_YUV411; 
+    res = DC1394_MODE_640x480_YUV411; 
     device_width=640;
     device_height=480;
     format=XV_YUY2;
     break;
   case 2: 
-    res = MODE_640x480_RGB8; 
+    res = DC1394_MODE_640x480_RGB8; 
     device_width=640;
     device_height=480;
     format=XV_YUY2;
     break;
   default: 
-    res = MODE_320x240_YUV422;
+    res = DC1394_MODE_320x240_YUV422;
     device_width=320;
     device_height=240;
     format=XV_UYVY;
@@ -435,7 +438,7 @@ int main(int argc,char *argv[])
     }
     
     if (dc1394_dma_setup_capture(cameras[i], i+1 /*channel*/, res,
-				 SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
+				 DC1394_SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
 				 device_name, &captures[i]) != DC1394_SUCCESS) {
       fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 	      __LINE__,__FILE__);
@@ -510,7 +513,7 @@ int main(int argc,char *argv[])
   while(1){
 
     //fprintf(stderr,"capturing...\n");
-    err=dc1394_dma_capture(captures, numCameras, VIDEO1394_WAIT);
+    err=dc1394_dma_capture(captures, numCameras, DC1394_VIDEO1394_WAIT);
     DC1394_ERR_CHK(err,"failed to capture\n");
 		
     display_frames();
@@ -550,27 +553,27 @@ int main(int argc,char *argv[])
 	  freeze = !freeze;
 	  break;
 	case XK_1:
-	  fps =	FRAMERATE_1_875; 
+	  fps =	DC1394_FRAMERATE_1_875; 
 	  for (i = 0; i < numCameras; i++)
 	    dc1394_set_video_framerate(cameras[i], fps);
 	  break;
 	case XK_2:
-	  fps =	FRAMERATE_3_75; 
+	  fps =	DC1394_FRAMERATE_3_75; 
 	  for (i = 0; i < numCameras; i++)
 	    dc1394_set_video_framerate(cameras[i], fps);
 	  break;
 	case XK_4:
-	  fps = FRAMERATE_15; 
+	  fps = DC1394_FRAMERATE_15; 
 	  for (i = 0; i < numCameras; i++)
 	    dc1394_set_video_framerate(cameras[i], fps);
 	  break;
 	case XK_5: 
-	  fps = FRAMERATE_30;
+	  fps = DC1394_FRAMERATE_30;
 	  for (i = 0; i < numCameras; i++)
 	    dc1394_set_video_framerate(cameras[i], fps);
 	  break;
 	case XK_3:
-	  fps = FRAMERATE_7_5; 
+	  fps = DC1394_FRAMERATE_7_5; 
 	  for (i = 0; i < numCameras; i++)
 	    dc1394_set_video_framerate(cameras[i], fps);
 	  break;

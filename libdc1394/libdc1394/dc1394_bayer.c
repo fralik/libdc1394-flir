@@ -98,10 +98,10 @@ dc1394_bayer_NearestNeighbor(const unsigned char *bayer, unsigned char *rgb, int
     const int rgbStep = 3 * sx;
     int width = sx;
     int height = sy;
-    int blue = tile == COLOR_FILTER_FORMAT_BGGR
-	|| tile == COLOR_FILTER_FORMAT_GBRG ? -1 : 1;
-    int start_with_green = tile == COLOR_FILTER_FORMAT_GBRG
-	|| tile == COLOR_FILTER_FORMAT_GRBG;
+    int blue = tile == DC1394_COLOR_FILTER_BGGR
+	|| tile == DC1394_COLOR_FILTER_GBRG ? -1 : 1;
+    int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
+	|| tile == DC1394_COLOR_FILTER_GRBG;
     int i, imax, iinc;
 
     /* add black border */
@@ -183,17 +183,17 @@ dc1394_bayer_Bilinear(const unsigned char *bayer, unsigned char *rgb, int sx, in
        the 4th and 3rd letters from the blinky name,
        and we also have to switch R and B (OpenCV is BGR)
 
-       CV_BayerBG2BGR <-> COLOR_FILTER_FORMAT_BGGR
-       CV_BayerGB2BGR <-> COLOR_FILTER_FORMAT_GBRG
-       CV_BayerGR2BGR <-> COLOR_FILTER_FORMAT_GRBG
+       CV_BayerBG2BGR <-> DC1394_COLOR_FILTER_BGGR
+       CV_BayerGB2BGR <-> DC1394_COLOR_FILTER_GBRG
+       CV_BayerGR2BGR <-> DC1394_COLOR_FILTER_GRBG
 
        int blue = tile == CV_BayerBG2BGR || tile == CV_BayerGB2BGR ? -1 : 1;
        int start_with_green = tile == CV_BayerGB2BGR || tile == CV_BayerGR2BGR;
      */
-    int blue = tile == COLOR_FILTER_FORMAT_BGGR
-	|| tile == COLOR_FILTER_FORMAT_GBRG ? -1 : 1;
-    int start_with_green = tile == COLOR_FILTER_FORMAT_GBRG
-	|| tile == COLOR_FILTER_FORMAT_GRBG;
+    int blue = tile == DC1394_COLOR_FILTER_BGGR
+	|| tile == DC1394_COLOR_FILTER_GBRG ? -1 : 1;
+    int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
+	|| tile == DC1394_COLOR_FILTER_GRBG;
 
     ClearBorders(rgb, sx, sy, 1);
     rgb += rgbStep + 3 + 1;
@@ -285,10 +285,10 @@ dc1394_bayer_HQLinear(const unsigned char *bayer, unsigned char *rgb, int sx, in
     const int rgbStep = 3 * sx;
     int width = sx;
     int height = sy;
-    int blue = tile == COLOR_FILTER_FORMAT_BGGR
-	|| tile == COLOR_FILTER_FORMAT_GBRG ? -1 : 1;
-    int start_with_green = tile == COLOR_FILTER_FORMAT_GBRG
-	|| tile == COLOR_FILTER_FORMAT_GRBG;
+    int blue = tile == DC1394_COLOR_FILTER_BGGR
+	|| tile == DC1394_COLOR_FILTER_GBRG ? -1 : 1;
+    int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
+	|| tile == DC1394_COLOR_FILTER_GRBG;
 
     ClearBorders(rgb, sx, sy, 2);
     rgb += 2 * rgbStep + 6 + 1;
@@ -484,14 +484,14 @@ dc1394_bayer_EdgeSense(const unsigned char *bayer, unsigned char *rgb, int sx, i
 
     // sx and sy should be even
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:
-    case COLOR_FILTER_FORMAT_BGGR:
+    case DC1394_COLOR_FILTER_GRBG:
+    case DC1394_COLOR_FILTER_BGGR:
 	outR = &rgb[0];
 	outG = &rgb[1];
 	outB = &rgb[2];
 	break;
-    case COLOR_FILTER_FORMAT_GBRG:
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_GBRG:
+    case DC1394_COLOR_FILTER_RGGB:
 	outR = &rgb[2];
 	outG = &rgb[1];
 	outB = &rgb[0];
@@ -503,8 +503,8 @@ dc1394_bayer_EdgeSense(const unsigned char *bayer, unsigned char *rgb, int sx, i
     }
 
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_GBRG:
+    case DC1394_COLOR_FILTER_GRBG:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_GBRG:
 	// copy original RGB data to output images
       for (i = 0; i < sy*sx; i += (sx<<1)) {
 	for (j = 0; j < sx; j += 2) {
@@ -633,8 +633,8 @@ dc1394_bayer_EdgeSense(const unsigned char *bayer, unsigned char *rgb, int sx, i
       }
       break;
 
-    case COLOR_FILTER_FORMAT_BGGR:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_BGGR:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_RGGB:
 	// copy original RGB data to output images
       for (i = 0; i < sy*sx; i += (sx<<1)) {
 	for (j = 0; j < sx; j += 2) {
@@ -782,14 +782,14 @@ dc1394_bayer_Downsample(const unsigned char *bayer, unsigned char *rgb, int sx, 
     sy *= 2;
 
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:
-    case COLOR_FILTER_FORMAT_BGGR:
+    case DC1394_COLOR_FILTER_GRBG:
+    case DC1394_COLOR_FILTER_BGGR:
 	outR = &rgb[0];
 	outG = &rgb[1];
 	outB = &rgb[2];
 	break;
-    case COLOR_FILTER_FORMAT_GBRG:
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_GBRG:
+    case DC1394_COLOR_FILTER_RGGB:
 	outR = &rgb[2];
 	outG = &rgb[1];
 	outB = &rgb[0];
@@ -801,8 +801,8 @@ dc1394_bayer_Downsample(const unsigned char *bayer, unsigned char *rgb, int sx, 
     }
 
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_GBRG:
+    case DC1394_COLOR_FILTER_GRBG:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_GBRG:
 	for (i = 0; i < sy*sx; i += (sx<<1)) {
 	    for (j = 0; j < sx; j += 2) {
 		tmp =
@@ -815,8 +815,8 @@ dc1394_bayer_Downsample(const unsigned char *bayer, unsigned char *rgb, int sx, 
 	    }
 	}
 	break;
-    case COLOR_FILTER_FORMAT_BGGR:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_BGGR:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_RGGB:
 	for (i = 0; i < sy*sx; i += (sx<<1)) {
 	    for (j = 0; j < sx; j += 2) {
 		tmp =
@@ -845,10 +845,10 @@ dc1394_bayer_Simple(const unsigned char *bayer, unsigned char *rgb, int sx, int 
     const int rgbStep = 3 * sx;
     int width = sx;
     int height = sy;
-    int blue = tile == COLOR_FILTER_FORMAT_BGGR
-        || tile == COLOR_FILTER_FORMAT_GBRG ? -1 : 1;
-    int start_with_green = tile == COLOR_FILTER_FORMAT_GBRG
-        || tile == COLOR_FILTER_FORMAT_GRBG;
+    int blue = tile == DC1394_COLOR_FILTER_BGGR
+        || tile == DC1394_COLOR_FILTER_GBRG ? -1 : 1;
+    int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
+        || tile == DC1394_COLOR_FILTER_GRBG;
     int i, imax, iinc;
 
     /* add black border */
@@ -926,10 +926,10 @@ dc1394_bayer_NearestNeighbor_uint16(const uint16_t *bayer, uint16_t *rgb, int sx
     const int rgbStep = 3 * sx;
     int width = sx;
     int height = sy;
-    int blue = tile == COLOR_FILTER_FORMAT_BGGR
-	|| tile == COLOR_FILTER_FORMAT_GBRG ? -1 : 1;
-    int start_with_green = tile == COLOR_FILTER_FORMAT_GBRG
-	|| tile == COLOR_FILTER_FORMAT_GRBG;
+    int blue = tile == DC1394_COLOR_FILTER_BGGR
+	|| tile == DC1394_COLOR_FILTER_GBRG ? -1 : 1;
+    int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
+	|| tile == DC1394_COLOR_FILTER_GRBG;
     int i, iinc, imax;
 
     /* add black border */
@@ -1005,10 +1005,10 @@ dc1394_bayer_Bilinear_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int s
     const int rgbStep = 3 * sx;
     int width = sx;
     int height = sy;
-    int blue = tile == COLOR_FILTER_FORMAT_BGGR
-	|| tile == COLOR_FILTER_FORMAT_GBRG ? -1 : 1;
-    int start_with_green = tile == COLOR_FILTER_FORMAT_GBRG
-	|| tile == COLOR_FILTER_FORMAT_GRBG;
+    int blue = tile == DC1394_COLOR_FILTER_BGGR
+	|| tile == DC1394_COLOR_FILTER_GBRG ? -1 : 1;
+    int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
+	|| tile == DC1394_COLOR_FILTER_GRBG;
 
     rgb += rgbStep + 3 + 1;
     height -= 2;
@@ -1104,17 +1104,17 @@ dc1394_bayer_HQLinear_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int s
        the 4th and 3rd letters from the blinky name,
        and we also have to switch R and B (OpenCV is BGR)
 
-       CV_BayerBG2BGR <-> COLOR_FILTER_FORMAT_BGGR
-       CV_BayerGB2BGR <-> COLOR_FILTER_FORMAT_GBRG
-       CV_BayerGR2BGR <-> COLOR_FILTER_FORMAT_GRBG
+       CV_BayerBG2BGR <-> DC1394_COLOR_FILTER_BGGR
+       CV_BayerGB2BGR <-> DC1394_COLOR_FILTER_GBRG
+       CV_BayerGR2BGR <-> DC1394_COLOR_FILTER_GRBG
 
        int blue = tile == CV_BayerBG2BGR || tile == CV_BayerGB2BGR ? -1 : 1;
        int start_with_green = tile == CV_BayerGB2BGR || tile == CV_BayerGR2BGR;
      */
-    int blue = tile == COLOR_FILTER_FORMAT_BGGR
-	|| tile == COLOR_FILTER_FORMAT_GBRG ? -1 : 1;
-    int start_with_green = tile == COLOR_FILTER_FORMAT_GBRG
-	|| tile == COLOR_FILTER_FORMAT_GRBG;
+    int blue = tile == DC1394_COLOR_FILTER_BGGR
+	|| tile == DC1394_COLOR_FILTER_GBRG ? -1 : 1;
+    int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
+	|| tile == DC1394_COLOR_FILTER_GRBG;
 
     ClearBorders_uint16(rgb, sx, sy, 2);
     rgb += 2 * rgbStep + 6 + 1;
@@ -1307,14 +1307,14 @@ dc1394_bayer_EdgeSense_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int 
 
     // sx and sy should be even
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:
-    case COLOR_FILTER_FORMAT_BGGR:
+    case DC1394_COLOR_FILTER_GRBG:
+    case DC1394_COLOR_FILTER_BGGR:
 	outR = &rgb[0];
 	outG = &rgb[1];
 	outB = &rgb[2];
 	break;
-    case COLOR_FILTER_FORMAT_GBRG:
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_GBRG:
+    case DC1394_COLOR_FILTER_RGGB:
 	outR = &rgb[2];
 	outG = &rgb[1];
 	outB = &rgb[0];
@@ -1326,8 +1326,8 @@ dc1394_bayer_EdgeSense_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int 
     }
 
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_GBRG:
+    case DC1394_COLOR_FILTER_GRBG:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_GBRG:
 	// copy original RGB data to output images
       for (i = 0; i < sy*sx; i += (sx<<1)) {
 	for (j = 0; j < sx; j += 2) {
@@ -1456,8 +1456,8 @@ dc1394_bayer_EdgeSense_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int 
       }
       break;
 
-    case COLOR_FILTER_FORMAT_BGGR:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_BGGR:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_RGGB:
 	// copy original RGB data to output images
       for (i = 0; i < sy*sx; i += (sx<<1)) {
 	for (j = 0; j < sx; j += 2) {
@@ -1605,14 +1605,14 @@ dc1394_bayer_Downsample_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int
     sy *= 2;
 
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:
-    case COLOR_FILTER_FORMAT_BGGR:
+    case DC1394_COLOR_FILTER_GRBG:
+    case DC1394_COLOR_FILTER_BGGR:
 	outR = &rgb[0];
 	outG = &rgb[1];
 	outB = &rgb[2];
 	break;
-    case COLOR_FILTER_FORMAT_GBRG:
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_GBRG:
+    case DC1394_COLOR_FILTER_RGGB:
 	outR = &rgb[2];
 	outG = &rgb[1];
 	outB = &rgb[0];
@@ -1624,8 +1624,8 @@ dc1394_bayer_Downsample_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int
     }
 
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_GBRG:
+    case DC1394_COLOR_FILTER_GRBG:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_GBRG:
 	for (i = 0; i < sy*sx; i += (sx<<1)) {
 	    for (j = 0; j < sx; j += 2) {
 		tmp =
@@ -1638,8 +1638,8 @@ dc1394_bayer_Downsample_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int
 	    }
 	}
 	break;
-    case COLOR_FILTER_FORMAT_BGGR:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_BGGR:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_RGGB:
 	for (i = 0; i < sy*sx; i += (sx<<1)) {
 	    for (j = 0; j < sx; j += 2) {
 		tmp =
@@ -1670,14 +1670,14 @@ dc1394_bayer_Simple_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int sy,
 
     // sx and sy should be even
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:
-    case COLOR_FILTER_FORMAT_BGGR:
+    case DC1394_COLOR_FILTER_GRBG:
+    case DC1394_COLOR_FILTER_BGGR:
 	outR = &rgb[0];
 	outG = &rgb[1];
 	outB = &rgb[2];
 	break;
-    case COLOR_FILTER_FORMAT_GBRG:
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_GBRG:
+    case DC1394_COLOR_FILTER_RGGB:
 	outR = &rgb[2];
 	outG = &rgb[1];
 	outB = &rgb[0];
@@ -1689,14 +1689,14 @@ dc1394_bayer_Simple_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int sy,
     }
 
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:
-    case COLOR_FILTER_FORMAT_BGGR:
+    case DC1394_COLOR_FILTER_GRBG:
+    case DC1394_COLOR_FILTER_BGGR:
 	outR = &rgb[0];
 	outG = &rgb[1];
 	outB = &rgb[2];
 	break;
-    case COLOR_FILTER_FORMAT_GBRG:
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_GBRG:
+    case DC1394_COLOR_FILTER_RGGB:
 	outR = &rgb[2];
 	outG = &rgb[1];
 	outB = &rgb[0];
@@ -1709,8 +1709,8 @@ dc1394_bayer_Simple_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int sy,
     }
 
     switch (tile) {
-    case COLOR_FILTER_FORMAT_GRBG:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_GBRG:
+    case DC1394_COLOR_FILTER_GRBG:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_GBRG:
 	for (i = 0; i < sy - 1; i += 2) {
 	    for (j = 0; j < sx - 1; j += 2) {
 		base = i * sx + j;
@@ -1756,8 +1756,8 @@ dc1394_bayer_Simple_uint16(const uint16_t *bayer, uint16_t *rgb, int sx, int sy,
 	    }
 	}
 	break;
-    case COLOR_FILTER_FORMAT_BGGR:	//---------------------------------------------------------
-    case COLOR_FILTER_FORMAT_RGGB:
+    case DC1394_COLOR_FILTER_BGGR:	//---------------------------------------------------------
+    case DC1394_COLOR_FILTER_RGGB:
 	for (i = 0; i < sy - 1; i += 2) {
 	    for (j = 0; j < sx - 1; j += 2) {
 		base = i * sx + j;

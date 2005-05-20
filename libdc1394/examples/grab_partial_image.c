@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.12  2005/05/20 08:58:58  ddouxchamps
+**  all constant definitions now start with DC1394_
+**
 **  Revision 1.4.2.11  2005/05/09 15:04:27  ddouxchamps
 **  fixed important f7 bug
 **
@@ -121,9 +124,9 @@ int main(int argc, char *argv[])
   //fprintf(stderr,"handle: 0x%x\n",capture.handle);
 
   if( dc1394_setup_format7_capture(camera, 0, /* channel */
-                                   MODE_FORMAT7_0, 
-                                   SPEED_400,
-                                   USE_MAX_AVAIL, /* use max packet size */
+                                   DC1394_MODE_FORMAT7_0, 
+                                   DC1394_SPEED_400,
+                                   DC1394_USE_MAX_AVAIL, /* use max packet size */
                                    10, 20, /* left, top */
                                    200, 100,  /* width, height */
                                    &capture) != DC1394_SUCCESS)
@@ -153,21 +156,21 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  print allowed and used packet size
    *-----------------------------------------------------------------------*/
-  if (dc1394_query_format7_packet_para(camera, MODE_FORMAT7_0, &min_bytes, &max_bytes) != DC1394_SUCCESS) { /* PACKET_PARA_INQ */
+  if (dc1394_query_format7_packet_para(camera, DC1394_MODE_FORMAT7_0, &min_bytes, &max_bytes) != DC1394_SUCCESS) { /* PACKET_PARA_INQ */
     printf("Packet para inq error\n");
     return DC1394_FAILURE;
   }
   printf( "camera reports allowed packet size from %d - %d bytes\n", min_bytes, max_bytes);
 
   
-  if (dc1394_query_format7_byte_per_packet(camera, MODE_FORMAT7_0, &actual_bytes) != DC1394_SUCCESS) {
+  if (dc1394_query_format7_byte_per_packet(camera, DC1394_MODE_FORMAT7_0, &actual_bytes) != DC1394_SUCCESS) {
     printf("dc1394_query_format7_byte_per_packet error\n");
     return DC1394_FAILURE;
   }
   printf( "camera reports actual packet size = %d bytes\n",
           actual_bytes);
 
-  if (dc1394_query_format7_total_bytes(camera, MODE_FORMAT7_0, &total_bytes) != DC1394_SUCCESS) {
+  if (dc1394_query_format7_total_bytes(camera, DC1394_MODE_FORMAT7_0, &total_bytes) != DC1394_SUCCESS) {
     printf("dc1394_query_format7_total_bytes error\n");
     return DC1394_FAILURE;
   }

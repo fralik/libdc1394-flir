@@ -22,7 +22,7 @@
 #include "dc1394_utils.h"
 #include "dc1394_register.h"
 
-const char *dc1394_feature_desc[FEATURE_NUM] =
+const char *dc1394_feature_desc[DC1394_FEATURE_NUM] =
 {
   "Brightness",
   "Exposure",
@@ -48,7 +48,7 @@ const char *dc1394_feature_desc[FEATURE_NUM] =
   "Capture Quality"
 };
 
-const char *dc1394_error_strings[NUM_ERRORS] =
+const char *dc1394_error_strings[DC1394_ERROR_NUM] =
 {
   "Success",
   "Generic failure",
@@ -125,7 +125,7 @@ int
 _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // ERROR handling to be updated
 {
   uint_t mode_index;
-  uint_t frame_rate_index= frame_rate - FRAMERATE_MIN;
+  uint_t frame_rate_index= frame_rate - DC1394_FRAMERATE_MIN;
   uint_t format;
   int err;
 
@@ -135,44 +135,44 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
   //fprintf(stderr,"format: %d\n",format);
 
   switch(format) {
-  case FORMAT0:
-    mode_index= mode - MODE_FORMAT0_MIN;
+  case DC1394_FORMAT0:
+    mode_index= mode - DC1394_MODE_FORMAT0_MIN;
     
-    if ( ((mode >= MODE_FORMAT0_MIN) && (mode <= MODE_FORMAT0_MAX)) && 
-	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
-      *qpp=quadlets_per_packet_format_0[FRAMERATE_NUM*mode_index+frame_rate_index];
+    if ( ((mode >= DC1394_MODE_FORMAT0_MIN) && (mode <= DC1394_MODE_FORMAT0_MAX)) && 
+	 ((frame_rate >= DC1394_FRAMERATE_MIN) && (frame_rate <= DC1394_FRAMERATE_MAX)) ) {
+      *qpp=quadlets_per_packet_format_0[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
     else {
       err=DC1394_INVALID_MODE;
       DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
-  case FORMAT1:
-    mode_index= mode - MODE_FORMAT1_MIN;
+  case DC1394_FORMAT1:
+    mode_index= mode - DC1394_MODE_FORMAT1_MIN;
     
-    if ( ((mode >= MODE_FORMAT1_MIN) && (mode <= MODE_FORMAT1_MAX)) && 
-	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
-      *qpp=quadlets_per_packet_format_1[FRAMERATE_NUM*mode_index+frame_rate_index];
+    if ( ((mode >= DC1394_MODE_FORMAT1_MIN) && (mode <= DC1394_MODE_FORMAT1_MAX)) && 
+	 ((frame_rate >= DC1394_FRAMERATE_MIN) && (frame_rate <= DC1394_FRAMERATE_MAX)) ) {
+      *qpp=quadlets_per_packet_format_1[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
     else {
       err=DC1394_INVALID_MODE;
       DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
-  case FORMAT2:
-    mode_index= mode - MODE_FORMAT2_MIN;
+  case DC1394_FORMAT2:
+    mode_index= mode - DC1394_MODE_FORMAT2_MIN;
     
-    if ( ((mode >= MODE_FORMAT2_MIN) && (mode <= MODE_FORMAT2_MAX)) && 
-	 ((frame_rate >= FRAMERATE_MIN) && (frame_rate <= FRAMERATE_MAX)) ) {
-      *qpp=quadlets_per_packet_format_2[FRAMERATE_NUM*mode_index+frame_rate_index];
+    if ( ((mode >= DC1394_MODE_FORMAT2_MIN) && (mode <= DC1394_MODE_FORMAT2_MAX)) && 
+	 ((frame_rate >= DC1394_FRAMERATE_MIN) && (frame_rate <= DC1394_FRAMERATE_MAX)) ) {
+      *qpp=quadlets_per_packet_format_2[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
     else {
       err=DC1394_INVALID_MODE;
       DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
-  case FORMAT6:
-  case FORMAT7:
+  case DC1394_FORMAT6:
+  case DC1394_FORMAT7:
     err=DC1394_INVALID_FORMAT;
     DC1394_ERR_CHK(err,"Format 6 and 7 don't have qpp");
     break;
@@ -213,14 +213,14 @@ int
 IsFeatureBitSet(quadlet_t value, uint_t feature)
 {
 
-  if (feature >= FEATURE_ZOOM) {
-    if (feature >= FEATURE_CAPTURE_SIZE) {
+  if (feature >= DC1394_FEATURE_ZOOM) {
+    if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {
       feature+= 12;
     }
-    feature-= FEATURE_ZOOM;
+    feature-= DC1394_FEATURE_ZOOM;
   }
   else {
-    feature-= FEATURE_MIN;
+    feature-= DC1394_FEATURE_MIN;
   }
   
   value&=(0x80000000UL >> feature);
@@ -236,20 +236,20 @@ _dc1394_get_format_from_mode(uint_t mode, uint_t *format)
 {
   int err=DC1394_SUCCESS;
 
-  if ((mode>=MODE_FORMAT0_MIN)&&(mode<=MODE_FORMAT0_MAX)) {
-    *format=FORMAT0;
+  if ((mode>=DC1394_MODE_FORMAT0_MIN)&&(mode<=DC1394_MODE_FORMAT0_MAX)) {
+    *format=DC1394_FORMAT0;
   }
-  else if ((mode>=MODE_FORMAT1_MIN)&&(mode<=MODE_FORMAT1_MAX)) {
-    *format=FORMAT1;
+  else if ((mode>=DC1394_MODE_FORMAT1_MIN)&&(mode<=DC1394_MODE_FORMAT1_MAX)) {
+    *format=DC1394_FORMAT1;
   }
-  else if ((mode>=MODE_FORMAT2_MIN)&&(mode<=MODE_FORMAT2_MAX)) {
-    *format=FORMAT2;
+  else if ((mode>=DC1394_MODE_FORMAT2_MIN)&&(mode<=DC1394_MODE_FORMAT2_MAX)) {
+    *format=DC1394_FORMAT2;
   }
-  else if ((mode>=MODE_FORMAT6_MIN)&&(mode<=MODE_FORMAT6_MAX)) {
-    *format=FORMAT6;
+  else if ((mode>=DC1394_MODE_FORMAT6_MIN)&&(mode<=DC1394_MODE_FORMAT6_MAX)) {
+    *format=DC1394_FORMAT6;
   }
-  else if ((mode>=MODE_FORMAT7_MIN)&&(mode<=MODE_FORMAT7_MAX)) {
-    *format=FORMAT7;
+  else if ((mode>=DC1394_MODE_FORMAT7_MIN)&&(mode<=DC1394_MODE_FORMAT7_MAX)) {
+    *format=DC1394_FORMAT7;
   }
   else {
     err=DC1394_INVALID_MODE;

@@ -26,15 +26,15 @@
 /* Definitions which application developers shouldn't care about */
 #define CONFIG_ROM_BASE             0xFFFFF0000000ULL
 
-#define ON_VALUE                    0x80000000UL
-#define OFF_VALUE                   0x00000000UL
+#define DC1394_FEATURE_ON           0x80000000UL
+#define DC1394_FEATURE_OFF          0x00000000UL
 
 /* Maximum number of write/read retries */
-#define MAX_RETRIES                 20
+#define DC1394_MAX_RETRIES          20
 
 /* A hard compiled factor that makes sure async read and writes don't happen
    too fast */
-#define SLOW_DOWN                   20
+#define DC1394_SLOW_DOWN            20
 
 /* transaction acknowldegements (this should be in the raw1394 headers) */
 #define ACK_COMPLETE                0x0001U
@@ -48,37 +48,37 @@
 
 #define FEATURE_TO_VALUE_OFFSET(feature, offset)                      \
                                                                       \
-    if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {       \
+    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {       \
       return DC1394_FAILURE;                                          \
     }                                                                 \
-    else if (feature < FEATURE_ZOOM) {                                \
+    else if (feature < DC1394_FEATURE_ZOOM) {                                \
       offset= REG_CAMERA_FEATURE_HI_BASE;                             \
-      feature-= FEATURE_MIN;                                          \
+      feature-= DC1394_FEATURE_MIN;                                          \
     }                                                                 \
     else {                                                            \
       offset= REG_CAMERA_FEATURE_LO_BASE;                             \
-      if (feature >= FEATURE_CAPTURE_SIZE) {                          \
+      if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {                          \
         feature+= 12;                                                 \
       }                                                               \
-      feature-= FEATURE_ZOOM;                                         \
+      feature-= DC1394_FEATURE_ZOOM;                                         \
     }                                                                 \
     offset+= feature * 0x04U;
 
 #define FEATURE_TO_INQUIRY_OFFSET(feature, offset)                    \
                                                                       \
-    if ( (feature > FEATURE_MAX) || (feature < FEATURE_MIN) ) {       \
+    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {       \
       return DC1394_FAILURE;                                          \
     }                                                                 \
-    else if (feature < FEATURE_ZOOM) {                                \
+    else if (feature < DC1394_FEATURE_ZOOM) {                                \
       offset= REG_CAMERA_FEATURE_HI_BASE_INQ;                         \
-      feature-= FEATURE_MIN;                                          \
+      feature-= DC1394_FEATURE_MIN;                                          \
     }                                                                 \
     else {                                                            \
       offset= REG_CAMERA_FEATURE_LO_BASE_INQ;                         \
-      if (feature >= FEATURE_CAPTURE_SIZE) {                          \
+      if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {                          \
         feature+= 12;                                                 \
       }                                                               \
-      feature-= FEATURE_ZOOM;                                         \
+      feature-= DC1394_FEATURE_ZOOM;                                         \
     }                                                                 \
     offset+= feature * 0x04U;
 
