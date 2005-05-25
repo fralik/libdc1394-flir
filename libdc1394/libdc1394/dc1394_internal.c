@@ -72,7 +72,8 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Tagged register not found",
   "Format_7 Error_flag_1 is set",
   "Format_7 Error_flag_2 is set",
-  "Invalid Bayer method code"
+  "Invalid Bayer method code",
+  "Could not create a raw1394 handle"
 };
 
 /*

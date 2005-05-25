@@ -592,3 +592,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-05-20 Damien <ddouxchamps@users.sf.net>
     * all constant definitions now start with DC1394_
+	
+2005-05-25 Damien <ddouxchamps@users.sf.net>
+    * added a handle check in dc1394_find_cameras
+    * fixed raw1394_set_port issue in the same function (Toshiyuki Umeda)
+    * new error code for failure of handle creation
+	

@@ -83,7 +83,7 @@ int
 dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 {
   // get the number the ports
-  raw1394handle_t handle;
+  raw1394handle_t handle=NULL;
   uint_t port_num, port;
   uint_t allocated_size;
   dc1394camera_t **cameras;
@@ -95,8 +95,8 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
   dc1394camera_t **newcam;
 
   cameras=*cameras_ptr;
-
   handle=raw1394_new_handle();
+
   port_num=raw1394_get_port_info(handle, NULL, 0);
 
   allocated_size=64; // initial allocation, will be reallocated if necessary
@@ -108,6 +108,11 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 
   for (port=0;port<port_num;port++) {
     // get a handle to the current interface card
+    if (handle!=NULL) {
+      raw1394_destroy_handle(handle);
+      handle=NULL;
+    }
+    handle=raw1394_new_handle();
     raw1394_set_port(handle, port);
 
     // find the cameras on this card
