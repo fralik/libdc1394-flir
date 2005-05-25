@@ -117,25 +117,27 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 
     // find the cameras on this card
     numNodes = raw1394_get_nodecount(handle);
+    raw1394_destroy_handle(handle);
+    handle=NULL;
+
     for (node=0;node<numNodes;node++){
 
       // create a camera struct for probing
+      //if (tmpcam==NULL) {
+      tmpcam=dc1394_new_camera(port,node);
+
       if (tmpcam==NULL) {
-	tmpcam=dc1394_new_camera(port,node);
-
-	if (tmpcam==NULL) {
-
-	  for (i=0;i<numCam;i++)
-	    dc1394_free_camera(cameras[i]);
-	  free(cameras);
-
-	  raw1394_destroy_handle(handle);
-	  fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
-		  __FILE__, __FUNCTION__, __LINE__,
-		  "Can't allocate camera structure");
-	  return DC1394_MEMORY_ALLOCATION_FAILURE;
-	}
+	
+	for (i=0;i<numCam;i++)
+	  dc1394_free_camera(cameras[i]);
+	free(cameras);
+	
+	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
+		__FILE__, __FUNCTION__, __LINE__,
+		"Can't allocate camera structure");
+	return DC1394_MEMORY_ALLOCATION_FAILURE;
       }
+
       err=dc1394_get_camera_info(tmpcam);
       if ((err != DC1394_SUCCESS) &&
 	  (err != DC1394_NOT_A_CAMERA) &&
@@ -147,7 +149,6 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 
 	dc1394_free_camera(tmpcam);
 
-	raw1394_destroy_handle(handle);
 	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
 		__FILE__, __FUNCTION__, __LINE__,
 		"Can't check if node is a camera");
@@ -169,6 +170,8 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	    tmpcam=NULL;
 	    numCam++;
 	  }
+	  else
+	    dc1394_free_camera(tmpcam);
 	}
 	else { // numcam == 0: we add the first camera without questions
 	  cameras[numCam]=tmpcam;
@@ -185,8 +188,6 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	    dc1394_free_camera(cameras[i]);
 	  free(cameras);
 
-	  raw1394_destroy_handle(handle);
-
 	  if (tmpcam!=NULL)
 	    dc1394_free_camera(tmpcam);
 
@@ -200,9 +201,13 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	}
       }
     }
+    /*
+    if (tmpcam!=NULL){
+      free(tmpcam);
+      tmpcam=NULL;
+    }
+    */
   }
-
-  raw1394_destroy_handle(handle);
 
   *numCameras=numCam;
 
@@ -371,30 +376,25 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   camera->advanced_features_csr=0;
   for (i=0;i<DC1394_MODE_FORMAT7_NUM;i++)
     camera->format7_csr[i]=0;
-  
-  /* now get the EUID-64 */
-  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
-  DC1394_ERR_CHK(err, "Could not get EUID-LSB");
-  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x10, &value[1]);
-  DC1394_ERR_CHK(err, "Could not get EUID-MSB");
-  camera->euid_64= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
+
+  // return silently on all errors as a bad rom just means another device
   
   /* get the unit_directory offset */
   offset= ROM_ROOT_DIRECTORY;
   err=GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get unit directory offset");
+  if (err!=DC1394_SUCCESS) return err;
   camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
 
   /* get the spec_id value */
   offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x12, &offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get spec ID");
+  if (err!=DC1394_SUCCESS) return err;
   camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
   //fprintf(stderr,"12: 0x%x\n",camera->ud_reg_tag_12);
   /* get the iidc revision */
   offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x13, &offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get IIDC revision");
+  if (err!=DC1394_SUCCESS) return err;
   camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
   //fprintf(stderr,"13: 0x%x\n",camera->ud_reg_tag_13);
 
@@ -405,6 +405,16 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   else
     DC1394_ERR_CHK(err, "Problem inferring the IIDC version");
 
+  // at this point we know it's a camera so we start returning errors if registers
+  // are not found
+
+  /* now get the EUID-64 */
+  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
+  if (err!=DC1394_SUCCESS) return err;
+  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x10, &value[1]);
+  if (err!=DC1394_SUCCESS) return err;
+  camera->euid_64= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
+  
   /* get the unit_dependent_directory offset */
   offset= camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);

@@ -598,3 +598,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed raw1394_set_port issue in the same function (Toshiyuki Umeda)
     * new error code for failure of handle creation
 	
+2005-05-25 Damien <ddouxchamps@users.sf.net>
+    * fixed multi-port/multi-camera detection thanks to Toshiyuki Umeda.
