@@ -34,7 +34,12 @@
 
 /* A hard compiled factor that makes sure async read and writes don't happen
    too fast */
-#define DC1394_SLOW_DOWN            20
+/* Toshiyuki Umeda: use randomize timings to avoid locking indefinitely.
+   If several thread are used the seed will be the same and the wait will therefor be
+   identical. A call to srand(getpid()) should be performed after calling the
+   raw1394_new_handle but I (Damien) not sure this would solve the problem as the handle
+   creation might have happened in the creating (as opposed to created) thread.*/
+#define DC1394_SLOW_DOWN            ((rand()%20)+10)
 
 /* transaction acknowldegements (this should be in the raw1394 headers) */
 #define ACK_COMPLETE                0x0001U

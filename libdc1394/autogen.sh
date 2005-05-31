@@ -52,6 +52,11 @@ aclocal $ACLOCAL_FLAGS
 # optionally feature autoheader
 (autoheader --version)  < /dev/null > /dev/null 2>&1 && autoheader
 
+# addition by Toshiyuki Umeda to avoid automake failure on first pass.
+# this only happens with recent automake versions.
+touch ltmain.sh
+touch config.h.in
+
 automake -a $am_opt
 autoconf
 cd $ORIGDIR

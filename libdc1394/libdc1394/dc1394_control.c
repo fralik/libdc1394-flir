@@ -6,29 +6,6 @@
  * Additions by Chris Urmson <curmson@ri.cmu.edu>
  * Additions by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
- * Acknowledgments:
- * Per Dalgas Jakobsen <pdj@maridan.dk>
- *   - Added retries to ROM and CSR reads
- *   - Nicer endianness handling
- *
- * Robert Ficklin <rficklin@westengineering.com>
- *   - bug fixes
- * 
- * Julie Andreotti <JulieAndreotti@smarttech.com>
- *   - bug fixes
- * 
- * Ann Dang <AnnDang@smarttech.com>
- *   - bug fixes
- *
- * Dan Dennedy <dan@dennedy.org>
- *  - bug fixes
- *
- * Yves Jaeger <yves.jaeger@fraenz-jaeger.de>
- *  - software trigger functions
- *
- * Pierre Moos <pierre.moos@gmail.com> 
- *  - AVT Marlin vendor specific functions
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -201,12 +178,6 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	}
       }
     }
-    /*
-    if (tmpcam!=NULL){
-      free(tmpcam);
-      tmpcam=NULL;
-    }
-    */
   }
 
   *numCameras=numCam;
