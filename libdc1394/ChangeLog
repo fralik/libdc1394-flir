@@ -604,3 +604,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-05-31 Damien <ddouxchamps@users.sf.net>
     * randomize DC1394_SLOW_DOWN (Toshiyuki Umeda)
     * fixed autogen.sh with recent automake versions (Toshiyuki Umeda)
+
+2005-06-13 Damien <ddouxchamps@users.sf.net>
+    * Release 2.0.0-pre3
+	
+2005-06-17 Damien <ddouxchamps@users.sf.net>
+    * Fixed a bug in the camrea detection (Jason Meltzer)
