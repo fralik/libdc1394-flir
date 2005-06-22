@@ -352,7 +352,7 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *o
   }
   
   block_length=*value>>16;
-
+  //fprintf(stderr,"  block length = %d\n",block_length);
   if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
     block_length=(CSR_CONFIG_ROM_END-*offset)/4;
   }

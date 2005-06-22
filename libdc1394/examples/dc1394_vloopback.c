@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.11  2005/06/22 05:02:38  ddouxchamps
+**  Fixed detection issue with hub/repeaters
+**
 **  Revision 1.11.2.10  2005/05/20 08:58:58  ddouxchamps
 **  all constant definitions now start with DC1394_
 **

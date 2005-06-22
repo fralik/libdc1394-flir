@@ -98,7 +98,7 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
     handle=NULL;
 
     for (node=0;node<numNodes;node++){
-
+      //fprintf(stderr,"------------------------ New device -----------------\n");
       // create a camera struct for probing
       //if (tmpcam==NULL) {
       tmpcam=dc1394_new_camera(port,node);
@@ -109,13 +109,16 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	  dc1394_free_camera(cameras[i]);
 	free(cameras);
 	
-	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
-		__FILE__, __FUNCTION__, __LINE__,
-		"Can't allocate camera structure");
+	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't allocate camera structure\n");
 	return DC1394_MEMORY_ALLOCATION_FAILURE;
       }
 
       err=dc1394_get_camera_info(tmpcam);
+
+      // This segment has been removed. Reason: some devices (like my hub) refuse to honour read requests even at offset 0x414.
+      // The result of this is a low-level error that is translated by DC1394_FAILURE. The latter error code was interpreted as
+      // a major system failure while it is actually simply a bad device.
+      /*
       if ((err != DC1394_SUCCESS) &&
 	  (err != DC1394_NOT_A_CAMERA) &&
 	  (err != DC1394_TAGGED_REGISTER_NOT_FOUND)) {
@@ -126,13 +129,12 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 
 	dc1394_free_camera(tmpcam);
 
-	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
-		__FILE__, __FUNCTION__, __LINE__,
-		"Can't check if node is a camera");
+	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't check if node is a camera\n");
 	return err;
       }
-      
-      if (err == DC1394_SUCCESS) {
+      */
+
+      if (err == DC1394_SUCCESS) { // is it a camera?
 	// check if this camera was not found yet. (a camera might appear twice with strange bus topologies)
 	// this hack comes from coriander.
 	if (numCam>0) {
@@ -251,10 +253,12 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
   /* IIDC 1.31 check */
   if (camera->iidc_version==DC1394_IIDC_VERSION_1_30) {
     
+    //fprintf(stderr,"1.30 detected\n");
     offset=camera->unit_dependent_directory;
     err=GetConfigROMTaggedRegister(camera, 0x38, &offset, &quadval);
     if (err!=DC1394_SUCCESS) {
       if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
+	//fprintf(stderr,"not tag reg\n");
 	// If it fails here we return success with the most accurate version estimation: 1.30.
 	// This is because the GetConfigROMTaggedRegister will return a failure both if there is a comm
 	// problem but also if the tag is not found. In the latter case it simply means that the
@@ -265,6 +269,7 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
       else 
 	DC1394_ERR_CHK(err, "Could not get tagged register 0x38");
     }
+    //fprintf(stderr,"test2\n");
 
     switch (quadval&0xFFFFFFUL) {
     case 0x10:
@@ -299,7 +304,7 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
       break;
     }
   }
-  
+  //fprintf(stderr,"test\n");
   return err;
 }
 
@@ -355,6 +360,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   /* get the unit_directory offset */
   offset= ROM_ROOT_DIRECTORY;
   err=GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval);
+  //fprintf(stderr,"Err: %d\n",err);
   if (err!=DC1394_SUCCESS) return err;
   camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
 
@@ -375,12 +381,13 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   err=_dc1394_get_iidc_version(camera);
   if (err==DC1394_NOT_A_CAMERA)
     return err;
-  else
-    DC1394_ERR_CHK(err, "Problem inferring the IIDC version");
+
+  DC1394_ERR_CHK(err, "Problem inferring the IIDC version");
+
 
   // at this point we know it's a camera so we start returning errors if registers
   // are not found
-
+  //fprintf(stderr,"got a camera\n");
   /* now get the EUID-64 */
   err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
   if (err!=DC1394_SUCCESS) return err;
@@ -418,7 +425,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   }
   offset+= 12;
   count= 0;
-  
+
   /* grab the vendor name */
   while (len > 0) {
     err=GetCameraROMValue(camera, offset+count, &value[0]);

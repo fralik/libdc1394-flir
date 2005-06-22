@@ -609,4 +609,10 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Release 2.0.0-pre3
 	
 2005-06-17 Damien <ddouxchamps@users.sf.net>
-    * Fixed a bug in the camrea detection (Jason Meltzer)
+    * Fixed a bug in the camera detection (Jason Meltzer)
+	
+2005-06-22 Damien <ddouxchamps@users.sf.net>
+    * Removed the error check after the call to dc1394_get_camera_info in
+      dc1394_find_cameras. This will let the program go around weird
+      devices like some hubs/repeaters which have next to zero ROM.
+	
