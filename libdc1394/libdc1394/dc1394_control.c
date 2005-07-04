@@ -74,6 +74,10 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
   cameras=*cameras_ptr;
   handle=raw1394_new_handle();
 
+  if(handle == NULL){
+    return DC1394_HANDLE_CREATION_FAILURE;
+  }
+
   port_num=raw1394_get_port_info(handle, NULL, 0);
 
   allocated_size=64; // initial allocation, will be reallocated if necessary

@@ -616,3 +616,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       dc1394_find_cameras. This will let the program go around weird
       devices like some hubs/repeaters which have next to zero ROM.
 	
+2005-07-04 Damien <ddouxchamps@users.sf.net>
+    * Applied patch from Tim Lapawa (chack handle creation failure in
+      dc1394_find_cameras)
+	
