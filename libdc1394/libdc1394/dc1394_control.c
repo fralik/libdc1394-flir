@@ -60,7 +60,7 @@ int
 dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 {
   // get the number the ports
-  raw1394handle_t handle=NULL;
+  raw1394handle_t handle;
   uint_t port_num, port;
   uint_t allocated_size;
   dc1394camera_t **cameras;
@@ -74,19 +74,20 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
   cameras=*cameras_ptr;
   handle=raw1394_new_handle();
 
-  if(handle == NULL){
+  if(handle == NULL)
     return DC1394_HANDLE_CREATION_FAILURE;
-  }
-
+  
   port_num=raw1394_get_port_info(handle, NULL, 0);
-
+  
   allocated_size=64; // initial allocation, will be reallocated if necessary
   cameras=(dc1394camera_t**)malloc(allocated_size*sizeof(dc1394camera_t*));
+  if (!cameras)
+    return DC1394_MEMORY_ALLOCATION_FAILURE;
   numCam=0;
-
+  
   // scan each port for cameras. When a camera is found add it.
   // if the number of cameras is not enough the array is re-allocated.
-
+  
   for (port=0;port<port_num;port++) {
     // get a handle to the current interface card
     if (handle!=NULL) {
@@ -95,18 +96,18 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
     }
     handle=raw1394_new_handle();
     raw1394_set_port(handle, port);
-
+    
     // find the cameras on this card
     numNodes = raw1394_get_nodecount(handle);
     raw1394_destroy_handle(handle);
     handle=NULL;
-
+    
     for (node=0;node<numNodes;node++){
       //fprintf(stderr,"------------------------ New device -----------------\n");
       // create a camera struct for probing
       //if (tmpcam==NULL) {
       tmpcam=dc1394_new_camera(port,node);
-
+      
       if (tmpcam==NULL) {
 	
 	for (i=0;i<numCam;i++)
@@ -116,28 +117,28 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't allocate camera structure\n");
 	return DC1394_MEMORY_ALLOCATION_FAILURE;
       }
-
+      
       err=dc1394_get_camera_info(tmpcam);
-
+      
       // This segment has been removed. Reason: some devices (like my hub) refuse to honour read requests even at offset 0x414.
       // The result of this is a low-level error that is translated by DC1394_FAILURE. The latter error code was interpreted as
       // a major system failure while it is actually simply a bad device.
       /*
-      if ((err != DC1394_SUCCESS) &&
-	  (err != DC1394_NOT_A_CAMERA) &&
-	  (err != DC1394_TAGGED_REGISTER_NOT_FOUND)) {
-
+	if ((err != DC1394_SUCCESS) &&
+	    (err != DC1394_NOT_A_CAMERA) &&
+	    (err != DC1394_TAGGED_REGISTER_NOT_FOUND)) {
+	
 	for (i=0;i<numCam;i++)
 	  dc1394_free_camera(cameras[i]);
 	free(cameras);
-
+	
 	dc1394_free_camera(tmpcam);
-
+	
 	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't check if node is a camera\n");
 	return err;
       }
       */
-
+      
       if (err == DC1394_SUCCESS) { // is it a camera?
 	// check if this camera was not found yet. (a camera might appear twice with strange bus topologies)
 	// this hack comes from coriander.
@@ -164,7 +165,7 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	  numCam++;
 	}
       }
-
+      
       if (numCam>=allocated_size) {
 	allocated_size*=2;
 	newcam=realloc(cameras,allocated_size*sizeof(dc1394camera_t*));
@@ -172,10 +173,10 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	  for (i=0;i<numCam;i++)
 	    dc1394_free_camera(cameras[i]);
 	  free(cameras);
-
+	  
 	  if (tmpcam!=NULL)
 	    dc1394_free_camera(tmpcam);
-
+	  
 	  fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
 		  __FILE__, __FUNCTION__, __LINE__,
 		  "Can't reallocate camera array");
@@ -187,7 +188,7 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
       }
     }
   }
-
+    
   *numCameras=numCam;
 
   *cameras_ptr=cameras;

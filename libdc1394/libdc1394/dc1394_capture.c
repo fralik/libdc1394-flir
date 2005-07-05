@@ -195,6 +195,7 @@ _dc1394_dma_basic_setup(uint_t channel,
   
   if (capture->dma_device_file == NULL) {
     capture->dma_device_file = malloc(32);
+    if (capture->dma_device_file)
     sprintf((char*)capture->dma_device_file, "/dev/video1394/%d", capture->port );
   }
   
