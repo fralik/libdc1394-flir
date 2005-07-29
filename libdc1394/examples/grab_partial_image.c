@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.14  2005/07/29 09:20:46  ddouxchamps
+**  Interface harmonization (work in progress)
+**
 **  Revision 1.4.2.13  2005/06/22 05:02:39  ddouxchamps
 **  Fixed detection issue with hub/repeaters
 **
@@ -159,21 +162,21 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  print allowed and used packet size
    *-----------------------------------------------------------------------*/
-  if (dc1394_query_format7_packet_para(camera, DC1394_MODE_FORMAT7_0, &min_bytes, &max_bytes) != DC1394_SUCCESS) { /* PACKET_PARA_INQ */
+  if (dc1394_format7_get_packet_para(camera, DC1394_MODE_FORMAT7_0, &min_bytes, &max_bytes) != DC1394_SUCCESS) { /* PACKET_PARA_INQ */
     printf("Packet para inq error\n");
     return DC1394_FAILURE;
   }
   printf( "camera reports allowed packet size from %d - %d bytes\n", min_bytes, max_bytes);
 
   
-  if (dc1394_query_format7_byte_per_packet(camera, DC1394_MODE_FORMAT7_0, &actual_bytes) != DC1394_SUCCESS) {
+  if (dc1394_format7_get_byte_per_packet(camera, DC1394_MODE_FORMAT7_0, &actual_bytes) != DC1394_SUCCESS) {
     printf("dc1394_query_format7_byte_per_packet error\n");
     return DC1394_FAILURE;
   }
   printf( "camera reports actual packet size = %d bytes\n",
           actual_bytes);
 
-  if (dc1394_query_format7_total_bytes(camera, DC1394_MODE_FORMAT7_0, &total_bytes) != DC1394_SUCCESS) {
+  if (dc1394_format7_get_total_bytes(camera, DC1394_MODE_FORMAT7_0, &total_bytes) != DC1394_SUCCESS) {
     printf("dc1394_query_format7_total_bytes error\n");
     return DC1394_FAILURE;
   }
@@ -184,7 +187,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
-  if (dc1394_start_iso_transmission(camera) !=DC1394_SUCCESS) {
+  if (dc1394_video_set_transmission(camera,DC1394_ON) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to start camera iso transmission\n");
     dc1394_release_capture(&capture);
     dc1394_free_camera(camera);
@@ -224,7 +227,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  Stop data transmission
    *-----------------------------------------------------------------------*/
-  if (dc1394_stop_iso_transmission(camera)!=DC1394_SUCCESS) {
+  if (dc1394_video_set_transmission(camera,DC1394_OFF)!=DC1394_SUCCESS) {
     printf("couldn't stop the camera?\n");
   }
 

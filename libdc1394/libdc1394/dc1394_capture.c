@@ -127,25 +127,25 @@ _dc1394_basic_setup(dc1394camera_t *camera,
      this will cause any problems for other cameras. */
   /* Addition by Dan Dennedy: Restart iso transmission later if it is on */
 
-  err=dc1394_get_iso_status(camera, &is_iso_on);
+  err=dc1394_video_get_transmission(camera, &is_iso_on);
   DC1394_ERR_CHK(err,"Unable to get ISO status");
   
   if (is_iso_on) {
-    err=dc1394_stop_iso_transmission(camera);
+    err=dc1394_video_set_transmission(camera, DC1394_OFF);
     DC1394_ERR_CHK(err,"Unable to pause iso transmission");
   }
   
-  err=dc1394_set_iso_channel_and_speed(camera,channel,speed);
+  err=dc1394_video_set_iso_channel_and_speed(camera,channel,speed);
   DC1394_ERR_CHK(err, "Unable to set channel and speed");
   
-  err=dc1394_set_video_mode(camera,mode);
+  err=dc1394_video_set_mode(camera,mode);
   DC1394_ERR_CHK(err, "Unable to set video mode %d!", mode);
 
-  err=dc1394_set_video_framerate(camera,frame_rate);
+  err=dc1394_video_set_framerate(camera,frame_rate);
   DC1394_ERR_CHK(err, "Unable to set framerate %d!", frame_rate);
   
   if (is_iso_on) {
-    err=dc1394_start_iso_transmission(camera);
+    err=dc1394_video_set_transmission(camera, DC1394_ON);
     DC1394_ERR_CHK(err,"Unable to restart iso transmission");
   }
 

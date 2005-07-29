@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.12  2005/07/29 09:20:46  ddouxchamps
+**  Interface harmonization (work in progress)
+**
 **  Revision 1.9.2.11  2005/06/22 05:02:38  ddouxchamps
 **  Fixed detection issue with hub/repeaters
 **
@@ -434,7 +437,7 @@ int main(int argc,char *argv[])
       //dc1394_print_feature_set(&features);
     }
     
-    if (dc1394_get_iso_channel_and_speed(cameras[i], &channel, &speed) != DC1394_SUCCESS) {
+    if (dc1394_video_get_iso_channel_and_speed(cameras[i], &channel, &speed) != DC1394_SUCCESS) {
       printf("unable to get the iso channel number\n");
       cleanup();
       exit(-1);
@@ -453,7 +456,7 @@ int main(int argc,char *argv[])
     
 		
     /*have the camera start sending us data*/
-    if (dc1394_start_iso_transmission(cameras[i]) !=DC1394_SUCCESS) {
+    if (dc1394_video_set_transmission(cameras[i],DC1394_ON) !=DC1394_SUCCESS) {
       perror("unable to start camera iso transmission\n");
       cleanup();
       exit(-1);
@@ -558,27 +561,27 @@ int main(int argc,char *argv[])
 	case XK_1:
 	  fps =	DC1394_FRAMERATE_1_875; 
 	  for (i = 0; i < numCameras; i++)
-	    dc1394_set_video_framerate(cameras[i], fps);
+	    dc1394_video_set_framerate(cameras[i], fps);
 	  break;
 	case XK_2:
 	  fps =	DC1394_FRAMERATE_3_75; 
 	  for (i = 0; i < numCameras; i++)
-	    dc1394_set_video_framerate(cameras[i], fps);
+	    dc1394_video_set_framerate(cameras[i], fps);
 	  break;
 	case XK_4:
 	  fps = DC1394_FRAMERATE_15; 
 	  for (i = 0; i < numCameras; i++)
-	    dc1394_set_video_framerate(cameras[i], fps);
+	    dc1394_video_set_framerate(cameras[i], fps);
 	  break;
 	case XK_5: 
 	  fps = DC1394_FRAMERATE_30;
 	  for (i = 0; i < numCameras; i++)
-	    dc1394_set_video_framerate(cameras[i], fps);
+	    dc1394_video_set_framerate(cameras[i], fps);
 	  break;
 	case XK_3:
 	  fps = DC1394_FRAMERATE_7_5; 
 	  for (i = 0; i < numCameras; i++)
-	    dc1394_set_video_framerate(cameras[i], fps);
+	    dc1394_video_set_framerate(cameras[i], fps);
 	  break;
 	}
 	break;

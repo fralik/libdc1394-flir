@@ -24,7 +24,7 @@
 
 
 int
-dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, uint_t feature, float *min, float *max)
+dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, uint_t feature, float *min, float *max)
 {
   int err=0;
   
@@ -42,7 +42,7 @@ dc1394_query_absolute_feature_min_max(dc1394camera_t *camera, uint_t feature, fl
 
 
 int
-dc1394_query_absolute_feature_value(dc1394camera_t *camera, uint_t feature, float *value)
+dc1394_feature_get_absolute_value(dc1394camera_t *camera, uint_t feature, float *value)
 {
   int err=0;
 
@@ -57,7 +57,7 @@ dc1394_query_absolute_feature_value(dc1394camera_t *camera, uint_t feature, floa
 
 
 int
-dc1394_set_absolute_feature_value(dc1394camera_t *camera, uint_t feature, float value)
+dc1394_feature_set_absolute_value(dc1394camera_t *camera, uint_t feature, float value)
 {
   int err=0;
 

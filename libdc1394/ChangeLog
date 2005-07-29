@@ -623,3 +623,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-07-05 Damien <ddouxchamps@users.sf.net>
     * Applied patch from Olaf Hering (check mem allocs properly)
 	
+2005-07-28 Damien <ddouxchamps@users.sf.net>
+    * Interface harmonization (there's still some work to do)
+	

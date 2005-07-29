@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.12  2005/07/29 09:20:46  ddouxchamps
+**  Interface harmonization (work in progress)
+**
 **  Revision 1.5.2.11  2005/06/22 05:02:39  ddouxchamps
 **  Fixed detection issue with hub/repeaters
 **
@@ -163,7 +166,7 @@ int main(int argc, char *argv[])
   }
   
   /* set trigger mode */
-  if( dc1394_set_trigger_mode(camera, DC1394_TRIGGER_MODE_0)
+  if( dc1394_external_trigger_set_mode(camera, DC1394_TRIGGER_MODE_0)
       != DC1394_SUCCESS)
   {
     fprintf( stderr, "unable to set camera trigger mode\n");
@@ -189,7 +192,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
-  if (dc1394_start_iso_transmission(camera) !=DC1394_SUCCESS) {
+  if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to start camera iso transmission\n");
     dc1394_release_capture(&capture);
     dc1394_free_camera(camera);
@@ -209,7 +212,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  Stop data transmission
    *-----------------------------------------------------------------------*/
-  if (dc1394_stop_iso_transmission(camera)!=DC1394_SUCCESS) {
+  if (dc1394_video_set_transmission(camera,DC1394_OFF)!=DC1394_SUCCESS) {
     printf("couldn't stop the camera?\n");
   }
   

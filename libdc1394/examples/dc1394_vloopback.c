@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.12  2005/07/29 09:20:46  ddouxchamps
+**  Interface harmonization (work in progress)
+**
 **  Revision 1.11.2.11  2005/06/22 05:02:38  ddouxchamps
 **  Fixed detection issue with hub/repeaters
 **
@@ -522,7 +525,7 @@ int dc_init()
 
   if (found) {
     /*have the camera start sending us data*/
-    if (dc1394_start_iso_transmission(camera) !=DC1394_SUCCESS) {
+    if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS) {
       perror("unable to start camera iso transmission\n");
       exit(-1);
     }
@@ -565,7 +568,7 @@ int dc_start(int palette)
 			return 0;
 	}
 	
-	if (dc1394_get_iso_channel_and_speed(camera, &channel, &speed) !=DC1394_SUCCESS) 
+	if (dc1394_video_get_iso_channel_and_speed(camera, &channel, &speed) !=DC1394_SUCCESS) 
 	{
 		printf("unable to get the iso channel number\n");
 		return 0;

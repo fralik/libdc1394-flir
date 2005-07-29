@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.12  2005/07/29 09:20:46  ddouxchamps
+**  Interface harmonization (work in progress)
+**
 **  Revision 1.5.2.11  2005/06/22 05:02:39  ddouxchamps
 **  Fixed detection issue with hub/repeaters
 **
@@ -174,7 +177,7 @@ int dc_init()
 
   if (found) {
     /*have the camera start sending us data*/
-    if (dc1394_start_iso_transmission(camera) !=DC1394_SUCCESS) {
+    if (dc1394_video_set_transmission(camera,DC1394_ON) !=DC1394_SUCCESS) {
       perror("unable to start camera iso transmission\n");
       exit(-1);
     }
@@ -223,7 +226,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
-  if (dc1394_start_iso_transmission(camera) !=DC1394_SUCCESS) {
+  if (dc1394_video_set_transmission(camera, DC1394_OFF) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to start camera iso transmission\n");
     dc1394_release_capture(&capture);
     dc1394_free_camera(camera);
