@@ -122,13 +122,13 @@ const int quadlets_per_packet_format_2[64] =
  This routine reports the number of useful image quadlets 
  per packet
 *********************************************************/
-int 
+dc1394error_t
 _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // ERROR handling to be updated
 {
   uint_t mode_index;
   uint_t frame_rate_index= frame_rate - DC1394_FRAMERATE_MIN;
   uint_t format;
-  int err;
+  dc1394error_t err;
 
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_CHK(err,"Invalid mode ID");
@@ -188,13 +188,13 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
  This routine reports the number of quadlets that make up a 
  frame given the format and mode
 ***********************************************************/
-int
+dc1394error_t
 _dc1394_quadlets_from_format(uint_t mode, uint_t *quads) 
 {
 
   uint_t w, h, color_mode;
   float bpp;
-  int err;
+  dc1394error_t err;
 
   err=dc1394_get_wh_from_mode(mode, &w, &h);
   DC1394_ERR_CHK(err, "Invalid mode ID");
@@ -210,7 +210,7 @@ _dc1394_quadlets_from_format(uint_t mode, uint_t *quads)
   return err;
 }
 
-int
+dc1394bool_t
 IsFeatureBitSet(quadlet_t value, uint_t feature)
 {
 
@@ -232,10 +232,10 @@ IsFeatureBitSet(quadlet_t value, uint_t feature)
     return DC1394_FALSE;
 }
 
-int
+dc1394error_t
 _dc1394_get_format_from_mode(uint_t mode, uint_t *format)
 {
-  int err=DC1394_SUCCESS;
+  dc1394error_t err=DC1394_SUCCESS;
 
   if ((mode>=DC1394_MODE_FORMAT0_MIN)&&(mode<=DC1394_MODE_FORMAT0_MAX)) {
     *format=DC1394_FORMAT0;

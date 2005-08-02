@@ -59,7 +59,7 @@ int *_dc1394_num_using_fd = NULL;
  hook to allow us to capture mutliple iso video streams.  This
  is used in the non DMA capture routines.
 ***************************************************************/
-int 
+dc1394error_t
 _dc1394_video_iso_handler(raw1394handle_t handle, int channel, size_t length, quadlet_t *data) 
 {
 
@@ -111,13 +111,13 @@ _dc1394_video_iso_handler(raw1394handle_t handle, int channel, size_t length, qu
 
  Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
 *************************************************************/
-int 
+dc1394error_t 
 _dc1394_basic_setup(dc1394camera_t *camera,
                     uint_t channel, uint_t mode,
                     uint_t speed, uint_t frame_rate, 
                     dc1394capture_t *capture)
 {
-  int err;
+  dc1394error_t err;
   dc1394switch_t is_iso_on= DC1394_OFF;
 
   /* Addition by Alexis Weiland: Certain cameras start sending iso
@@ -183,7 +183,7 @@ _dc1394_basic_setup(dc1394camera_t *camera,
  This sets up the dma for the given camera
 
 ******************************************************/
-int
+dc1394error_t
 _dc1394_dma_basic_setup(uint_t channel,
                         uint_t num_dma_buffers,
                         dc1394capture_t *capture)
@@ -286,13 +286,13 @@ _dc1394_dma_basic_setup(uint_t channel,
 
  Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
 **************************************************************/
-int 
+dc1394error_t 
 dc1394_setup_capture(dc1394camera_t *camera, 
                      uint_t channel, uint_t mode, 
                      uint_t speed, uint_t frame_rate, 
                      dc1394capture_t *capture) 
 {
-  int err;
+  dc1394error_t err;
   uint_t format;
 
   err=_dc1394_get_format_from_mode(mode, &format);
@@ -329,7 +329,7 @@ dc1394_setup_capture(dc1394camera_t *camera,
  Frees buffer space contained in the cameracapture 
  structure
 *****************************************************/
-int 
+dc1394error_t 
 dc1394_release_capture(dc1394capture_t *capture)
 {
   //fprintf(stderr,"Error a\n");
@@ -353,7 +353,7 @@ dc1394_release_capture(dc1394capture_t *capture)
 
  Returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it succeeds
 ****************************************************************************/
-int 
+dc1394error_t 
 dc1394_capture(dc1394capture_t *cams, uint_t num) 
 {
   int i, j;
@@ -433,7 +433,7 @@ dc1394_capture(dc1394capture_t *cams, uint_t num)
  the dma engine.  Should be much faster than the above
  routines
 ******************************************************/
-int
+dc1394error_t
 dc1394_dma_setup_capture(dc1394camera_t *camera,
                          uint_t channel, uint_t mode,
                          uint_t speed, uint_t frame_rate,
@@ -442,7 +442,7 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
 			 const char *dma_device_file,
 			 dc1394capture_t *capture)
 {
-  int err;
+  dc1394error_t err;
   uint_t format;
 
   err=_dc1394_get_format_from_mode(mode, &format);
@@ -482,7 +482,7 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
  This releases memory that was mapped by
  dc1394_dma_setup_camera
 *****************************************************/
-int 
+dc1394error_t 
 dc1394_dma_release_capture(dc1394capture_t *capture) 
 {
   //dc1394_stop_iso_transmission(handle,camera->node);
@@ -513,7 +513,7 @@ dc1394_dma_release_capture(dc1394capture_t *capture)
 
  This tells video1394 to halt iso reception.
 *****************************************************/
-int 
+dc1394error_t 
 dc1394_dma_unlisten(dc1394capture_t *capture) 
 {
   if (ioctl(capture->dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(capture->channel)) < 0)
@@ -533,7 +533,7 @@ dc1394_dma_unlisten(dc1394capture_t *capture)
  This function is private.
 
 *****************************************************/
-int
+dc1394error_t
 dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy) 
 {
   struct video1394_wait vwait;
@@ -617,7 +617,7 @@ dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy
  This allows the driver to use the buffer previously
  handed to the user by dc1394_dma_*_capture
 *****************************************************/
-int 
+dc1394error_t 
 dc1394_dma_done_with_buffer(dc1394capture_t *capture) 
 {  
   struct video1394_wait vwait;

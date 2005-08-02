@@ -628,5 +628,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-08-02 Damien <ddouxchamps@users.sf.net>
     * Now compiles with GCC-4.0
+    * type for functions returns is now dc1394error_t (was int)
 
 	

@@ -89,19 +89,19 @@
 
 /* Internal functions required by two different source files */
 
-int
+dc1394error_t
 _dc1394_dma_basic_setup(uint_t channel, uint_t num_dma_buffers, dc1394capture_t *capture);
 	
-int 
+dc1394error_t 
 _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp);
 
-int
+dc1394error_t
 _dc1394_quadlets_from_format(uint_t mode, uint_t *quads);
 
-int
+dc1394error_t
 _dc1394_get_format_from_mode(uint_t mode, uint_t *format);
 		
-int
+dc1394bool_t
 IsFeatureBitSet(quadlet_t value, uint_t feature);
 
 #endif /* _DC1394_INTERNAL_H */

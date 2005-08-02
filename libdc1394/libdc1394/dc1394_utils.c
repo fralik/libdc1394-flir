@@ -19,7 +19,7 @@
 
 #include "dc1394_utils.h"
 
-int
+dc1394error_t
 dc1394_get_wh_from_mode(uint_t mode, uint_t *w, uint_t *h) 
 {
   switch(mode) {
@@ -76,7 +76,7 @@ dc1394_get_wh_from_mode(uint_t mode, uint_t *w, uint_t *h)
 }
 	
 
-int
+dc1394error_t
 dc1394_framerate_as_float(uint_t framerate_enum, float *framerate)
 {
   switch(framerate_enum)  {
@@ -108,7 +108,7 @@ dc1394_framerate_as_float(uint_t framerate_enum, float *framerate)
   return DC1394_INVALID_FRAMERATE;
 }
 
-int
+dc1394error_t
 dc1394_is_color(uint_t color_mode, dc1394bool_t *is_color)
 {
   switch(color_mode)  {
@@ -131,7 +131,7 @@ dc1394_is_color(uint_t color_mode, dc1394bool_t *is_color)
   return DC1394_INVALID_COLOR_MODE;
 }
 
-int
+dc1394error_t
 dc1394_get_bytes_per_pixel(uint_t color_mode, float* bpp)
 {
   switch(color_mode) {
@@ -160,7 +160,7 @@ dc1394_get_bytes_per_pixel(uint_t color_mode, float* bpp)
   return DC1394_INVALID_COLOR_MODE;
 }
 
-int
+dc1394error_t
 dc1394_get_color_mode_from_mode(uint_t mode, uint_t *color_mode)
 {
   switch(mode) {

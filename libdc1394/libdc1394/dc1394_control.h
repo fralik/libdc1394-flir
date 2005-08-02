@@ -477,7 +477,7 @@ extern "C" {
  ***************************************************************************/
 
 /* locate and initialise the cameras */
-int dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras);
+dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras);
 // free camera tree should be provided here
 
 /* create / free camera structure */
@@ -485,123 +485,123 @@ dc1394camera_t* dc1394_new_camera(uint_t port, nodeid_t node);
 void dc1394_free_camera(dc1394camera_t *camera);
 
 /* get / print the camera information */
-int dc1394_get_camera_info(dc1394camera_t *camera); // to be hidden
-int dc1394_print_camera_info(dc1394camera_t *camera);
+dc1394error_t dc1394_get_camera_info(dc1394camera_t *camera); // to be hidden
+dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
 
 /***************************************************************************
      Other functionalities
  ***************************************************************************/
 
 /* reset camera to factory default settings */
-int dc1394_reset_camera(dc1394camera_t *camera);
+dc1394error_t dc1394_reset_camera(dc1394camera_t *camera);
 
 /* turn camera on or off */
-int dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr);
 
 /* functions to read and write camera setups in memory channels */
-int dc1394_memory_get_load_ch(dc1394camera_t *camera, uint_t *channel);
-int dc1394_memory_get_save_ch(dc1394camera_t *camera, uint_t *channel);
-int dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value);
-int dc1394_memory_save(dc1394camera_t *camera, uint_t channel);
-int dc1394_memory_load(dc1394camera_t *camera, uint_t channel);
+dc1394error_t dc1394_memory_get_load_ch(dc1394camera_t *camera, uint_t *channel);
+dc1394error_t dc1394_memory_get_save_ch(dc1394camera_t *camera, uint_t *channel);
+dc1394error_t dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value);
+dc1394error_t dc1394_memory_save(dc1394camera_t *camera, uint_t channel);
+dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint_t channel);
 
 /* external trigger feature functions */
-int dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity);
-int dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity);
-int dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polarity_capable);
-int dc1394_external_trigger_set(dc1394camera_t *camera, dc1394switch_t pwr);
-int dc1394_external_trigger_get(dc1394camera_t *camera, dc1394switch_t *pwr);
-int dc1394_external_trigger_set_mode(dc1394camera_t *camera, uint_t mode);
-int dc1394_external_trigger_get_mode(dc1394camera_t *camera, uint_t *mode);
+dc1394error_t dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity);
+dc1394error_t dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity);
+dc1394error_t dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polarity_capable);
+dc1394error_t dc1394_external_trigger_set(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_external_trigger_get(dc1394camera_t *camera, dc1394switch_t *pwr);
+dc1394error_t dc1394_external_trigger_set_mode(dc1394camera_t *camera, uint_t mode);
+dc1394error_t dc1394_external_trigger_get_mode(dc1394camera_t *camera, uint_t *mode);
 
 /* Turn one software trigger on or off and get state */
-int dc1394_software_trigger_set(dc1394camera_t *camera, dc1394switch_t pwr);
-int dc1394_software_trigger_get(dc1394camera_t *camera, dc1394switch_t *pwr);
+dc1394error_t dc1394_software_trigger_set(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_software_trigger_get(dc1394camera_t *camera, dc1394switch_t *pwr);
 
   /***** to be removed from API? *****/
-int dc1394_get_revision(dc1394camera_t *camera, uint_t mode, quadlet_t *value);
-int dc1394_get_basic_functionality(dc1394camera_t *camera, quadlet_t *value);
-int dc1394_feature_get_characteristics(dc1394camera_t *camera, uint_t feature, quadlet_t *value);
+dc1394error_t dc1394_get_revision(dc1394camera_t *camera, uint_t mode, quadlet_t *value);
+dc1394error_t dc1394_get_basic_functionality(dc1394camera_t *camera, quadlet_t *value);
+dc1394error_t dc1394_feature_get_characteristics(dc1394camera_t *camera, uint_t feature, quadlet_t *value);
 
 /***************************************************************************
      Features
  ***************************************************************************/
 
 /* Collects the available features for the camera described by node and stores them in features. */
-int dc1394_get_camera_feature_set(dc1394camera_t *camera, dc1394featureset_t *features);
+dc1394error_t dc1394_get_camera_feature_set(dc1394camera_t *camera, dc1394featureset_t *features);
 
 /* Stores the bounds and options associated with the feature described by feature->feature_id */
-int dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_t *feature);
+dc1394error_t dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_t *feature);
 
 /* Displays the bounds and options of the given feature or of the entire feature set */
-int dc1394_print_feature(dc1394feature_t *feature);
-int dc1394_print_feature_set(dc1394featureset_t *features);
+dc1394error_t dc1394_print_feature(dc1394feature_t *feature);
+dc1394error_t dc1394_print_feature_set(dc1394featureset_t *features);
 
 /* get/set the values of multiple-value features on the camera */
-int dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint_t *u_b_value, uint_t *v_r_value);
-int dc1394_feature_whitebalance_set_value(dc1394camera_t *camera, uint_t u_b_value, uint_t v_r_value);
-int dc1394_feature_temperature_get_value(dc1394camera_t *camera, uint_t *target_temperature, uint_t *temperature);
-int dc1394_feature_temperature_set_value(dc1394camera_t *camera, uint_t target_temperature);
-int dc1394_feature_whiteshading_get_value(dc1394camera_t *camera, uint_t *r_value, uint_t *g_value, uint_t *b_value);
-int dc1394_feature_whiteshading_set_value(dc1394camera_t *camera, uint_t r_value, uint_t g_value, uint_t b_value);
+dc1394error_t dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint_t *u_b_value, uint_t *v_r_value);
+dc1394error_t dc1394_feature_whitebalance_set_value(dc1394camera_t *camera, uint_t u_b_value, uint_t v_r_value);
+dc1394error_t dc1394_feature_temperature_get_value(dc1394camera_t *camera, uint_t *target_temperature, uint_t *temperature);
+dc1394error_t dc1394_feature_temperature_set_value(dc1394camera_t *camera, uint_t target_temperature);
+dc1394error_t dc1394_feature_whiteshading_get_value(dc1394camera_t *camera, uint_t *r_value, uint_t *g_value, uint_t *b_value);
+dc1394error_t dc1394_feature_whiteshading_set_value(dc1394camera_t *camera, uint_t r_value, uint_t g_value, uint_t b_value);
 
 /* get/set the values of single-value features on the camera */
-int dc1394_feature_get_value(dc1394camera_t *camera, uint_t feature, uint_t *value);
-int dc1394_feature_set_value(dc1394camera_t *camera, uint_t feature, uint_t value);
+dc1394error_t dc1394_feature_get_value(dc1394camera_t *camera, uint_t feature, uint_t *value);
+dc1394error_t dc1394_feature_set_value(dc1394camera_t *camera, uint_t feature, uint_t value);
 
 /* query/set specific feature characteristics */
-int dc1394_feature_is_present(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
-int dc1394_feature_is_readable(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
-int dc1394_feature_get_boundaries(dc1394camera_t *camera, uint_t feature, uint_t *min, uint_t *max);
-int dc1394_feature_is_switchable(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
-int dc1394_feature_get_power(dc1394camera_t *camera, uint_t feature, dc1394switch_t *pwr);
-int dc1394_feature_set_power(dc1394camera_t *camera, uint_t feature, dc1394switch_t pwr);
-int dc1394_feature_has_auto_mode(dc1394camera_t *camera,  uint_t feature, dc1394bool_t *value);
-int dc1394_feature_has_manual_mode(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
-int dc1394_feature_has_one_push_auto(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
-int dc1394_feature_get_mode(dc1394camera_t *camera, uint_t feature, dc1394feature_mode_t *mode);
-int dc1394_feature_set_mode(dc1394camera_t *camera, uint_t feature, dc1394feature_mode_t mode);
+dc1394error_t dc1394_feature_is_present(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_is_readable(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_boundaries(dc1394camera_t *camera, uint_t feature, uint_t *min, uint_t *max);
+dc1394error_t dc1394_feature_is_switchable(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_power(dc1394camera_t *camera, uint_t feature, dc1394switch_t *pwr);
+dc1394error_t dc1394_feature_set_power(dc1394camera_t *camera, uint_t feature, dc1394switch_t pwr);
+dc1394error_t dc1394_feature_has_auto_mode(dc1394camera_t *camera,  uint_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_has_manual_mode(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_has_one_push_auto(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_mode(dc1394camera_t *camera, uint_t feature, dc1394feature_mode_t *mode);
+dc1394error_t dc1394_feature_set_mode(dc1394camera_t *camera, uint_t feature, dc1394feature_mode_t mode);
 
 /* absolute settings */
-int dc1394_feature_has_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
-int dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, uint_t feature, float *min, float *max);
-int dc1394_feature_get_absolute_value(dc1394camera_t *camera, uint_t feature, float *value);
-int dc1394_feature_set_absolute_value(dc1394camera_t *camera, uint_t feature, float value);
-int dc1394_feature_get_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394switch_t *pwr);
-int dc1394_feature_set_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394switch_t pwr);
+dc1394error_t dc1394_feature_has_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, uint_t feature, float *min, float *max);
+dc1394error_t dc1394_feature_get_absolute_value(dc1394camera_t *camera, uint_t feature, float *value);
+dc1394error_t dc1394_feature_set_absolute_value(dc1394camera_t *camera, uint_t feature, float value);
+dc1394error_t dc1394_feature_get_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394switch_t *pwr);
+dc1394error_t dc1394_feature_set_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394switch_t pwr);
 
 /***************************************************************************
      Video functions: formats, framerates,...
  ***************************************************************************/
 
 /* functions for querying camera attributes */
-int dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394videomodes_t *modes);
-int dc1394_video_get_supported_framerates(dc1394camera_t *camera, uint_t mode, dc1394framerates_t *framerates);
+dc1394error_t dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394videomodes_t *modes);
+dc1394error_t dc1394_video_get_supported_framerates(dc1394camera_t *camera, uint_t mode, dc1394framerates_t *framerates);
 
 /* get/set the framerate, mode, format, iso channel/speed for the video */
-int dc1394_video_get_framerate(dc1394camera_t *camera, uint_t *framerate);
-int dc1394_video_set_framerate(dc1394camera_t *camera, uint_t framerate);
-int dc1394_video_get_mode(dc1394camera_t *camera, uint_t *mode);
-int dc1394_video_set_mode(dc1394camera_t *camera, uint_t mode);
-int dc1394_video_get_operation_mode(dc1394camera_t *camera, uint_t *mode);
-int dc1394_video_set_operation_mode(dc1394camera_t *camera, uint_t mode);
-int dc1394_video_get_iso_channel_and_speed(dc1394camera_t *camera, uint_t *channel, uint_t *speed);
-int dc1394_video_set_iso_channel_and_speed(dc1394camera_t *camera, uint_t channel, uint_t speed);
+dc1394error_t dc1394_video_get_framerate(dc1394camera_t *camera, uint_t *framerate);
+dc1394error_t dc1394_video_set_framerate(dc1394camera_t *camera, uint_t framerate);
+dc1394error_t dc1394_video_get_mode(dc1394camera_t *camera, uint_t *mode);
+dc1394error_t dc1394_video_set_mode(dc1394camera_t *camera, uint_t mode);
+dc1394error_t dc1394_video_get_operation_mode(dc1394camera_t *camera, uint_t *mode);
+dc1394error_t dc1394_video_set_operation_mode(dc1394camera_t *camera, uint_t mode);
+dc1394error_t dc1394_video_get_iso_channel_and_speed(dc1394camera_t *camera, uint_t *channel, uint_t *speed);
+dc1394error_t dc1394_video_set_iso_channel_and_speed(dc1394camera_t *camera, uint_t channel, uint_t speed);
  
 /* start/stop isochronous data transmission */
-int dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr);
-int dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch_t *pwr);
+dc1394error_t dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch_t *pwr);
 
 /* turn one shot mode on or off */
-int dc1394_video_set_one_shot(dc1394camera_t *camera, dc1394switch_t pwr);
-int dc1394_video_get_one_shot(dc1394camera_t *camera, dc1394bool_t *is_on);
+dc1394error_t dc1394_video_set_one_shot(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_video_get_one_shot(dc1394camera_t *camera, dc1394bool_t *is_on);
 
 /* turn multishot mode on or off */
-int dc1394_video_set_multi_shot(dc1394camera_t *camera, uint_t numFrames, dc1394switch_t pwr);
-int dc1394_video_get_multi_shot(dc1394camera_t *camera, dc1394bool_t *is_on, uint_t *numFrames);
+dc1394error_t dc1394_video_set_multi_shot(dc1394camera_t *camera, uint_t numFrames, dc1394switch_t pwr);
+dc1394error_t dc1394_video_get_multi_shot(dc1394camera_t *camera, dc1394bool_t *is_on, uint_t *numFrames);
 
 /* Utility function */
-int dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *bandwidth);
+dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *bandwidth);
 
 /***************************************************************************
      Capture Functions
@@ -610,69 +610,69 @@ int dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *bandwidth);
          Legacy libraw1394 transfers are only there for debug purposes.    */
 
 /* setup the DMA capture */
-int dc1394_dma_setup_capture(dc1394camera_t *camera,
+dc1394error_t dc1394_dma_setup_capture(dc1394camera_t *camera,
 			     uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
 			     uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file,
 			     dc1394capture_t *capture);
-int dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
+dc1394error_t dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
                                  uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
                                  uint_t left, uint_t top, uint_t width, uint_t height,
                                  uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file,
                                  dc1394capture_t *capture);
 /* captures a frame from the given cameras. */
-int dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy);
+dc1394error_t dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy);
 /* returns the buffer previously handed to the user by dc1394_dma_*_capture to the DMA ring buffer */
-int dc1394_dma_done_with_buffer(dc1394capture_t * capture);
+dc1394error_t dc1394_dma_done_with_buffer(dc1394capture_t * capture);
 /* tells video1394 to halt iso reception. */
-int dc1394_dma_unlisten(dc1394capture_t *capture);
+dc1394error_t dc1394_dma_unlisten(dc1394capture_t *capture);
 /* releases memory that was mapped by dc1394_dma_setup_camera */
-int dc1394_dma_release_capture(dc1394capture_t *capture);
+dc1394error_t dc1394_dma_release_capture(dc1394capture_t *capture);
 
 
 /* Non DMA capture functions for legacy/debug purposes */
-int dc1394_setup_capture(dc1394camera_t *camera, 
+dc1394error_t dc1394_setup_capture(dc1394camera_t *camera, 
 			 uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
 			 dc1394capture_t * capture);
-int dc1394_setup_format7_capture(dc1394camera_t *camera,
+dc1394error_t dc1394_setup_format7_capture(dc1394camera_t *camera,
 				 uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
 				 uint_t left, uint_t top, uint_t width, uint_t height, 
 				 dc1394capture_t * capure);
-int dc1394_capture(dc1394capture_t *capture, uint_t num);
-int dc1394_release_capture(dc1394capture_t *capture);
+dc1394error_t dc1394_capture(dc1394capture_t *capture, uint_t num);
+dc1394error_t dc1394_release_capture(dc1394capture_t *capture);
 
 /***************************************************************************
      Format_7 (scalable image format)
  ***************************************************************************/
 
 /* image size */
-int dc1394_format7_get_max_image_size(dc1394camera_t *camera, uint_t mode, uint_t *h_size,uint_t *v_size);
-int dc1394_format7_get_unit_size(dc1394camera_t *camera, uint_t mode, uint_t *h_unit, uint_t *v_unit);
-int dc1394_format7_get_image_size(dc1394camera_t *camera, uint_t mode, uint_t *width, uint_t *height);
-int dc1394_format7_set_image_size(dc1394camera_t *camera, uint_t mode, uint_t width, uint_t height);
+dc1394error_t dc1394_format7_get_max_image_size(dc1394camera_t *camera, uint_t mode, uint_t *h_size,uint_t *v_size);
+dc1394error_t dc1394_format7_get_unit_size(dc1394camera_t *camera, uint_t mode, uint_t *h_unit, uint_t *v_unit);
+dc1394error_t dc1394_format7_get_image_size(dc1394camera_t *camera, uint_t mode, uint_t *width, uint_t *height);
+dc1394error_t dc1394_format7_set_image_size(dc1394camera_t *camera, uint_t mode, uint_t width, uint_t height);
 /* image position */
-int dc1394_format7_get_image_position(dc1394camera_t *camera, uint_t mode, uint_t *left, uint_t *top);
-int dc1394_format7_set_image_position(dc1394camera_t *camera, uint_t mode, uint_t left, uint_t top);
-int dc1394_format7_get_unit_position(dc1394camera_t *camera, uint_t mode, uint_t *h_unit_pos, uint_t *v_unit_pos);
+dc1394error_t dc1394_format7_get_image_position(dc1394camera_t *camera, uint_t mode, uint_t *left, uint_t *top);
+dc1394error_t dc1394_format7_set_image_position(dc1394camera_t *camera, uint_t mode, uint_t left, uint_t top);
+dc1394error_t dc1394_format7_get_unit_position(dc1394camera_t *camera, uint_t mode, uint_t *h_unit_pos, uint_t *v_unit_pos);
 
 /* color coding */
-int dc1394_format7_get_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
-int dc1394_format7_get_color_coding(dc1394camera_t *camera, uint_t mode, dc1394colormodes_t *codings);
-int dc1394_format7_set_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
-int dc1394_format7_set_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
-int dc1394_format7_get_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
+dc1394error_t dc1394_format7_get_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
+dc1394error_t dc1394_format7_get_color_coding(dc1394camera_t *camera, uint_t mode, dc1394colormodes_t *codings);
+dc1394error_t dc1394_format7_set_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
+dc1394error_t dc1394_format7_set_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
+dc1394error_t dc1394_format7_get_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
 
 /* packet */
-int dc1394_format7_get_packet_para(dc1394camera_t *camera, uint_t mode, uint_t *min_bytes, uint_t *max_bytes);
-int dc1394_format7_get_byte_per_packet(dc1394camera_t *camera, uint_t mode, uint_t *packet_bytes);
-int dc1394_format7_set_byte_per_packet(dc1394camera_t *camera, uint_t mode, uint_t packet_bytes);
-int dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera, uint_t mode, uint_t *bpp);
-int dc1394_format7_get_packet_per_frame(dc1394camera_t *camera, uint_t mode, uint_t *ppf);
+dc1394error_t dc1394_format7_get_packet_para(dc1394camera_t *camera, uint_t mode, uint_t *min_bytes, uint_t *max_bytes);
+dc1394error_t dc1394_format7_get_byte_per_packet(dc1394camera_t *camera, uint_t mode, uint_t *packet_bytes);
+dc1394error_t dc1394_format7_set_byte_per_packet(dc1394camera_t *camera, uint_t mode, uint_t packet_bytes);
+dc1394error_t dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera, uint_t mode, uint_t *bpp);
+dc1394error_t dc1394_format7_get_packet_per_frame(dc1394camera_t *camera, uint_t mode, uint_t *ppf);
 
 /* other */
-int dc1394_format7_get_data_depth(dc1394camera_t *camera, uint_t mode, uint_t *data_depth);
-int dc1394_format7_get_frame_interval(dc1394camera_t *camera, uint_t mode, float *interval);
-int dc1394_format7_get_pixel_number(dc1394camera_t *camera, uint_t mode, uint_t *pixnum);
-int dc1394_format7_get_total_bytes(dc1394camera_t *camera, uint_t mode, uint64_t *total_bytes);
+dc1394error_t dc1394_format7_get_data_depth(dc1394camera_t *camera, uint_t mode, uint_t *data_depth);
+dc1394error_t dc1394_format7_get_frame_interval(dc1394camera_t *camera, uint_t mode, float *interval);
+dc1394error_t dc1394_format7_get_pixel_number(dc1394camera_t *camera, uint_t mode, uint_t *pixnum);
+dc1394error_t dc1394_format7_get_total_bytes(dc1394camera_t *camera, uint_t mode, uint64_t *total_bytes);
 
 #ifdef __cplusplus
 }

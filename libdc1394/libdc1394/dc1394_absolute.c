@@ -23,10 +23,10 @@
 #include "dc1394_register.h"
 
 
-int
+dc1394error_t
 dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, uint_t feature, float *min, float *max)
 {
-  int err=0;
+  dc1394error_t err=DC1394_SUCCESS;
   
   if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_FAILURE;
@@ -41,10 +41,10 @@ dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, uint_t feature, f
 }
 
 
-int
+dc1394error_t
 dc1394_feature_get_absolute_value(dc1394camera_t *camera, uint_t feature, float *value)
 {
-  int err=0;
+  dc1394error_t err=DC1394_SUCCESS;
 
   if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_FAILURE;
@@ -56,10 +56,10 @@ dc1394_feature_get_absolute_value(dc1394camera_t *camera, uint_t feature, float 
 }
 
 
-int
+dc1394error_t
 dc1394_feature_set_absolute_value(dc1394camera_t *camera, uint_t feature, float value)
 {
-  int err=0;
+  dc1394error_t err=DC1394_SUCCESS;
 
   if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_FAILURE;
