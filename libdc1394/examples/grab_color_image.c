@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.13  2005/08/02 05:43:04  ddouxchamps
+**  Now compiles with GCC-4.0
+**
 **  Revision 1.5.2.12  2005/07/29 09:20:46  ddouxchamps
 **  Interface harmonization (work in progress)
 **
@@ -122,7 +125,7 @@ void get_options(int argc,char *argv[])
 int dc_init()
 {
   int reset;
-  int camCount = 0;
+  uint_t camCount = 0;
   int found = 0;
   dc1394camera_t **cameras=NULL;
   int err, i;

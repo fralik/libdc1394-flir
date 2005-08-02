@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.13  2005/08/02 05:43:04  ddouxchamps
+**  Now compiles with GCC-4.0
+**
 **  Revision 1.5.2.12  2005/07/29 09:20:46  ddouxchamps
 **  Interface harmonization (work in progress)
 **
@@ -82,7 +85,7 @@ int main(int argc, char *argv[])
   dc1394capture_t capture;
   dc1394camera_t *camera, **cameras=NULL;
   //int numNodes;
-  int numCameras, i;
+  uint_t numCameras, i;
   dc1394featureset_t features;
   
   /* Find cameras */

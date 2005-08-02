@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.13  2005/08/02 05:43:04  ddouxchamps
+**  Now compiles with GCC-4.0
+**
 **  Revision 1.11.2.12  2005/07/29 09:20:46  ddouxchamps
 **  Interface harmonization (work in progress)
 **
@@ -472,7 +475,7 @@ int capture_mmap(int frame)
 int dc_init()
 {
   int reset;
-  int camCount = 0;
+  uint_t camCount = 0;
   int found = 0;
   dc1394camera_t **cameras=NULL;
   int err, i;
@@ -1023,7 +1026,7 @@ int main(int argc,char *argv[])
 	while (1) {
 		if (g_v4l_mode == V4L_MODE_PIPE) {
 			if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
-				capture_pipe( v4l_dev, (char *) capture.capture_buffer );
+				capture_pipe( v4l_dev, (unsigned char *) capture.capture_buffer );
 				dc1394_dma_done_with_buffer(&capture);
 			}
 		} else {

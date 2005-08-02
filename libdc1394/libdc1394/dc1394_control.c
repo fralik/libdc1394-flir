@@ -1230,6 +1230,9 @@ dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr)
     err=SetCameraControlRegister(camera, REG_CAMERA_POWER, DC1394_FEATURE_OFF);
     DC1394_ERR_CHK(err, "Could not switch camera OFF");
     break;
+  default:
+    err=DC1394_GENERIC_INVALID_ARGUMENT;
+    DC1394_ERR_CHK(err, "Invalid switch value");
   }
   return err;
 }
@@ -1247,6 +1250,9 @@ dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr)
     err=SetCameraControlRegister(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_OFF);
     DC1394_ERR_CHK(err, "Could not stop ISO transmission");
     break;
+  default:
+    err=DC1394_GENERIC_INVALID_ARGUMENT;
+    DC1394_ERR_CHK(err, "Invalid switch value");
   }
   return err;
 }
@@ -1909,7 +1915,7 @@ dc1394_memory_load(dc1394camera_t *camera, uint_t channel)
  */
 
 int
-dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394bool_t polarity)
+dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity)
 {
   int err;
   quadlet_t curval;
@@ -1924,7 +1930,7 @@ dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394bool_t polari
 }
 
 int
-dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394bool_t *polarity)
+dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity)
 {
   quadlet_t value;
   int err= GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &value);
@@ -1992,7 +1998,7 @@ dc1394_get_soft_trigger(dc1394camera_t *camera, dc1394bool_t *is_on)
 }
 
 int
-dc1394_feature_get_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value)
+dc1394_feature_get_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394switch_t *pwr)
 {
   int err;
   octlet_t offset;
@@ -2004,10 +2010,10 @@ dc1394_feature_get_absolute_control(dc1394camera_t *camera, uint_t feature, dc13
   DC1394_ERR_CHK(err, "Could not get get abs control for feature %d",feature);
   
   if (quadval & 0x40000000UL) {
-    *value= DC1394_TRUE;
+    *pwr= DC1394_ON;
   }
   else {
-    *value= DC1394_FALSE;
+    *pwr= DC1394_OFF;
   }
   
   return err;

@@ -626,3 +626,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-07-28 Damien <ddouxchamps@users.sf.net>
     * Interface harmonization (there's still some work to do)
 	
+2005-08-02 Damien <ddouxchamps@users.sf.net>
+    * Now compiles with GCC-4.0
+
+	

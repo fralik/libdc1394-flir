@@ -274,10 +274,11 @@ typedef enum {
   DC1394_FORMAT7_ERROR_FLAG_1,
   DC1394_FORMAT7_ERROR_FLAG_2,
   DC1394_INVALID_BAYER_METHOD,
-  DC1394_HANDLE_CREATION_FAILURE
+  DC1394_HANDLE_CREATION_FAILURE,
+  DC1394_GENERIC_INVALID_ARGUMENT
 } dc1394error_t;
 
-#define DC1394_ERROR_NUM DC1394_HANDLE_CREATION_FAILURE+1
+#define DC1394_ERROR_NUM DC1394_GENERIC_INVALID_ARGUMENT+1
 
 /* Parameter flags for dc1394_setup_format7_capture() */
 #define DC1394_QUERY_FROM_CAMERA -1
@@ -340,7 +341,7 @@ typedef struct __dc1394_camera
   // some current values
   uint_t             mode;
   uint_t             framerate;
-  dc1394bool_t       is_iso_on;
+  dc1394switch_t     is_iso_on;
   uint_t             iso_channel;
   uint_t             iso_speed;
   uint_t             mem_channel_number;
@@ -356,17 +357,17 @@ typedef struct __dc1394_cam_cap_struct
   uint_t             frame_rate;
   uint_t             frame_width;
   uint_t             frame_height;
-  int                *capture_buffer;
+  uint_t            *capture_buffer;
   uint_t             quadlets_per_frame;
   uint_t             quadlets_per_packet;
   /* components needed for the DMA based video capture */
-  const uchar_t      *dma_ring_buffer;
+  const uchar_t     *dma_ring_buffer;
   uint_t             dma_buffer_size;
   uint_t             dma_frame_size;
   uint_t             num_dma_buffers;
   uint_t             dma_last_buffer;
   uint_t             num_dma_buffers_behind;
-  const char         *dma_device_file;
+  const char        *dma_device_file;
   int                dma_fd;
   uint_t             port;
   struct timeval     filltime;
@@ -385,12 +386,12 @@ typedef struct __dc1394feature_t_struct
   dc1394bool_t       auto_capable;
   dc1394bool_t       manual_capable;
   dc1394bool_t       polarity_capable;
-  dc1394bool_t       one_push_active;
-  dc1394bool_t       is_on;
+  dc1394switch_t     one_push_active;
+  dc1394switch_t     is_on;
   dc1394bool_t       auto_active;
   char               trigger_mode_capable_mask;
   uint_t             trigger_mode;
-  dc1394bool_t       trigger_polarity;
+  dc1394trigger_polarity_t    trigger_polarity;
   uint_t             min;
   uint_t             max;
   uint_t             value;
@@ -401,7 +402,7 @@ typedef struct __dc1394feature_t_struct
   uint_t             G_value;
   uint_t             target_value;
   
-  dc1394bool_t       abs_control;
+  dc1394switch_t     abs_control;
   float              abs_value;
   float              abs_max;
   float              abs_min;

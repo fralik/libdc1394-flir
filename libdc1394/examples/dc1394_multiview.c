@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.13  2005/08/02 05:43:04  ddouxchamps
+**  Now compiles with GCC-4.0
+**
 **  Revision 1.9.2.12  2005/07/29 09:20:46  ddouxchamps
 **  Interface harmonization (work in progress)
 **
@@ -122,7 +125,7 @@
 
 
 /* declarations for libdc1394 */
-int numCameras = 0;
+uint_t numCameras = 0;
 dc1394capture_t captures[MAX_CAMERAS];
 dc1394camera_t **cameras;
 dc1394featureset_t features;
@@ -133,8 +136,8 @@ char *device_name=NULL;
 /* declarations for Xwindows */
 Display *display=NULL;
 Window window=(Window)NULL;
-long width,height;
-long device_width,device_height;
+unsigned long width,height;
+unsigned long device_width,device_height;
 int connection=-1;
 XvImage *xv_image=NULL;
 XvAdaptorInfo *info;
@@ -143,7 +146,7 @@ GC gc;
 
 
 /* Other declarations */
-long frame_length;
+unsigned long frame_length;
 long frame_free;
 int frame=0;
 int adaptor=-1;
@@ -152,7 +155,7 @@ int freeze=0;
 int average=0;
 int fps;
 int res;
-unsigned char *frame_buffer=NULL;
+char *frame_buffer=NULL;
 
 
 static struct option long_options[]={
@@ -216,7 +219,7 @@ void get_options(int argc,char *argv[])
 /* image format conversion functions */
 
 static inline
-void iyu12yuy2 (unsigned char *src, unsigned char *dest, int NumPixels) {
+void iyu12yuy2 (unsigned char *src, unsigned char *dest, uint_t NumPixels) {
   int i=0,j=0;
   register int y0, y1, y2, y3, u, v;
   while (i < NumPixels*3/2)
@@ -254,7 +257,7 @@ void iyu12yuy2 (unsigned char *src, unsigned char *dest, int NumPixels) {
   v = v > 255 ? 255 : v
 
 static inline
-void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, int NumPixels) {
+void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, uint_t NumPixels) {
   int i, j;
   register int y0, y1, u0, u1, v0, v1 ;
   register int r, g, b;
@@ -278,7 +281,7 @@ void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, int NumPixels) {
 
 /* helper functions */
 
-void set_frame_length(long size, int numCameras)
+void set_frame_length(unsigned long size, int numCameras)
 {
 	frame_length=size;
 	fprintf(stderr,"Setting frame size to %ld kb\n",size/1024);
@@ -288,7 +291,7 @@ void set_frame_length(long size, int numCameras)
 
 void display_frames()
 {
-	int i;
+	uint_t i;
 	
 	if(!freeze && adaptor>=0){
 		for (i = 0; i < numCameras; i++)
@@ -296,7 +299,7 @@ void display_frames()
 			switch (res) {
 			case DC1394_MODE_640x480_YUV411:
 				iyu12yuy2( (unsigned char *) captures[i].capture_buffer,
-					frame_buffer + (i * frame_length),
+					(unsigned char *)(frame_buffer + (i * frame_length)),
 					(device_width*device_height) );
 				break;
 				
@@ -308,7 +311,7 @@ void display_frames()
 					
 			case DC1394_MODE_640x480_RGB8:
 				rgb2yuy2( (unsigned char *) captures[i].capture_buffer,
-					frame_buffer + (i * frame_length),
+					(unsigned char *) (frame_buffer + (i * frame_length)),
 					(device_width*device_height) );
 				break;
 			}
@@ -326,7 +329,7 @@ void display_frames()
 
 void QueryXv()
 {
-	int num_adaptors;
+	uint_t num_adaptors;
 	int num_formats;
 	XvImageFormatValues *formats=NULL;
 	int i,j;

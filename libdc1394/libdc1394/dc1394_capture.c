@@ -37,7 +37,7 @@
 #define MAX_NUM_PORTS 8
 
 /*Variables used for simultaneous capture of video from muliple cameras*/
-int *_dc1394_buffer[NUM_ISO_CHANNELS];
+uint_t *_dc1394_buffer[NUM_ISO_CHANNELS];
 int _dc1394_frame_captured[NUM_ISO_CHANNELS];
 int _dc1394_offset[NUM_ISO_CHANNELS];
 int _dc1394_quadlets_per_frame[NUM_ISO_CHANNELS];
@@ -118,7 +118,7 @@ _dc1394_basic_setup(dc1394camera_t *camera,
                     dc1394capture_t *capture)
 {
   int err;
-  dc1394bool_t is_iso_on= DC1394_FALSE;
+  dc1394switch_t is_iso_on= DC1394_OFF;
 
   /* Addition by Alexis Weiland: Certain cameras start sending iso
      data when they are reset, so we need to stop them so we can set

@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.15  2005/08/02 05:43:04  ddouxchamps
+**  Now compiles with GCC-4.0
+**
 **  Revision 1.4.2.14  2005/07/29 09:20:46  ddouxchamps
 **  Interface harmonization (work in progress)
 **
@@ -84,7 +87,7 @@ int main(int argc, char *argv[])
   FILE* imagefile;
   dc1394capture_t capture;
   dc1394camera_t *camera, **cameras=NULL;
-  int numCameras;
+  uint_t numCameras;
   int grab_n_frames = 10;
   struct tms tms_buf;
   clock_t start_time;

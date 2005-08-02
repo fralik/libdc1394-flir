@@ -20,7 +20,7 @@
 #include "dc1394_utils.h"
 
 int
-dc1394_get_wh_from_mode(int mode, int *w, int *h) 
+dc1394_get_wh_from_mode(uint_t mode, uint_t *w, uint_t *h) 
 {
   switch(mode) {
   case DC1394_MODE_160x120_YUV444:
@@ -77,7 +77,7 @@ dc1394_get_wh_from_mode(int mode, int *w, int *h)
 	
 
 int
-dc1394_framerate_as_float(int framerate_enum, float *framerate)
+dc1394_framerate_as_float(uint_t framerate_enum, float *framerate)
 {
   switch(framerate_enum)  {
   case DC1394_FRAMERATE_1_875:
@@ -109,7 +109,7 @@ dc1394_framerate_as_float(int framerate_enum, float *framerate)
 }
 
 int
-dc1394_is_color(int color_mode, dc1394bool_t *is_color)
+dc1394_is_color(uint_t color_mode, dc1394bool_t *is_color)
 {
   switch(color_mode)  {
   case DC1394_COLOR_CODING_MONO8:
@@ -132,7 +132,7 @@ dc1394_is_color(int color_mode, dc1394bool_t *is_color)
 }
 
 int
-dc1394_get_bytes_per_pixel(int color_mode, float* bpp)
+dc1394_get_bytes_per_pixel(uint_t color_mode, float* bpp)
 {
   switch(color_mode) {
   case DC1394_COLOR_CODING_MONO8:
@@ -161,7 +161,7 @@ dc1394_get_bytes_per_pixel(int color_mode, float* bpp)
 }
 
 int
-dc1394_get_color_mode_from_mode(int mode, int *color_mode)
+dc1394_get_color_mode_from_mode(uint_t mode, uint_t *color_mode)
 {
   switch(mode) {
   case DC1394_MODE_160x120_YUV444:

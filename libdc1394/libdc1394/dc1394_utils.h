@@ -21,11 +21,11 @@
 
 #include "dc1394_control.h"
 
-int dc1394_get_wh_from_mode(int mode, int *w, int *h);
-int dc1394_framerate_as_float(int framerate_enum, float *framerate);
-int dc1394_get_bytes_per_pixel(int color_mode, float* bpp);
-int dc1394_get_color_mode_from_mode(int mode, int *color_mode);
-int dc1394_is_color(int color_mode, dc1394bool_t *is_color);
+int dc1394_get_wh_from_mode(uint_t mode, uint_t *w, uint_t *h);
+int dc1394_framerate_as_float(uint_t framerate_enum, float *framerate);
+int dc1394_get_bytes_per_pixel(uint_t color_mode, float* bpp);
+int dc1394_get_color_mode_from_mode(uint_t mode, uint_t *color_mode);
+int dc1394_is_color(uint_t color_mode, dc1394bool_t *is_color);
 
 #endif /* _DC1394_UTILS_H */
 
