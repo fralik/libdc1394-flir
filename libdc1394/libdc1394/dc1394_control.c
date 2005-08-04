@@ -1581,7 +1581,7 @@ dc1394error_t dc1394_feature_is_readable(dc1394camera_t *camera, uint_t feature,
   return err;
 }
 
-dc1394error_t dc1394_feature_is_switcheable(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value)
+dc1394error_t dc1394_feature_is_switchable(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value)
 {
   int err;
   octlet_t offset;
@@ -1648,7 +1648,7 @@ dc1394error_t dc1394_feature_set_power(dc1394camera_t *camera, uint_t feature, d
   return err;
 }
 
-dc1394error_t dc1394_has_auto_mode(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value)
+dc1394error_t dc1394_feature_has_auto_mode(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value)
 {
   int err;
   octlet_t offset;
@@ -1673,7 +1673,7 @@ dc1394error_t dc1394_has_auto_mode(dc1394camera_t *camera, uint_t feature, dc139
   return err;
 }
 
-dc1394error_t dc1394_has_manual_mode(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value)
+dc1394error_t dc1394_feature_has_manual_mode(dc1394camera_t *camera, uint_t feature, dc1394bool_t *value)
 {
   int err;
   octlet_t offset;
@@ -1760,7 +1760,7 @@ dc1394error_t dc1394_feature_set_mode(dc1394camera_t *camera, uint_t feature, dc
   return err;
 }
 
-dc1394error_t dc1394_get_min_value(dc1394camera_t *camera, uint_t feature, uint_t *value)
+dc1394error_t dc1394_feature_get_boundaries(dc1394camera_t *camera, uint_t feature, uint_t *min, uint_t *max)
 {
   int err;
   octlet_t offset;
@@ -1775,30 +1775,10 @@ dc1394error_t dc1394_get_min_value(dc1394camera_t *camera, uint_t feature, uint_
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_CHK(err, "Could not get feature %d min value",feature);
   
-  *value= (uint_t)((quadval & 0xFFF000UL) >> 12);
+  *min= (uint_t)((quadval & 0xFFF000UL) >> 12);
+  *max= (uint_t)(quadval & 0xFFFUL);
   return err;
 }
-
-dc1394error_t dc1394_get_max_value(dc1394camera_t *camera, uint_t feature, uint_t *value)
-{
-  int err;
-  octlet_t offset;
-  quadlet_t quadval;
-  
-  if (feature == DC1394_FEATURE_TRIGGER) {
-    return DC1394_FAILURE;
-  }
-  
-  FEATURE_TO_INQUIRY_OFFSET(feature, offset);
-  
-  err=GetCameraControlRegister(camera, offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get feature %d max value",feature);
-  
-  *value= (uint_t)(quadval & 0xFFFUL);
-  
-  return err;
-}
-
 
 /*
  * Memory load/save functions
