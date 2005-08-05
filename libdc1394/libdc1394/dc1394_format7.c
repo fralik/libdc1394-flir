@@ -894,7 +894,7 @@ dc1394_format7_get_data_depth(dc1394camera_t *camera,
     
 dc1394error_t
 dc1394_format7_get_color_filter_id(dc1394camera_t *camera,
-				     uint_t mode, uint_t *color_id)
+				     uint_t mode, uint_t *filter_id)
 {   
   dc1394error_t err;
   quadlet_t value;
@@ -905,20 +905,23 @@ dc1394_format7_get_color_filter_id(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID, &value);
   DC1394_ERR_CHK(err, "Could not get color filter ID");
 
-  *color_id= (value >> 24)+DC1394_COLOR_CODING_MIN;
+  *filter_id= (value >> 24)+DC1394_COLOR_FILTER_MIN;
   return err;
 }   
      
 dc1394error_t
 dc1394_format7_set_color_filter_id(dc1394camera_t *camera,
-				   uint_t mode, uint_t color_id)
+				   uint_t mode, uint_t filter_id)
 {   
   dc1394error_t err;
   if ( (mode > DC1394_MODE_FORMAT7_MAX) || (mode < DC1394_MODE_FORMAT7_MIN) )
     return DC1394_FAILURE;
   
+  filter_id -= DC1394_COLOR_FILTER_MIN;
+  filter_id <<= 24;
+
   err=SetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID,
-			       color_id - DC1394_COLOR_CODING_MIN);
+			       filter_id);
   DC1394_ERR_CHK(err, "Could not set color filter ID");
 
   return err;

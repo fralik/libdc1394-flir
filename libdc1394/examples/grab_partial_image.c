@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.17  2005/08/05 01:24:15  ddouxchamps
+**  fixed wrong color filter definitions and functions (Tony Hague)
+**
 **  Revision 1.4.2.16  2005/08/04 08:31:40  ddouxchamps
 **  version 2.0.0-pre4
 **

@@ -221,9 +221,9 @@ enum {
   DC1394_COLOR_FILTER_GRBG,
   DC1394_COLOR_FILTER_BGGR
 };
-#define DC1394_COLOR_FILTER_MIN        DC1394_COLOR_FILTER_FORMAT_RGGB
-#define DC1394_COLOR_FILTER_MAX        DC1394_COLOR_FILTER_FORMAT_BGGR
-#define DC1394_COLOR_FILTER_NUM       (DC1394_COLOR_FILTER_FORMAT_MAX - DC1394_COLOR_FILTER_FORMAT_MIN + 1)
+#define DC1394_COLOR_FILTER_MIN        DC1394_COLOR_FILTER_RGGB
+#define DC1394_COLOR_FILTER_MAX        DC1394_COLOR_FILTER_BGGR
+#define DC1394_COLOR_FILTER_NUM       (DC1394_COLOR_FILTER_MAX - DC1394_COLOR_FILTER_MIN + 1)
 
 /* IIDC versions*/
 enum {
@@ -658,8 +658,8 @@ dc1394error_t dc1394_format7_get_unit_position(dc1394camera_t *camera, uint_t mo
 dc1394error_t dc1394_format7_get_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
 dc1394error_t dc1394_format7_get_color_coding(dc1394camera_t *camera, uint_t mode, dc1394colormodes_t *codings);
 dc1394error_t dc1394_format7_set_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
-dc1394error_t dc1394_format7_set_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
-dc1394error_t dc1394_format7_get_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
+dc1394error_t dc1394_format7_set_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t filter_id);
+dc1394error_t dc1394_format7_get_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t *filter_id);
 
 /* packet */
 dc1394error_t dc1394_format7_get_packet_para(dc1394camera_t *camera, uint_t mode, uint_t *min_bytes, uint_t *max_bytes);
