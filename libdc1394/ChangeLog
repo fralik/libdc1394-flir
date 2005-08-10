@@ -637,3 +637,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-08-05 Damien <ddouxchamps@users.sf.net>
     * fixed wrong color filter definitions and functions (Tony Hague)
 
+2005-08-10 Damien <ddouxchamps@users.sf.net>
+    * fixed .c/.h coherency, again (Joshua Lamorie)
+

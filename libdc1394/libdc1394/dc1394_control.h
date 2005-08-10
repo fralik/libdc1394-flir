@@ -476,13 +476,12 @@ extern "C" {
      General system functions
  ***************************************************************************/
 
-/* locate and initialise the cameras */
-dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras);
-// free camera tree should be provided here
-
 /* create / free camera structure */
 dc1394camera_t* dc1394_new_camera(uint_t port, nodeid_t node);
 void dc1394_free_camera(dc1394camera_t *camera);
+
+/* locate and initialise the cameras */
+dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras);
 
 /* get / print the camera information */
 dc1394error_t dc1394_get_camera_info(dc1394camera_t *camera); // to be hidden
@@ -611,14 +610,14 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *b
 
 /* setup the DMA capture */
 dc1394error_t dc1394_dma_setup_capture(dc1394camera_t *camera,
-			     uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
-			     uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file,
-			     dc1394capture_t *capture);
+				       uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
+				       uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file,
+				       dc1394capture_t *capture);
 dc1394error_t dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
-                                 uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
-                                 uint_t left, uint_t top, uint_t width, uint_t height,
-                                 uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file,
-                                 dc1394capture_t *capture);
+					       uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
+					       uint_t left, uint_t top, uint_t width, uint_t height,
+					       uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file,
+					       dc1394capture_t *capture);
 /* captures a frame from the given cameras. */
 dc1394error_t dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy);
 /* returns the buffer previously handed to the user by dc1394_dma_*_capture to the DMA ring buffer */
@@ -631,12 +630,12 @@ dc1394error_t dc1394_dma_release_capture(dc1394capture_t *capture);
 
 /* Non DMA capture functions for legacy/debug purposes */
 dc1394error_t dc1394_setup_capture(dc1394camera_t *camera, 
-			 uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
-			 dc1394capture_t * capture);
+				   uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
+				   dc1394capture_t * capture);
 dc1394error_t dc1394_setup_format7_capture(dc1394camera_t *camera,
-				 uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
-				 uint_t left, uint_t top, uint_t width, uint_t height, 
-				 dc1394capture_t * capure);
+					   uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
+					   uint_t left, uint_t top, uint_t width, uint_t height, 
+					   dc1394capture_t * capure);
 dc1394error_t dc1394_capture(dc1394capture_t *capture, uint_t num);
 dc1394error_t dc1394_release_capture(dc1394capture_t *capture);
 
@@ -649,6 +648,7 @@ dc1394error_t dc1394_format7_get_max_image_size(dc1394camera_t *camera, uint_t m
 dc1394error_t dc1394_format7_get_unit_size(dc1394camera_t *camera, uint_t mode, uint_t *h_unit, uint_t *v_unit);
 dc1394error_t dc1394_format7_get_image_size(dc1394camera_t *camera, uint_t mode, uint_t *width, uint_t *height);
 dc1394error_t dc1394_format7_set_image_size(dc1394camera_t *camera, uint_t mode, uint_t width, uint_t height);
+
 /* image position */
 dc1394error_t dc1394_format7_get_image_position(dc1394camera_t *camera, uint_t mode, uint_t *left, uint_t *top);
 dc1394error_t dc1394_format7_set_image_position(dc1394camera_t *camera, uint_t mode, uint_t left, uint_t top);
