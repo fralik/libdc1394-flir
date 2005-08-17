@@ -409,7 +409,7 @@ typedef struct __dc1394feature_t_struct
   
 } dc1394feature_t;
 
-typedef struct __dc1394featureset_t_struct 
+typedef struct __dc1394featureset_t
 {
   dc1394feature_t    feature[DC1394_FEATURE_NUM];
 } dc1394featureset_t;
@@ -431,6 +431,41 @@ typedef struct
   uint_t             num;
   uint_t             framerates[DC1394_FRAMERATE_NUM];
 } dc1394framerates_t;
+
+typedef struct __dc1394format7mode_t
+{
+  dc1394bool_t present;
+
+  unsigned int size_x;
+  unsigned int size_y;
+  unsigned int max_size_x;
+  unsigned int max_size_y;
+
+  unsigned int pos_x;
+  unsigned int pos_y;
+
+  unsigned int unit_size_x;
+  unsigned int unit_size_y;
+  unsigned int unit_pos_x;
+  unsigned int unit_pos_y;
+
+  dc1394colormodes_t color_codings;
+  unsigned int color_coding_id;
+
+  unsigned int pixnum;
+
+  unsigned int bpp; // bpp is byte_per_packet, not bit per pixel.
+  unsigned int min_bpp;
+  unsigned int max_bpp;
+
+  unsigned long long int total_bytes;
+
+} dc1394format7mode_t;
+
+typedef struct __dc1394format7modeset_t
+{
+  dc1394format7mode_t mode[DC1394_MODE_FORMAT7_NUM];
+} dc1394format7modeset_t;
 
 /* Feature descriptions */
 extern const char *dc1394_feature_desc[DC1394_FEATURE_NUM];
@@ -673,6 +708,10 @@ dc1394error_t dc1394_format7_get_data_depth(dc1394camera_t *camera, uint_t mode,
 dc1394error_t dc1394_format7_get_frame_interval(dc1394camera_t *camera, uint_t mode, float *interval);
 dc1394error_t dc1394_format7_get_pixel_number(dc1394camera_t *camera, uint_t mode, uint_t *pixnum);
 dc1394error_t dc1394_format7_get_total_bytes(dc1394camera_t *camera, uint_t mode, uint64_t *total_bytes);
+
+/* These functions get the properties of (one or all) format7 mode(s) */
+dc1394error_t dc1394_format7_get_modeset(dc1394camera_t *camera, dc1394format7modeset_t *info);
+dc1394error_t dc1394_format7_get_mode_info(dc1394camera_t *camera, uint_t mode_id, dc1394format7mode_t *mode);
 
 #ifdef __cplusplus
 }

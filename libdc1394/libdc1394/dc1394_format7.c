@@ -926,3 +926,82 @@ dc1394_format7_set_color_filter_id(dc1394camera_t *camera,
 
   return err;
 }   
+
+dc1394error_t
+dc1394_format7_get_mode_info(dc1394camera_t *camera,
+			     uint_t mode_id, dc1394format7mode_t *mode)
+{
+  dc1394error_t err=DC1394_SUCCESS;
+
+  if (mode->present>0) { // check for mode presence before query
+    err=dc1394_format7_get_max_image_size(camera,mode_id,&mode->max_size_x,&mode->max_size_y);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 max image size");
+    err=dc1394_format7_get_unit_size(camera,mode_id,&mode->unit_size_x,&mode->unit_size_y);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 unit size");
+    err=dc1394_format7_get_unit_position(camera,mode_id,&mode->unit_pos_x,&mode->unit_pos_y);
+    if (err!=DC1394_SUCCESS) {
+      //DC1394_ERR_CHK(err,"Got a problem querying format7 unit position");
+      // unit position might not be supported, hence a softer check is implemented
+      mode->unit_pos_x=0;
+      mode->unit_pos_y=0;
+    }
+
+    err=dc1394_format7_get_image_position(camera,mode_id,&mode->pos_x,&mode->pos_y);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 image position");
+    err=dc1394_format7_get_image_size(camera,mode_id,&mode->size_x,&mode->size_y);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 image size");
+    err=dc1394_format7_get_byte_per_packet(camera,mode_id,&mode->bpp);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 bytes per packet");
+    
+    if (mode->bpp==0) {
+      // sometimes a camera will not set the bpp register until a valid image size
+      // has been set after boot. If BPP is zero, we therefor
+      // try again after setting the image size to the maximum size.
+      err=dc1394_format7_set_image_position(camera,mode_id,0,0);
+      DC1394_ERR_CHK(err,"Got a problem setting format7 image position");
+      err=dc1394_format7_set_image_size(camera,mode_id,mode->max_size_x,mode->max_size_y);
+      DC1394_ERR_CHK(err,"Got a problem setting format7 image size");
+      // maybe we should also force a color coding here.
+      err=dc1394_format7_get_byte_per_packet(camera,mode_id,&mode->bpp);
+      DC1394_ERR_CHK(err,"Got a problem querying format7 bytes per packet");
+    }
+    
+    err=dc1394_format7_get_packet_para(camera,mode_id,&mode->min_bpp,&mode->max_bpp);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 packet parameters");
+    err=dc1394_format7_get_pixel_number(camera,mode_id,&mode->pixnum);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 pixel number");
+    err=dc1394_format7_get_total_bytes(camera,mode_id,&mode->total_bytes);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 total bytes per frame");
+    err=dc1394_format7_get_color_coding_id(camera,mode_id,&mode->color_coding_id);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 color coding ID");
+    err=dc1394_format7_get_color_coding(camera,mode_id,&mode->color_codings);
+    DC1394_ERR_CHK(err,"Got a problem querying format7 color coding");
+  }
+
+  return err;
+}
+
+dc1394error_t
+dc1394_format7_get_modeset(dc1394camera_t *camera, dc1394format7modeset_t *info)
+{
+  dc1394error_t err;
+  int i;
+  dc1394videomodes_t modes;
+
+  for (i=0;i<DC1394_MODE_FORMAT7_NUM;i++) {
+    info->mode[i].present=0;
+  }
+
+  err=dc1394_video_get_supported_modes(camera, &modes);
+  DC1394_ERR_CHK(err,"Could not query supported formats");
+
+  // find a mode which is F7:
+  for (i=0;i<modes.num;i++) {
+    if ((modes.modes[i]>=DC1394_MODE_FORMAT7_MIN)&&(modes.modes[i]<=DC1394_MODE_FORMAT7_MAX)) {
+      info->mode[modes.modes[i]-DC1394_MODE_FORMAT7_MIN].present= 1;
+      dc1394_format7_get_mode_info(camera, modes.modes[i], info->mode);
+    }
+  }
+
+  return err;
+}

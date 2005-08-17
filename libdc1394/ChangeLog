@@ -640,3 +640,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-08-10 Damien <ddouxchamps@users.sf.net>
     * fixed .c/.h coherency, again (Joshua Lamorie)
 
+2005-08-17 Damien <ddouxchamps@users.sf.net>
+    * added functions to grab all the properties of a format7 mode
+      with a single call. This required the addition of new format7
+      mode and modeset structures. The code of these functions comes
+      from Coriander.
