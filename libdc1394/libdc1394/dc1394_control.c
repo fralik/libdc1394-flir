@@ -576,7 +576,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_t *feature)
     feature->one_push= DC1394_FALSE;
     feature->polarity_capable=
       (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->trigger_mode_capable_mask= ((value >> 12) & 0x0f);
+    feature->trigger_mode_capable_mask= ((value >> 20) & 0x0f);
     feature->auto_capable= DC1394_FALSE;
     feature->manual_capable= DC1394_FALSE;
     break;
@@ -726,7 +726,7 @@ dc1394_print_feature(dc1394feature_t *f)
       printf("1 ");
     if (f->trigger_mode_capable_mask & 0x02)
       printf("2 ");
-    if (f->trigger_mode_capable_mask & 0x02)
+    if (f->trigger_mode_capable_mask & 0x01)
       printf("3 ");
     if (!(f->trigger_mode_capable_mask & 0x0f))
       printf("No modes available");

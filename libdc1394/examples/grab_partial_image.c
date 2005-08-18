@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.4.2.18  2005/08/18 07:02:39  ddouxchamps
+**  I looked at the bug reports on SF and applied some fixes
+**
 **  Revision 1.4.2.17  2005/08/05 01:24:15  ddouxchamps
 **  fixed wrong color filter definitions and functions (Tony Hague)
 **

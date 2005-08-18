@@ -645,3 +645,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       with a single call. This required the addition of new format7
       mode and modeset structures. The code of these functions comes
       from Coriander.
+
+2005-08-18 Damien <ddouxchamps@users.sf.net>	
+    * fixed memory leak in capture functions (dma device name not freed)
+    * fixed trigger capabilities detection (Markus Niebel)

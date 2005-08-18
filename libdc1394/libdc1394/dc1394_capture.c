@@ -502,6 +502,7 @@ dc1394_dma_release_capture(dc1394capture_t *capture)
       
     }
   }
+  free((void*)capture->dma_device_file);
 
   raw1394_destroy_handle(capture->handle);
   
