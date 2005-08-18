@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5  2005/08/18 07:03:06  ddouxchamps
+**  I looked at the bug reports on SF and applied some fixes
+**
 **  Revision 1.4  2003/09/02 23:42:36  ddennedy
 **  cleanup handle destroying in examples; fix dc1394_multiview to use handle per camera; new example
 **
@@ -45,7 +48,7 @@ int main(int argc, char *argv[])
   int numCameras;
   raw1394handle_t handle;
   nodeid_t * camera_nodes;
-  int grab_n_frames = 100;
+  int grab_n_frames = 10;
   struct tms tms_buf;
   clock_t start_time;
   float elapsed_time;
@@ -116,6 +119,7 @@ int main(int argc, char *argv[])
     dc1394_destroy_handle(handle);
     exit( 1);
   }
+  //fprintf(stderr,"handle: 0x%x, node: 0x%x\n",handle,camera_nodes[0]);
   
   /*-----------------------------------------------------------------------
    *  setup capture for format 7
@@ -191,6 +195,7 @@ int main(int argc, char *argv[])
     dc1394_destroy_handle(handle);
     exit(1);
   }
+  //fprintf(stderr,"hello_world\n");
 
   /*-----------------------------------------------------------------------
    *  capture 1000 frames and measure the time for this operation

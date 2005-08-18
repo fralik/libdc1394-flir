@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.10  2005/08/18 07:03:06  ddouxchamps
+**  I looked at the bug reports on SF and applied some fixes
+**
 **  Revision 1.9  2004/08/10 07:57:22  ddouxchamps
 **  Removed extra buffering (Johann Schoonees)
 **
@@ -402,10 +405,9 @@ int main(int argc,char *argv[])
 		int camCount;
 		
 		/* get the camera nodes and describe them as we find them */
-		raw_handle = raw1394_new_handle();
-		raw1394_set_port( raw_handle, p );
+		raw_handle=dc1394_create_handle(p);
 		camera_nodes = dc1394_get_camera_nodes(raw_handle, &camCount, 1);
-		raw1394_destroy_handle(raw_handle);
+		dc1394_destroy_handle(raw_handle);
 
 		/* setup cameras for capture */
 		for (i = 0; i < camCount; i++)

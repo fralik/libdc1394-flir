@@ -101,6 +101,8 @@ GetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
         retval= raw1394_read(handle, 0xffc0 | node,
                              CONFIG_ROM_BASE + csr + offset, 4, value);
 
+	//fprintf(stderr,"got register 0x%llx : 0x%x\n",CONFIG_ROM_BASE + csr + offset,*value);
+
 #ifdef LIBRAW1394_OLD
         if (retval >= 0)
         {
@@ -173,6 +175,7 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
     /* retry a few times if necessary (addition by PDJ) */
     while(retry--)
     {
+      //fprintf(stderr,"trying to set F7 0x%llx\n",offset + csr);
         retval= raw1394_write(handle, 0xffc0 | node,
                               CONFIG_ROM_BASE + offset + csr, 4, &value);
 
@@ -361,6 +364,8 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
   unsigned int camera_height = 0;
   unsigned int max_width = 0;
   unsigned int max_height = 0;
+
+  //fprintf(stderr,"entering setup\n");
 
   dc1394_camerahandle *camerahandle;
   camerahandle = (dc1394_camerahandle*) raw1394_get_userdata( handle );
@@ -582,8 +587,8 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
       }
       camera->quadlets_per_frame/=4;
     */
-    //fprintf(stderr,"quadlets per frame: %d\n",camera->quadlets_per_frame);
   }
+  //fprintf(stderr,"quadlets per frame: %d\n",camera->quadlets_per_frame);
 
   if (camera->quadlets_per_frame<=0) {
     return DC1394_FAILURE;

@@ -523,3 +523,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-04-15 Damien <ddouxchamps@users.sf.net>
     * Merged the Allied Vision Tech extensions of Pierre Moos.
+
+2005-08-18 Damien <ddouxchamps@users.sf.net>
+    * fixed memory leak in capture functions (dma device name not freed)
+    * fixed trigger capabilities detection (Markus Niebel)
+    * fixed some confusion between raw1394_new_handle and dc1394_create_handle
+      (Thanks to Thorondor)

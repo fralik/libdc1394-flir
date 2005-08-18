@@ -444,6 +444,13 @@ dc1394_print_feature_set(dc1394_feature_set *features);
  system
 
  If a handle can't be created, it returns NULL
+
+ IMPORTANT: you should NOT use raw1394_new_handle()
+ to create a new handle, even if you use
+ raw1394_set_port after. dc1394_create_handle has to
+ setup other things and failing to use it will result
+ in crashes.
+
 *****************************************************/
 raw1394handle_t 
 dc1394_create_handle(int port);

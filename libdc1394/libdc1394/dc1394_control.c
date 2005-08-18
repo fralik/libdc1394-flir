@@ -496,8 +496,9 @@ GetCameraROMValue(raw1394handle_t handle, nodeid_t node,
     /* retry a few times if necessary (addition by PDJ) */
     while(retry--) 
     {
-        retval= raw1394_read(handle, 0xffc0 | node, CONFIG_ROM_BASE + offset,
-                             4, value);
+      //fprintf(stderr,"get reg at 0x%llx : ", CONFIG_ROM_BASE + offset);
+      retval= raw1394_read(handle, 0xffc0 | node, CONFIG_ROM_BASE + offset, 4, value);
+      //fprintf(stderr,"0x%lx\n",*value);
 
 #ifdef LIBRAW1394_OLD
         if (retval >= 0)
@@ -547,20 +548,22 @@ GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
     camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
 
     /* get the ccr_base address if not yet retrieved */
-    if (camera != NULL && camera->ccr_base == 0)
-    {
+    if (camera != NULL) {
+      if (camera->ccr_base == 0) {
         dc1394_camerainfo info;
         if ( dc1394_get_camera_info(handle, node, &info) != DC1394_SUCCESS )
-            return -1;
+	  return -1;
+      }
     }
-    else if (camera == NULL)
-        return -1;
+    else
+      return -1;
 
     /* retry a few times if necessary (addition by PDJ) */
     while(retry--) 
     {
-        retval= raw1394_read(handle, 0xffc0 | node, camera->ccr_base + offset,
-                             4, value);
+      //fprintf(stderr,"get reg at 0x%llx : ", camera->ccr_base+offset);
+      retval= raw1394_read(handle, 0xffc0 | node, camera->ccr_base + offset, 4, value);
+      //fprintf(stderr,"0x%lx\n",*value);
 
 #ifdef LIBRAW1394_OLD
         if (retval >= 0)
@@ -610,14 +613,15 @@ SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
     camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
 
     /* get the ccr_base address if not yet retrieved */
-    if (camera != NULL && camera->ccr_base == 0)
-    {
+    if (camera != NULL) {
+      if (camera->ccr_base == 0) {
         dc1394_camerainfo info;
         if ( dc1394_get_camera_info(handle, node, &info) != DC1394_SUCCESS )
-            return -1;
+	  return -1;
+      }
     }
-    else if (camera == NULL)
-        return -1;
+    else
+      return -1;
 
     /* conditionally byte swap the value (addition by PDJ) */
     value= htonl(value);
@@ -972,7 +976,7 @@ dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
 nodeid_t* 
 dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numIds, 
                                int *ids, int *numCameras,
-                               int showCameras) 
+                              int showCameras) 
 {
     int numNodes, i,j, uid, foundId, extraId;
     dc1394bool_t isCamera;
@@ -1584,7 +1588,7 @@ dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
       feature->one_push= DC1394_FALSE;
       feature->polarity_capable=
 	(value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
-      feature->trigger_mode_capable_mask= ((value >> 12) & 0x0f);
+      feature->trigger_mode_capable_mask= ((value >> 20) & 0x0f);
       feature->auto_capable= DC1394_FALSE;
       feature->manual_capable= DC1394_FALSE;
       break;
@@ -1749,7 +1753,7 @@ dc1394_print_feature(dc1394_feature_info *f)
 	printf("1 ");
       if (f->trigger_mode_capable_mask & 0x02)
 	printf("2 ");
-      if (f->trigger_mode_capable_mask & 0x02)
+      if (f->trigger_mode_capable_mask & 0x01)
 	printf("3 ");
       if (!(f->trigger_mode_capable_mask & 0x0f))
 	printf("No modes available");

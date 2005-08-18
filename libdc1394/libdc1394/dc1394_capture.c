@@ -459,11 +459,12 @@ dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams,
         _dc1394_quadlets_per_packet[cams[i].channel]=
             cams[i].quadlets_per_packet;
 
+	//fprintf(stderr,"starting reception...\n");
         if (raw1394_start_iso_rcv(handle,cams[i].channel) < 0) 
         {
             /* error handling- for some reason something didn't work, 
                so we have to reset everything....*/
-            printf("(%s:%d) error!\n", __FILE__, __LINE__);
+            fprintf(stderr,"(%s:%d) error!\n", __FILE__, __LINE__);
 
             for (j= 0; j < num; j++) 
             {
@@ -475,10 +476,12 @@ dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams,
         }
 
     }
+    //fprintf(stderr,"data loop...\n");
 
     /* now we iterate till the data is here*/
     while (_dc1394_all_captured != 0) 
     {
+      //fprintf(stderr,"iter ");
         raw1394_loop_iterate(handle);
     }
   
@@ -577,6 +580,8 @@ dc1394_dma_release_camera(raw1394handle_t handle,
 	    
 	  }
     }
+
+    free(camera->dma_device_file);
 
     return DC1394_SUCCESS;
 }
