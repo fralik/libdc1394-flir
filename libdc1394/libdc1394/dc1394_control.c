@@ -351,13 +351,18 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
   //fprintf(stderr,"13: 0x%x\n",camera->ud_reg_tag_13);
 
+  /* get the unit_dependent_directory offset */
+  offset= camera->unit_directory;
+  err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
+  DC1394_ERR_CHK(err, "Could not get unit dependent directory");
+  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
+  
   /* verify the version/revision and find the IIDC_REVISION value from that */
+  /* Note: this requires the UDD to be set in order to verify IIDC 1.31 compliance. */
   err=_dc1394_get_iidc_version(camera);
   if (err==DC1394_NOT_A_CAMERA)
     return err;
-
   DC1394_ERR_CHK(err, "Problem inferring the IIDC version");
-
 
   // at this point we know it's a camera so we start returning errors if registers
   // are not found
@@ -369,12 +374,6 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   if (err!=DC1394_SUCCESS) return err;
   camera->euid_64= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
   
-  /* get the unit_dependent_directory offset */
-  offset= camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get unit dependent directory");
-  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
-  
   /* now get the command_regs_base */
   offset= camera->unit_dependent_directory;
   err=GetConfigROMTaggedRegister(camera, 0x40, &offset, &quadval);
@@ -385,68 +384,85 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   offset= camera->unit_dependent_directory;
   camera->vendor[0] = '\0';
   err=GetConfigROMTaggedRegister(camera, 0x81, &offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get vendor leaf offset");
-  offset=(quadval & 0xFFFFFFUL)*4+offset;
+  if (err==DC1394_SUCCESS) {
+    offset=(quadval & 0xFFFFFFUL)*4+offset;
     
-  /* read in the length of the vendor name */
-  err=GetCameraROMValue(camera, offset, &value[0]);
-  DC1394_ERR_CHK(err, "Could not get vendor leaf length");
-  
-  len= (uint_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
-  
-  if (len > MAX_CHARS) {
-    len= MAX_CHARS;
-  }
-  offset+= 12;
-  count= 0;
-
-  /* grab the vendor name */
-  while (len > 0) {
-    err=GetCameraROMValue(camera, offset+count, &value[0]);
-    DC1394_ERR_CHK(err, "Could not get vendor string character");
-
-    camera->vendor[count++]= (value[0] >> 24);
-    camera->vendor[count++]= (value[0] >> 16) & 0xFFUL;
-    camera->vendor[count++]= (value[0] >> 8) & 0xFFUL;
-    camera->vendor[count++]= value[0] & 0xFFUL;
-    len-= 4;
+    /* read in the length of the vendor name */
+    err=GetCameraROMValue(camera, offset, &value[0]);
+    DC1394_ERR_CHK(err, "Could not get vendor leaf length");
     
-    camera->vendor[count]= '\0';
+    len= (uint_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
+    
+    if (len > MAX_CHARS) {
+      len= MAX_CHARS;
+    }
+    offset+= 12;
+    count= 0;
+
+    /* grab the vendor name */
+    while (len > 0) {
+      err=GetCameraROMValue(camera, offset+count, &value[0]);
+      DC1394_ERR_CHK(err, "Could not get vendor string character");
+      
+      camera->vendor[count++]= (value[0] >> 24);
+      camera->vendor[count++]= (value[0] >> 16) & 0xFFUL;
+      camera->vendor[count++]= (value[0] >> 8) & 0xFFUL;
+      camera->vendor[count++]= value[0] & 0xFFUL;
+      len-= 4;
+      
+      camera->vendor[count]= '\0';
+    }
   }
+  /* if the tagged register is not found, don't make a fuss about it. */
+  else if (err==DC1394_ERROR_TAGGED_REGISTER_NOT_FOUND) {
+    camera->vendor[0]= '\0';
+  }
+  else
+    DC1394_ERR_CHK(err, "Could not get vendor leaf offset");
   
   /* get the model_name_leaf offset (optional) */
   offset= camera->unit_dependent_directory;
   camera->model[0] = '\0';
   err=GetConfigROMTaggedRegister(camera, 0x82, &offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get model name leaf offset");
-  offset=(quadval & 0xFFFFFFUL)*4+offset;
-    
-  /* read in the length of the model name */
-  err=GetCameraROMValue(camera, offset, &value[0]);
-  DC1394_ERR_CHK(err, "Could not get model name leaf length");
-  
-  len= (uint_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
-  
-  if (len > MAX_CHARS) {
-    len= MAX_CHARS;
-  }
-  offset+= 12;
-  count= 0;
-  
-  /* grab the model name */
-  while (len > 0) {
-    err=GetCameraROMValue(camera, offset+count, &value[0]);
-    DC1394_ERR_CHK(err, "Could not get model name character");
-    
-    camera->model[count++]= (value[0] >> 24);
-    camera->model[count++]= (value[0] >> 16) & 0xFFUL;
-    camera->model[count++]= (value[0] >> 8) & 0xFFUL;
-    camera->model[count++]= value[0] & 0xFFUL;
-    len-= 4;
 
-    camera->model[count]= '\0';
+  if (err==DC1394_SUCCESS) {
+    offset=(quadval & 0xFFFFFFUL)*4+offset;
+    
+    /* read in the length of the model name */
+    err=GetCameraROMValue(camera, offset, &value[0]);
+    DC1394_ERR_CHK(err, "Could not get model name leaf length");
+    
+    len= (uint_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
+    
+    if (len > MAX_CHARS) {
+      len= MAX_CHARS;
+    }
+    offset+= 12;
+    count= 0;
+    
+    /* grab the model name */
+    while (len > 0) {
+      err=GetCameraROMValue(camera, offset+count, &value[0]);
+      DC1394_ERR_CHK(err, "Could not get model name character");
+      
+      camera->model[count++]= (value[0] >> 24);
+      camera->model[count++]= (value[0] >> 16) & 0xFFUL;
+      camera->model[count++]= (value[0] >> 8) & 0xFFUL;
+      camera->model[count++]= value[0] & 0xFFUL;
+      len-= 4;
+      
+      camera->model[count]= '\0';
+    }
   }
+  /* if the tagged register is not found, don't make a fuss about it. */
+  else if (err==DC1394_ERROR_TAGGED_REGISTER_NOT_FOUND) {
+    camera->model[0]= '\0';
+  }
+  else
+    DC1394_ERR_CHK(err, "Could not get model name leaf offset");
   
+
+
   err=dc1394_video_get_iso_channel_and_speed(camera, &camera->iso_channel, &camera->iso_speed);
   DC1394_ERR_CHK(err, "Could not get ISO channel and speed");
   

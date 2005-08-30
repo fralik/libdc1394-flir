@@ -649,3 +649,13 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-08-18 Damien <ddouxchamps@users.sf.net>	
     * fixed memory leak in capture functions (dma device name not freed)
     * fixed trigger capabilities detection (Markus Niebel)
+	
+2005-08-30 Damien <ddouxchamps@users.sf.net>	
+    * fixed the check of iidc 1.31 software version: probing the UDD should
+      come before that.
+    * fixed vendor/model strings: they are optional now (there seems to be a
+      bug in Apple iSight rev 1.03 about this: two tags 0x81 are present but
+      no 0x82 can be found)
+    * Thanks to 'danalien' for the debug inputs.
+
+	

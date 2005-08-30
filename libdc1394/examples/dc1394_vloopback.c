@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.17  2005/08/30 01:36:44  ddouxchamps
+**  fixed a few bugs found with the iSight camera
+**
 **  Revision 1.11.2.16  2005/08/18 07:02:39  ddouxchamps
 **  I looked at the bug reports on SF and applied some fixes
 **
