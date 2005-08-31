@@ -52,40 +52,42 @@
 #define RESP_SONY_HACK              0x000fU
 
 #define FEATURE_TO_VALUE_OFFSET(feature, offset)                      \
-                                                                      \
-    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {       \
+    {                                                                 \
+    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) { \
       return DC1394_FAILURE;                                          \
     }                                                                 \
-    else if (feature < DC1394_FEATURE_ZOOM) {                                \
+    else if (feature < DC1394_FEATURE_ZOOM) {                         \
       offset= REG_CAMERA_FEATURE_HI_BASE;                             \
-      feature-= DC1394_FEATURE_MIN;                                          \
+      feature-= DC1394_FEATURE_MIN;                                   \
     }                                                                 \
     else {                                                            \
       offset= REG_CAMERA_FEATURE_LO_BASE;                             \
-      if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {                          \
+      if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {                   \
         feature+= 12;                                                 \
       }                                                               \
-      feature-= DC1394_FEATURE_ZOOM;                                         \
+      feature-= DC1394_FEATURE_ZOOM;                                  \
     }                                                                 \
-    offset+= feature * 0x04U;
+    offset+= feature * 0x04U;                                         \
+    }
 
 #define FEATURE_TO_INQUIRY_OFFSET(feature, offset)                    \
-                                                                      \
-    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {       \
+    {                                                                 \
+    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) { \
       return DC1394_FAILURE;                                          \
     }                                                                 \
-    else if (feature < DC1394_FEATURE_ZOOM) {                                \
+    else if (feature < DC1394_FEATURE_ZOOM) {                         \
       offset= REG_CAMERA_FEATURE_HI_BASE_INQ;                         \
-      feature-= DC1394_FEATURE_MIN;                                          \
+      feature-= DC1394_FEATURE_MIN;                                   \
     }                                                                 \
     else {                                                            \
       offset= REG_CAMERA_FEATURE_LO_BASE_INQ;                         \
-      if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {                          \
+      if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {                   \
         feature+= 12;                                                 \
       }                                                               \
-      feature-= DC1394_FEATURE_ZOOM;                                         \
+      feature-= DC1394_FEATURE_ZOOM;                                  \
     }                                                                 \
-    offset+= feature * 0x04U;
+    offset+= feature * 0x04U;                                         \
+    }
 
 /* Internal functions required by two different source files */
 

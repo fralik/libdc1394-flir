@@ -338,7 +338,7 @@ SetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, octlet_t
 /********************************************************************************/
 /* Find a register with a specific tag                                          */
 /********************************************************************************/
-
+/*
 dc1394error_t
 GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *offset, quadlet_t *value)
 {
@@ -371,7 +371,7 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *o
   return DC1394_TAGGED_REGISTER_NOT_FOUND;
 }
 
-/*
+*/
 // Don Murray's debug version
 int
 GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, 
@@ -380,11 +380,13 @@ octlet_t *offset, quadlet_t *value)
   unsigned int block_length;
   int i;
   // get the block length
-  fprintf(stderr,"Getting register tag 0x%x starting at offset 0x%x\n",tag,*offset);
+  fprintf(stderr,"Getting register tag 0x%x starting at offset 0x%llx\n",tag,*offset);
   if (GetCameraROMValue(camera, *offset, value)!=DC1394_SUCCESS) {
+    fprintf(stderr,"Failed to get the block length\n" );
     return DC1394_FAILURE;
   }
   block_length=*value>>16;
+  fprintf(stderr,"The block length is %d quadlets\n",block_length);
   if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
     block_length=(CSR_CONFIG_ROM_END-*offset)/4;   }
   
@@ -402,10 +404,11 @@ octlet_t *offset, quadlet_t *value)
     else {
       fprintf(stderr,"found tag 0x%x (value 0x%x) - continue \n",
 	      *value>>24,
-	      *value );
+	      *value & 0xFFFFFF);
     }
   }
   
+  fprintf(stderr,"Tag not found :-(\n");
   return DC1394_TAGGED_REGISTER_NOT_FOUND;
 }
-*/
+

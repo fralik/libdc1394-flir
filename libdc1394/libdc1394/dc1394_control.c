@@ -414,16 +414,16 @@ dc1394_get_camera_info(dc1394camera_t *camera)
     }
   }
   /* if the tagged register is not found, don't make a fuss about it. */
-  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
-    camera->vendor[0]= '\0';
-  }
-  else
+  else if (err!=DC1394_TAGGED_REGISTER_NOT_FOUND) {
     DC1394_ERR_CHK(err, "Could not get vendor leaf offset");
-  
+  }
+
   /* get the model_name_leaf offset (optional) */
   offset= camera->unit_dependent_directory;
   camera->model[0] = '\0';
   err=GetConfigROMTaggedRegister(camera, 0x82, &offset, &quadval);
+
+  fprintf(stderr,"ERR CODE = %d\n",err);
 
   if (err==DC1394_SUCCESS) {
     offset=(quadval & 0xFFFFFFUL)*4+offset;
@@ -455,13 +455,9 @@ dc1394_get_camera_info(dc1394camera_t *camera)
     }
   }
   /* if the tagged register is not found, don't make a fuss about it. */
-  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
-    camera->model[0]= '\0';
-  }
-  else
+  else if (err!=DC1394_TAGGED_REGISTER_NOT_FOUND) {
     DC1394_ERR_CHK(err, "Could not get model name leaf offset");
-  
-
+  }
 
   err=dc1394_video_get_iso_channel_and_speed(camera, &camera->iso_channel, &camera->iso_speed);
   DC1394_ERR_CHK(err, "Could not get ISO channel and speed");

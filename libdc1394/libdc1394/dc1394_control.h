@@ -475,7 +475,7 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
    if error is positive. Neg errors are messages and are thus ignored */
 
 #define DC1394_ERR_CHK(err, err_string...)                   \
-                                                             \
+    {                                                        \
     if ((err<0)||(err>DC1394_ERROR_NUM))                     \
       err=DC1394_INVALID_ERROR_CODE;                         \
                                                              \
@@ -486,10 +486,11 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
       fprintf(stderr, err_string);                           \
       fprintf(stderr,"\n");                                  \
       return err;                                            \
+    }                                                        \
     }
 
 #define DC1394_ERR_CHK_WITH_CLEANUP(err, cleanup, err_string...)     \
-                                                                     \
+    {                                                                \
     if ((err<0)||(err>DC1394_ERROR_NUM))                             \
       err=DC1394_INVALID_ERROR_CODE;                                 \
                                                                      \
@@ -501,6 +502,7 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
       fprintf(stderr,"\n");                                          \
       cleanup;                                                       \
       return err;                                                    \
+    }                                                                \
     }
 
 #ifdef __cplusplus

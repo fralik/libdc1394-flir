@@ -661,3 +661,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-08-30 Damien <ddouxchamps@users.sf.net>
     * fixed invalid definition
 	
+2005-08-31 Damien <ddouxchamps@users.sf.net>
+    * set several debug statements for testing with the iSight
+	
