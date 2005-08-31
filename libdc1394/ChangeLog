@@ -657,5 +657,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       bug in Apple iSight rev 1.03 about this: two tags 0x81 are present but
       no 0x82 can be found)
     * Thanks to 'danalien' for the debug inputs.
-
+	
+2005-08-30 Damien <ddouxchamps@users.sf.net>
+    * fixed invalid definition
 	

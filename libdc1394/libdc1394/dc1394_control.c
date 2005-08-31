@@ -414,7 +414,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
     }
   }
   /* if the tagged register is not found, don't make a fuss about it. */
-  else if (err==DC1394_ERROR_TAGGED_REGISTER_NOT_FOUND) {
+  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
     camera->vendor[0]= '\0';
   }
   else
@@ -455,7 +455,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
     }
   }
   /* if the tagged register is not found, don't make a fuss about it. */
-  else if (err==DC1394_ERROR_TAGGED_REGISTER_NOT_FOUND) {
+  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
     camera->model[0]= '\0';
   }
   else
