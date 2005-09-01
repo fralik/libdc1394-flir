@@ -664,3 +664,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-08-31 Damien <ddouxchamps@users.sf.net>
     * set several debug statements for testing with the iSight
 	
+2005-09-01 Damien <ddouxchamps@users.sf.net>
+    * added debug modes in dc1394_register.h
+    * fixed macro definitions: added braces around the code
+    * removed debug statements introduced above.
+    * added version definitions in dc1394_control.h

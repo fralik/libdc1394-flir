@@ -258,6 +258,15 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
   /* IIDC 1.31 check */
   if (camera->iidc_version==DC1394_IIDC_VERSION_1_30) {
     
+    /* -- get the unit_dependent_directory offset --
+       We can do it here since we know it's a camera, and thus the UDD should exists
+       This UDD will be re-checked after but it does not really matter. */
+
+    offset= camera->unit_directory;
+    err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
+    DC1394_ERR_CHK(err, "Could not get unit dependent directory");
+    camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
+  
     //fprintf(stderr,"1.30 detected\n");
     offset=camera->unit_dependent_directory;
     err=GetConfigROMTaggedRegister(camera, 0x38, &offset, &quadval);
@@ -329,7 +338,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   for (i=0;i<DC1394_MODE_FORMAT7_NUM;i++)
     camera->format7_csr[i]=0;
 
-  // return silently on all errors as a bad rom just means another device
+  // return silently on all errors as a bad rom just means a device that is not a camera
   
   /* get the unit_directory offset */
   offset= ROM_ROOT_DIRECTORY;
@@ -344,6 +353,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   if (err!=DC1394_SUCCESS) return err;
   camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
   //fprintf(stderr,"12: 0x%x\n",camera->ud_reg_tag_12);
+
   /* get the iidc revision */
   offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x13, &offset, &quadval);
@@ -351,12 +361,6 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
   //fprintf(stderr,"13: 0x%x\n",camera->ud_reg_tag_13);
 
-  /* get the unit_dependent_directory offset */
-  offset= camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
-  DC1394_ERR_CHK(err, "Could not get unit dependent directory");
-  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
-  
   /* verify the version/revision and find the IIDC_REVISION value from that */
   /* Note: this requires the UDD to be set in order to verify IIDC 1.31 compliance. */
   err=_dc1394_get_iidc_version(camera);
@@ -364,6 +368,12 @@ dc1394_get_camera_info(dc1394camera_t *camera)
     return err;
   DC1394_ERR_CHK(err, "Problem inferring the IIDC version");
 
+  /* get the unit_dependent_directory offset */
+  offset= camera->unit_directory;
+  err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
+  DC1394_ERR_CHK(err, "Could not get unit dependent directory");
+  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
+  
   // at this point we know it's a camera so we start returning errors if registers
   // are not found
   //fprintf(stderr,"got a camera\n");
@@ -423,7 +433,7 @@ dc1394_get_camera_info(dc1394camera_t *camera)
   camera->model[0] = '\0';
   err=GetConfigROMTaggedRegister(camera, 0x82, &offset, &quadval);
 
-  fprintf(stderr,"ERR CODE = %d\n",err);
+  //fprintf(stderr,"ERR CODE = %d\n",err);
 
   if (err==DC1394_SUCCESS) {
     offset=(quadval & 0xFFFFFFUL)*4+offset;

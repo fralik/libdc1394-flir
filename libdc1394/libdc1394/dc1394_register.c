@@ -22,30 +22,40 @@
 #include "dc1394_offsets.h"
 #include "config.h"
 
+/* Note: debug modes can be very verbose. */
+
+/* To debug config rom structure: */
+//#define DC1394_DEBUG_TAGGED_REGISTER_ACCESS
+
+/* To debug low-level access (raw1394 read/write): */
+//#define DC1394_DEBUG_LOWEST_LEVEL
+
 #define FEATURE_TO_ABS_VALUE_OFFSET(feature, offset)                  \
-                                                                      \
-    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) )         \
+    {                                                                 \
+    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) )  \
     {                                                                 \
 	return DC1394_FAILURE;                                        \
     }                                                                 \
-    else if (feature < DC1394_FEATURE_ZOOM)                                  \
+    else if (feature < DC1394_FEATURE_ZOOM)                           \
     {                                                                 \
 	offset= REG_CAMERA_FEATURE_ABS_HI_BASE;                       \
-        feature-= DC1394_FEATURE_MIN;                                        \
+        feature-= DC1394_FEATURE_MIN;                                 \
     }                                                                 \
     else                                                              \
     {                                                                 \
 	offset= REG_CAMERA_FEATURE_ABS_LO_BASE;                       \
-	feature-= DC1394_FEATURE_ZOOM;                                       \
+	feature-= DC1394_FEATURE_ZOOM;                                \
                                                                       \
-	if (feature >= DC1394_FEATURE_CAPTURE_SIZE)                          \
+	if (feature >= DC1394_FEATURE_CAPTURE_SIZE)                   \
 	{                                                             \
 	    feature+= 12;                                             \
 	}                                                             \
                                                                       \
     }                                                                 \
                                                                       \
-    offset+= feature * 0x04U;
+    offset+= feature * 0x04U;                                         \
+    }
+
 
 dc1394error_t
 GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
@@ -58,9 +68,13 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 
   /* retry a few times if necessary (addition by PDJ) */
   while(retry--)  {
-    //fprintf(stderr,"get reg at 0x%llx : ", offset + CONFIG_ROM_BASE);
+#ifdef DC1394_DEBUG_LOWEST_LEVEL
+    fprintf(stderr,"get reg at 0x%llx : ", offset + CONFIG_ROM_BASE);
+#endif
     retval= raw1394_read(camera->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, value);
-    //fprintf(stderr,"0x%lx\n",*value);
+#ifdef DC1394_DEBUG_LOWEST_LEVEL
+    fprintf(stderr,"0x%lx\n",*value);
+#endif
 
 #ifdef LIBRAW1394_OLD
     if (retval >= 0) {
@@ -111,8 +125,11 @@ SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
   
   /* retry a few times if necessary */
   while(retry--) {
+#ifdef DC1394_DEBUG_LOWEST_LEVEL
+    fprintf(stderr,"set reg at 0x%llx to value 0x%lx\n", offset + CONFIG_ROM_BASE, value);
+#endif
     retval= raw1394_write(camera->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, &value);
-    /* printf(" Set Adv debug : base = %Lux, offset = %Lux, base + offset = %Lux\n",camera->adv_csr,offset, camera->adv_csr+offset); */
+
 #ifdef LIBRAW1394_OLD
     if (retval >= 0) {
       ack= retval >> 16;
@@ -338,40 +355,9 @@ SetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, octlet_t
 /********************************************************************************/
 /* Find a register with a specific tag                                          */
 /********************************************************************************/
-/*
-dc1394error_t
-GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *offset, quadlet_t *value)
-{
-  unsigned int block_length;
-  int i;
-  
-  // get the block length
-  //fprintf(stderr,"Getting register tag 0x%x starting at offset 0x%x\n",tag,*offset);
-  if (GetCameraROMValue(camera, *offset, value)!=DC1394_SUCCESS) {
-    return DC1394_FAILURE;
-  }
-  
-  block_length=*value>>16;
-  //fprintf(stderr,"  block length = %d\n",block_length);
-  if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
-    block_length=(CSR_CONFIG_ROM_END-*offset)/4;
-  }
 
-  // find the tag and return the result
-  for (i=0;i<block_length;i++) {
-    *offset+=4;
-    if (GetCameraROMValue(camera,*offset,value)!=DC1394_SUCCESS) {
-      return DC1394_FAILURE;
-    }
-    if ((*value>>24)==tag) {
-      return DC1394_SUCCESS;
-    }
-  }
+#ifndef DC1394_DEBUG_TAGGED_REGISTER_ACCESS
 
-  return DC1394_TAGGED_REGISTER_NOT_FOUND;
-}
-
-*/
 // Don Murray's debug version
 int
 GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, 
@@ -412,3 +398,39 @@ octlet_t *offset, quadlet_t *value)
   return DC1394_TAGGED_REGISTER_NOT_FOUND;
 }
 
+
+#else
+
+dc1394error_t
+GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *offset, quadlet_t *value)
+{
+  unsigned int block_length;
+  int i;
+  
+  // get the block length
+  //fprintf(stderr,"Getting register tag 0x%x starting at offset 0x%x\n",tag,*offset);
+  if (GetCameraROMValue(camera, *offset, value)!=DC1394_SUCCESS) {
+    return DC1394_FAILURE;
+  }
+  
+  block_length=*value>>16;
+  //fprintf(stderr,"  block length = %d\n",block_length);
+  if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
+    block_length=(CSR_CONFIG_ROM_END-*offset)/4;
+  }
+
+  // find the tag and return the result
+  for (i=0;i<block_length;i++) {
+    *offset+=4;
+    if (GetCameraROMValue(camera,*offset,value)!=DC1394_SUCCESS) {
+      return DC1394_FAILURE;
+    }
+    if ((*value>>24)==tag) {
+      return DC1394_SUCCESS;
+    }
+  }
+
+  return DC1394_TAGGED_REGISTER_NOT_FOUND;
+}
+
+#endif
