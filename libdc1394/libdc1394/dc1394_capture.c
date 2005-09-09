@@ -193,12 +193,6 @@ _dc1394_dma_basic_setup(uint_t channel,
   struct video1394_wait vwait;
   uint_t i;
   
-  if (capture->dma_device_file == NULL) {
-    capture->dma_device_file = malloc(32);
-    if (capture->dma_device_file)
-    sprintf((char*)capture->dma_device_file, "/dev/video1394/%d", capture->port );
-  }
-  
   /* using_fd counter array NULL if not used yet -- initialize */
   if( NULL == _dc1394_num_using_fd ) {
     _dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(uint_t) );
@@ -463,7 +457,18 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
   }
   else {
     capture->port = camera->port;
-    capture->dma_device_file = dma_device_file;
+
+    if (capture->dma_device_file == NULL) {
+      capture->dma_device_file = malloc(32);
+      if (capture->dma_device_file != NULL)
+	sprintf((char*)capture->dma_device_file, "/dev/video1394/%d", capture->port );
+      else
+	DC1394_ERR_CHK(DC1394_MEMORY_ALLOCATION_FAILURE,"Failed to allocate string for DMA device filename");
+    }
+    else {
+      capture->dma_device_file = strdup(dma_device_file);
+    }
+  
     capture->drop_frames = drop_frames;
     
     err=_dc1394_basic_setup(camera, channel, mode, speed,frame_rate, capture);
@@ -502,7 +507,8 @@ dc1394_dma_release_capture(dc1394capture_t *capture)
       
     }
   }
-  free((void*)capture->dma_device_file);
+  // this dma_device file is allocated by the strdup() function and can be freed here without problems.
+  free(capture->dma_device_file);
 
   raw1394_destroy_handle(capture->handle);
   
