@@ -335,6 +335,28 @@ typedef enum {
   DC1394_FEATURE_MODE_ONE_PUSH_AUTO
 } dc1394feature_mode_t;
 
+typedef struct __dc1394_cam_cap_struct 
+{
+  uint_t             frame_rate;
+  uint_t             frame_width;
+  uint_t             frame_height;
+  uint_t            *capture_buffer;
+  uint_t             quadlets_per_frame;
+  uint_t             quadlets_per_packet;
+  /* components needed for the DMA based video capture */
+  const uchar_t     *dma_ring_buffer;
+  uint_t             dma_buffer_size;
+  uint_t             dma_frame_size;
+  uint_t             num_dma_buffers;
+  uint_t             dma_last_buffer;
+  uint_t             num_dma_buffers_behind;
+  char              *dma_device_file;
+  int                dma_fd;
+  struct timeval     filltime;
+  uint_t             drop_frames;
+  raw1394handle_t    handle;
+} dc1394capture_t ;
+
 /* Camera structure */
 typedef struct __dc1394_camera
 {
@@ -367,33 +389,12 @@ typedef struct __dc1394_camera
   uint_t             mem_channel_number;
   uint_t             save_channel;
   uint_t             load_channel;
+
+  // capture structure
+  dc1394capture_t    capture;
   
 } dc1394camera_t;
 
-typedef struct __dc1394_cam_cap_struct 
-{
-  nodeid_t           node;
-  uint_t             channel;
-  uint_t             frame_rate;
-  uint_t             frame_width;
-  uint_t             frame_height;
-  uint_t            *capture_buffer;
-  uint_t             quadlets_per_frame;
-  uint_t             quadlets_per_packet;
-  /* components needed for the DMA based video capture */
-  const uchar_t     *dma_ring_buffer;
-  uint_t             dma_buffer_size;
-  uint_t             dma_frame_size;
-  uint_t             num_dma_buffers;
-  uint_t             dma_last_buffer;
-  uint_t             num_dma_buffers_behind;
-  char              *dma_device_file;
-  int                dma_fd;
-  uint_t             port;
-  struct timeval     filltime;
-  uint_t             drop_frames;
-  raw1394handle_t    handle;
-} dc1394capture_t ;
 
 typedef struct __dc1394feature_t_struct 
 {
@@ -668,33 +669,29 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *b
 /* setup the DMA capture */
 dc1394error_t dc1394_dma_setup_capture(dc1394camera_t *camera,
 				       uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
-				       uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file,
-				       dc1394capture_t *capture);
+				       uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file);
 dc1394error_t dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
 					       uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
 					       uint_t left, uint_t top, uint_t width, uint_t height,
-					       uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file,
-					       dc1394capture_t *capture);
+					       uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file);
 /* captures a frame from the given cameras. */
-dc1394error_t dc1394_dma_capture(dc1394capture_t *cams, uint_t num, dc1394videopolicy_t policy);
+dc1394error_t dc1394_dma_capture(dc1394camera_t **camera, uint_t num, dc1394videopolicy_t policy);
 /* returns the buffer previously handed to the user by dc1394_dma_*_capture to the DMA ring buffer */
-dc1394error_t dc1394_dma_done_with_buffer(dc1394capture_t * capture);
+dc1394error_t dc1394_dma_done_with_buffer(dc1394camera_t *camera);
 /* tells video1394 to halt iso reception. */
-dc1394error_t dc1394_dma_unlisten(dc1394capture_t *capture);
+dc1394error_t dc1394_dma_unlisten(dc1394camera_t *camera);
 /* releases memory that was mapped by dc1394_dma_setup_camera */
-dc1394error_t dc1394_dma_release_capture(dc1394capture_t *capture);
+dc1394error_t dc1394_dma_release_camera(dc1394camera_t *camera);
 
 
 /* Non DMA capture functions for legacy/debug purposes */
 dc1394error_t dc1394_setup_capture(dc1394camera_t *camera, 
-				   uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
-				   dc1394capture_t * capture);
+				   uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate);
 dc1394error_t dc1394_setup_format7_capture(dc1394camera_t *camera,
 					   uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
-					   uint_t left, uint_t top, uint_t width, uint_t height, 
-					   dc1394capture_t * capure);
-dc1394error_t dc1394_capture(dc1394capture_t *capture, uint_t num);
-dc1394error_t dc1394_release_capture(dc1394capture_t *capture);
+					   uint_t left, uint_t top, uint_t width, uint_t height);
+dc1394error_t dc1394_capture(dc1394camera_t **camera, uint_t num);
+dc1394error_t dc1394_release_camera(dc1394camera_t *camera);
 
 /***************************************************************************
      Format_7 (scalable image format)

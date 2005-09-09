@@ -165,8 +165,7 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
                             uint_t channel, uint_t mode, uint_t speed,
                             uint_t bytes_per_packet,
                             uint_t left, uint_t top,
-                            uint_t width, uint_t height, 
-                            dc1394capture_t *capture)
+                            uint_t width, uint_t height)
 {
   dc1394switch_t is_iso_on= DC1394_OFF;
   uint_t unit_bytes, max_bytes;
@@ -206,13 +205,10 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
   /*
    * TODO: frame_rate not used for format 7, may be calculated
    */
-  capture->frame_rate= 0;
-  capture->node= camera->node;
-  capture->port=camera->port;
-  capture->channel= channel;
-  capture->handle=raw1394_new_handle();
-  //capture->handle=camera->handle;
-  raw1394_set_port(capture->handle,capture->port);
+  camera->capture.frame_rate= 0;
+  camera->capture.handle=raw1394_new_handle();
+  //camera->capture.handle=camera->handle;
+  raw1394_set_port(camera->capture.handle,camera->port);
 
   /*-----------------------------------------------------------------------
    *  set image position. If QUERY_FROM_CAMERA was given instead of a
@@ -329,9 +325,9 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
   
   err=dc1394_format7_get_byte_per_packet(camera, mode, &packet_bytes);
   DC1394_ERR_CHK(err, "Unable to get format 7 bytes per packet for mode %d", mode);
-  capture->quadlets_per_packet= packet_bytes /4;
+  camera->capture.quadlets_per_packet= packet_bytes /4;
 
-  if (capture->quadlets_per_packet<=0) {
+  if (camera->capture.quadlets_per_packet<=0) {
     printf("(%s) No format 7 bytes per packet %d \n", __FILE__, mode);
     return DC1394_FAILURE;
   }
@@ -344,7 +340,7 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
   if (camera->iidc_version >= DC1394_IIDC_VERSION_1_30) { // if version is 1.30
     err=dc1394_format7_get_packet_per_frame(camera, mode, &packets_per_frame);
     DC1394_ERR_CHK(err, "Unable to get format 7 packets per frame %d", mode);
-    capture->quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
+    camera->capture.quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
     //fprintf(stderr,"packet per frame: %d\n",packets_per_frame);
   }
   else {
@@ -359,7 +355,7 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
     DC1394_ERR_CHK(err, "Unable to infer bpp from color coding");
     packets_per_frame = ((int)(width * height * bpp) +
 			 bytes_per_packet -1) / bytes_per_packet;
-    capture->quadlets_per_frame=(packets_per_frame*bytes_per_packet)/4;
+    camera->capture.quadlets_per_frame=(packets_per_frame*bytes_per_packet)/4;
 
     /*
       if (dc1394_query_format7_total_bytes(camera, mode, &camera->quadlets_per_frame)!= DC1394_SUCCESS) {
@@ -370,12 +366,12 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
     */
   }
 
-  if (capture->quadlets_per_frame<=0) {
-    //fprintf(stderr,"quadlets per frame: %d\n",capture->quadlets_per_frame);
+  if (camera->capture.quadlets_per_frame<=0) {
+    //fprintf(stderr,"quadlets per frame: %d\n",camera->capture.quadlets_per_frame);
     return DC1394_FAILURE;
   }
-  capture->frame_width = width; /* irrespective of pixel depth */
-  capture->frame_height= height;
+  camera->capture.frame_width = width; /* irrespective of pixel depth */
+  camera->capture.frame_height= height;
   
   if (is_iso_on){
     err=dc1394_video_set_transmission(camera, DC1394_ON);
@@ -400,8 +396,7 @@ dc1394_setup_format7_capture(dc1394camera_t *camera,
                              uint_t channel, uint_t mode, uint_t speed,
                              uint_t bytes_per_packet,
                              uint_t left, uint_t top,
-                             uint_t width, uint_t height, 
-                             dc1394capture_t *capture)
+                             uint_t width, uint_t height)
 
 {
   dc1394error_t err;
@@ -414,12 +409,12 @@ dc1394_setup_format7_capture(dc1394camera_t *camera,
           bytes_per_packet, left, top, width, height);*/
   
   err=_dc1394_basic_format7_setup(camera, channel, mode, speed, bytes_per_packet,
-                                  left, top, width, height, capture);
+                                  left, top, width, height);
   DC1394_ERR_CHK(err, "Could not perform basic F7 capture setup");
   
-  capture->capture_buffer= (uint_t*)malloc(capture->quadlets_per_frame*4);
+  camera->capture.capture_buffer= (uint_t*)malloc(camera->capture.quadlets_per_frame*4);
   
-  if (capture->capture_buffer == NULL) {
+  if (camera->capture.capture_buffer == NULL) {
     err=DC1394_MEMORY_ALLOCATION_FAILURE;
     DC1394_ERR_CHK(err,"failed to allocate capture buffer");
   }
@@ -441,33 +436,30 @@ dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
                                  uint_t width, uint_t height,
                                  uint_t num_dma_buffers,
 				 uint_t drop_frames,
-				 const char *dma_device_file,
-                                 dc1394capture_t *capture)
+				 const char *dma_device_file)
 {
   dc1394error_t err;
   
-  capture->port = camera->port;
-  
-  if (capture->dma_device_file == NULL) {
-    capture->dma_device_file = malloc(32);
-    if (capture->dma_device_file != NULL)
-      sprintf((char*)capture->dma_device_file, "/dev/video1394/%d", capture->port );
+  if (camera->capture.dma_device_file == NULL) {
+    camera->capture.dma_device_file = malloc(32);
+    if (camera->capture.dma_device_file != NULL)
+      sprintf((char*)camera->capture.dma_device_file, "/dev/video1394/%d", camera->port );
     else {
       err=DC1394_MEMORY_ALLOCATION_FAILURE;
       DC1394_ERR_CHK(err,"Failed to allocate string for DMA device filename");
     }
   }
   else {
-    capture->dma_device_file = strdup(dma_device_file);
+    camera->capture.dma_device_file = strdup(dma_device_file);
   }
   
-  capture->drop_frames = drop_frames;
+  camera->capture.drop_frames = drop_frames;
 
   err=_dc1394_basic_format7_setup(camera, channel, mode, speed, bytes_per_packet,
-				  left, top, width, height, capture);
+				  left, top, width, height);
   DC1394_ERR_CHK(err, "Could not perform basic F7 capture setup");
   
-  err=_dc1394_dma_basic_setup(channel,num_dma_buffers, capture);
+  err=_dc1394_dma_basic_setup(camera, channel,num_dma_buffers);
   DC1394_ERR_CHK(err, "Could not perform DMA capture setup or format7");
   
   return err;

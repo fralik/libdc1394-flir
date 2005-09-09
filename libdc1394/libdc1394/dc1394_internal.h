@@ -92,7 +92,7 @@
 /* Internal functions required by two different source files */
 
 dc1394error_t
-_dc1394_dma_basic_setup(uint_t channel, uint_t num_dma_buffers, dc1394capture_t *capture);
+_dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t channel, uint_t num_dma_buffers);
 	
 dc1394error_t 
 _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp);

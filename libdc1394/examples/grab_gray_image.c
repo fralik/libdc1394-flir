@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.19  2005/09/09 08:14:35  ddouxchamps
+**  dc1394capture_t struct now hidden in dc1394camera_t
+**
 **  Revision 1.5.2.18  2005/09/09 01:49:21  ddouxchamps
 **  fixed compilation errors
 **
@@ -97,7 +100,6 @@
 int main(int argc, char *argv[]) 
 {
   FILE* imagefile;
-  dc1394capture_t capture;
   dc1394camera_t *camera, **cameras=NULL;
   //int numNodes;
   uint_t numCameras, i;
@@ -171,14 +173,13 @@ int main(int argc, char *argv[])
   if (dc1394_setup_capture(camera, 0, /* channel */ 
                            DC1394_MODE_640x480_MONO8,
                            DC1394_SPEED_400,
-                           DC1394_FRAMERATE_7_5,
-                           &capture)!=DC1394_SUCCESS) {
+                           DC1394_FRAMERATE_7_5)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode,framerate and format are\n"
              "supported by your camera\n",
              __LINE__,__FILE__);
-    dc1394_release_capture(&capture);
+    dc1394_release_camera(camera);
     dc1394_free_camera(camera);
     exit(1);
   }
@@ -189,7 +190,7 @@ int main(int argc, char *argv[])
   {
     fprintf( stderr, "unable to set camera trigger mode\n");
 #if 0
-    dc1394_release_capture(&capture);
+    dc1394_release_camera(camera);
     dc1394_free_camera(camera);
     exit(1);
 #endif
@@ -212,7 +213,7 @@ int main(int argc, char *argv[])
    *-----------------------------------------------------------------------*/
   if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to start camera iso transmission\n");
-    dc1394_release_capture(&capture);
+    dc1394_release_camera(camera);
     dc1394_free_camera(camera);
     exit(1);
   }
@@ -220,9 +221,9 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  capture one frame
    *-----------------------------------------------------------------------*/
-  if (dc1394_capture(&capture,1)!=DC1394_SUCCESS) {
-    fprintf( stderr, "unable to capture a frame\n");
-    dc1394_release_capture(&capture);
+  if (dc1394_capture(&camera,1)!=DC1394_SUCCESS) {
+    fprintf(stderr, "unable to capture a frame\n");
+    dc1394_release_camera(camera);
     dc1394_free_camera(camera);
     exit(1);
   }
@@ -241,23 +242,23 @@ int main(int argc, char *argv[])
 
   if( imagefile == NULL) {
     perror( "Can't create '" IMAGE_FILE_NAME "'");
-    dc1394_release_capture(&capture);
+    dc1394_release_camera(camera);
     dc1394_free_camera(camera);
     exit( 1);
   }
   
     
-  fprintf(imagefile,"P5\n%u %u 255\n", capture.frame_width,
-          capture.frame_height );
-  fwrite((const char *)capture.capture_buffer, 1,
-         capture.frame_height*capture.frame_width, imagefile);
+  fprintf(imagefile,"P5\n%u %u 255\n", camera->capture.frame_width,
+          camera->capture.frame_height );
+  fwrite((const char *)camera->capture.capture_buffer, 1,
+         camera->capture.frame_height*camera->capture.frame_width, imagefile);
   fclose(imagefile);
   printf("wrote: " IMAGE_FILE_NAME "\n");
 
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
-  dc1394_release_capture(&capture);
+  dc1394_release_camera(camera);
   dc1394_free_camera(camera);
 
   return 0;

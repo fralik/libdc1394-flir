@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.19  2005/09/09 08:14:35  ddouxchamps
+**  dc1394capture_t struct now hidden in dc1394camera_t
+**
 **  Revision 1.11.2.18  2005/09/09 01:49:21  ddouxchamps
 **  fixed compilation errors
 **
@@ -143,7 +146,6 @@
 #define MAX_RESETS 5
 
 /* declarations for libdc1394 */
-dc1394capture_t capture;
 nodeid_t *camera_nodes;
 dc1394featureset_t features;
 dc1394camera_t *camera;
@@ -457,28 +459,28 @@ int capture_mmap(int frame)
 	}
 	
 	if (g_v4l_fmt == VIDEO_PALETTE_YUV422P && out_pipe != NULL) {
-		if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
-			affine_scale( (unsigned char *) capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+		if (dc1394_dma_capture(&camera,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
+			affine_scale( (unsigned char *) camera->capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
 				ppp * bpp, transform);
-			dc1394_dma_done_with_buffer(&capture);
+			dc1394_dma_done_with_buffer(camera);
 		}
 		yuy2_to_yv16( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
 	else if (g_v4l_fmt == VIDEO_PALETTE_YUV420P && out_pipe != NULL) {
-		if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
-			affine_scale( (unsigned char *) capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+		if (dc1394_dma_capture(&camera,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
+			affine_scale( (unsigned char *) camera->capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
 				ppp * bpp, transform);
-			dc1394_dma_done_with_buffer(&capture);
+			dc1394_dma_done_with_buffer(camera);
 		}
 		yuy2_to_yv12( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
-	else if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
-		affine_scale( (unsigned char *) capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+	else if (dc1394_dma_capture(&camera,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
+		affine_scale( (unsigned char *) camera->capture.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 			out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width/ppp, g_height,
 			ppp * bpp, transform);
-		dc1394_dma_done_with_buffer(&capture);
+		dc1394_dma_done_with_buffer(camera);
 	}
 
 	
@@ -524,11 +526,10 @@ int dc_init()
       free(cameras);
       cameras=NULL;
 
-      capture.node = camera->node;
       dc1394_print_camera_info(camera);
     
       /* camera can not be root--highest order node */
-      if (capture.node == raw1394_get_nodecount(camera->handle)-1) {
+      if (camera->node == raw1394_get_nodecount(camera->handle)-1) {
 	/* reset and retry if root */
 	//fprintf(stderr,"reset\n");
 	raw1394_reset_bus(camera->handle);
@@ -594,7 +595,7 @@ int dc_start(int palette)
 	 
 	if (dc1394_dma_setup_capture(camera, channel,  mode,
 				     speed, DC1394_FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES,
-				     dc_dev_name, &capture) != DC1394_SUCCESS) 
+				     dc_dev_name) != DC1394_SUCCESS) 
 	{
 		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 			   __LINE__,__FILE__);
@@ -608,8 +609,8 @@ int dc_start(int palette)
 void dc_stop()
 {
 	if (camera->handle && g_v4l_mode != V4L_MODE_NONE) {
-		dc1394_dma_unlisten(&capture);
-		dc1394_dma_release_capture(&capture);
+		dc1394_dma_unlisten(camera);
+		dc1394_dma_release_camera(camera);
 	}
 }
 		
@@ -982,8 +983,8 @@ void cleanup(void) {
 		close(v4l_dev);
 	if (camera->handle) {
 		if (g_v4l_mode != V4L_MODE_NONE) {
-			dc1394_dma_unlisten(&capture );
-			dc1394_dma_release_capture(&capture);
+			dc1394_dma_unlisten(camera);
+			dc1394_dma_release_camera(camera);
 		}
 		dc1394_free_camera(camera);
 	}
@@ -1040,9 +1041,9 @@ int main(int argc,char *argv[])
 	
 	while (1) {
 		if (g_v4l_mode == V4L_MODE_PIPE) {
-			if (dc1394_dma_capture(&capture,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
-				capture_pipe( v4l_dev, (unsigned char *) capture.capture_buffer );
-				dc1394_dma_done_with_buffer(&capture);
+			if (dc1394_dma_capture(&camera,1,DC1394_VIDEO1394_WAIT) == DC1394_SUCCESS) {
+				capture_pipe( v4l_dev, (unsigned char *) camera->capture.capture_buffer);
+				dc1394_dma_done_with_buffer(camera);
 			}
 		} else {
 			pause();

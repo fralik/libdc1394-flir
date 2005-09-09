@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.9.2.19  2005/09/09 08:14:35  ddouxchamps
+**  dc1394capture_t struct now hidden in dc1394camera_t
+**
 **  Revision 1.9.2.18  2005/09/09 01:49:21  ddouxchamps
 **  fixed compilation errors
 **
@@ -141,7 +144,6 @@
 
 /* declarations for libdc1394 */
 uint_t numCameras = 0;
-dc1394capture_t captures[MAX_CAMERAS];
 dc1394camera_t **cameras;
 dc1394featureset_t features;
 
@@ -313,7 +315,7 @@ void display_frames()
 		{
 			switch (res) {
 			case DC1394_MODE_640x480_YUV411:
-				iyu12yuy2( (unsigned char *) captures[i].capture_buffer,
+				iyu12yuy2( (unsigned char *) cameras[i]->capture.capture_buffer,
 					(unsigned char *)(frame_buffer + (i * frame_length)),
 					(device_width*device_height) );
 				break;
@@ -321,11 +323,11 @@ void display_frames()
 			case DC1394_MODE_320x240_YUV422:
 			case DC1394_MODE_640x480_YUV422:
 				memcpy( frame_buffer + (i * frame_length),
-					captures[i].capture_buffer, device_width*device_height*2);
+					cameras[i]->capture.capture_buffer, device_width*device_height*2);
 				break;
 					
 			case DC1394_MODE_640x480_RGB8:
-				rgb2yuy2( (unsigned char *) captures[i].capture_buffer,
+				rgb2yuy2( (unsigned char *) cameras[i]->capture.capture_buffer,
 					(unsigned char *) (frame_buffer + (i * frame_length)),
 					(device_width*device_height) );
 				break;
@@ -374,8 +376,8 @@ void cleanup(void) {
 	int i;
 	for (i=0; i < numCameras; i++)
 	{
-		dc1394_dma_unlisten( &captures[i] );
-		dc1394_dma_release_capture( &captures[i]);
+		dc1394_dma_unlisten(cameras[i]);
+		dc1394_dma_release_camera(cameras[i]);
 	}
 	if ((void *)window != NULL)
 		XUnmapWindow(display,window);
@@ -463,7 +465,7 @@ int main(int argc,char *argv[])
     
     if (dc1394_dma_setup_capture(cameras[i], i+1 /*channel*/, res,
 				 DC1394_SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES,
-				 device_name, &captures[i]) != DC1394_SUCCESS) {
+				 device_name) != DC1394_SUCCESS) {
       fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 	      __LINE__,__FILE__);
       perror("that the video mode,framerate and format are supported\n");
@@ -537,7 +539,7 @@ int main(int argc,char *argv[])
   while(1){
 
     //fprintf(stderr,"capturing...\n");
-    err=dc1394_dma_capture(captures, numCameras, DC1394_VIDEO1394_WAIT);
+    err=dc1394_dma_capture(cameras, numCameras, DC1394_VIDEO1394_WAIT);
     DC1394_ERR_CHK(err,"failed to capture\n");
 		
     display_frames();
@@ -607,7 +609,7 @@ int main(int argc,char *argv[])
     } /* XPending */
     
     for (i = 0; i < numCameras; i++) {
-      dc1394_dma_done_with_buffer(&captures[i]);
+      dc1394_dma_done_with_buffer(cameras[i]);
     }
     
   } /* while not interrupted */
