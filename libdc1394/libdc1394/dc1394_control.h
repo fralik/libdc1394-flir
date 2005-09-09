@@ -387,7 +387,7 @@ typedef struct __dc1394_cam_cap_struct
   uint_t             num_dma_buffers;
   uint_t             dma_last_buffer;
   uint_t             num_dma_buffers_behind;
-  const char        *dma_device_file;
+  char              *dma_device_file;
   int                dma_fd;
   uint_t             port;
   struct timeval     filltime;

@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.18  2005/09/09 01:49:21  ddouxchamps
+**  fixed compilation errors
+**
 **  Revision 1.5.2.17  2005/08/30 01:36:44  ddouxchamps
 **  fixed a few bugs found with the iSight camera
 **

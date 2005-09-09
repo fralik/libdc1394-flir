@@ -674,3 +674,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed leak or invalid free with the dma_device_file (Johann Schoonees,
       Joshua Lamorie). Additional cleanups too.
     * _dc1394_basic_format7_setup() was called before setting port, etc. Fixed.
+
+2005-09-09 Damien <ddouxchamps@users.sf.net>
+    * fixed compilation errors. Duh!
+	
