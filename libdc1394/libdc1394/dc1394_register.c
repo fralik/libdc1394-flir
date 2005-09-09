@@ -356,7 +356,7 @@ SetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, octlet_t
 /* Find a register with a specific tag                                          */
 /********************************************************************************/
 
-#ifndef DC1394_DEBUG_TAGGED_REGISTER_ACCESS
+#ifdef DC1394_DEBUG_TAGGED_REGISTER_ACCESS
 
 // Don Murray's debug version
 int

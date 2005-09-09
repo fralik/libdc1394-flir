@@ -677,4 +677,4 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2005-09-09 Damien <ddouxchamps@users.sf.net>
     * fixed compilation errors. Duh!
-	
+    * removed debug by default (Joshua Lamorie)
