@@ -578,7 +578,7 @@ dc1394_format7_get_color_coding_id(dc1394camera_t *camera,
 }
 
 dc1394error_t
-dc1394_format7_get_color_coding(dc1394camera_t *camera, uint_t mode, dc1394colormodes_t *modes)
+dc1394_format7_get_color_codings(dc1394camera_t *camera, uint_t mode, dc1394colormodes_t *modes)
 {
   dc1394error_t err;
   int i;
@@ -587,8 +587,6 @@ dc1394_format7_get_color_coding(dc1394camera_t *camera, uint_t mode, dc1394color
   if ( (mode > DC1394_MODE_FORMAT7_MAX) || (mode < DC1394_MODE_FORMAT7_MIN) ) {
     return DC1394_FAILURE;
   }
- 
-  //fprintf(stderr,"malloc OK\n");
 
   err=GetCameraFormat7Register(camera, mode, REG_CAMERA_FORMAT7_COLOR_CODING_INQ, &value);
   DC1394_ERR_CHK(err, "Could not get available color codings");
@@ -604,7 +602,8 @@ dc1394_format7_get_color_coding(dc1394camera_t *camera, uint_t mode, dc1394color
       modes->num++;
     }
   }
-
+  
+  //fprintf(stderr,"number of modes: %d\n",modes->num);
   return err;
 }
  
@@ -979,8 +978,10 @@ dc1394_format7_get_mode_info(dc1394camera_t *camera,
     DC1394_ERR_CHK(err,"Got a problem querying format7 total bytes per frame");
     err=dc1394_format7_get_color_coding_id(camera,mode_id,&mode->color_coding_id);
     DC1394_ERR_CHK(err,"Got a problem querying format7 color coding ID");
-    err=dc1394_format7_get_color_coding(camera,mode_id,&mode->color_codings);
+    err=dc1394_format7_get_color_codings(camera,mode_id,&mode->color_codings);
     DC1394_ERR_CHK(err,"Got a problem querying format7 color coding");
+
+    //fprintf(stderr,"# color codings for mode %d: %d\n", mode_id, mode->color_codings.num);
   }
 
   return err;
@@ -1004,7 +1005,8 @@ dc1394_format7_get_modeset(dc1394camera_t *camera, dc1394format7modeset_t *info)
   for (i=0;i<modes.num;i++) {
     if ((modes.modes[i]>=DC1394_MODE_FORMAT7_MIN)&&(modes.modes[i]<=DC1394_MODE_FORMAT7_MAX)) {
       info->mode[modes.modes[i]-DC1394_MODE_FORMAT7_MIN].present= 1;
-      dc1394_format7_get_mode_info(camera, modes.modes[i], info->mode);
+      dc1394_format7_get_mode_info(camera, modes.modes[i], &info->mode[modes.modes[i]-DC1394_MODE_FORMAT7_MIN]);
+      //fprintf(stderr,"# color codings for mode %d: %d\n", modes.modes[i], info->mode[modes.modes[i]-DC1394_MODE_FORMAT7_MIN].color_codings.num);
     }
   }
 

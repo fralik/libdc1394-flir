@@ -682,3 +682,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       duplicate infomation (channel, port, node) but more importantly improves
       the interface by simplifying it a bit more.
 
+2005-10-03 Damien <ddouxchamps@users.sf.net>
+    * fixed bad array adressing in dc1394_format7_get_modeset()

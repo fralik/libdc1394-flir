@@ -444,7 +444,11 @@ typedef struct
 typedef struct
 {
   uint_t             num;
-  uint_t             modes[DC1394_MODE_FORMAT0_NUM+DC1394_MODE_FORMAT1_NUM+DC1394_MODE_FORMAT2_NUM+DC1394_MODE_FORMAT6_NUM+DC1394_MODE_FORMAT7_NUM];
+  uint_t             modes[DC1394_MODE_FORMAT0_NUM+
+			   DC1394_MODE_FORMAT1_NUM+
+			   DC1394_MODE_FORMAT2_NUM+
+			   DC1394_MODE_FORMAT6_NUM+
+			   DC1394_MODE_FORMAT7_NUM];
 } dc1394videomodes_t;
 
 typedef struct
@@ -710,7 +714,7 @@ dc1394error_t dc1394_format7_get_unit_position(dc1394camera_t *camera, uint_t mo
 
 /* color coding */
 dc1394error_t dc1394_format7_get_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t *color_id);
-dc1394error_t dc1394_format7_get_color_coding(dc1394camera_t *camera, uint_t mode, dc1394colormodes_t *codings);
+dc1394error_t dc1394_format7_get_color_codings(dc1394camera_t *camera, uint_t mode, dc1394colormodes_t *codings);
 dc1394error_t dc1394_format7_set_color_coding_id(dc1394camera_t *camera, uint_t mode, uint_t color_id);
 dc1394error_t dc1394_format7_set_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t filter_id);
 dc1394error_t dc1394_format7_get_color_filter_id(dc1394camera_t *camera, uint_t mode, uint_t *filter_id);
