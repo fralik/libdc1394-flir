@@ -447,7 +447,7 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
     DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
   else {
-    if (camera->capture.dma_device_file == NULL) {
+    if (dma_device_file == NULL) {
       camera->capture.dma_device_file = malloc(32);
       if (camera->capture.dma_device_file != NULL)
 	sprintf((char*)camera->capture.dma_device_file, "/dev/video1394/%d", camera->port );

@@ -684,3 +684,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2005-10-03 Damien <ddouxchamps@users.sf.net>
     * fixed bad array adressing in dc1394_format7_get_modeset()
+
+2005-10-11 Damien <ddouxchamps@users.sf.net>
+    * we were not looking at a non-initialized "camera->capture.dma_device_file"
+      instead of the function argument "dma_device_file" (Thanks to Irv Elshoff)
+

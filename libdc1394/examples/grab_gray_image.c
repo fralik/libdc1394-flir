@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.20  2005/10/11 00:51:35  ddouxchamps
+**  fixed the way we used the dma_device_file argument
+**
 **  Revision 1.5.2.19  2005/09/09 08:14:35  ddouxchamps
 **  dc1394capture_t struct now hidden in dc1394camera_t
 **

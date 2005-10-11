@@ -440,7 +440,7 @@ dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
 {
   dc1394error_t err;
   
-  if (camera->capture.dma_device_file == NULL) {
+  if (dma_device_file == NULL) {
     camera->capture.dma_device_file = malloc(32);
     if (camera->capture.dma_device_file != NULL)
       sprintf((char*)camera->capture.dma_device_file, "/dev/video1394/%d", camera->port );
