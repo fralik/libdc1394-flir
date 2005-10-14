@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.21  2005/10/14 11:25:49  ddouxchamps
+**  video1394 device is now set with a specific function
+**
 **  Revision 1.11.2.20  2005/10/11 00:51:35  ddouxchamps
 **  fixed the way we used the dma_device_file argument
 **
@@ -596,9 +599,15 @@ int dc_start(int palette)
 		return 0;
 	}
 	 
+	if (dc_dev_name!=NULL) {
+	  if (dc1394_set_dma_device_filename(camera,dc_dev_name) != DC1394_SUCCESS) {
+	    fprintf(stderr,"unable to set dma device filename!\n");
+	    return 0;
+	  }
+	}
+
 	if (dc1394_dma_setup_capture(camera, channel,  mode,
-				     speed, DC1394_FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES,
-				     dc_dev_name) != DC1394_SUCCESS) 
+				     speed, DC1394_FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES) != DC1394_SUCCESS) 
 	{
 		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 			   __LINE__,__FILE__);

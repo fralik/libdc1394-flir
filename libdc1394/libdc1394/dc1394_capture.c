@@ -194,21 +194,10 @@ _dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t channel,
     _dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(uint_t) );
   }
 	
-  if (_dc1394_num_using_fd[camera->port] == 0) {
-    
-    if ( (camera->capture.dma_fd = open(camera->capture.dma_device_file,O_RDONLY)) < 0 ) {
-      printf("(%s) unable to open video1394 device %s\n", __FILE__, camera->capture.dma_device_file);
-      perror( __FILE__ );
-      return DC1394_FAILURE;
-    }
-    _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-    
+  if (_dc1394_open_dma_device(camera) != DC1394_SUCCESS) {
+    return DC1394_INVALID_VIDEO1394_DEVICE;
   }
-  else
-    camera->capture.dma_fd = _dc1394_dma_fd[camera->port];
-
   
-  _dc1394_num_using_fd[camera->port]++;
   vmmap.sync_tag= 1;
   vmmap.nb_buffers= num_dma_buffers;
   vmmap.flags= VIDEO1394_SYNC_FRAMES;
@@ -256,7 +245,22 @@ _dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t channel,
   return DC1394_SUCCESS;
 }
 
+/*
+  This function allows you to specify the DMA device filename manually.
+*/
 
+dc1394error_t
+dc1394_set_dma_device_filename(dc1394camera_t* camera, char *filename)
+{
+  if (camera->capture.dma_device_file==NULL) {
+    camera->capture.dma_device_file=(char*)malloc(64*sizeof(char));
+    if (camera->capture.dma_device_file==NULL)
+      return DC1394_MEMORY_ALLOCATION_FAILURE;
+  }
+  memcpy(camera->capture.dma_device_file,filename,64*sizeof(char));
+
+  return DC1394_SUCCESS;
+}
 
 /********************************
  libraw Capture Functions
@@ -425,8 +429,7 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
                          uint_t channel, uint_t mode,
                          uint_t speed, uint_t frame_rate,
                          uint_t num_dma_buffers, 
-			 uint_t drop_frames,
-			 const char *dma_device_file)
+			 uint_t drop_frames)
 {
   dc1394error_t err;
   uint_t format;
@@ -442,24 +445,10 @@ dc1394_dma_setup_capture(dc1394camera_t *camera,
 					 DC1394_QUERY_FROM_CAMERA, /*width*/
 					 DC1394_QUERY_FROM_CAMERA, /*height*/
 					 num_dma_buffers,
-					 drop_frames,
-					 dma_device_file); 
+					 drop_frames); 
     DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
   else {
-    if (dma_device_file == NULL) {
-      camera->capture.dma_device_file = malloc(32);
-      if (camera->capture.dma_device_file != NULL)
-	sprintf((char*)camera->capture.dma_device_file, "/dev/video1394/%d", camera->port );
-      else {
-	err=DC1394_MEMORY_ALLOCATION_FAILURE;
-	DC1394_ERR_CHK(err,"Failed to allocate string for DMA device filename");
-      }
-    }
-    else {
-      camera->capture.dma_device_file = strdup(dma_device_file);
-    }
-  
     camera->capture.drop_frames = drop_frames;
     
     err=_dc1394_basic_setup(camera, channel, mode, speed,frame_rate);

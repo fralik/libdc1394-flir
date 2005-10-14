@@ -106,4 +106,7 @@ _dc1394_get_format_from_mode(uint_t mode, uint_t *format);
 dc1394bool_t
 IsFeatureBitSet(quadlet_t value, uint_t feature);
 
+dc1394error_t
+_dc1394_open_dma_device(dc1394camera_t *camera);
+
 #endif /* _DC1394_INTERNAL_H */

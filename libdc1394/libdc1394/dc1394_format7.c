@@ -435,23 +435,9 @@ dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
                                  uint_t left, uint_t top,
                                  uint_t width, uint_t height,
                                  uint_t num_dma_buffers,
-				 uint_t drop_frames,
-				 const char *dma_device_file)
+				 uint_t drop_frames)
 {
   dc1394error_t err;
-  
-  if (dma_device_file == NULL) {
-    camera->capture.dma_device_file = malloc(32);
-    if (camera->capture.dma_device_file != NULL)
-      sprintf((char*)camera->capture.dma_device_file, "/dev/video1394/%d", camera->port );
-    else {
-      err=DC1394_MEMORY_ALLOCATION_FAILURE;
-      DC1394_ERR_CHK(err,"Failed to allocate string for DMA device filename");
-    }
-  }
-  else {
-    camera->capture.dma_device_file = strdup(dma_device_file);
-  }
   
   camera->capture.drop_frames = drop_frames;
 

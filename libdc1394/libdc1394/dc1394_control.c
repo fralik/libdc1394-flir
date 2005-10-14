@@ -65,6 +65,7 @@ dc1394_new_camera(uint_t port, nodeid_t node)
   cam->handle=raw1394_new_handle();
   cam->port=port;
   cam->node=node;
+  cam->capture.dma_device_file=NULL;
 
   raw1394_set_port(cam->handle, cam->port);
 
@@ -79,6 +80,10 @@ dc1394_free_camera(dc1394camera_t *camera)
     free(camera);
   }
   camera=NULL;
+
+  if (camera->capture.dma_device_file!=NULL)
+    free(camera->capture.dma_device_file);
+
 }
 
 dc1394error_t

@@ -295,10 +295,11 @@ typedef enum {
   DC1394_FORMAT7_ERROR_FLAG_2,
   DC1394_INVALID_BAYER_METHOD,
   DC1394_HANDLE_CREATION_FAILURE,
-  DC1394_GENERIC_INVALID_ARGUMENT
+  DC1394_GENERIC_INVALID_ARGUMENT,
+  DC1394_INVALID_VIDEO1394_DEVICE
 } dc1394error_t;
 
-#define DC1394_ERROR_NUM DC1394_GENERIC_INVALID_ARGUMENT+1
+#define DC1394_ERROR_NUM DC1394_INVALID_VIDEO1394_DEVICE+1
 
 /* Parameter flags for dc1394_setup_format7_capture() */
 #define DC1394_QUERY_FROM_CAMERA -1
@@ -673,11 +674,14 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *b
 /* setup the DMA capture */
 dc1394error_t dc1394_dma_setup_capture(dc1394camera_t *camera,
 				       uint_t channel, uint_t mode, uint_t speed, uint_t frame_rate, 
-				       uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file);
+				       uint_t num_dma_buffers, uint_t drop_frames);
 dc1394error_t dc1394_dma_setup_format7_capture(dc1394camera_t *camera,
 					       uint_t channel, uint_t mode, uint_t speed, uint_t bytes_per_packet,
 					       uint_t left, uint_t top, uint_t width, uint_t height,
-					       uint_t num_dma_buffers, uint_t drop_frames, const char *dma_device_file);
+					       uint_t num_dma_buffers, uint_t drop_frames);
+/* Set the DMA device filename manually. In most cases this is not necessary because the capture
+   functions probe common filenames such as /dev/video1394/x or /dev/video1394. */
+dc1394error_t dc1394_set_dma_device_filename(dc1394camera_t* camera, char *filename);
 /* captures a frame from the given cameras. */
 dc1394error_t dc1394_dma_capture(dc1394camera_t **camera, uint_t num, dc1394videopolicy_t policy);
 /* returns the buffer previously handed to the user by dc1394_dma_*_capture to the DMA ring buffer */

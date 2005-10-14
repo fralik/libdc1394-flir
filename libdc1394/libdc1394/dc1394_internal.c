@@ -22,6 +22,9 @@
 #include "dc1394_utils.h"
 #include "dc1394_register.h"
 
+extern int *_dc1394_dma_fd;
+extern int *_dc1394_num_using_fd;
+
 const char *dc1394_feature_desc[DC1394_FEATURE_NUM] =
 {
   "Brightness",
@@ -73,7 +76,9 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Format_7 Error_flag_1 is set",
   "Format_7 Error_flag_2 is set",
   "Invalid Bayer method code",
-  "Could not create a raw1394 handle"
+  "Could not create a raw1394 handle",
+  "Invalid argument",
+  "Invalid video1394 device filename"
 };
 
 /*
@@ -260,3 +265,57 @@ _dc1394_get_format_from_mode(uint_t mode, uint_t *format)
   return err;
 }
 
+dc1394error_t
+_dc1394_open_dma_device(dc1394camera_t *camera)
+{
+  char filename[64];
+
+  //fprintf(stderr,"entering!\n");
+  if (_dc1394_num_using_fd[camera->port] == 0) {
+
+    // first check if the dma device file has been set manually:
+    //fprintf(stderr,"device file: 0x%x\n",camera->capture.dma_device_file);
+    if (camera->capture.dma_device_file!=NULL) {
+      //fprintf(stderr,"oops!\n");
+      if ( (camera->capture.dma_fd = open(camera->capture.dma_device_file,O_RDONLY)) < 0 ) {
+	return DC1394_INVALID_VIDEO1394_DEVICE;
+      }
+      else {
+	_dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+      }
+    }
+
+    else {
+      //fprintf(stderr,"auto mode!\n");
+      // then try to open the usual DMA files /dev/video1394/x
+      sprintf(filename,"/dev/video1394/%d",camera->port);
+      if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
+	// try the old-fashioned /dev/video1394 only if the port is zero
+	if (camera->port==0) {
+	  sprintf(filename,"/dev/video1394");
+	  if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
+	    return DC1394_INVALID_VIDEO1394_DEVICE;
+	  }
+	  else {
+	    _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+	  }
+	}
+	else {
+	  return DC1394_INVALID_VIDEO1394_DEVICE;
+	}
+      }
+      else {
+	_dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+      }
+
+    }
+
+  }
+  else
+    camera->capture.dma_fd = _dc1394_dma_fd[camera->port];
+
+  
+  _dc1394_num_using_fd[camera->port]++;
+
+  return DC1394_SUCCESS;
+}
