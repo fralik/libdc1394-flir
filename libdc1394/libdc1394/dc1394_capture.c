@@ -327,6 +327,7 @@ dc1394_release_camera(dc1394camera_t *camera)
   if (camera->capture.capture_buffer != NULL) {
     //fprintf(stderr,"Error b\n");
     free(camera->capture.capture_buffer);
+    camera->capture.capture_buffer=NULL;
     //fprintf(stderr,"Error c\n");
   }
   //fprintf(stderr,"Error d\n");
@@ -489,6 +490,7 @@ dc1394_dma_release_camera(dc1394camera_t *camera)
   }
   // this dma_device file is allocated by the strdup() function and can be freed here without problems.
   free(camera->capture.dma_device_file);
+  camera->capture.dma_device_file=NULL;
 
   raw1394_destroy_handle(camera->capture.handle);
   

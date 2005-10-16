@@ -27,30 +27,6 @@
 #include "dc1394_register.h"
 #include "dc1394_offsets.h"
 
-/*
-
-// The defines below are not used because I don't know how to handle bus resets with this kind
-// of scheme. Besides, I'm not sure about thread safety, and I also not sure if the global
-// variables below have indeed a single occurence per system (and not per process). This will
-// need more work. There should be an easier way: maybe the kernel keeps track of this.
-// Damien.
-
-// The following global variable are used to keep track of the ISO channels used by each camera.
-// this is necessary in order to properly allocate ISO channels. The vectors will be allocated
-// and set to zero on first use but I don't know when to free them.
-
-unsigned long long int *iso_channel_uids  =NULL; // GUID of the camera
-uint_t                 *iso_channel       =NULL; // ISO channel of the camera
-uint_t                 *iso_channel_ncam  =0;    // number of cameras in the structures
-
-// the var below is used to keep track of weather the ISO channel is vacant or not. This is because
-// two things require and ISO channel to be set: capture ANS iso streaming. For each camera we keep
-// track of a bit mask of which is active. 0=channel can be reused, 1=ISO, 2=capture.
-
-uint_t                 *iso_channel_in_use=NULL; // bit mask
-
-*/
-
 
 dc1394camera_t*
 dc1394_new_camera(uint_t port, nodeid_t node)
@@ -69,21 +45,26 @@ dc1394_new_camera(uint_t port, nodeid_t node)
 
   raw1394_set_port(cam->handle, cam->port);
 
+  //fprintf(stderr,"Created camera with handle 0x%x\n",cam->handle);
   return cam;
 }
 
 void
 dc1394_free_camera(dc1394camera_t *camera)
 {
-  if (camera!=NULL) { 
-    raw1394_destroy_handle(camera->handle); 
+  if (camera!=NULL) {
+    //fprintf(stderr,"Freeing camera with handle 0x%x and DMA device file 0x%x\n",camera->handle,camera->capture.dma_device_file);
+    
+    if (camera->handle!=NULL)
+      raw1394_destroy_handle(camera->handle);
+   
+    if (camera->capture.dma_device_file!=NULL) {
+      free(camera->capture.dma_device_file);
+      camera->capture.dma_device_file=NULL;
+    }
+    
     free(camera);
   }
-  camera=NULL;
-
-  if (camera->capture.dma_device_file!=NULL)
-    free(camera->capture.dma_device_file);
-
 }
 
 dc1394error_t
@@ -100,6 +81,8 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
   //dc1394bool_t isCamera;
   dc1394camera_t *tmpcam=NULL;
   dc1394camera_t **newcam;
+
+  //fprintf(stderr,"entering dc1394_find_cameras\n");
 
   cameras=*cameras_ptr;
   handle=raw1394_new_handle();
@@ -135,13 +118,15 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
     for (node=0;node<numNodes;node++){
       //fprintf(stderr,"------------------------ New device -----------------\n");
       // create a camera struct for probing
-      //if (tmpcam==NULL) {
-      tmpcam=dc1394_new_camera(port,node);
+      if (tmpcam==NULL)
+	tmpcam=dc1394_new_camera(port,node);
       
       if (tmpcam==NULL) {
 	
-	for (i=0;i<numCam;i++)
+	for (i=0;i<numCam;i++) {
 	  dc1394_free_camera(cameras[i]);
+	  cameras[i]=NULL;
+	}
 	free(cameras);
 	
 	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't allocate camera structure\n");
@@ -186,8 +171,10 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	    tmpcam=NULL;
 	    numCam++;
 	  }
-	  else
+	  else {
 	    dc1394_free_camera(tmpcam);
+	    tmpcam=NULL;
+	  }
 	}
 	else { // numcam == 0: we add the first camera without questions
 	  cameras[numCam]=tmpcam;
@@ -200,12 +187,16 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	allocated_size*=2;
 	newcam=realloc(cameras,allocated_size*sizeof(dc1394camera_t*));
 	if (newcam ==NULL) {
-	  for (i=0;i<numCam;i++)
+	  for (i=0;i<numCam;i++) {
 	    dc1394_free_camera(cameras[i]);
+	    cameras[i]=NULL;
+	  }
 	  free(cameras);
 	  
-	  if (tmpcam!=NULL)
+	  if (tmpcam!=NULL) {
 	    dc1394_free_camera(tmpcam);
+	    tmpcam=NULL;
+	  }
 	  
 	  fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
 		  __FILE__, __FUNCTION__, __LINE__,
@@ -223,6 +214,13 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 
   *cameras_ptr=cameras;
 
+  if (tmpcam!=NULL) {
+    dc1394_free_camera(tmpcam);
+    tmpcam=NULL;
+  }
+
+  //fprintf(stderr,"leaving dc1394_find_cameras\n");
+  
   if (numCam==0)
     return DC1394_NO_CAMERA;
 

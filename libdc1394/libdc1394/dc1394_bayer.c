@@ -478,9 +478,11 @@ void
 dc1394_bayer_EdgeSense(const unsigned char *bayer, unsigned char *rgb, int sx, int sy, int tile)
 {
     unsigned char *outR, *outG, *outB;
-    register int i, j;
+    register int i3, j3, base;
+    int i, j;
     int dh, dv;
     int tmp;
+    int sx3=sx*3;
 
     // sx and sy should be even
     switch (tile) {
@@ -506,129 +508,118 @@ dc1394_bayer_EdgeSense(const unsigned char *bayer, unsigned char *rgb, int sx, i
     case DC1394_COLOR_FILTER_GRBG:	//---------------------------------------------------------
     case DC1394_COLOR_FILTER_GBRG:
 	// copy original RGB data to output images
-      for (i = 0; i < sy*sx; i += (sx<<1)) {
-	for (j = 0; j < sx; j += 2) {
-	  outG[(i + j) * 3] = bayer[i + j];
-	  outG[(i + sx + (j + 1)) * 3] = bayer[i + sx + (j + 1)];
-	  outR[(i + j + 1) * 3] = bayer[i + j + 1];
-	  outB[(i + sx + j) * 3] = bayer[i + sx + j];
+      for (i = 0, i3=0; i < sy*sx; i += (sx<<1), i3 += (sx3<<1)) {
+	for (j = 0, j3=0; j < sx; j += 2, j3+=6) {
+	  base=i3+j3;
+	  outG[base]           = bayer[i + j];
+	  outG[base + sx3 + 3] = bayer[i + j + sx + 1];
+	  outR[base + 3]       = bayer[i + j + 1];
+	  outB[base + sx3]     = bayer[i + j + sx];
 	}
       }
       // process GREEN channel
-      for (i = 3*sx; i < (sy - 2)*sx; i += (sx<<1)) {
-	for (j = 2; j < sx - 3; j += 2) {
-	  dh = abs(((outB[(i + j - 2) * 3] +
-		     outB[(i + j + 2) * 3]) >> 1) -
-		   outB[(i + j) * 3]);
-	  dv = abs(((outB[(i - (sx<<1) + j) * 3] +
-		     outB[(i + (sx<<1) + j) * 3]) >> 1)  -
-		   outB[(i + j) * 3]);
-	  if (dh < dv)
-	    tmp = (outG[(i + j - 1) * 3] +
-		   outG[(i + j + 1) * 3]) >> 1;
-	  else {
-	    if (dh > dv)
-	      tmp = (outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 1;
-	    else
-	      tmp = (outG[(i + j - 1) * 3] +
-		     outG[(i + j + 1) * 3] +
-		     outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 2;
-	  }
-	  CLIP(tmp, outG[(i + j) * 3]);
+      for (i3= 3*sx3; i3 < (sy - 2)*sx3; i3 += (sx3<<1)) {
+	for (j3=6; j3 < sx3 - 9; j3+=6) {
+	  base=i3+j3;
+	  dh = abs(((outB[base - 6] +
+		     outB[base + 6]) >> 1) -
+		     outB[base]);
+	  dv = abs(((outB[base - (sx3<<1)] +
+		     outB[base + (sx3<<1)]) >> 1) -
+		     outB[base]);
+	  tmp = (((outG[base - 3]   + outG[base + 3]) >> 1) * (dh<=dv) +
+		 ((outG[base - sx3] + outG[base + sx3]) >> 1) * (dh>dv));
+	  //tmp = (dh==dv) ? tmp>>1 : tmp;
+	  CLIP(tmp, outG[base]);
 	}
       }
 	
-      for (i = 2*sx; i < (sy - 3)*sx; i += (sx<<1)) {
-	for (j = 3; j < sx - 2; j += 2) {
-	  dh = abs(((outR[(i + j - 2) * 3] +
-		     outR[(i + j + 2) * 3]) >>1 ) -
-		   outR[(i + j) * 3]);
-	  dv = abs(((outR[(i - (sx<<1) + j) * 3] +
-		     outR[(i + (sx<<1) + j) * 3]) >>1 ) -
-		   outR[(i + j) * 3]);
-	  if (dh < dv)
-	    tmp = (outG[(i + j - 1) * 3] +
-		   outG[(i + j + 1) * 3]) >> 1;
-	  else {
-	    if (dh > dv)
-	      tmp = (outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 1;
-	    else
-	      tmp = (outG[(i + j - 1) * 3] +
-		     outG[(i + j + 1) * 3] +
-		     outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 2;
-	  }
-	  CLIP(tmp, outG[(i + j) * 3]);
+      for (i3=2*sx3; i3 < (sy - 3)*sx3; i3 += (sx3<<1)) {
+	for (j3=9; j3 < sx3 - 6; j3+=6) {
+	  base=i3+j3;
+	  dh = abs(((outR[base - 6] +
+		     outR[base + 6]) >>1 ) -
+		     outR[base]);
+	  dv = abs(((outR[base - (sx3<<1)] +
+		     outR[base + (sx3<<1)]) >>1 ) -
+		     outR[base]);
+	  tmp = (((outG[base - 3]   + outG[base + 3]) >> 1) * (dh<=dv) +
+		 ((outG[base - sx3] + outG[base + sx3]) >> 1) * (dh>dv));
+	  //tmp = (dh==dv) ? tmp>>1 : tmp;
+	  CLIP(tmp, outG[base]);
 	}
       }
       // process RED channel
-      for (i = 0; i < (sy - 1)*sx; i += (sx<<1)) {
-	for (j = 2; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i + j - 1) * 3] -
-		outG[(i + j - 1) * 3] +
-		outR[(i + j + 1) * 3] -
-		outG[(i + j + 1) * 3]) >> 1);
-	  CLIP(tmp, outR[(i + j) * 3]);
+      for (i3=0; i3 < (sy - 1)*sx3; i3 += (sx3<<1)) {
+	for (j3=6; j3 < sx3 - 3; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outR[base - 3] -
+		outG[base - 3] +
+		outR[base + 3] -
+		outG[base + 3]) >> 1);
+	  CLIP(tmp, outR[base]);
 	}
       }
-      for (i = sx; i < (sy - 2)*sx; i += (sx<<1)) {
-	for (j = 1; j < sx; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i - sx + j) * 3] -
-		outG[(i - sx + j) * 3] +
-		outR[(i + sx + j) * 3] -
-		outG[(i + sx + j) * 3]) >> 1);
-	  CLIP(tmp, outR[(i + j) * 3]);
+      for (i3=sx3; i3 < (sy - 2)*sx3; i3 += (sx3<<1)) {
+	for (j3=3; j3 < sx3; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outR[base - sx3] -
+		outG[base - sx3] +
+		outR[base + sx3] -
+		outG[base + sx3]) >> 1);
+	  CLIP(tmp, outR[base]);
 	}
-	for (j = 2; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i - sx + j - 1) * 3] -
-		outG[(i - sx + j - 1) * 3] +
-		outR[(i - sx + j + 1) * 3] -
-		outG[(i - sx + j + 1) * 3] +
-		outR[(i + sx + j - 1) * 3] -
-		outG[(i + sx + j - 1) * 3] +
-		outR[(i + sx + j + 1) * 3] -
-		outG[(i + sx + j + 1) * 3]) >> 2);
-	  CLIP(tmp, outR[(i + j) * 3]);
+	for (j3=6; j3 < sx3 - 3; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outR[base - sx3 - 3] -
+		outG[base - sx3 - 3] +
+		outR[base - sx3 + 3] -
+		outG[base - sx3 + 3] +
+		outR[base + sx3 - 3] -
+		outG[base + sx3 - 3] +
+		outR[base + sx3 + 3] -
+		outG[base + sx3 + 3]) >> 2);
+	  CLIP(tmp, outR[base]);
 	}
       }
 
       // process BLUE channel
-      for (i = sx; i < sy*sx; i += (sx<<1)) {
-	for (j = 1; j < sx - 2; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i + j - 1) * 3] -
-		outG[(i + j - 1) * 3] +
-		outB[(i + j + 1) * 3] -
-		outG[(i + j + 1) * 3]) >> 1);
-	  CLIP(tmp, outB[(i + j) * 3]);
+      for (i3=sx3; i3 < sy*sx3; i3 += (sx3<<1)) {
+	for (j3=3; j3 < sx3 - 6; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outB[base - 3] -
+		outG[base - 3] +
+		outB[base + 3] -
+		outG[base + 3]) >> 1);
+	  CLIP(tmp, outB[base]);
 	}
       }
-      for (i = 2*sx; i < (sy - 1)*sx; i += (sx<<1)) {
-	for (j = 0; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i - sx + j) * 3] -
-		outG[(i - sx + j) * 3] +
-		outB[(i + sx + j) * 3] -
-		outG[(i + sx + j) * 3]) >> 1);
-	  CLIP(tmp, outB[(i + j) * 3]);
+      for (i3=2*sx3; i3 < (sy - 1)*sx3; i3 += (sx3<<1)) {
+	for (j3=0; j3 < sx3 - 3; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outB[base - sx3] -
+		outG[base - sx3] +
+		outB[base + sx3] -
+		outG[base + sx3]) >> 1);
+	  CLIP(tmp, outB[base]);
 	}
-	for (j = 1; j < sx - 2; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i - sx + j - 1) * 3] -
-		outG[(i - sx + j - 1) * 3] +
-		outB[(i - sx + j + 1) * 3] -
-		outG[(i - sx + j + 1) * 3] +
-		outB[(i + sx + j - 1) * 3] -
-		outG[(i + sx + j - 1) * 3] +
-		outB[(i + sx + j + 1) * 3] -
-		outG[(i + sx + j + 1) * 3]) >> 2);
-	  CLIP(tmp, outB[(i + j) * 3]);
+	for (j3=3; j3 < sx3 - 6; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outB[base - sx3 - 3] -
+		outG[base - sx3 - 3] +
+		outB[base - sx3 + 3] -
+		outG[base - sx3 + 3] +
+		outB[base + sx3 - 3] -
+		outG[base + sx3 - 3] +
+		outB[base + sx3 + 3] -
+		outG[base + sx3 + 3]) >> 2);
+	  CLIP(tmp, outB[base]);
 	}
       }
       break;
@@ -636,128 +627,117 @@ dc1394_bayer_EdgeSense(const unsigned char *bayer, unsigned char *rgb, int sx, i
     case DC1394_COLOR_FILTER_BGGR:	//---------------------------------------------------------
     case DC1394_COLOR_FILTER_RGGB:
 	// copy original RGB data to output images
-      for (i = 0; i < sy*sx; i += (sx<<1)) {
-	for (j = 0; j < sx; j += 2) {
-	  outB[(i + j) * 3] = bayer[i + j];
-	  outR[(i + sx + (j + 1)) * 3] = bayer[i + sx + (j + 1)];
-	  outG[(i + j + 1) * 3] = bayer[i + j + 1];
-	  outG[(i + sx + j) * 3] = bayer[i + sx + j];
+      for (i = 0, i3=0; i < sy*sx; i += (sx<<1), i3 += (sx3<<1)) {
+	for (j = 0, j3=0; j < sx; j += 2, j3+=6) {
+	  base=i3+j3;
+	  outB[base] = bayer[i + j];
+	  outR[base + sx3 + 3] = bayer[i + sx + (j + 1)];
+	  outG[base + 3] = bayer[i + j + 1];
+	  outG[base + sx3] = bayer[i + sx + j];
 	}
       }
       // process GREEN channel
-      for (i = 2*sx; i < (sy - 2)*sx; i += (sx<<1)) {
-	for (j = 2; j < sx - 3; j += 2) {
-	  dh = abs(((outB[(i + j - 2) * 3] +
-		    outB[(i + j + 2) * 3]) >> 1) -
-		   outB[(i + j) * 3]);
-	  dv = abs(((outB[(i - (sx<<1) + j) * 3] +
-		    outB[(i + (sx<<1) + j) * 3]) >> 1) -
-		   outB[(i + j) * 3]);
-	  if (dh < dv)
-	    tmp = (outG[(i + j - 1) * 3] +
-		   outG[(i + j + 1) * 3]) >> 1;
-	  else {
-	    if (dh > dv)
-	      tmp = (outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 1;
-	    else
-	      tmp = (outG[(i + j - 1) * 3] +
-		     outG[(i + j + 1) * 3] +
-		     outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 2;
-	  }
-	  CLIP(tmp, outG[(i + j) * 3]);
+      for (i3=2*sx3; i3 < (sy - 2)*sx3; i3 += (sx3<<1)) {
+	for (j3=6; j3 < sx3 - 9; j3+=6) {
+	  base=i3+j3;
+	  dh = abs(((outB[base - 6] +
+		     outB[base + 6]) >> 1) -
+		     outB[base]);
+	  dv = abs(((outB[base - (sx3<<1)] +
+		     outB[base + (sx3<<1)]) >> 1) -
+		     outB[base]);
+	  tmp = (((outG[base - 3]   + outG[base + 3]) >> 1) * (dh<=dv) +
+		 ((outG[base - sx3] + outG[base + sx3]) >> 1) * (dh>dv));
+	  //tmp = (dh==dv) ? tmp>>1 : tmp;
+	  CLIP(tmp, outG[base]);
 	}
       }
-      for (i = 3*sx; i < (sy - 3)*sx; i += (sx<<1)) {
-	for (j = 3; j < sx - 2; j += 2) {
-	  dh = abs(((outR[(i + j - 2) * 3] +
-		    outR[(i + j + 2) * 3]) >> 1) -
-		   outR[(i + j) * 3]);
-	  dv = abs(((outR[(i - (sx<<1) + j) * 3] +
-		    outR[(i + (sx<<1) + j) * 3]) >> 1) -
-		   outR[(i + j) * 3]);
-	  if (dh < dv)
-	    tmp = (outG[(i + j - 1) * 3] +
-		   outG[(i + j + 1) * 3]) >>1;
-	  else {
-	    if (dh > dv)
-	      tmp = (outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >>1;
-	    else
-	      tmp = (outG[(i + j - 1) * 3] +
-		     outG[(i + j + 1) * 3] +
-		     outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >>2;
-	  }
-	  CLIP(tmp, outG[(i + j) * 3]);
+      for (i3=3*sx3; i3 < (sy - 3)*sx3; i3 += (sx3<<1)) {
+	for (j3=9; j3 < sx3 - 6; j3+=6) {
+	  base=i3+j3;
+	  dh = abs(((outR[base - 6] +
+		     outR[base + 6]) >> 1) -
+		     outR[base]);
+	  dv = abs(((outR[base - (sx3<<1)] +
+		     outR[base + (sx3<<1)]) >> 1) -
+		     outR[base]);
+	  tmp = (((outG[base - 3]   + outG[base + 3]) >> 1) * (dh<=dv) +
+		 ((outG[base - sx3] + outG[base + sx3]) >> 1) * (dh>dv));
+	  //tmp = (dh==dv) ? tmp>>1 : tmp;
+	  CLIP(tmp, outG[base]);
 	}
       }
       // process RED channel
-      for (i = sx; i < (sy - 1)*sx; i += (sx<<1)) {	// G-points (1/2)
-	for (j = 2; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i + j - 1) * 3] -
-		outG[(i + j - 1) * 3] +
-		outR[(i + j + 1) * 3] -
-		outG[(i + j + 1) * 3]) >>1);
-	  CLIP(tmp, outR[(i + j) * 3]);
+      for (i3=sx3; i3 < (sy - 1)*sx3; i3 += (sx3<<1)) {	// G-points (1/2)
+	for (j3=6; j3 < sx3 - 3; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outR[base - 3] -
+		outG[base - 3] +
+		outR[base + 3] -
+		outG[base + 3]) >>1);
+	  CLIP(tmp, outR[base]);
 	}
       }
-      for (i = 2*sx; i < (sy - 2)*sx; i += (sx<<1)) {
-	for (j = 1; j < sx; j += 2) {	// G-points (2/2)
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i - sx + j) * 3] -
-		outG[(i - sx + j) * 3] +
-		outR[(i + sx + j) * 3] -
-		outG[(i + sx + j) * 3]) >> 1);
-	  CLIP(tmp, outR[(i + j) * 3]);
+      for (i3=2*sx3; i3 < (sy - 2)*sx3; i3 += (sx3<<1)) {
+	for (j3=3; j3 < sx3; j3+=6) {	// G-points (2/2)
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outR[base - sx3] -
+		outG[base - sx3] +
+		outR[base + sx3] -
+		outG[base + sx3]) >> 1);
+	  CLIP(tmp, outR[base]);
 	}
-	for (j = 2; j < sx - 1; j += 2) {	// B-points
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i - sx + j - 1) * 3] -
-		outG[(i - sx + j - 1) * 3] +
-		outR[(i - sx + j + 1) * 3] -
-		outG[(i - sx + j + 1) * 3] +
-		outR[(i + sx + j - 1) * 3] -
-		outG[(i + sx + j - 1) * 3] +
-		outR[(i + sx + j + 1) * 3] -
-		outG[(i + sx + j + 1) * 3]) >> 2);
-	  CLIP(tmp, outR[(i + j) * 3]);
+	for (j3=6; j3 < sx3 - 3; j3+=6) {	// B-points
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outR[base - sx3 - 3] -
+		outG[base - sx3 - 3] +
+		outR[base - sx3 + 3] -
+		outG[base - sx3 + 3] +
+		outR[base + sx3 - 3] -
+		outG[base + sx3 - 3] +
+		outR[base + sx3 + 3] -
+		outG[base + sx3 + 3]) >> 2);
+	  CLIP(tmp, outR[base]);
 	}
       }
       
       // process BLUE channel
-      for (i = 0; i < sy*sx; i += (sx<<1)) {
-	for (j = 1; j < sx - 2; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i + j - 1) * 3] -
-		outG[(i + j - 1) * 3] +
-		outB[(i + j + 1) * 3] -
-		outG[(i + j + 1) * 3]) >> 1);
-	  CLIP(tmp, outB[(i + j) * 3]);
+      for (i = 0,i3=0; i < sy*sx; i += (sx<<1), i3 += (sx3<<1)) {
+	for (j = 1, j3=3; j < sx - 2; j += 2, j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outB[base - 3] -
+		outG[base - 3] +
+		outB[base + 3] -
+		outG[base + 3]) >> 1);
+	  CLIP(tmp, outB[base]);
 	}
       }
-      for (i = sx; i < (sy - 1)*sx; i += (sx<<1)) {
-	for (j = 0; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i - sx + j) * 3] -
-		outG[(i - sx + j) * 3] +
-		outB[(i + sx + j) * 3] -
-		outG[(i + sx + j) * 3]) >> 1);
-	  CLIP(tmp, outB[(i + j) * 3]);
+      for (i3=sx3; i3 < (sy - 1)*sx3; i3 += (sx3<<1)) {
+	for (j3=0; j3 < sx3 - 3; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outB[base - sx3] -
+		outG[base - sx3] +
+		outB[base + sx3] -
+		outG[base + sx3]) >> 1);
+	  CLIP(tmp, outB[base]);
 	}
-	for (j = 1; j < sx - 2; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i - sx + j - 1) * 3] -
-		outG[(i - sx + j - 1) * 3] +
-		outB[(i - sx + j + 1) * 3] -
-		outG[(i - sx + j + 1) * 3] +
-		outB[(i + sx + j - 1) * 3] -
-		outG[(i + sx + j - 1) * 3] +
-		outB[(i + sx + j + 1) * 3] -
-		outG[(i + sx + j + 1) * 3]) >> 2);
-	  CLIP(tmp, outB[(i + j) * 3]);
+	for (j3=3; j3 < sx3 - 6; j3+=6) {
+	  base=i3+j3;
+	  tmp = outG[base] +
+	      ((outB[base - sx3 - 3] -
+		outG[base - sx3 - 3] +
+		outB[base - sx3 + 3] -
+		outG[base - sx3 + 3] +
+		outB[base + sx3 - 3] -
+		outG[base + sx3 - 3] +
+		outB[base + sx3 + 3] -
+		outG[base + sx3 + 3]) >> 2);
+	  CLIP(tmp, outB[base]);
 	}
       }
       break;
