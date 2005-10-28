@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.21  2005/10/28 15:05:45  ddouxchamps
+**  fixed bad help message in grab_color_image
+**
 **  Revision 1.5.2.20  2005/10/11 00:51:35  ddouxchamps
 **  fixed the way we used the dma_device_file argument
 **

@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.5.2.21  2005/10/28 15:05:45  ddouxchamps
+**  fixed bad help message in grab_color_image
+**
 **  Revision 1.5.2.20  2005/10/11 00:51:35  ddouxchamps
 **  fixed the way we used the dma_device_file argument
 **
@@ -129,7 +132,7 @@ void get_options(int argc,char *argv[])
 				printf( "\n"
 					"%s - grab a color image using format0, rgb mode\n\n"
 					"Usage:\n"
-					"    %s [--guid=/dev/video1394/x] [filename.ppm]\n\n"
+					"    %s [--guid] [filename.ppm]\n\n"
 					"    --guid    - specifies camera to use (optional)\n"
 					"                default = first identified on buses\n"
 					"    --help    - prints this message\n"

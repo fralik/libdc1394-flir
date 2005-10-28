@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.22  2005/10/28 15:05:45  ddouxchamps
+**  fixed bad help message in grab_color_image
+**
 **  Revision 1.11.2.21  2005/10/14 11:25:49  ddouxchamps
 **  video1394 device is now set with a specific function
 **

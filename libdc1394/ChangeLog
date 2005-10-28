@@ -698,3 +698,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2005-10-16 Damien <ddouxchamps@users.sf.net>
     * fixed a memory leak in the camera detection
+
+2005-10-29 Damien <ddouxchamps@users.sf.net>
+    * fixed bad help message in grab_color_image (thanks to Hugo Costelha)
+
+	
