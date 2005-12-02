@@ -32,7 +32,7 @@ extern void swab();
  **********************************************************************/
 
 void
-dc1394_YUV422_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_YUV422_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
 {
   switch (byte_order) {
   case DC1394_BYTE_ORDER_YUYV:
@@ -48,7 +48,7 @@ dc1394_YUV422_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t 
 }
 
 void
-dc1394_YUV411_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_YUV411_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
 {
   register int i=NumPixels + (NumPixels >> 1)-1;
   register int j=(NumPixels << 1)-1;
@@ -103,7 +103,7 @@ dc1394_YUV411_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t 
 }
 
 void
-dc1394_YUV444_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_YUV444_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
 {
   register int i = NumPixels + (NumPixels << 1)-1;
   register int j = (NumPixels << 1)-1;
@@ -147,7 +147,7 @@ dc1394_YUV444_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t 
 }
 
 void
-dc1394_MONO8_to_YUV422(uchar_t *src, uchar_t *dest, 
+dc1394_MONO8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, 
 		       uint_t src_width, uint_t src_height,
 		       uint_t dest_pitch, uint_t byte_order)
 {
@@ -222,7 +222,7 @@ dc1394_MONO8_to_YUV422(uchar_t *src, uchar_t *dest,
 }
 
 void
-dc1394_MONO16_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits, uint_t byte_order)
+dc1394_MONO16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits, uint_t byte_order)
 {
   register int i = (NumPixels << 1)-1;
   register int j = (NumPixels << 1)-1;
@@ -261,7 +261,7 @@ dc1394_MONO16_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t 
 }
 
 void
-dc1394_MONO16_to_MONO8(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits)
+dc1394_MONO16_to_MONO8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits)
 {
   register int i = (NumPixels<<1)-1;
   register int j = NumPixels-1;
@@ -274,7 +274,7 @@ dc1394_MONO16_to_MONO8(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t b
 }
 
 void
-dc1394_RGB8_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_RGB8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
 {
   register int i = NumPixels + ( NumPixels << 1 )-1;
   register int j = (NumPixels << 1)-1;
@@ -321,7 +321,7 @@ dc1394_RGB8_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t by
 }
 
 void
-dc1394_RGB16_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_RGB16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
 {
   register int i = ( (NumPixels + ( NumPixels << 1 )) << 1 ) -1;
   register int j = (NumPixels << 1)-1;
@@ -386,7 +386,7 @@ dc1394_RGB16_to_YUV422(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t b
  **********************************************************************/
 
 void
-dc1394_RGB16_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
+dc1394_RGB16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
 {
   register int i = ((NumPixels + ( NumPixels << 1 )) << 1)-1;
   register int j = NumPixels + ( NumPixels << 1 ) -1;
@@ -403,7 +403,7 @@ dc1394_RGB16_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
 
 
 void
-dc1394_YUV444_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
+dc1394_YUV444_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
 {
   register int i = NumPixels + ( NumPixels << 1 ) -1;
   register int j = NumPixels + ( NumPixels << 1 ) -1;
@@ -422,7 +422,7 @@ dc1394_YUV444_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
 }
 
 void
-dc1394_YUV422_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
+dc1394_YUV422_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
 {
   register int i = (NumPixels << 1)-1;
   register int j = NumPixels + ( NumPixels << 1 ) -1;
@@ -447,7 +447,7 @@ dc1394_YUV422_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
 
 
 void
-dc1394_YUV411_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
+dc1394_YUV411_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
 {
   register int i = NumPixels + ( NumPixels >> 1 )-1;
   register int j = NumPixels + ( NumPixels << 1 )-1;
@@ -481,7 +481,7 @@ dc1394_YUV411_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
 }
 
 void
-dc1394_MONO8_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
+dc1394_MONO8_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
 {
   register int i = NumPixels-1;
   register int j = NumPixels + ( NumPixels << 1 )-1;
@@ -496,7 +496,7 @@ dc1394_MONO8_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
 }
 
 void
-dc1394_MONO16_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bits)
+dc1394_MONO16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits)
 {
   register int i = (NumPixels << 1)-1;
   register int j = NumPixels + ( NumPixels << 1 )-1;
@@ -514,7 +514,7 @@ dc1394_MONO16_to_RGB8(uchar_t *src, uchar_t *dest, uint64_t NumPixels, uint_t bi
 // change a 16bit stereo image (8bit/channel) into two 8bit images on top
 // of each other
 void
-dc1394_deinterlace_stereo(uchar_t *src, uchar_t *dest, uint64_t NumPixels)
+dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
 {
   register int i = NumPixels-1;
   register int j = (NumPixels>>1)-1;

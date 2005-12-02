@@ -2006,29 +2006,29 @@ dc1394_external_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr)
 }
 
 dc1394error_t
-dc1394_set_soft_trigger(dc1394camera_t *camera)
+dc1394_software_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr)
 {
-  dc1394error_t err=SetCameraControlRegister(camera, REG_CAMERA_SOFT_TRIGGER, DC1394_FEATURE_ON);
+  dc1394error_t err;
+
+  if (pwr==DC1394_ON) {
+    err=SetCameraControlRegister(camera, REG_CAMERA_SOFT_TRIGGER, DC1394_FEATURE_ON);
+  }
+  else {
+    err=SetCameraControlRegister(camera, REG_CAMERA_SOFT_TRIGGER, DC1394_FEATURE_OFF);
+  }
   DC1394_ERR_CHK(err, "Could not set software trigger");
   return err;
 }
 
 dc1394error_t
-dc1394_unset_soft_trigger(dc1394camera_t *camera)
-{
-  dc1394error_t err=SetCameraControlRegister(camera, REG_CAMERA_SOFT_TRIGGER, DC1394_FEATURE_OFF);
-  DC1394_ERR_CHK(err, "Could not unset sofftware trigger");
-  return err;
-}
-
-dc1394error_t
-dc1394_get_soft_trigger(dc1394camera_t *camera, dc1394bool_t *is_on)
+dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr)
 {
   quadlet_t value;
   dc1394error_t err = GetCameraControlRegister(camera, REG_CAMERA_SOFT_TRIGGER, &value);
   DC1394_ERR_CHK(err, "Could not get software trigger status");
   
-  *is_on = value & DC1394_FEATURE_ON;
+  *pwr = (value & DC1394_FEATURE_ON)? DC1394_ON : DC1394_OFF;
+
   return err;
 }
 

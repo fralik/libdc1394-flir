@@ -702,4 +702,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-10-29 Damien <ddouxchamps@users.sf.net>
     * fixed bad help message in grab_color_image (thanks to Hugo Costelha)
 
-	
+2005-12-02 Damien <ddouxchamps@users.sf.net>
+    * fixed the headers and functions for software trigger access (thanks to
+      Daniel Drake for spotting the bug)
+    * use the 'restrict' C99 keyword for the conversion functions prototypes.
+      (thanks to Frederic Devernay)

@@ -38,6 +38,7 @@
 #include <netinet/in.h>
 #include <libraw1394/raw1394.h>
 #include "dc1394_control.h"
+#include "config.h"
 
 #define uint_t   unsigned int
 #define uint16_t unsigned short int
@@ -571,14 +572,14 @@ dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint_t channel);
 dc1394error_t dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity);
 dc1394error_t dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity);
 dc1394error_t dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polarity_capable);
-dc1394error_t dc1394_external_trigger_set(dc1394camera_t *camera, dc1394switch_t pwr);
-dc1394error_t dc1394_external_trigger_get(dc1394camera_t *camera, dc1394switch_t *pwr);
+dc1394error_t dc1394_external_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_external_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr);
 dc1394error_t dc1394_external_trigger_set_mode(dc1394camera_t *camera, uint_t mode);
 dc1394error_t dc1394_external_trigger_get_mode(dc1394camera_t *camera, uint_t *mode);
 
 /* Turn one software trigger on or off and get state */
-dc1394error_t dc1394_software_trigger_set(dc1394camera_t *camera, dc1394switch_t pwr);
-dc1394error_t dc1394_software_trigger_get(dc1394camera_t *camera, dc1394switch_t *pwr);
+dc1394error_t dc1394_software_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr);
 
   /***** to be removed from API? *****/
 dc1394error_t dc1394_get_revision(dc1394camera_t *camera, uint_t mode, quadlet_t *value);
