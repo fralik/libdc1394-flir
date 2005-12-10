@@ -2033,6 +2033,18 @@ dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr)
 }
 
 dc1394error_t
+dc1394_video_get_data_depth(dc1394camera_t *camera, unsigned int *depth)
+{
+  quadlet_t value;
+  dc1394error_t err = GetCameraControlRegister(camera, REG_CAMERA_DATA_DEPTH, &value);
+  DC1394_ERR_CHK(err, "Could not get video data depth");
+  
+  *depth = value & 0xFFUL;
+
+  return err;
+}
+
+dc1394error_t
 dc1394_feature_get_absolute_control(dc1394camera_t *camera, uint_t feature, dc1394switch_t *pwr)
 {
   dc1394error_t err;

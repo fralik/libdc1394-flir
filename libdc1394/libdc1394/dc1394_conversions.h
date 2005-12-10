@@ -23,6 +23,7 @@
 #define __DC1394_CONVERSIONS_H__
 
 #include "dc1394_control.h"
+#define restrict __restrict
 
 enum {
   DC1394_BYTE_ORDER_UYVY=0,

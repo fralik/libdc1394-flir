@@ -37,12 +37,9 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <libraw1394/raw1394.h>
-#include "dc1394_control.h"
-#include "config.h"
 
 #define uint_t   unsigned int
 #define uint16_t unsigned short int
-#define uint_t   unsigned int
 #define uint64_t unsigned long long int
 #define uchar_t  unsigned char
 
@@ -185,6 +182,7 @@ enum {
 #define DC1394_TRIGGER_MODE_NUM    (DC1394_TRIGGER_MODE_3 - DC1394_TRIGGER_MODE_0 + 1)
 
 /* Enumeration of camera image formats */
+/* This could disappear from the API I think.*/
 enum {
   DC1394_FORMAT0= 384,
   DC1394_FORMAT1,
@@ -337,6 +335,7 @@ typedef enum {
   DC1394_FEATURE_MODE_ONE_PUSH_AUTO
 } dc1394feature_mode_t;
 
+/* Will be removed from the API when access functions will be there (for buffer, timestamp,...)*/
 typedef struct __dc1394_cam_cap_struct 
 {
   uint_t             frame_rate;
@@ -568,6 +567,15 @@ dc1394error_t dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394b
 dc1394error_t dc1394_memory_save(dc1394camera_t *camera, uint_t channel);
 dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint_t channel);
 
+  /***** to be removed from API? *****/
+dc1394error_t dc1394_get_revision(dc1394camera_t *camera, uint_t mode, quadlet_t *value);
+dc1394error_t dc1394_get_basic_functionality(dc1394camera_t *camera, quadlet_t *value);
+dc1394error_t dc1394_feature_get_characteristics(dc1394camera_t *camera, uint_t feature, quadlet_t *value);
+
+/***************************************************************************
+     Trigger
+ ***************************************************************************/
+
 /* external trigger feature functions */
 dc1394error_t dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity);
 dc1394error_t dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity);
@@ -580,11 +588,6 @@ dc1394error_t dc1394_external_trigger_get_mode(dc1394camera_t *camera, uint_t *m
 /* Turn one software trigger on or off and get state */
 dc1394error_t dc1394_software_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
 dc1394error_t dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr);
-
-  /***** to be removed from API? *****/
-dc1394error_t dc1394_get_revision(dc1394camera_t *camera, uint_t mode, quadlet_t *value);
-dc1394error_t dc1394_get_basic_functionality(dc1394camera_t *camera, quadlet_t *value);
-dc1394error_t dc1394_feature_get_characteristics(dc1394camera_t *camera, uint_t feature, quadlet_t *value);
 
 /***************************************************************************
      Features
@@ -650,6 +653,7 @@ dc1394error_t dc1394_video_get_operation_mode(dc1394camera_t *camera, uint_t *mo
 dc1394error_t dc1394_video_set_operation_mode(dc1394camera_t *camera, uint_t mode);
 dc1394error_t dc1394_video_get_iso_channel_and_speed(dc1394camera_t *camera, uint_t *channel, uint_t *speed);
 dc1394error_t dc1394_video_set_iso_channel_and_speed(dc1394camera_t *camera, uint_t channel, uint_t speed);
+dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, unsigned int *depth);
  
 /* start/stop isochronous data transmission */
 dc1394error_t dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr);
@@ -746,3 +750,5 @@ dc1394error_t dc1394_format7_get_mode_info(dc1394camera_t *camera, uint_t mode_i
 #endif
 
 #endif /* __DC1394_CAMERA_CONTROL_H__ */
+
+

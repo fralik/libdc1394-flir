@@ -707,3 +707,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       Daniel Drake for spotting the bug)
     * use the 'restrict' C99 keyword for the conversion functions prototypes.
       (thanks to Frederic Devernay)
+2005-12-10 Damien <ddouxchamps@users.sf.net>
+    * new function to get the data depth of 16-bit video.
