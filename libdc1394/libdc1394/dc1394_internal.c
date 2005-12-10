@@ -290,24 +290,30 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
       // then try to open the usual DMA files /dev/video1394/x
       sprintf(filename,"/dev/video1394/%d",camera->port);
       if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
-	// try the old-fashioned /dev/video1394 only if the port is zero
-	if (camera->port==0) {
-	  sprintf(filename,"/dev/video1394");
-	  if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
-	    return DC1394_INVALID_VIDEO1394_DEVICE;
+	sprintf(filename,"/dev/video1394-%d",camera->port);
+	if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
+	  // try the old-fashioned /dev/video1394 only if the port is zero
+	  if (camera->port==0) {
+	    sprintf(filename,"/dev/video1394");
+	    if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
+	      return DC1394_INVALID_VIDEO1394_DEVICE;
+	    }
+	    else {
+	      _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+	    }
 	  }
 	  else {
-	    _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+	    return DC1394_INVALID_VIDEO1394_DEVICE;
 	  }
 	}
 	else {
-	  return DC1394_INVALID_VIDEO1394_DEVICE;
+	  _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
 	}
       }
       else {
 	_dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
       }
-
+      
     }
 
   }

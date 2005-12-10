@@ -709,3 +709,4 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       (thanks to Frederic Devernay)
 2005-12-10 Damien <ddouxchamps@users.sf.net>
     * new function to get the data depth of 16-bit video.
+    * also check /dev/video1394-X when auto-opening the video1394 device file
