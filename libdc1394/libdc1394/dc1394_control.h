@@ -335,13 +335,15 @@ typedef enum {
   DC1394_FEATURE_MODE_ONE_PUSH_AUTO
 } dc1394feature_mode_t;
 
-/* Will be removed from the API when access functions will be there (for buffer, timestamp,...)*/
-typedef struct __dc1394_cam_cap_struct 
+/* Camera capture structure. Do not access directly from your application.
+   Use dc1394_video_get_buffer and dc1394_video_get_fill_time instead.
+   This structure definition should be hidden.*/
+
+typedef struct __dc1394_capture
 {
-  uint_t             frame_rate;
   uint_t             frame_width;
   uint_t             frame_height;
-  uint_t            *capture_buffer;
+  uchar_t           *capture_buffer;
   uint_t             quadlets_per_frame;
   uint_t             quadlets_per_packet;
   /* components needed for the DMA based video capture */
@@ -356,7 +358,8 @@ typedef struct __dc1394_cam_cap_struct
   struct timeval     filltime;
   uint_t             drop_frames;
   raw1394handle_t    handle;
-} dc1394capture_t ;
+} dc1394capture_t;
+
 
 /* Camera structure */
 typedef struct __dc1394_camera
@@ -392,7 +395,7 @@ typedef struct __dc1394_camera
   uint_t             load_channel;
 
   // capture structure
-  dc1394capture_t    capture;
+  dc1394capture_t   capture;
   
 } dc1394camera_t;
 
@@ -705,6 +708,11 @@ dc1394error_t dc1394_setup_format7_capture(dc1394camera_t *camera,
 					   uint_t left, uint_t top, uint_t width, uint_t height);
 dc1394error_t dc1394_capture(dc1394camera_t **camera, uint_t num);
 dc1394error_t dc1394_release_camera(dc1394camera_t *camera);
+
+/* Functions for accessing the buffer content: */
+uchar_t*        dc1394_video_get_buffer(dc1394camera_t *camera);
+struct timeval* dc1394_video_get_filltime(dc1394camera_t *camera);
+
 
 /***************************************************************************
      Format_7 (scalable image format)

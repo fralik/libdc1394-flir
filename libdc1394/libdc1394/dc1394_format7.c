@@ -202,12 +202,7 @@ _dc1394_basic_format7_setup(dc1394camera_t *camera,
     DC1394_ERR_CHK(err, "Unable to get F7 bpp for mode %d", mode);
   }
 
-  /*
-   * TODO: frame_rate not used for format 7, may be calculated
-   */
-  camera->capture.frame_rate= 0;
   camera->capture.handle=raw1394_new_handle();
-  //camera->capture.handle=camera->handle;
   raw1394_set_port(camera->capture.handle,camera->port);
 
   /*-----------------------------------------------------------------------
@@ -412,7 +407,7 @@ dc1394_setup_format7_capture(dc1394camera_t *camera,
                                   left, top, width, height);
   DC1394_ERR_CHK(err, "Could not perform basic F7 capture setup");
   
-  camera->capture.capture_buffer= (uint_t*)malloc(camera->capture.quadlets_per_frame*4);
+  camera->capture.capture_buffer= (uchar_t*)malloc(camera->capture.quadlets_per_frame*4);
   
   if (camera->capture.capture_buffer == NULL) {
     err=DC1394_MEMORY_ALLOCATION_FAILURE;

@@ -6,9 +6,9 @@ libdc1394_control_la_LDFLAGS = -version-info @lt_major@:@lt_revision@:@lt_age@
 
 libdc1394_control_la_SOURCES =  \
 	dc1394_control.c 	\
+        dc1394_control.h	\
 	dc1394_offsets.h	\
 	dc1394_capture.c	\
-        dc1394_control.h	\
 	dc1394_format7.c        \
 	dc1394_vendor_avt.c 	\
 	dc1394_vendor_avt.h	\

@@ -28,16 +28,18 @@
 #include <errno.h>
 
 #include "config.h"
+#include "dc1394_internal.h"
 #include "dc1394_control.h"
 #include "kernel-video1394.h"
-#include "dc1394_internal.h"
 #include "dc1394_utils.h"
 
 #define NUM_ISO_CHANNELS 64
 #define MAX_NUM_PORTS 8
 
-/*Variables used for simultaneous capture of video from muliple cameras*/
-uint_t *_dc1394_buffer[NUM_ISO_CHANNELS];
+/* Variables used for simultaneous capture of video from muliple cameras
+   This is only used by RAW1394 capture. VIDEO1394 (aka DMA) capture
+   doesn't use this */
+uchar_t *_dc1394_buffer[NUM_ISO_CHANNELS];
 int _dc1394_frame_captured[NUM_ISO_CHANNELS];
 int _dc1394_offset[NUM_ISO_CHANNELS];
 int _dc1394_quadlets_per_frame[NUM_ISO_CHANNELS];
@@ -148,7 +150,6 @@ _dc1394_basic_setup(dc1394camera_t *camera,
     DC1394_ERR_CHK(err,"Unable to restart iso transmission");
   }
 
-  camera->capture.frame_rate= frame_rate;
   camera->capture.handle=raw1394_new_handle();
   raw1394_set_port(camera->capture.handle,camera->port);
 
@@ -303,7 +304,7 @@ dc1394_setup_capture(dc1394camera_t *camera,
     err=_dc1394_basic_setup(camera, channel, mode, speed,frame_rate);
     DC1394_ERR_CHK(err,"Could not setup capture");
     
-    camera->capture.capture_buffer= (uint_t*)malloc(camera->capture.quadlets_per_frame*4);
+    camera->capture.capture_buffer= (uchar_t*)malloc(camera->capture.quadlets_per_frame*4);
    
     if (camera->capture.capture_buffer == NULL) {
       printf("(%s) unable to allocate memory for capture buffer\n", __FILE__);
@@ -589,9 +590,9 @@ dc1394_dma_capture(dc1394camera_t **cams, uint_t num, dc1394videopolicy_t policy
     //fprintf(stderr,"test3\n");
     
     /* point to the next buffer in the dma ringbuffer */
-    cams[i]->capture.capture_buffer = (uint_t*)(cams[i]->capture.dma_ring_buffer +
-					       cams[i]->capture.dma_last_buffer *
-					       cams[i]->capture.dma_frame_size);
+    cams[i]->capture.capture_buffer = (uchar_t*)(cams[i]->capture.dma_ring_buffer +
+						 cams[i]->capture.dma_last_buffer *
+						 cams[i]->capture.dma_frame_size);
     
     cams[i]->capture.filltime = vwait.filltime;
     cams[i]->capture.num_dma_buffers_behind = extra_buf;
@@ -623,4 +624,18 @@ dc1394_dma_done_with_buffer(dc1394camera_t *camera)
   }
   
   return DC1394_SUCCESS;
+}
+
+/* functions to access the capture data */
+
+uchar_t*
+dc1394_video_get_buffer(dc1394camera_t *camera)
+{
+  return camera->capture.capture_buffer;
+}
+
+struct timeval*
+dc1394_video_get_filltime(dc1394camera_t *camera)
+{
+  return &(camera->capture.filltime);
 }
