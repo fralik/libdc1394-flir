@@ -60,12 +60,15 @@ dc1394error_t
 dc1394_feature_set_absolute_value(dc1394camera_t *camera, uint_t feature, float value)
 {
   dc1394error_t err=DC1394_SUCCESS;
+  
+  quadlet_t tempq;
+  memcpy(&tempq,&value,4);
 
   if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_FAILURE;
   }
 
-  SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t)((void*)(&value)));
+  SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, tempq);
   DC1394_ERR_CHK(err,"Could not get current absolute value");
 
   return err;

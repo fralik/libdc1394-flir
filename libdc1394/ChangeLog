@@ -718,3 +718,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * the type of image buffers is uchat_t*, NOT uint_t*.
     * new functions to access the capture data (image buffer and fill time).
       The capture structure will removed from the API, but I don't know how yet.
+
+2005-12-12 Damien <ddouxchamps@users.sf.net>
+    * fixed the absolute settings.
