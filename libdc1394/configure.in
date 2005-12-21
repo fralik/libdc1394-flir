@@ -13,12 +13,9 @@ AC_C_RESTRICT
 
 # Check for the new version of libraw1394 first since they might have both
 # installed and we want to use the newest version
-AC_CHECK_LIB(raw1394, raw1394_new_handle,
-     [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) LIBS="$LIBS -lraw1394";break],
-     AC_CHECK_LIB(raw1394, raw1394_get_handle,
-          [AC_DEFINE(LIBRAW1394_OLD,[],[Defined if an old version of libraw1394 is present])
-	  AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) LIBS="$LIBS -lraw1394"  ;break ],
-     AC_MSG_ERROR(No version of libraw1394 found!)))
+AC_CHECK_LIB(raw1394, raw1394_channel_modify,
+   [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) LIBS="$LIBS -lraw1394";break],
+    AC_MSG_ERROR(libraw1394 not found or too old))
 
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h sys/ioctl.h unistd.h)

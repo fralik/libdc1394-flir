@@ -36,7 +36,8 @@ enum {
   DC1394_BAYER_METHOD_BILINEAR,
   DC1394_BAYER_METHOD_HQLINEAR,
   DC1394_BAYER_METHOD_DOWNSAMPLE,
-  DC1394_BAYER_METHOD_EDGESENSE
+  DC1394_BAYER_METHOD_EDGESENSE,
+  DC1394_BAYER_METHOD_VNG
 };
 #define DC1394_BAYER_METHOD_MIN      DC1394_BAYER_METHOD_NEAREST
 #define DC1394_BAYER_METHOD_MAX      DC1394_BAYER_METHOD_EDGESENSE
@@ -126,8 +127,8 @@ void dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, ui
  *                                                                                              *
  ************************************************************************************************/
 
-int dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method);
-int dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method, uint_t bits);
+dc1394error_t dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method);
+dc1394error_t dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method, uint_t bits);
 
 #endif /* _DC1394_CONVERSIONS_H */
 

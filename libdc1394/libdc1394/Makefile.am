@@ -26,4 +26,3 @@ libdc1394_control_la_SOURCES =  \
 
 # headers to be installed
 pkginclude_HEADERS = dc1394_control.h dc1394_utils.h dc1394_vendor_avt.h dc1394_conversions.h
-

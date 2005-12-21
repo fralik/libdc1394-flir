@@ -78,7 +78,9 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Invalid Bayer method code",
   "Could not create a raw1394 handle",
   "Invalid argument",
-  "Invalid video1394 device filename"
+  "Invalid video1394 device filename",
+  "Could not allocate an ISO channel"
+  "Could not allocate bandwidth"
 };
 
 /*
@@ -128,7 +130,7 @@ const int quadlets_per_packet_format_2[64] =
  per packet
 *********************************************************/
 dc1394error_t
-_dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // ERROR handling to be updated
+_dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame_rate, uint_t *qpp) // ERROR handling to be updated
 {
   uint_t mode_index;
   uint_t frame_rate_index= frame_rate - DC1394_FRAMERATE_MIN;
@@ -142,9 +144,9 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
 
   switch(format) {
   case DC1394_FORMAT0:
-    mode_index= mode - DC1394_MODE_FORMAT0_MIN;
+    mode_index= mode - DC1394_VIDEO_MODE_FORMAT0_MIN;
     
-    if ( ((mode >= DC1394_MODE_FORMAT0_MIN) && (mode <= DC1394_MODE_FORMAT0_MAX)) && 
+    if ( ((mode >= DC1394_VIDEO_MODE_FORMAT0_MIN) && (mode <= DC1394_VIDEO_MODE_FORMAT0_MAX)) && 
 	 ((frame_rate >= DC1394_FRAMERATE_MIN) && (frame_rate <= DC1394_FRAMERATE_MAX)) ) {
       *qpp=quadlets_per_packet_format_0[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
@@ -154,9 +156,9 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT1:
-    mode_index= mode - DC1394_MODE_FORMAT1_MIN;
+    mode_index= mode - DC1394_VIDEO_MODE_FORMAT1_MIN;
     
-    if ( ((mode >= DC1394_MODE_FORMAT1_MIN) && (mode <= DC1394_MODE_FORMAT1_MAX)) && 
+    if ( ((mode >= DC1394_VIDEO_MODE_FORMAT1_MIN) && (mode <= DC1394_VIDEO_MODE_FORMAT1_MAX)) && 
 	 ((frame_rate >= DC1394_FRAMERATE_MIN) && (frame_rate <= DC1394_FRAMERATE_MAX)) ) {
       *qpp=quadlets_per_packet_format_1[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
@@ -166,9 +168,9 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT2:
-    mode_index= mode - DC1394_MODE_FORMAT2_MIN;
+    mode_index= mode - DC1394_VIDEO_MODE_FORMAT2_MIN;
     
-    if ( ((mode >= DC1394_MODE_FORMAT2_MIN) && (mode <= DC1394_MODE_FORMAT2_MAX)) && 
+    if ( ((mode >= DC1394_VIDEO_MODE_FORMAT2_MIN) && (mode <= DC1394_VIDEO_MODE_FORMAT2_MAX)) && 
 	 ((frame_rate >= DC1394_FRAMERATE_MIN) && (frame_rate <= DC1394_FRAMERATE_MAX)) ) {
       *qpp=quadlets_per_packet_format_2[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
@@ -194,7 +196,7 @@ _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp) // 
  frame given the format and mode
 ***********************************************************/
 dc1394error_t
-_dc1394_quadlets_from_format(uint_t mode, uint_t *quads) 
+_dc1394_quadlets_from_format(dc1394video_mode_t mode, uint_t *quads) 
 {
 
   uint_t w, h, color_mode;
@@ -216,7 +218,7 @@ _dc1394_quadlets_from_format(uint_t mode, uint_t *quads)
 }
 
 dc1394bool_t
-IsFeatureBitSet(quadlet_t value, uint_t feature)
+IsFeatureBitSet(quadlet_t value, dc1394feature_id_t feature)
 {
 
   if (feature >= DC1394_FEATURE_ZOOM) {
@@ -238,23 +240,23 @@ IsFeatureBitSet(quadlet_t value, uint_t feature)
 }
 
 dc1394error_t
-_dc1394_get_format_from_mode(uint_t mode, uint_t *format)
+_dc1394_get_format_from_mode(dc1394video_mode_t mode, uint_t *format)
 {
   dc1394error_t err=DC1394_SUCCESS;
 
-  if ((mode>=DC1394_MODE_FORMAT0_MIN)&&(mode<=DC1394_MODE_FORMAT0_MAX)) {
+  if ((mode>=DC1394_VIDEO_MODE_FORMAT0_MIN)&&(mode<=DC1394_VIDEO_MODE_FORMAT0_MAX)) {
     *format=DC1394_FORMAT0;
   }
-  else if ((mode>=DC1394_MODE_FORMAT1_MIN)&&(mode<=DC1394_MODE_FORMAT1_MAX)) {
+  else if ((mode>=DC1394_VIDEO_MODE_FORMAT1_MIN)&&(mode<=DC1394_VIDEO_MODE_FORMAT1_MAX)) {
     *format=DC1394_FORMAT1;
   }
-  else if ((mode>=DC1394_MODE_FORMAT2_MIN)&&(mode<=DC1394_MODE_FORMAT2_MAX)) {
+  else if ((mode>=DC1394_VIDEO_MODE_FORMAT2_MIN)&&(mode<=DC1394_VIDEO_MODE_FORMAT2_MAX)) {
     *format=DC1394_FORMAT2;
   }
-  else if ((mode>=DC1394_MODE_FORMAT6_MIN)&&(mode<=DC1394_MODE_FORMAT6_MAX)) {
+  else if ((mode>=DC1394_VIDEO_MODE_FORMAT6_MIN)&&(mode<=DC1394_VIDEO_MODE_FORMAT6_MAX)) {
     *format=DC1394_FORMAT6;
   }
-  else if ((mode>=DC1394_MODE_FORMAT7_MIN)&&(mode<=DC1394_MODE_FORMAT7_MAX)) {
+  else if ((mode>=DC1394_VIDEO_MODE_FORMAT7_MIN)&&(mode<=DC1394_VIDEO_MODE_FORMAT7_MAX)) {
     *format=DC1394_FORMAT7;
   }
   else {
@@ -324,4 +326,135 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
   _dc1394_num_using_fd[camera->port]++;
 
   return DC1394_SUCCESS;
+}
+
+
+dc1394error_t
+dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
+{
+  dc1394error_t err;
+  int i;
+
+  if (camera->capture_is_set==0) {
+    // capture is not set, and thus channels/bandwidth have not been allocated.
+    // We can safely allocate that in advance. 
+
+    if (camera->iso_channel<0){
+      // first we need to assign an ISO channel:  
+      for (i=0;i<DC1394_NUM_ISO_CHANNELS;i++) {
+	if (raw1394_channel_modify(camera->handle, i, RAW1394_MODIFY_ALLOC)==0) {
+	  // channel allocated.
+	  camera->iso_channel=i;
+	  fprintf(stderr,"Allocated channel %d\n",camera->iso_channel);
+	  break;
+	}
+      }
+      // check if channel was allocated:
+      if (camera->iso_channel==-1) {
+	return DC1394_NO_ISO_CHANNEL;
+      }
+      else {
+	// set channel in the camera
+	err=dc1394_video_set_iso_channel(camera, camera->iso_channel);
+	DC1394_ERR_CHK(err, "Could not set ISO channel in the camera");
+      }
+    }
+    
+    if (camera->iso_bandwidth==0) {
+      fprintf(stderr,"Estimating ISO bandwidth\n");
+      // then we book the bandwidth
+      err=dc1394_video_get_bandwidth_usage(camera, &camera->iso_bandwidth);
+      DC1394_ERR_CHK(err, "Could not estimate ISO bandwidth");
+      if (raw1394_bandwidth_modify(camera->handle, camera->iso_bandwidth, RAW1394_MODIFY_ALLOC)<0) {
+	camera->iso_bandwidth=0;
+	return DC1394_NO_BANDWIDTH;
+      }
+      else
+	fprintf(stderr,"Allocated %d bandwidth units\n",camera->iso_bandwidth);
+    }
+  }
+  else {
+    // do nothing, capture is running, and channels/bandwidth is already allocated
+  }
+  
+  return DC1394_SUCCESS;
+}
+
+dc1394error_t
+dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera)
+{
+  if (camera->capture_is_set==0) {
+    // capture is not set, and thus channels/bandwidth can be freed without interfering
+
+    if (camera->iso_bandwidth>0) {
+      // first free the bandwidth
+      if (raw1394_bandwidth_modify(camera->handle, camera->iso_bandwidth, RAW1394_MODIFY_FREE)<0) {
+	fprintf(stderr,"Error: could not free %d units of bandwidth!!\n", camera->iso_bandwidth);
+	return DC1394_FAILURE;
+      }
+      else {
+	fprintf(stderr,"Freed %d bandwidth units\n",camera->iso_bandwidth);
+	camera->iso_bandwidth=0;
+      }
+    }
+    
+    // then free the ISO channel if it was allocated
+    if (camera->iso_channel>=0) {
+      if (raw1394_channel_modify(camera->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1) {
+	fprintf(stderr,"Error: could not free iso channel %d!!\n",camera->iso_channel);
+	return DC1394_FAILURE;
+      }
+      else {
+	fprintf(stderr,"Freed channel %d\n",camera->iso_channel);
+	camera->iso_channel=-1;
+      }
+    }
+  }
+  else {
+    // capture is running, don't free any channel/bandwidth allocation
+  }
+  return DC1394_SUCCESS;
+} 
+ 
+dc1394error_t
+dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel)
+{
+  dc1394error_t err;
+  quadlet_t value_inq, value;
+  int speed;
+
+  err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  DC1394_ERR_CHK(err, "Could not get basic function register");
+
+  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+  DC1394_ERR_CHK(err, "Could not get ISO data");
+
+  // check if 1394b is available and if we are now using 1394b
+  if ((value_inq & 0x00800000)&&(value & 0x00008000)) {
+    err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+    DC1394_ERR_CHK(err, "oops");
+    speed=value & 0x7UL;
+    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
+				 (quadlet_t) ( ((channel & 0x3FUL) << 8) |
+					       (speed & 0x7UL) |
+					       (0x1 << 15) ));
+    DC1394_ERR_CHK(err, "oops");
+  }
+  else { // fallback to legacy
+    err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+    DC1394_ERR_CHK(err, "oops");
+    speed=(value >> 24) & 0x3UL;
+    if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
+      fprintf(stderr,"(%s) line %d: an ISO speed >400Mbps was requested while the camera is in LEGACY mode\n",__FILE__,__LINE__);
+      fprintf(stderr,"              Please set the operation mode to OPERATION_MODE_1394B before asking for\n");
+      fprintf(stderr,"              1394b ISO speeds\n");
+      return DC1394_FAILURE;
+    }
+    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
+				 (quadlet_t) (((channel & 0xFUL) << 28) |
+					      ((speed & 0x3UL) << 24) ));
+    DC1394_ERR_CHK(err, "Could not set ISO data register");
+  }
+  
+  return err;
 }

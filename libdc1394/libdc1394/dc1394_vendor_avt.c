@@ -786,7 +786,7 @@ dc1394_avt_set_blemish(dc1394camera_t *camera,
 /************************************************************************/
 dc1394error_t
 dc1394_avt_get_io(dc1394camera_t *camera, unsigned int IO,
-		  dc1394bool_t *polarity, unsigned int *mode,dc1394bool_t *pinstate)
+		  dc1394bool_t *polarity, unsigned int *mode, dc1394bool_t *pinstate)
 {
   dc1394error_t err;
   quadlet_t value;

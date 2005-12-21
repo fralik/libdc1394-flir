@@ -32,6 +32,12 @@
 /* Maximum number of write/read retries */
 #define DC1394_MAX_RETRIES          20
 
+/* Maximum number of ISO channels */
+/* Note that the maximum currently supported by a chipset is 8 so that 16 is already
+   a conservative number. A typical number of channels supported is 4. (TI chipset)
+   However, 1394b allows for more channels, hence we use 64 as the limit */
+#define DC1394_NUM_ISO_CHANNELS     64
+
 /* A hard compiled factor that makes sure async read and writes don't happen
    too fast */
 /* Toshiyuki Umeda: use randomize timings to avoid locking indefinitely.
@@ -92,7 +98,7 @@
 /* Internal functions required by two different source files */
 
 dc1394error_t
-_dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t channel, uint_t num_dma_buffers);
+_dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t num_dma_buffers);
 	
 dc1394error_t 
 _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp);
@@ -108,5 +114,14 @@ IsFeatureBitSet(quadlet_t value, uint_t feature);
 
 dc1394error_t
 _dc1394_open_dma_device(dc1394camera_t *camera);
+
+dc1394error_t
+dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera);
+
+dc1394error_t
+dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera);
+
+dc1394error_t
+dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel);
 
 #endif /* _DC1394_INTERNAL_H */

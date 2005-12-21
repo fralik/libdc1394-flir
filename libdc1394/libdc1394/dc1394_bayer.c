@@ -1800,6 +1800,303 @@ dc1394_bayer_Simple_uint16(const uint16_t *restrict bayer, uint16_t *restrict rg
     }
 }
 
+/* Variable Number of Gradients, from dcraw <http://www.cybercom.net/~dcoffin/dcraw/> */
+/* Ported to libdc1394 by Frederic Devernay */
+
+#define ABS(x) (((int)(x) ^ ((int)(x) >> 31)) - ((int)(x) >> 31))
+/*
+   In order to inline this calculation, I make the risky
+   assumption that all filter patterns can be described
+   by a repeating pattern of eight rows and two columns
+
+   Return values are either 0/1/2/3 = G/M/C/Y or 0/1/2/3 = R/G1/B/G2
+ */
+#define FC(row,col) \
+	(filters >> ((((row) << 1 & 14) + ((col) & 1)) << 1) & 3)
+
+/*
+   This algorithm is officially called:
+
+   "Interpolation using a Threshold-based variable number of gradients"
+
+   described in http://www-ise.stanford.edu/~tingchen/algodep/vargra.html
+
+   I've extended the basic idea to work with non-Bayer filter arrays.
+   Gradients are numbered clockwise from NW=0 to W=7.
+ */
+static const signed char bayervng_terms[] = {
+    -2,-2,+0,-1,0,0x01, -2,-2,+0,+0,1,0x01, -2,-1,-1,+0,0,0x01,
+    -2,-1,+0,-1,0,0x02, -2,-1,+0,+0,0,0x03, -2,-1,+0,+1,1,0x01,
+    -2,+0,+0,-1,0,0x06, -2,+0,+0,+0,1,0x02, -2,+0,+0,+1,0,0x03,
+    -2,+1,-1,+0,0,0x04, -2,+1,+0,-1,1,0x04, -2,+1,+0,+0,0,0x06,
+    -2,+1,+0,+1,0,0x02, -2,+2,+0,+0,1,0x04, -2,+2,+0,+1,0,0x04,
+    -1,-2,-1,+0,0,0x80, -1,-2,+0,-1,0,0x01, -1,-2,+1,-1,0,0x01,
+    -1,-2,+1,+0,1,0x01, -1,-1,-1,+1,0,0x88, -1,-1,+1,-2,0,0x40,
+    -1,-1,+1,-1,0,0x22, -1,-1,+1,+0,0,0x33, -1,-1,+1,+1,1,0x11,
+    -1,+0,-1,+2,0,0x08, -1,+0,+0,-1,0,0x44, -1,+0,+0,+1,0,0x11,
+    -1,+0,+1,-2,1,0x40, -1,+0,+1,-1,0,0x66, -1,+0,+1,+0,1,0x22,
+    -1,+0,+1,+1,0,0x33, -1,+0,+1,+2,1,0x10, -1,+1,+1,-1,1,0x44,
+    -1,+1,+1,+0,0,0x66, -1,+1,+1,+1,0,0x22, -1,+1,+1,+2,0,0x10,
+    -1,+2,+0,+1,0,0x04, -1,+2,+1,+0,1,0x04, -1,+2,+1,+1,0,0x04,
+    +0,-2,+0,+0,1,0x80, +0,-1,+0,+1,1,0x88, +0,-1,+1,-2,0,0x40,
+    +0,-1,+1,+0,0,0x11, +0,-1,+2,-2,0,0x40, +0,-1,+2,-1,0,0x20,
+    +0,-1,+2,+0,0,0x30, +0,-1,+2,+1,1,0x10, +0,+0,+0,+2,1,0x08,
+    +0,+0,+2,-2,1,0x40, +0,+0,+2,-1,0,0x60, +0,+0,+2,+0,1,0x20,
+    +0,+0,+2,+1,0,0x30, +0,+0,+2,+2,1,0x10, +0,+1,+1,+0,0,0x44,
+    +0,+1,+1,+2,0,0x10, +0,+1,+2,-1,1,0x40, +0,+1,+2,+0,0,0x60,
+    +0,+1,+2,+1,0,0x20, +0,+1,+2,+2,0,0x10, +1,-2,+1,+0,0,0x80,
+    +1,-1,+1,+1,0,0x88, +1,+0,+1,+2,0,0x08, +1,+0,+2,-1,0,0x40,
+    +1,+0,+2,+1,0,0x10
+}, bayervng_chood[] = { -1,-1, -1,0, -1,+1, 0,+1, +1,+1, +1,0, +1,-1, 0,-1 };
+
+static void
+dc1394_bayer_VNG(const uint8_t *restrict bayer,
+		 uint8_t *restrict dst, int sx, int sy,
+		 dc1394color_filter_t pattern)
+{
+  const int height = sy, width = sx;
+  static const signed char *cp;
+  /* the following has the same type as the image */
+  uint8_t (*brow[5])[3], *pix;          /* [FD] */
+  int code[8][2][320], *ip, gval[8], gmin, gmax, sum[4];
+  int row, col, x, y, x1, x2, y1, y2, t, weight, grads, color, diag;
+  int g, diff, thold, num, c;
+  uint32_t filters;                     /* [FD] */
+  
+  /* first, use bilinear bayer decoding */
+  dc1394_bayer_Bilinear(bayer, dst, sx, sy, pattern);
+
+  switch(pattern) {
+      case DC1394_COLOR_FILTER_BGGR:
+          filters = 0x16161616;
+          break;
+      case DC1394_COLOR_FILTER_GRBG:
+          filters = 0x61616161;
+          break;
+      case DC1394_COLOR_FILTER_RGGB:
+          filters = 0x94949494;
+          break;
+      case DC1394_COLOR_FILTER_GBRG:
+          filters = 0x49494949;
+          break;
+      default:
+          return;
+  }
+      
+  for (row=0; row < 8; row++) {		/* Precalculate for VNG */
+    for (col=0; col < 2; col++) {
+      ip = code[row][col];
+      for (cp=bayervng_terms, t=0; t < 64; t++) {
+	y1 = *cp++;  x1 = *cp++;
+	y2 = *cp++;  x2 = *cp++;
+	weight = *cp++;
+	grads = *cp++;
+	color = FC(row+y1,col+x1);
+	if (FC(row+y2,col+x2) != color) continue;
+	diag = (FC(row,col+1) == color && FC(row+1,col) == color) ? 2:1;
+	if (abs(y1-y2) == diag && abs(x1-x2) == diag) continue;
+	*ip++ = (y1*width + x1)*3 + color; /* [FD] */
+	*ip++ = (y2*width + x2)*3 + color; /* [FD] */
+	*ip++ = weight;
+	for (g=0; g < 8; g++)
+	  if (grads & 1<<g) *ip++ = g;
+	*ip++ = -1;
+      }
+      *ip++ = INT_MAX;
+      for (cp=bayervng_chood, g=0; g < 8; g++) {
+	y = *cp++;  x = *cp++;
+	*ip++ = (y*width + x) * 3;      /* [FD] */
+	color = FC(row,col);
+	if (FC(row+y,col+x) != color && FC(row+y*2,col+x*2) == color)
+	  *ip++ = (y*width + x) * 6 + color; /* [FD] */
+	else
+	  *ip++ = 0;
+      }
+    }
+  }
+  brow[4] = calloc (width*3, sizeof **brow);
+  //merror (brow[4], "vng_interpolate()");
+  for (row=0; row < 3; row++)
+    brow[row] = brow[4] + row*width;
+  for (row=2; row < height-2; row++) {		/* Do VNG interpolation */
+    for (col=2; col < width-2; col++) {
+        pix = dst + (row*width+col)*3;  /* [FD] */
+      ip = code[row & 7][col & 1];
+      memset (gval, 0, sizeof gval);
+      while ((g = ip[0]) != INT_MAX) {		/* Calculate gradients */
+	diff = ABS(pix[g] - pix[ip[1]]) << ip[2];
+	gval[ip[3]] += diff;
+	ip += 5;
+	if ((g = ip[-1]) == -1) continue;
+	gval[g] += diff;
+	while ((g = *ip++) != -1)
+	  gval[g] += diff;
+      }
+      ip++;
+      gmin = gmax = gval[0];			/* Choose a threshold */
+      for (g=1; g < 8; g++) {
+	if (gmin > gval[g]) gmin = gval[g];
+	if (gmax < gval[g]) gmax = gval[g];
+      }
+      if (gmax == 0) {
+          memcpy (brow[2][col], pix, 3 * sizeof *dst); /* [FD] */
+	continue;
+      }
+      thold = gmin + (gmax >> 1);
+      memset (sum, 0, sizeof sum);
+      color = FC(row,col);
+      for (num=g=0; g < 8; g++,ip+=2) {		/* Average the neighbors */
+	if (gval[g] <= thold) {
+	  for (c=0; c < 3; c++)         /* [FD] */
+	    if (c == color && ip[1])
+	      sum[c] += (pix[c] + pix[ip[1]]) >> 1;
+	    else
+	      sum[c] += pix[ip[0] + c];
+	  num++;
+	}
+      }
+      for (c=0; c < 3; c++) {           /* [FD] Save to buffer */
+	t = pix[color];
+	if (c != color)
+	  t += (sum[c] - sum[color]) / num;
+	CLIP(t,brow[2][col][c]);        /* [FD] */
+      }
+    }
+    if (row > 3)				/* Write buffer to image */
+        memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst); /* [FD] */
+    for (g=0; g < 4; g++)
+      brow[(g-1) & 3] = brow[g];
+  }
+  memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst);
+  memcpy (dst + 3*((row-1)*width+2), brow[1]+2, (width-4)*3*sizeof *dst);
+  free (brow[4]);
+}
+
+
+static void
+dc1394_bayer_VNG_uint16(const uint16_t *restrict bayer,
+			uint16_t *restrict dst, int sx, int sy,
+			dc1394color_filter_t pattern, int bits)
+{
+  const int height = sy, width = sx;
+  static const signed char *cp;
+  /* the following has the same type as the image */
+  uint16_t (*brow[5])[3], *pix;          /* [FD] */
+  int code[8][2][320], *ip, gval[8], gmin, gmax, sum[4];
+  int row, col, x, y, x1, x2, y1, y2, t, weight, grads, color, diag;
+  int g, diff, thold, num, c;
+  uint32_t filters;                     /* [FD] */
+  
+  /* first, use bilinear bayer decoding */
+  
+  dc1394_bayer_Bilinear_uint16(bayer, dst, sx, sy, pattern, bits);
+
+  switch(pattern) {
+      case DC1394_COLOR_FILTER_BGGR:
+          filters = 0x16161616;
+          break;
+      case DC1394_COLOR_FILTER_GRBG:
+          filters = 0x61616161;
+          break;
+      case DC1394_COLOR_FILTER_RGGB:
+          filters = 0x94949494;
+          break;
+      case DC1394_COLOR_FILTER_GBRG:
+          filters = 0x49494949;
+          break;
+      default:
+          return;
+  }
+      
+  for (row=0; row < 8; row++) {		/* Precalculate for VNG */
+    for (col=0; col < 2; col++) {
+      ip = code[row][col];
+      for (cp=bayervng_terms, t=0; t < 64; t++) {
+	y1 = *cp++;  x1 = *cp++;
+	y2 = *cp++;  x2 = *cp++;
+	weight = *cp++;
+	grads = *cp++;
+	color = FC(row+y1,col+x1);
+	if (FC(row+y2,col+x2) != color) continue;
+	diag = (FC(row,col+1) == color && FC(row+1,col) == color) ? 2:1;
+	if (abs(y1-y2) == diag && abs(x1-x2) == diag) continue;
+	*ip++ = (y1*width + x1)*3 + color; /* [FD] */
+	*ip++ = (y2*width + x2)*3 + color; /* [FD] */
+	*ip++ = weight;
+	for (g=0; g < 8; g++)
+	  if (grads & 1<<g) *ip++ = g;
+	*ip++ = -1;
+      }
+      *ip++ = INT_MAX;
+      for (cp=bayervng_chood, g=0; g < 8; g++) {
+	y = *cp++;  x = *cp++;
+	*ip++ = (y*width + x) * 3;      /* [FD] */
+	color = FC(row,col);
+	if (FC(row+y,col+x) != color && FC(row+y*2,col+x*2) == color)
+	  *ip++ = (y*width + x) * 6 + color; /* [FD] */
+	else
+	  *ip++ = 0;
+      }
+    }
+  }
+  brow[4] = calloc (width*3, sizeof **brow);
+  //merror (brow[4], "vng_interpolate()");
+  for (row=0; row < 3; row++)
+    brow[row] = brow[4] + row*width;
+  for (row=2; row < height-2; row++) {		/* Do VNG interpolation */
+    for (col=2; col < width-2; col++) {
+        pix = dst + (row*width+col)*3;  /* [FD] */
+      ip = code[row & 7][col & 1];
+      memset (gval, 0, sizeof gval);
+      while ((g = ip[0]) != INT_MAX) {		/* Calculate gradients */
+	diff = ABS(pix[g] - pix[ip[1]]) << ip[2];
+	gval[ip[3]] += diff;
+	ip += 5;
+	if ((g = ip[-1]) == -1) continue;
+	gval[g] += diff;
+	while ((g = *ip++) != -1)
+	  gval[g] += diff;
+      }
+      ip++;
+      gmin = gmax = gval[0];			/* Choose a threshold */
+      for (g=1; g < 8; g++) {
+	if (gmin > gval[g]) gmin = gval[g];
+	if (gmax < gval[g]) gmax = gval[g];
+      }
+      if (gmax == 0) {
+          memcpy (brow[2][col], pix, 3 * sizeof *dst); /* [FD] */
+	continue;
+      }
+      thold = gmin + (gmax >> 1);
+      memset (sum, 0, sizeof sum);
+      color = FC(row,col);
+      for (num=g=0; g < 8; g++,ip+=2) {		/* Average the neighbors */
+	if (gval[g] <= thold) {
+	  for (c=0; c < 3; c++)         /* [FD] */
+	    if (c == color && ip[1])
+	      sum[c] += (pix[c] + pix[ip[1]]) >> 1;
+	    else
+	      sum[c] += pix[ip[0] + c];
+	  num++;
+	}
+      }
+      for (c=0; c < 3; c++) {           /* [FD] Save to buffer */
+	t = pix[color];
+	if (c != color)
+	  t += (sum[c] - sum[color]) / num;
+	CLIP16(t,brow[2][col][c],bits);        /* [FD] */
+      }
+    }
+    if (row > 3)				/* Write buffer to image */
+        memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst); /* [FD] */
+    for (g=0; g < 4; g++)
+      brow[(g-1) & 3] = brow[g];
+  }
+  memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst);
+  memcpy (dst + 3*((row-1)*width+2), brow[1]+2, (width-4)*3*sizeof *dst);
+  free (brow[4]);
+}
+
 int
 dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method)
 {
@@ -1821,6 +2118,9 @@ dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb,
     return DC1394_SUCCESS;
   case DC1394_BAYER_METHOD_EDGESENSE:
     dc1394_bayer_EdgeSense(bayer, rgb, sx, sy, tile);
+    return DC1394_SUCCESS;
+  case DC1394_BAYER_METHOD_VNG:
+    dc1394_bayer_VNG(bayer, rgb, sx, sy, tile);
     return DC1394_SUCCESS;
   }
 
@@ -1848,6 +2148,9 @@ dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict r
     return DC1394_SUCCESS;
   case DC1394_BAYER_METHOD_EDGESENSE:
     dc1394_bayer_EdgeSense_uint16(bayer, rgb, sx, sy, tile, bits);
+    return DC1394_SUCCESS;
+  case DC1394_BAYER_METHOD_VNG:
+    dc1394_bayer_VNG_uint16(bayer, rgb, sx, sy, tile, bits);
     return DC1394_SUCCESS;
   }
 

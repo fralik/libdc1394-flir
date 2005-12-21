@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.23  2005/12/21 10:52:43  ddouxchamps
+**  major update: bayer-VNG, auto iso channel,...
+**
 **  Revision 1.11.2.22  2005/10/28 15:05:45  ddouxchamps
 **  fixed bad help message in grab_color_image
 **
@@ -577,28 +580,27 @@ int dc_init()
 
 int dc_start(int palette)
 {
-	unsigned int channel;
-	unsigned int speed;
-	int mode;
+	dc1394speed_t speed;
+	dc1394video_mode_t mode;
 
 	switch (palette) {
 		case VIDEO_PALETTE_RGB24:
-			mode = DC1394_MODE_640x480_RGB8;
+			mode = DC1394_VIDEO_MODE_640x480_RGB8;
 			break;
 			
 		case VIDEO_PALETTE_YUV422:
 		case VIDEO_PALETTE_YUV422P:
 		case VIDEO_PALETTE_YUV420P:
-			mode = DC1394_MODE_640x480_YUV422;
+			mode = DC1394_VIDEO_MODE_640x480_YUV422;
 			break;
 
 		default:
 			return 0;
 	}
 	
-	if (dc1394_video_get_iso_channel_and_speed(camera, &channel, &speed) !=DC1394_SUCCESS) 
+	if (dc1394_video_get_iso_speed(camera, &speed) !=DC1394_SUCCESS) 
 	{
-		printf("unable to get the iso channel number\n");
+		printf("unable to get the iso speed\n");
 		return 0;
 	}
 	 
@@ -609,8 +611,7 @@ int dc_start(int palette)
 	  }
 	}
 
-	if (dc1394_dma_setup_capture(camera, channel,  mode,
-				     speed, DC1394_FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES) != DC1394_SUCCESS) 
+	if (dc1394_dma_setup_capture(camera, mode, speed, DC1394_FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES) != DC1394_SUCCESS) 
 	{
 		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 			   __LINE__,__FILE__);

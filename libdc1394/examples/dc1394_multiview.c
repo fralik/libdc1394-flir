@@ -14,101 +14,6 @@
 **
 **-------------------------------------------------------------------------
 **
-**  $Log$
-**  Revision 1.9.2.22  2005/10/28 15:05:45  ddouxchamps
-**  fixed bad help message in grab_color_image
-**
-**  Revision 1.9.2.21  2005/10/14 11:25:49  ddouxchamps
-**  video1394 device is now set with a specific function
-**
-**  Revision 1.9.2.20  2005/10/11 00:51:35  ddouxchamps
-**  fixed the way we used the dma_device_file argument
-**
-**  Revision 1.9.2.19  2005/09/09 08:14:35  ddouxchamps
-**  dc1394capture_t struct now hidden in dc1394camera_t
-**
-**  Revision 1.9.2.18  2005/09/09 01:49:21  ddouxchamps
-**  fixed compilation errors
-**
-**  Revision 1.9.2.17  2005/08/30 01:36:44  ddouxchamps
-**  fixed a few bugs found with the iSight camera
-**
-**  Revision 1.9.2.16  2005/08/18 07:02:39  ddouxchamps
-**  I looked at the bug reports on SF and applied some fixes
-**
-**  Revision 1.9.2.15  2005/08/05 01:24:15  ddouxchamps
-**  fixed wrong color filter definitions and functions (Tony Hague)
-**
-**  Revision 1.9.2.14  2005/08/04 08:31:40  ddouxchamps
-**  version 2.0.0-pre4
-**
-**  Revision 1.9.2.13  2005/08/02 05:43:04  ddouxchamps
-**  Now compiles with GCC-4.0
-**
-**  Revision 1.9.2.12  2005/07/29 09:20:46  ddouxchamps
-**  Interface harmonization (work in progress)
-**
-**  Revision 1.9.2.11  2005/06/22 05:02:38  ddouxchamps
-**  Fixed detection issue with hub/repeaters
-**
-**  Revision 1.9.2.10  2005/05/20 08:58:58  ddouxchamps
-**  all constant definitions now start with DC1394_
-**
-**  Revision 1.9.2.9  2005/05/09 02:57:51  ddouxchamps
-**  first debugging with coriander
-**
-**  Revision 1.9.2.8  2005/05/09 00:48:22  ddouxchamps
-**  more fixes and updates
-**
-**  Revision 1.9.2.7  2005/05/06 01:24:46  ddouxchamps
-**  fixed a few bugs created by the previous changes
-**
-**  Revision 1.9.2.6  2005/05/06 00:13:37  ddouxchamps
-**  more updates from Golden Week
-**
-**  Revision 1.9.2.5  2005/05/02 04:37:58  ddouxchamps
-**  debugged everything. AFAIK code is 99.99% ok now.
-**
-**  Revision 1.9.2.4  2005/05/02 01:00:01  ddouxchamps
-**  cleanup, error handling and new camera detection
-**
-**  Revision 1.9.2.3  2005/04/28 14:45:08  ddouxchamps
-**  new error reporting mechanism
-**
-**  Revision 1.9.2.2  2005/04/06 05:52:33  ddouxchamps
-**  fixed bandwidth usage estimation and missing strings
-**
-**  Revision 1.9.2.1  2005/02/13 07:02:47  ddouxchamps
-**  Creation of the Version_2_0 branch
-**
-**  Revision 1.9  2004/08/10 07:57:22  ddouxchamps
-**  Removed extra buffering (Johann Schoonees)
-**
-**  Revision 1.8  2004/03/09 08:41:44  ddouxchamps
-**  patch from Johann Schoonees for extra buffering
-**
-**  Revision 1.7  2004/01/20 16:14:01  ddennedy
-**  fix segfault in dc1394_multiview
-**
-**  Revision 1.6  2004/01/20 04:12:27  ddennedy
-**  added dc1394_free_camera_nodes and applied to examples
-**
-**  Revision 1.5  2003/09/02 23:42:36  ddennedy
-**  cleanup handle destroying in examples; fix dc1394_multiview to use handle per camera; new example
-**
-**  Revision 1.4  2002/07/27 21:24:51  ddennedy
-**  just increase buffers some to reduce chance of hangs
-**
-**  Revision 1.3  2002/07/27 04:45:07  ddennedy
-**  added drop_frames option to dma capture, prepare versions/NEWS for 0.9 release
-**
-**  Revision 1.2  2002/07/24 02:22:40  ddennedy
-**  cleanup, add drop frame support to dc1394_multiview
-**
-**  Revision 1.1  2002/07/22 02:57:02  ddennedy
-**  added examples/dc1394_multiview to test/demonstrate dma multicapture over multiple ports
-**
-**
 **************************************************************************/
 
 #include <stdio.h>
@@ -223,7 +128,7 @@ void get_options(int argc,char *argv[])
 				"             --res    - resolution. 0 = 320x240 (default),\n"
 				"                        1 = 640x480 YUV4:1:1, 2 = 640x480 RGB8\n"
 				"             --device - specifies video1394 device to use (optional)\n"
-				"                        default = /dev/video1394/<port#>\n"
+				"                        default = automatic\n"
 				"             --help   - prints this message\n\n"
 				"Keyboard Commands:\n"
 				"        q = quit\n"
@@ -323,19 +228,19 @@ void display_frames()
 		for (i = 0; i < numCameras; i++)
 		{
 			switch (res) {
-			case DC1394_MODE_640x480_YUV411:
+			case DC1394_VIDEO_MODE_640x480_YUV411:
 				iyu12yuy2( (unsigned char *) cameras[i]->capture.capture_buffer,
 					(unsigned char *)(frame_buffer + (i * frame_length)),
 					(device_width*device_height) );
 				break;
 				
-			case DC1394_MODE_320x240_YUV422:
-			case DC1394_MODE_640x480_YUV422:
+			case DC1394_VIDEO_MODE_320x240_YUV422:
+			case DC1394_VIDEO_MODE_640x480_YUV422:
 				memcpy( frame_buffer + (i * frame_length),
 					cameras[i]->capture.capture_buffer, device_width*device_height*2);
 				break;
 					
-			case DC1394_MODE_640x480_RGB8:
+			case DC1394_VIDEO_MODE_640x480_RGB8:
 				rgb2yuy2( (unsigned char *) cameras[i]->capture.capture_buffer,
 					(unsigned char *) (frame_buffer + (i * frame_length)),
 					(device_width*device_height) );
@@ -409,7 +314,6 @@ int main(int argc,char *argv[])
   XEvent xev;
   XGCValues xgcv;
   long background=0x010203;
-  unsigned int channel;
   unsigned int speed;
   int i,err;
   
@@ -425,19 +329,19 @@ int main(int argc,char *argv[])
   }
   switch(res) {
   case 1: 
-    res = DC1394_MODE_640x480_YUV411; 
+    res = DC1394_VIDEO_MODE_640x480_YUV411; 
     device_width=640;
     device_height=480;
     format=XV_YUY2;
     break;
   case 2: 
-    res = DC1394_MODE_640x480_RGB8; 
+    res = DC1394_VIDEO_MODE_640x480_RGB8; 
     device_width=640;
     device_height=480;
     format=XV_YUY2;
     break;
   default: 
-    res = DC1394_MODE_320x240_YUV422;
+    res = DC1394_VIDEO_MODE_320x240_YUV422;
     device_width=320;
     device_height=240;
     format=XV_UYVY;
@@ -466,8 +370,8 @@ int main(int argc,char *argv[])
       //dc1394_print_feature_set(&features);
     }
     
-    if (dc1394_video_get_iso_channel_and_speed(cameras[i], &channel, &speed) != DC1394_SUCCESS) {
-      printf("unable to get the iso channel number\n");
+    if (dc1394_video_get_iso_speed(cameras[i], &speed) != DC1394_SUCCESS) {
+      printf("unable to get the iso speed\n");
       cleanup();
       exit(-1);
     }
@@ -479,8 +383,8 @@ int main(int argc,char *argv[])
       }
     }
 
-    if (dc1394_dma_setup_capture(cameras[i], i+1 /*channel*/, res,
-				 DC1394_SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES) != DC1394_SUCCESS) {
+    if (dc1394_dma_setup_capture(cameras[i], res,
+				 DC1394_ISO_SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES) != DC1394_SUCCESS) {
       fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 	      __LINE__,__FILE__);
       perror("that the video mode,framerate and format are supported\n");

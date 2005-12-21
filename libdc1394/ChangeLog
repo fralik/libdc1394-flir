@@ -721,3 +721,20 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2005-12-12 Damien <ddouxchamps@users.sf.net>
     * fixed the absolute settings.
+	
+2005-12-18 Damien <ddouxchamps@users.sf.net>
+    * stronger typing: most enum types have now defined types, like
+      dc1394framerate_t or dc1394video_mode_t
+    * changed the video mode names from DC1394_MODE_xxx to DC1394_VIDEO_MODE_xxx
+
+2005-12-19 Damien <ddouxchamps@users.sf.net>
+    * start implementation of automatic ISO channel/bandwidth  allocation
+    * updated configure script (we now require libraw1394 >= 1.2.0)
+    * removed the old libraw1394 code since we need new stuff anyway.
+	
+2005-12-20 Damien <ddouxchamps@users.sf.net>
+    * fixes concerning the auto ISO channel allocation
+	
+2005-12-21 Damien <ddouxchamps@users.sf.net>
+    * Added VNG bayer decoding, thanks to Frederic Devernay. The trunk of
+      the original code is from dcraw. It's very, very slow but looks nice.
