@@ -312,17 +312,17 @@ typedef struct __dc1394_cam_cap_struct
 
 typedef struct __dc1394_misc_info
 {
-  int format;
-  int mode;
-  int framerate;
+  unsigned int format;
+  unsigned int mode;
+  unsigned int framerate;
 
   dc1394bool_t is_iso_on;
-  int iso_channel;
-  int iso_speed;
+  unsigned int iso_channel;
+  unsigned int iso_speed;
 
-  int mem_channel_number;
-  int save_channel;
-  int load_channel;
+  unsigned int mem_channel_number;
+  unsigned int save_channel;
+  unsigned int load_channel;
 
   dc1394bool_t bmode_capable;
   dc1394bool_t one_shot_capable;
@@ -722,10 +722,6 @@ dc1394_get_frame_rate(raw1394handle_t handle, nodeid_t node,
 int
 dc1394_set_frame_rate(raw1394handle_t handle, nodeid_t node,
 		      unsigned int frame_rate);
-  int
-dc1394_get_hue(raw1394handle_t handle, nodeid_t node,
-	       unsigned int *hue);
-
 int
 dc1394_get_trigger_mode(raw1394handle_t handle, nodeid_t node,
                         unsigned int *mode);
@@ -844,8 +840,8 @@ dc1394_get_max_value(raw1394handle_t handle, nodeid_t node,
 ******************************************************/
 int
 dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
-                         int channel, int format, int mode,
-                         int speed, int frame_rate, 
+                         unsigned int channel, unsigned int format, unsigned int mode,
+                         unsigned int speed, unsigned int frame_rate, 
                          int num_dma_buffers,
                          int drop_frames,
                          const char *dma_device_file,
@@ -928,8 +924,8 @@ dc1394_dma_done_with_buffer(dc1394_cameracapture * camera);
 ************************************************************/
 int 
 dc1394_setup_capture(raw1394handle_t handle, nodeid_t node, 
-                     int channel, int format, int mode, 
-                     int speed, int frame_rate, 
+                     unsigned int channel, unsigned int format, unsigned int mode, 
+                     unsigned int speed, unsigned int frame_rate, 
                      dc1394_cameracapture * camera);
 
 /***********************************************************
@@ -1066,8 +1062,8 @@ dc1394_get_soft_trigger(raw1394handle_t handle, nodeid_t node,
 /*======================================================================*/
 int
 dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
-                             int channel, int mode, int speed,
-                             int bytes_per_packet,
+                             unsigned int channel, unsigned int mode, unsigned int speed,
+                             unsigned int bytes_per_packet,
                              unsigned int left, unsigned int top,
                              unsigned int width, unsigned int height, 
                              dc1394_cameracapture * camera);
@@ -1108,8 +1104,8 @@ dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
 /*======================================================================*/
 int
 dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
-                                 int channel, int mode, int speed,
-                                 int bytes_per_packet,
+                                 unsigned int channel, unsigned int mode, unsigned int speed,
+                                 unsigned int bytes_per_packet,
                                  unsigned int left, unsigned int top,
                                  unsigned int width, unsigned int height,
                                  int num_dma_buffers,
@@ -1201,11 +1197,6 @@ int
 dc1394_query_format7_recommended_byte_per_packet(raw1394handle_t handle, nodeid_t node,
 						  unsigned int mode,
 						  unsigned int *bpp);
-
-int
-dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
-				      unsigned int mode,
-				      unsigned int *ppf);
 
 int
 dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,

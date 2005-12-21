@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.12  2005/12/21 11:22:49  ddouxchamps
+**  Fixed compilation warning and a bug in camera detection
+**
 **  Revision 1.11  2004/08/10 07:57:22  ddouxchamps
 **  Removed extra buffering (Johann Schoonees)
 **
@@ -1005,7 +1008,7 @@ int main(int argc,char *argv[])
 	while (1) {
 		if (g_v4l_mode == V4L_MODE_PIPE) {
 			if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
-				capture_pipe( v4l_dev, (char *) camera.capture_buffer );
+				capture_pipe( v4l_dev, (unsigned char *) camera.capture_buffer );
 				dc1394_dma_done_with_buffer(&camera);
 			}
 		} else {

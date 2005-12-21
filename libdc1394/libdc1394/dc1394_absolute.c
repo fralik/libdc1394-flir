@@ -22,6 +22,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "dc1394_control.h"
 #include "dc1394_internal.h"
@@ -137,7 +138,7 @@ GetCameraAbsoluteRegister(raw1394handle_t handle, nodeid_t node,
 
 static int
 SetCameraAbsoluteRegister(raw1394handle_t handle, nodeid_t node,
-			  int feature, octlet_t offset, quadlet_t* value)
+			  int feature, octlet_t offset, quadlet_t value)
 {
     int retval, retry= MAX_RETRIES;
     quadlet_t csr;
@@ -149,13 +150,13 @@ SetCameraAbsoluteRegister(raw1394handle_t handle, nodeid_t node,
     csr*= 0x04UL;
   
     /* conditionally byte swap the value (addition by PDJ) */
-    *value= htonl(*value);
+    value= htonl(value);
  
     /* retry a few times if necessary (addition by PDJ) */
     while(retry--)
     {
         retval= raw1394_write(handle, 0xffc0 | node,
-                              CONFIG_ROM_BASE + offset + csr, 4, value);
+                              CONFIG_ROM_BASE + offset + csr, 4, &value);
 
 #ifdef LIBRAW1394_OLD
         if (retval >= 0)
@@ -243,8 +244,11 @@ int
 dc1394_set_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
 				  int feature, float value)
 {
+  quadlet_t tempq;
+  memcpy(&tempq,&value,4);
+
   if (SetCameraAbsoluteRegister(handle, node, feature, REG_CAMERA_ABS_VALUE,
-				(quadlet_t*)(&value)) != DC1394_SUCCESS)
+				tempq) != DC1394_SUCCESS)
     {
       printf("(%s) Absolute value setting failure \n", __FILE__);
       return DC1394_FAILURE;

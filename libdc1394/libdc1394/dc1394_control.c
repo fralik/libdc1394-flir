@@ -1157,30 +1157,18 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
         return DC1394_SUCCESS;
     }
 
-    quadval = 0;
+    int version;
     /* get the unit_sw_version (should be 0x000100 - 0x000102 for 1394 digital camera) */
     /* DRD> without this check, AV/C cameras show up as well */
-    offset = ud_offset;
-    if (GetConfigROMTaggedRegister(handle, node, 0x13, &offset, &quadval)!=DC1394_SUCCESS) {
-      *value= DC1394_FALSE;
+    if (dc1394_get_sw_version(handle,node, &version)!=DC1394_SUCCESS) {
+      *value=DC1394_FALSE;
       return DC1394_FAILURE;
     }
     else {
-      quadval&=0xFFFFFFUL;
-    }
-    //fprintf(stderr,"0x%x\n",quadval);
-
-    if ((quadval == 0x000100UL) || 
-        (quadval == 0x000101UL) ||
-        (quadval == 0x000102UL) ||
-        ((quadval == 0x000114UL) && ptgrey) ||
-        ((quadval == 0x800002UL) && ptgrey))
-    {
-        *value= DC1394_TRUE;
-    }
-    else
-    {
-        *value= DC1394_FALSE;
+      if (version!=-1)
+	return DC1394_FALSE;
+      else
+	return DC1394_SUCCESS;
     }
 
     return DC1394_SUCCESS;

@@ -346,8 +346,8 @@ _dc1394_dma_basic_setup(int channel,
 **************************************************************/
 int 
 dc1394_setup_capture(raw1394handle_t handle, nodeid_t node, 
-                     int channel, int format, int mode, 
-                     int speed, int frame_rate, 
+                     unsigned int channel, unsigned int format, unsigned int mode, 
+                     unsigned int speed, unsigned int frame_rate, 
                      dc1394_cameracapture * camera) 
 {
   if( format == FORMAT_SCALABLE_IMAGE_SIZE)
@@ -511,8 +511,8 @@ dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams,
 ******************************************************/
 int
 dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
-                         int channel, int format, int mode,
-                         int speed, int frame_rate,
+                         unsigned int channel, unsigned int format, unsigned int mode,
+                         unsigned int speed, unsigned int frame_rate,
                          int num_dma_buffers, 
 			 int drop_frames,
 			 const char *dma_device_file,

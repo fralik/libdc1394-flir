@@ -529,3 +529,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed trigger capabilities detection (Markus Niebel)
     * fixed some confusion between raw1394_new_handle and dc1394_create_handle
       (Thanks to Thorondor)
+	
+2005-12-17 Damien <ddouxchamps@users.sf.net>
+    * replaced camera version detection in dc1394_is_camera() by a proper call
+      to dc1394_get_sw_version(). Thanks to Frederic Devernay for spotting the
+      bug.
+    * fixed compilation warnings due to mixed signedness in the whole code.

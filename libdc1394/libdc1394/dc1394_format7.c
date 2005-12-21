@@ -220,7 +220,7 @@ SetCameraFormat7Register(raw1394handle_t handle, nodeid_t node,
 int
 _dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
 {
-  int setting_1, err_flag1, err_flag2, v130handshake;
+  unsigned int setting_1, err_flag1, err_flag2, v130handshake;
   int exit_loop;
 
   dc1394_camerahandle *camera;
@@ -272,7 +272,7 @@ _dc1394_v130_handshake(raw1394handle_t handle, nodeid_t node, int mode)
 int
 _dc1394_v130_errflag2(raw1394handle_t handle, nodeid_t node, int mode)
 {
-  int setting_1, err_flag1, err_flag2, v130handshake;
+  unsigned int setting_1, err_flag1, err_flag2, v130handshake;
 
   dc1394_camerahandle *camera;
   camera = (dc1394_camerahandle*) raw1394_get_userdata( handle );
@@ -346,18 +346,18 @@ _Format7BytePerPixel(int color_coding)
  *======================================================================*/
 int
 _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
-                            int channel, int mode, int speed,
-                            int bytes_per_packet,
-                            int left, int top,
-                            int width, int height, 
+                            unsigned int channel, unsigned int mode, unsigned int speed,
+                            unsigned int bytes_per_packet,
+                            unsigned int left, unsigned int top,
+                            unsigned int width, unsigned int height, 
                             dc1394_cameracapture *camera)
 {
   dc1394bool_t is_iso_on= DC1394_FALSE;
   unsigned int unit_bytes, max_bytes;
-  unsigned packet_bytes=0;
+  unsigned int packet_bytes=0;
   unsigned int recom_bpp;
-  int packets_per_frame;
-  int color_coding;
+  unsigned int packets_per_frame;
+  unsigned int color_coding;
   unsigned int camera_left = 0;
   unsigned int camera_top = 0;
   unsigned int camera_width = 0;
@@ -618,8 +618,8 @@ _dc1394_basic_format7_setup(raw1394handle_t handle, nodeid_t node,
  *=======================================================================*/
 int
 dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
-                             int channel, int mode, int speed,
-                             int bytes_per_packet,
+                             unsigned int channel, unsigned int mode, unsigned int speed,
+                             unsigned int bytes_per_packet,
                              unsigned int left, unsigned int top,
                              unsigned int width, unsigned int height, 
                              dc1394_cameracapture * camera)
@@ -661,8 +661,8 @@ dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
  *=======================================================================*/
 int
 dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
-                                 int channel, int mode, int speed,
-                                 int bytes_per_packet,
+                                 unsigned int channel, unsigned int mode, unsigned int speed,
+                                 unsigned int bytes_per_packet,
                                  unsigned int left, unsigned int top,
                                  unsigned int width, unsigned int height,
                                  int num_dma_buffers,

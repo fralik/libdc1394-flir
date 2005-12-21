@@ -15,6 +15,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11  2005/12/21 11:22:49  ddouxchamps
+**  Fixed compilation warning and a bug in camera detection
+**
 **  Revision 1.10  2005/08/18 07:03:06  ddouxchamps
 **  I looked at the bug reports on SF and applied some fixes
 **
@@ -283,7 +286,7 @@ void display_frames()
 			}
 		}
 		
-		xv_image=XvCreateImage(display,info[adaptor].base_id,format,frame_buffer,
+		xv_image=XvCreateImage(display,info[adaptor].base_id,format, (char*)frame_buffer,
 			device_width,device_height * numCameras);
 		XvPutImage(display,info[adaptor].base_id,window,gc,xv_image,
 			0,0,device_width,device_height * numCameras,
@@ -301,7 +304,7 @@ void QueryXv()
 	int i,j;
 	char xv_name[5];
 	
-	XvQueryAdaptors(display,DefaultRootWindow(display),&num_adaptors,&info);
+	XvQueryAdaptors(display,DefaultRootWindow(display),(unsigned int*)&num_adaptors,&info);
 	
 	for(i=0;i<num_adaptors;i++) {
 		formats=XvListImageFormats(display,info[i].base_id,&num_formats);
