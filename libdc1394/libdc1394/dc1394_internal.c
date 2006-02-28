@@ -65,6 +65,7 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Invalid mode",
   "Invalid framerate",
   "Invalid trigger mode",
+  "Invalid trigger source",
   "Invalid ISO speed",
   "Invalid IIDC version",
   "Invalid Format_7 color coding",
@@ -196,20 +197,20 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
  frame given the format and mode
 ***********************************************************/
 dc1394error_t
-_dc1394_quadlets_from_format(dc1394video_mode_t mode, uint_t *quads) 
+_dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint_t *quads) 
 {
 
-  uint_t w, h, color_mode;
+  uint_t w, h, color_coding;
   float bpp;
   dc1394error_t err;
 
-  err=dc1394_get_wh_from_mode(mode, &w, &h);
+  err=dc1394_get_image_size_from_video_mode(camera, video_mode, &w, &h);
   DC1394_ERR_CHK(err, "Invalid mode ID");
 
-  err=dc1394_get_color_mode_from_mode(mode, &color_mode);
+  err=dc1394_get_color_coding_from_video_mode(camera, video_mode, &color_coding);
   DC1394_ERR_CHK(err, "Invalid mode ID");
 
-  err=dc1394_get_bytes_per_pixel(color_mode, &bpp);
+  err=dc1394_get_bytes_per_pixel(color_coding, &bpp);
   DC1394_ERR_CHK(err, "Invalid color mode ID");
 
   *quads=(uint_t)(w*h*bpp/4);
@@ -218,7 +219,7 @@ _dc1394_quadlets_from_format(dc1394video_mode_t mode, uint_t *quads)
 }
 
 dc1394bool_t
-IsFeatureBitSet(quadlet_t value, dc1394feature_id_t feature)
+IsFeatureBitSet(quadlet_t value, dc1394feature_t feature)
 {
 
   if (feature >= DC1394_FEATURE_ZOOM) {
@@ -272,60 +273,50 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
 {
   char filename[64];
 
-  //fprintf(stderr,"entering!\n");
-  if (_dc1394_num_using_fd[camera->port] == 0) {
-
-    // first check if the dma device file has been set manually:
-    //fprintf(stderr,"device file: 0x%x\n",camera->capture.dma_device_file);
-    if (camera->capture.dma_device_file!=NULL) {
-      //fprintf(stderr,"oops!\n");
-      if ( (camera->capture.dma_fd = open(camera->capture.dma_device_file,O_RDONLY)) < 0 ) {
-	return DC1394_INVALID_VIDEO1394_DEVICE;
-      }
-      else {
-	_dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-      }
-    }
-
-    else {
-      //fprintf(stderr,"auto mode!\n");
-      // then try to open the usual DMA files /dev/video1394/x
-      sprintf(filename,"/dev/video1394/%d",camera->port);
-      if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
-	sprintf(filename,"/dev/video1394-%d",camera->port);
-	if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
-	  // try the old-fashioned /dev/video1394 only if the port is zero
-	  if (camera->port==0) {
-	    sprintf(filename,"/dev/video1394");
-	    if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) < 0 ) {
-	      return DC1394_INVALID_VIDEO1394_DEVICE;
-	    }
-	    else {
-	      _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-	    }
-	  }
-	  else {
-	    return DC1394_INVALID_VIDEO1394_DEVICE;
-	  }
-	}
-	else {
-	  _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-	}
-      }
-      else {
-	_dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-      }
-      
-    }
-
-  }
-  else
+  // if the file has already been opened: increment the number of uses and return
+  if (_dc1394_num_using_fd[camera->port] != 0) {
+    _dc1394_num_using_fd[camera->port]++;
     camera->capture.dma_fd = _dc1394_dma_fd[camera->port];
+    return DC1394_SUCCESS;
+  }
 
+  // if the dma device file has been set manually, use that device name
+  if (camera->capture.dma_device_file!=NULL) {
+    if ( (camera->capture.dma_fd = open(camera->capture.dma_device_file,O_RDONLY)) < 0 ) {
+      return DC1394_INVALID_VIDEO1394_DEVICE;
+    }
+    else {
+      _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+      _dc1394_num_using_fd[camera->port]++;
+      return DC1394_SUCCESS;
+    }
+  }
+
+  // automatic mode: try to open several usual device files.
+  sprintf(filename,"/dev/video1394/%d",camera->port);
+  if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+    _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+    _dc1394_num_using_fd[camera->port]++;
+    return DC1394_SUCCESS;
+  }
+
+  sprintf(filename,"/dev/video1394-%d",camera->port);
+  if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+    _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+    _dc1394_num_using_fd[camera->port]++;
+    return DC1394_SUCCESS;
+  }
   
-  _dc1394_num_using_fd[camera->port]++;
+  if (camera->port==0) {
+    sprintf(filename,"/dev/video1394");
+    if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+      _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
+      _dc1394_num_using_fd[camera->port]++;
+      return DC1394_SUCCESS;
+    }
+  }
 
-  return DC1394_SUCCESS;
+  return DC1394_FAILURE;
 }
 
 

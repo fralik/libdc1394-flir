@@ -57,42 +57,62 @@
 #define RESP_COMPLETE               0x0000U
 #define RESP_SONY_HACK              0x000fU
 
-#define FEATURE_TO_VALUE_OFFSET(feature, offset)                      \
-    {                                                                 \
-    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) { \
-      return DC1394_FAILURE;                                          \
-    }                                                                 \
-    else if (feature < DC1394_FEATURE_ZOOM) {                         \
-      offset= REG_CAMERA_FEATURE_HI_BASE;                             \
-      feature-= DC1394_FEATURE_MIN;                                   \
-    }                                                                 \
-    else {                                                            \
-      offset= REG_CAMERA_FEATURE_LO_BASE;                             \
-      if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {                   \
-        feature+= 12;                                                 \
-      }                                                               \
-      feature-= DC1394_FEATURE_ZOOM;                                  \
-    }                                                                 \
-    offset+= feature * 0x04U;                                         \
-    }
+// Format_0
+#define DC1394_VIDEO_MODE_FORMAT0_MIN	    DC1394_VIDEO_MODE_160x120_YUV444
+#define DC1394_VIDEO_MODE_FORMAT0_MAX	    DC1394_VIDEO_MODE_640x480_MONO16
+#define DC1394_VIDEO_MODE_FORMAT0_NUM      (DC1394_VIDEO_MODE_FORMAT0_MAX - DC1394_VIDEO_MODE_FORMAT0_MIN + 1)
 
-#define FEATURE_TO_INQUIRY_OFFSET(feature, offset)                    \
-    {                                                                 \
-    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) { \
-      return DC1394_FAILURE;                                          \
-    }                                                                 \
-    else if (feature < DC1394_FEATURE_ZOOM) {                         \
-      offset= REG_CAMERA_FEATURE_HI_BASE_INQ;                         \
-      feature-= DC1394_FEATURE_MIN;                                   \
-    }                                                                 \
-    else {                                                            \
-      offset= REG_CAMERA_FEATURE_LO_BASE_INQ;                         \
-      if (feature >= DC1394_FEATURE_CAPTURE_SIZE) {                   \
-        feature+= 12;                                                 \
-      }                                                               \
-      feature-= DC1394_FEATURE_ZOOM;                                  \
-    }                                                                 \
-    offset+= feature * 0x04U;                                         \
+// Format_1
+#define DC1394_VIDEO_MODE_FORMAT1_MIN	    DC1394_VIDEO_MODE_800x600_YUV422
+#define DC1394_VIDEO_MODE_FORMAT1_MAX	    DC1394_VIDEO_MODE_1024x768_MONO16
+#define DC1394_VIDEO_MODE_FORMAT1_NUM      (DC1394_VIDEO_MODE_FORMAT1_MAX - DC1394_VIDEO_MODE_FORMAT1_MIN + 1)
+
+// Format_2
+#define DC1394_VIDEO_MODE_FORMAT2_MIN	    DC1394_VIDEO_MODE_1280x960_YUV422
+#define DC1394_VIDEO_MODE_FORMAT2_MAX	    DC1394_VIDEO_MODE_1600x1200_MONO16
+#define DC1394_VIDEO_MODE_FORMAT2_NUM	   (DC1394_VIDEO_MODE_FORMAT2_MAX - DC1394_VIDEO_MODE_FORMAT2_MIN + 1)
+
+// Format_6
+#define DC1394_VIDEO_MODE_FORMAT6_MIN	    DC1394_VIDEO_MODE_EXIF
+#define DC1394_VIDEO_MODE_FORMAT6_MAX	    DC1394_VIDEO_MODE_EXIF
+#define DC1394_VIDEO_MODE_FORMAT6_NUM	   (DC1394_VIDEO_MODE_FORMAT6_MAX - DC1394_VIDEO_MODE_FORMAT6_MIN + 1)
+
+/* Enumeration of camera image formats */
+/* This could disappear from the API I think.*/
+enum {
+  DC1394_FORMAT0= 384,
+  DC1394_FORMAT1,
+  DC1394_FORMAT2,
+  DC1394_FORMAT6=390,
+  DC1394_FORMAT7
+};
+#define DC1394_FORMAT_MIN           DC1394_FORMAT0
+#define DC1394_FORMAT_MAX           DC1394_FORMAT7
+//#define DC1394_FORMAT_NUM          (DC1394_FORMAT_MAX - DC1394_FORMAT_MIN + 1)
+/* DANGER: FORMAT_NUM should be 5!! FORMAT_NUM is therefor undefined to avoid problems */
+
+#define FEATURE_TO_VALUE_OFFSET(feature, offset)                                 \
+    {                                                                            \
+    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) )      \
+      return DC1394_FAILURE;                                                     \
+    else if (feature < DC1394_FEATURE_ZOOM)                                      \
+      offset= REG_CAMERA_FEATURE_HI_BASE+(feature - DC1394_FEATURE_MIN)*0x04U;   \
+    else if (feature >= DC1394_FEATURE_CAPTURE_SIZE)                             \
+      offset= REG_CAMERA_FEATURE_LO_BASE +(feature+12-DC1394_FEATURE_ZOOM)*0x04U;\
+    else                                                                         \
+      offset= REG_CAMERA_FEATURE_LO_BASE +(feature-DC1394_FEATURE_ZOOM)*0x04U;   \
+										   }
+
+#define FEATURE_TO_INQUIRY_OFFSET(feature, offset)                                   \
+    {                                                                                \
+    if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) )          \
+      return DC1394_FAILURE;                                                         \
+    else if (feature < DC1394_FEATURE_ZOOM)                                          \
+      offset= REG_CAMERA_FEATURE_HI_BASE_INQ+(feature - DC1394_FEATURE_MIN)*0x04U;   \
+    else if (feature >= DC1394_FEATURE_CAPTURE_SIZE)                                 \
+      offset= REG_CAMERA_FEATURE_LO_BASE_INQ +(feature+12-DC1394_FEATURE_ZOOM)*0x04U;\
+    else                                                                             \
+      offset= REG_CAMERA_FEATURE_LO_BASE_INQ +(feature-DC1394_FEATURE_ZOOM)*0x04U;   \
     }
 
 /* Internal functions required by two different source files */
@@ -104,7 +124,7 @@ dc1394error_t
 _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp);
 
 dc1394error_t
-_dc1394_quadlets_from_format(uint_t mode, uint_t *quads);
+_dc1394_quadlets_from_format(dc1394camera_t *camera, uint_t mode, uint_t *quads);
 
 dc1394error_t
 _dc1394_get_format_from_mode(uint_t mode, uint_t *format);

@@ -63,52 +63,12 @@ void print_format( uint_t format )
 }
 
 /*-----------------------------------------------------------------------
- *  Converts the image to RGB8
- *-----------------------------------------------------------------------*/
-void convertToRgb8( uchar_t *src , uchar_t *dest , uint_t mode , uint64_t numPixels )
-{
-  uint_t fromFormat;
-
-  dc1394_get_color_mode_from_mode(mode,&fromFormat);
-
-  switch( fromFormat ) {
-  case DC1394_COLOR_CODING_YUV411:
-    dc1394_YUV411_to_RGB8(src,dest,numPixels);
-    break;
-
-  case DC1394_COLOR_CODING_YUV444:
-    dc1394_YUV444_to_RGB8(src,dest,numPixels);
-    break;
-
-  case DC1394_COLOR_CODING_YUV422:
-    dc1394_YUV422_to_RGB8(src,dest,numPixels);
-    break;
-
-  case DC1394_COLOR_CODING_MONO8:
-    dc1394_MONO8_to_RGB8(src,dest,numPixels);
-    break;
-
-  case DC1394_COLOR_CODING_RGB16:
-    dc1394_RGB16_to_RGB8(src,dest,numPixels);
-    break;
-
-  case DC1394_COLOR_CODING_RGB8:
-    memmove(dest,src,3*numPixels);
-    break;
-
-  default:
-    fprintf(stderr,"Unknown format\n");
-    exit(1);    
-  }
-}
-
-/*-----------------------------------------------------------------------
  *  Returns the number of pixels in the image based upon the format
  *-----------------------------------------------------------------------*/
-uint_t get_num_pixels( uint_t format ) {
+uint_t get_num_pixels(dc1394camera_t *camera, uint_t format ) {
   uint_t w,h;
 
-  dc1394_get_wh_from_mode(format,&w,&h);
+  dc1394_get_image_size_from_video_mode(camera, format,&w,&h);
 
   return w*h;
 }
@@ -233,7 +193,7 @@ int main(int argc, char *argv[])
     dc1394_free_camera(cameras[i]);
   free(cameras);
 
-  dc1394videomodes_t modes;
+  dc1394video_modes_t modes;
 
     // get supported modes
   if (dc1394_video_get_supported_modes(camera, &modes)!=DC1394_SUCCESS) {
@@ -349,7 +309,8 @@ int main(int argc, char *argv[])
 
   uchar_t *rgb_image = (uchar_t *)malloc(3*numPixels);
 
-  convertToRgb8( (uchar_t *)camera->capture.capture_buffer , rgb_image , selected_mode , numPixels );
+  dc1394_convert_to_RGB8((uchar_t *)camera->capture.capture_buffer, rgb_image, camera->capture.frame_width,
+			 camera->capture.frame_height, DC1394_BYTE_ORDER_YUYV, selected_mode, 16);
 
   /*-----------------------------------------------------------------------
    *  save image as 'Image.pgm'

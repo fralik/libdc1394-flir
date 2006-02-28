@@ -5,6 +5,8 @@
  * 
  * Written by Damien Douxchamps and Frederic Devernay
  *
+ * The original VNG Bayer decoding is from Dave Coffin's DCRAW.
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -750,7 +752,7 @@ dc1394_bayer_EdgeSense(const uchar_t *restrict bayer, uchar_t *restrict rgb, int
     ClearBorders(rgb, sx, sy, 3);
 }
 
-/* coriander's Bayer decoding (GPL) */
+/* coriander's Bayer decoding */
 void
 dc1394_bayer_Downsample(const uchar_t *restrict bayer, uchar_t *restrict rgb, int sx, int sy, int tile)
 {
@@ -1276,7 +1278,7 @@ dc1394_bayer_HQLinear_uint16(const uint16_t *restrict bayer, uint16_t *restrict 
     }
 }
 
-/* coriander's Bayer decoding (GPL) */
+/* coriander's Bayer decoding */
 void
 dc1394_bayer_EdgeSense_uint16(const uint16_t *restrict bayer, uint16_t *restrict rgb, int sx, int sy, int tile, int bits)
 {
@@ -1573,7 +1575,7 @@ dc1394_bayer_EdgeSense_uint16(const uint16_t *restrict bayer, uint16_t *restrict
     ClearBorders_uint16(rgb, sx, sy, 3);
 }
 
-/* coriander's Bayer decoding (GPL) */
+/* coriander's Bayer decoding */
 void
 dc1394_bayer_Downsample_uint16(const uint16_t *restrict bayer, uint16_t *restrict rgb, int sx, int sy, int tile, int bits)
 {
@@ -1640,7 +1642,7 @@ dc1394_bayer_Downsample_uint16(const uint16_t *restrict bayer, uint16_t *restric
 
 }
 
-/* coriander's Bayer decoding (GPL) */
+/* coriander's Bayer decoding */
 void
 dc1394_bayer_Simple_uint16(const uint16_t *restrict bayer, uint16_t *restrict rgb, int sx, int sy, int tile, int bits)
 {

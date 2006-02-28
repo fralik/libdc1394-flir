@@ -32,14 +32,14 @@ extern void swab();
  **********************************************************************/
 
 void
-dc1394_YUV422_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_YUV422_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order)
 {
   switch (byte_order) {
   case DC1394_BYTE_ORDER_YUYV:
-    swab(src, dest, NumPixels << 1);
+    swab(src, dest, (width*height) << 1);
     break;
   case DC1394_BYTE_ORDER_UYVY:
-    memcpy(dest,src, NumPixels<<1);
+    memcpy(dest,src, (width*height)<<1);
     break;
   default:
     fprintf(stderr,"Invalid overlay byte order\n");
@@ -48,10 +48,10 @@ dc1394_YUV422_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t 
 }
 
 void
-dc1394_YUV411_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_YUV411_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order)
 {
-  register int i=NumPixels + (NumPixels >> 1)-1;
-  register int j=(NumPixels << 1)-1;
+  register int i=(width*height) + ((width*height) >> 1) -1;
+  register int j=((width*height) << 1)-1;
   register int y0, y1, y2, y3, u, v;
 
   switch (byte_order) {
@@ -103,10 +103,10 @@ dc1394_YUV411_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t 
 }
 
 void
-dc1394_YUV444_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_YUV444_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order)
 {
-  register int i = NumPixels + (NumPixels << 1)-1;
-  register int j = (NumPixels << 1)-1;
+  register int i = (width*height) + ((width*height) << 1)-1;
+  register int j = ((width*height) << 1)-1;
   register int y0, y1, u0, u1, v0, v1;
 
   switch (byte_order) {
@@ -147,14 +147,12 @@ dc1394_YUV444_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t 
 }
 
 void
-dc1394_MONO8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, 
-		       uint_t src_width, uint_t src_height,
-		       uint_t dest_pitch, uint_t byte_order)
+dc1394_MONO8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order)
 {
-  if ((src_width*2) == dest_pitch) {
+  if ((width%2)==0) {
     // do it the quick way
-    register int i = src_width*src_height - 1;
-    register int j = (src_width*src_height << 1) - 1;
+    register int i = width*height - 1;
+    register int j = (width*height << 1) - 1;
     register int y0, y1;
     
     switch (byte_order) {
@@ -182,16 +180,16 @@ dc1394_MONO8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest,
       fprintf(stderr,"Invalid overlay byte order\n");
       break;
     }
-  } else { // src_width*2 != dest_pitch
+  } else { // width*2 != dest_pitch
     register int x, y;
 
-    //assert ((dest_pitch - 2*src_width)==1);
+    //assert ((dest_pitch - 2*width)==1);
 
     switch (byte_order) {
     case DC1394_BYTE_ORDER_YUYV:
-      y=src_height;
+      y=height;
       while (y--) {
-	x=src_width;
+	x=width;
 	while (x--) {
 	  *dest++ = *src++;
 	  *dest++ = 128;
@@ -202,9 +200,9 @@ dc1394_MONO8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest,
       }
       break;
     case DC1394_BYTE_ORDER_UYVY:
-      y=src_height;
+      y=height;
       while (y--) {
-	x=src_width;
+	x=width;
 	while (x--) {
 	  *dest++ = 128;
 	  *dest++ = *src++;
@@ -222,10 +220,10 @@ dc1394_MONO8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest,
 }
 
 void
-dc1394_MONO16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits, uint_t byte_order)
+dc1394_MONO16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order, uint_t bits)
 {
-  register int i = (NumPixels << 1)-1;
-  register int j = (NumPixels << 1)-1;
+  register int i = ((width*height) << 1)-1;
+  register int j = ((width*height) << 1)-1;
   register int y0, y1;
 
   switch (byte_order) {
@@ -261,10 +259,10 @@ dc1394_MONO16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t 
 }
 
 void
-dc1394_MONO16_to_MONO8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits)
+dc1394_MONO16_to_MONO8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t bits)
 {
-  register int i = (NumPixels<<1)-1;
-  register int j = NumPixels-1;
+  register int i = ((width*height)<<1)-1;
+  register int j = (width*height)-1;
   register int y;
 
   while (i >= 0) {
@@ -274,10 +272,10 @@ dc1394_MONO16_to_MONO8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t N
 }
 
 void
-dc1394_RGB8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_RGB8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order)
 {
-  register int i = NumPixels + ( NumPixels << 1 )-1;
-  register int j = (NumPixels << 1)-1;
+  register int i = (width*height) + ( (width*height) << 1 )-1;
+  register int j = ((width*height) << 1)-1;
   register int y0, y1, u0, u1, v0, v1 ;
   register int r, g, b;
 
@@ -321,29 +319,29 @@ dc1394_RGB8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t Nu
 }
 
 void
-dc1394_RGB16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order)
+dc1394_RGB16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order, uint_t bits)
 {
-  register int i = ( (NumPixels + ( NumPixels << 1 )) << 1 ) -1;
-  register int j = (NumPixels << 1)-1;
+  register int i = ( ((width*height) + ( (width*height) << 1 )) << 1 ) -1;
+  register int j = ((width*height) << 1)-1;
   register int y0, y1, u0, u1, v0, v1 ;
-  register int r, g, b;
+  register int r, g, b, t;
 
   switch (byte_order) {
   case DC1394_BYTE_ORDER_YUYV:
     while (i >= 0) {
-      i--;
-      b = (uchar_t) src[i--];
-      i--;
-      g = (uchar_t) src[i--];
-      i--;
-      r = (uchar_t) src[i--];
-      i--;
+      t =src[i--];
+      b = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
+      t =src[i--];
+      g = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
+      t =src[i--];
+      r = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
       RGB2YUV (r, g, b, y0, u0 , v0);
-      b = (uchar_t) src[i--];
-      i--;
-      g = (uchar_t) src[i--];
-      i--;
-      r = (uchar_t) src[i--];
+      t =src[i--]; 
+      b = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
+      t =src[i--];
+      g = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8)); 
+      t =src[i--];
+      r = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
       RGB2YUV (r, g, b, y1, u1 , v1);
       dest[j--] = (v0+v1) >> 1;
       dest[j--] = y0;
@@ -353,19 +351,19 @@ dc1394_RGB16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t N
     break;
   case DC1394_BYTE_ORDER_UYVY:
     while (i >= 0) {
-      i--;
-      b = (uchar_t) src[i--];
-      i--;
-      g = (uchar_t) src[i--];
-      i--;
-      r = (uchar_t) src[i--];
-      i--;
+      t =src[i--]; 
+      b = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
+      t =src[i--]; 
+      g = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
+      t =src[i--]; 
+      r = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
       RGB2YUV (r, g, b, y0, u0 , v0);
-      b = (uchar_t) src[i--];
-      i--;
-      g = (uchar_t) src[i--];
-      i--;
-      r = (uchar_t) src[i--];
+      t =src[i--]; 
+      b = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
+      t =src[i--]; 
+      g = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
+      t =src[i--]; 
+      r = (uchar_t) ((t + (src[i--]<<8)) >>(bits-8));
       RGB2YUV (r, g, b, y1, u1 , v1);
       dest[j--] = y0;
       dest[j--] = (v0+v1) >> 1;
@@ -386,27 +384,31 @@ dc1394_RGB16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t N
  **********************************************************************/
 
 void
-dc1394_RGB16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
+dc1394_RGB16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t bits)
 {
-  register int i = ((NumPixels + ( NumPixels << 1 )) << 1)-1;
-  register int j = NumPixels + ( NumPixels << 1 ) -1;
+  register int i = (((width*height) + ( (width*height) << 1 )) << 1)-1;
+  register int j = (width*height) + ( (width*height) << 1 ) -1;
+  register int t;
 
   while (i >= 0) {
-    i--;
-    dest[j--]=src[i--];
-    i--;
-    dest[j--]=src[i--];
-    i--;
-    dest[j--]=src[i--];
+    t = src[i--];
+    t = (t + (src[i--]<<8))>>(bits-8);
+    dest[j--]=t;
+    t = src[i--];
+    t = (t + (src[i--]<<8))>>(bits-8);
+    dest[j--]=t;
+    t = src[i--];
+    t = (t + (src[i--]<<8))>>(bits-8);
+    dest[j--]=t;
   }
 }
 
 
 void
-dc1394_YUV444_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
+dc1394_YUV444_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height)
 {
-  register int i = NumPixels + ( NumPixels << 1 ) -1;
-  register int j = NumPixels + ( NumPixels << 1 ) -1;
+  register int i = (width*height) + ( (width*height) << 1 ) -1;
+  register int j = (width*height) + ( (width*height) << 1 ) -1;
   register int y, u, v;
   register int r, g, b;
 
@@ -422,35 +424,60 @@ dc1394_YUV444_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t Nu
 }
 
 void
-dc1394_YUV422_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
+dc1394_YUV422_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order)
 {
-  register int i = (NumPixels << 1)-1;
-  register int j = NumPixels + ( NumPixels << 1 ) -1;
+  register int i = ((width*height) << 1)-1;
+  register int j = (width*height) + ( (width*height) << 1 ) -1;
   register int y0, y1, u, v;
   register int r, g, b;
 
-  while (i >= 0) {
-    y1 = (uchar_t) src[i--];
-    v  = (uchar_t) src[i--] - 128;
-    y0 = (uchar_t) src[i--];
-    u  = (uchar_t) src[i--] - 128;
-    YUV2RGB (y1, u, v, r, g, b);
-    dest[j--] = b;
-    dest[j--] = g;
-    dest[j--] = r;
-    YUV2RGB (y0, u, v, r, g, b);
-    dest[j--] = b;
-    dest[j--] = g;
-    dest[j--] = r;
+  
+  switch (byte_order) {
+  case DC1394_BYTE_ORDER_YUYV:
+    while (i >= 0) {
+      v  = (uchar_t) src[i--] -128;
+      y1 = (uchar_t) src[i--];
+      u  = (uchar_t) src[i--] -128;
+      y0  = (uchar_t) src[i--];
+      YUV2RGB (y1, u, v, r, g, b);
+      dest[j--] = b;
+      dest[j--] = g;
+      dest[j--] = r;
+      YUV2RGB (y0, u, v, r, g, b);
+      dest[j--] = b;
+      dest[j--] = g;
+      dest[j--] = r;
+    }
+    break;
+  case DC1394_BYTE_ORDER_UYVY:
+    while (i >= 0) {
+      y1 = (uchar_t) src[i--];
+      v  = (uchar_t) src[i--] - 128;
+      y0 = (uchar_t) src[i--];
+      u  = (uchar_t) src[i--] - 128;
+      YUV2RGB (y1, u, v, r, g, b);
+      dest[j--] = b;
+      dest[j--] = g;
+      dest[j--] = r;
+      YUV2RGB (y0, u, v, r, g, b);
+      dest[j--] = b;
+      dest[j--] = g;
+      dest[j--] = r;
+    }
+    break;
+  default:
+    fprintf(stderr,"Invalid overlay byte order\n");
+    break;
   }
+  
 }
 
 
 void
-dc1394_YUV411_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
+dc1394_YUV411_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height)
 {
-  register int i = NumPixels + ( NumPixels >> 1 )-1;
-  register int j = NumPixels + ( NumPixels << 1 )-1;
+  register int i = (width*height) + ( (width*height) >> 1 )-1;
+  register int j = (width*height) + ( (width*height) << 1 )-1;
   register int y0, y1, y2, y3, u, v;
   register int r, g, b;
   
@@ -481,10 +508,10 @@ dc1394_YUV411_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t Nu
 }
 
 void
-dc1394_MONO8_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
+dc1394_MONO8_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height)
 {
-  register int i = NumPixels-1;
-  register int j = NumPixels + ( NumPixels << 1 )-1;
+  register int i = (width*height)-1;
+  register int j = (width*height) + ( (width*height) << 1 )-1;
   register int y;
 
   while (i >= 0) {
@@ -496,10 +523,10 @@ dc1394_MONO8_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t Num
 }
 
 void
-dc1394_MONO16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits)
+dc1394_MONO16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t bits)
 {
-  register int i = (NumPixels << 1)-1;
-  register int j = NumPixels + ( NumPixels << 1 )-1;
+  register int i = ((width*height) << 1)-1;
+  register int j = (width*height) + ( (width*height) << 1 )-1;
   register int y;
 
   while (i > 0) {
@@ -514,14 +541,103 @@ dc1394_MONO16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t Nu
 // change a 16bit stereo image (8bit/channel) into two 8bit images on top
 // of each other
 void
-dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels)
+dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height)
 {
-  register int i = NumPixels-1;
-  register int j = (NumPixels>>1)-1;
-  register int k = NumPixels-1;
+  register int i = (width*height)-1;
+  register int j = ((width*height)>>1)-1;
+  register int k = (width*height)-1;
 
   while (i >= 0) {
     dest[k--] = src[i--];
     dest[j--] = src[i--];
   }
+}
+
+dc1394error_t
+dc1394_convert_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+			 dc1394color_coding_t source_coding, uint_t bits)
+{
+  switch(source_coding) {
+  case DC1394_COLOR_CODING_YUV422:
+    dc1394_YUV422_to_YUV422(src, dest, width, height, byte_order);
+    break;
+  case DC1394_COLOR_CODING_YUV411:
+    dc1394_YUV411_to_YUV422(src, dest, width, height, byte_order);
+    break;
+  case DC1394_COLOR_CODING_YUV444:
+    dc1394_YUV444_to_YUV422(src, dest, width, height, byte_order);
+    break;
+  case DC1394_COLOR_CODING_RGB8:
+    dc1394_RGB8_to_YUV422(src, dest, width, height, byte_order);
+    break;
+  case DC1394_COLOR_CODING_MONO8:
+  case DC1394_COLOR_CODING_RAW8:
+    dc1394_MONO8_to_YUV422(src, dest, width, height, byte_order);
+    break;
+  case DC1394_COLOR_CODING_MONO16:
+    dc1394_MONO16_to_YUV422(src, dest, width, height, byte_order, bits);
+    break;
+  case DC1394_COLOR_CODING_RGB16:
+    dc1394_RGB16_to_YUV422(src, dest, width, height, byte_order, bits);
+    break;
+  default:
+    fprintf(stderr,"Conversion to YUV422 from this color coding is not supported\n");
+    return DC1394_FAILURE;
+  }
+
+  return DC1394_SUCCESS;
+}
+
+dc1394error_t
+dc1394_convert_to_MONO8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+			dc1394color_coding_t source_coding, uint_t bits)
+{
+  switch(source_coding) {
+  case DC1394_COLOR_CODING_MONO16:
+    dc1394_MONO16_to_MONO8(src, dest, width, height, bits);
+    break;
+  case DC1394_COLOR_CODING_MONO8:
+    memcpy(dest, src, width*height);
+    break;
+  default:
+    fprintf(stderr,"Conversion to MONO8 from this color coding is not supported\n");
+    return DC1394_FAILURE;
+  }
+
+  return DC1394_SUCCESS;
+}
+
+dc1394error_t
+dc1394_convert_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+		       dc1394color_coding_t source_coding, uint_t bits)
+{
+  switch(source_coding) {
+  case DC1394_COLOR_CODING_RGB16:
+    dc1394_RGB16_to_RGB8 (src, dest, width, height, bits);
+    break;
+  case DC1394_COLOR_CODING_YUV444:
+    dc1394_YUV444_to_RGB8 (src, dest, width, height);
+    break;
+  case DC1394_COLOR_CODING_YUV422:
+    dc1394_YUV422_to_RGB8 (src, dest, width, height, byte_order);
+    break;
+  case DC1394_COLOR_CODING_YUV411:
+    dc1394_YUV411_to_RGB8 (src, dest, width, height);
+    break;
+  case DC1394_COLOR_CODING_MONO8:
+  case DC1394_COLOR_CODING_RAW8:
+    dc1394_MONO8_to_RGB8 (src, dest, width, height);
+    break;
+  case DC1394_COLOR_CODING_MONO16:
+    dc1394_MONO16_to_RGB8 (src, dest, width, height,bits);
+    break;
+  case DC1394_COLOR_CODING_RGB8:
+    memcpy(dest, src, width*height*3);
+    break;
+  default:
+    fprintf(stderr,"Conversion to RGB8 from this color coding is not supported\n");
+    return DC1394_FAILURE;
+  }
+
+  return DC1394_SUCCESS;
 }

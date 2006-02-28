@@ -1,7 +1,7 @@
 # process this file with autoconf to get a configure script
 AC_INIT(libdc1394/dc1394_control.c)
 
-AM_INIT_AUTOMAKE(libdc1394, 2.0.0-pre5)
+AM_INIT_AUTOMAKE(dc1394, 2.0.0-20060207)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -16,6 +16,27 @@ AC_C_RESTRICT
 AC_CHECK_LIB(raw1394, raw1394_channel_modify,
    [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) LIBS="$LIBS -lraw1394";break],
     AC_MSG_ERROR(libraw1394 not found or too old))
+
+# check for Xv extensions (necessary for examples/dc1394_multiview)
+# imported from Coriander
+AC_DEFUN([AC_CHECK_XV],[
+	AC_SUBST(XV_CFLAGS)
+	AC_SUBST(XV_LIBS)
+	AC_MSG_CHECKING(for Xv extensions)
+	AC_TRY_COMPILE([
+	#include <X11/Xlib.h>
+ 	#include <X11/extensions/Xvlib.h>],[
+	int main(void) { (void) XvGetPortAttribute(0, 0, 0, 0); return 0; }
+	],xv=yes,xv=no);
+	AC_MSG_RESULT($xv)
+ 	if test x$xv = xyes; then
+           XV_LIBS="-lXv -lXext"
+           XV_CFLAGS=""
+	   AC_DEFINE(HAVE_XV,1,[defined if XV video overlay is available])
+ 	fi
+        AM_CONDITIONAL(XVOK, test x$xv = xyes)
+])
+AC_CHECK_XV
 
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h sys/ioctl.h unistd.h)

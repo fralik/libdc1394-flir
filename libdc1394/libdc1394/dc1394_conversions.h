@@ -30,7 +30,7 @@ enum {
   DC1394_BYTE_ORDER_YUYV
 };
 
-enum {
+typedef enum {
   DC1394_BAYER_METHOD_NEAREST=0,
   DC1394_BAYER_METHOD_SIMPLE,
   DC1394_BAYER_METHOD_BILINEAR,
@@ -38,7 +38,7 @@ enum {
   DC1394_BAYER_METHOD_DOWNSAMPLE,
   DC1394_BAYER_METHOD_EDGESENSE,
   DC1394_BAYER_METHOD_VNG
-};
+} dc1394bayer_method_t;
 #define DC1394_BAYER_METHOD_MIN      DC1394_BAYER_METHOD_NEAREST
 #define DC1394_BAYER_METHOD_MAX      DC1394_BAYER_METHOD_EDGESENSE
 #define DC1394_BAYER_METHOD_NUM     (DC1394_BAYER_METHOD_MAX-DC1394_BAYER_METHOD_MIN+1)
@@ -68,42 +68,32 @@ enum {
   u = u > 255 ? 255 : u;\
   v = v > 255 ? 255 : v
 
-/**********************************************************************
- *  CONVERSION FUNCTIONS TO YUV422
- **********************************************************************/
-
-void dc1394_YUV422_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order);
-void dc1394_YUV411_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order);
-void dc1394_YUV444_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order);
-void dc1394_MONO16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits, uint_t byte_order);
-void dc1394_RGB8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order);
-void dc1394_RGB16_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t byte_order);
-void dc1394_MONO8_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, 
-			    uint_t src_width, uint_t src_height,
-			    uint_t dest_pitch, uint_t byte_order);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**********************************************************************
- *  CONVERSION FUNCTIONS TO MONO8
+ *  CONVERSION FUNCTIONS TO YUV422, MONO8 and RGB8
  **********************************************************************/
 
-void dc1394_MONO16_to_MONO8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits);
+dc1394error_t
+dc1394_convert_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+			 dc1394color_coding_t source_coding, uint_t bits);
 
-/**********************************************************************
- *  CONVERSION FUNCTIONS TO RGB8 
- **********************************************************************/
+dc1394error_t
+dc1394_convert_to_MONO8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+			dc1394color_coding_t source_coding, uint_t bits);
 
-void dc1394_RGB16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels);
-void dc1394_YUV444_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels);
-void dc1394_YUV422_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels);
-void dc1394_YUV411_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels);
-void dc1394_MONO8_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels);
-void dc1394_MONO16_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels, uint_t bits);
+dc1394error_t
+dc1394_convert_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+		       dc1394color_coding_t source_coding, uint_t bits);
 
 /**********************************************************************
  *  CONVERSION FUNCTIONS FOR STEREO IMAGES
  **********************************************************************/
+
 //changes a 16bit stereo image (8bit/channel) into two 8bit images on top of each other
-void dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, uint64_t NumPixels);
+void dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height);
 
 /************************************************************************************************
  *                                                                                              *
@@ -124,11 +114,24 @@ void dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, ui
  *  - Downsample       : "Known to the Ancients"                                                *
  *  - Simple           : Implemented from the information found in the manual of Allied Vision  *
  *                       Technologies (AVT) cameras.                                            *
+ *  - VNG              : Variable Number of Gradients, a method described in                    *
+ *                       http://www-ise.stanford.edu/~tingchen/algodep/vargra.html              *
+ *                       Sources import from DCRAW by Frederic Devernay. DCRAW is a RAW         *
+ *                       converter program by Dave Coffin. URL:                                 *
+ *                       http://www.cybercom.net/~dcoffin/dcraw/                                *
  *                                                                                              *
  ************************************************************************************************/
 
-dc1394error_t dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method);
-dc1394error_t dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method, uint_t bits);
+dc1394error_t dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb,
+					 uint_t width, uint_t height, dc1394color_filter_t tile,
+					 dc1394bayer_method_t method);
+dc1394error_t dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb,
+					  uint_t width, uint_t height, dc1394color_filter_t tile,
+					  dc1394bayer_method_t, uint_t bits);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _DC1394_CONVERSIONS_H */
 

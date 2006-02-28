@@ -18,11 +18,15 @@
  */
 
 #include "dc1394_utils.h"
+#include "dc1394_internal.h"
 
 dc1394error_t
-dc1394_get_wh_from_mode(dc1394video_mode_t mode, uint_t *w, uint_t *h) 
+dc1394_get_image_size_from_video_mode(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint_t *w, uint_t *h) 
 {
-  switch(mode) {
+  dc1394error_t err;
+  uint_t sx, sy;
+
+  switch(video_mode) {
   case DC1394_VIDEO_MODE_160x120_YUV444:
     *w = 160;*h=120;
     return DC1394_SUCCESS;
@@ -68,8 +72,17 @@ dc1394_get_wh_from_mode(dc1394video_mode_t mode, uint_t *w, uint_t *h)
   case DC1394_VIDEO_MODE_FORMAT7_5:
   case DC1394_VIDEO_MODE_FORMAT7_6:
   case DC1394_VIDEO_MODE_FORMAT7_7:
+    // get the current color mode from the camera
+    err=dc1394_format7_get_image_size(camera, video_mode, &sx, &sy);
+    if (err!=DC1394_SUCCESS) {
+      return err;
+    }
+    else {
+      *w=sx;
+      *h=sy;
+    }
+    return DC1394_SUCCESS;
   case DC1394_VIDEO_MODE_EXIF:
-    // TODO get size from camera.
     return DC1394_FAILURE;
   }
 
@@ -110,9 +123,9 @@ dc1394_framerate_as_float(dc1394framerate_t framerate_enum, float *framerate)
 }
 
 dc1394error_t
-dc1394_is_color(dc1394color_coding_t color_mode, dc1394bool_t *is_color)
+dc1394_is_color(dc1394color_coding_t color_coding, dc1394bool_t *is_color)
 {
-  switch(color_mode)  {
+  switch(color_coding)  {
   case DC1394_COLOR_CODING_MONO8:
   case DC1394_COLOR_CODING_MONO16:
   case DC1394_COLOR_CODING_MONO16S:
@@ -129,13 +142,13 @@ dc1394_is_color(dc1394color_coding_t color_mode, dc1394bool_t *is_color)
     *is_color=DC1394_TRUE;
     return DC1394_SUCCESS;
   }
-  return DC1394_INVALID_COLOR_MODE;
+  return DC1394_INVALID_COLOR_CODING;
 }
 
 dc1394error_t
-dc1394_get_bytes_per_pixel(dc1394color_coding_t color_mode, float* bpp)
+dc1394_get_bytes_per_pixel(dc1394color_coding_t color_coding, float* bpp)
 {
-  switch(color_mode) {
+  switch(color_coding) {
   case DC1394_COLOR_CODING_MONO8:
   case DC1394_COLOR_CODING_RAW8:
     *bpp=1.0;
@@ -158,15 +171,18 @@ dc1394_get_bytes_per_pixel(dc1394color_coding_t color_mode, float* bpp)
     *bpp=6.0;
     return DC1394_SUCCESS;
   }
-  return DC1394_INVALID_COLOR_MODE;
+  return DC1394_INVALID_COLOR_CODING;
 }
 
 dc1394error_t
-dc1394_get_color_mode_from_mode(dc1394video_mode_t mode, uint_t *color_mode)
+dc1394_get_color_coding_from_video_mode(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding)
 {
-  switch(mode) {
+  dc1394error_t err;
+  dc1394color_coding_t id;
+
+  switch(video_mode) {
   case DC1394_VIDEO_MODE_160x120_YUV444:
-    *color_mode=DC1394_COLOR_CODING_YUV444;
+    *color_coding=DC1394_COLOR_CODING_YUV444;
     return DC1394_SUCCESS;
   case DC1394_VIDEO_MODE_320x240_YUV422:
   case DC1394_VIDEO_MODE_640x480_YUV422:
@@ -174,31 +190,31 @@ dc1394_get_color_mode_from_mode(dc1394video_mode_t mode, uint_t *color_mode)
   case DC1394_VIDEO_MODE_1024x768_YUV422:
   case DC1394_VIDEO_MODE_1280x960_YUV422:
   case DC1394_VIDEO_MODE_1600x1200_YUV422:
-    *color_mode=DC1394_COLOR_CODING_YUV422;
+    *color_coding=DC1394_COLOR_CODING_YUV422;
     return DC1394_SUCCESS;
   case DC1394_VIDEO_MODE_640x480_YUV411:
-    *color_mode=DC1394_COLOR_CODING_YUV411;
+    *color_coding=DC1394_COLOR_CODING_YUV411;
     return DC1394_SUCCESS;
   case DC1394_VIDEO_MODE_640x480_RGB8:
   case DC1394_VIDEO_MODE_800x600_RGB8:
   case DC1394_VIDEO_MODE_1024x768_RGB8:
   case DC1394_VIDEO_MODE_1280x960_RGB8:
   case DC1394_VIDEO_MODE_1600x1200_RGB8:
-    *color_mode=DC1394_COLOR_CODING_RGB8;
+    *color_coding=DC1394_COLOR_CODING_RGB8;
     return DC1394_SUCCESS;
   case DC1394_VIDEO_MODE_640x480_MONO8:
   case DC1394_VIDEO_MODE_800x600_MONO8:
   case DC1394_VIDEO_MODE_1024x768_MONO8:
   case DC1394_VIDEO_MODE_1280x960_MONO8:
   case DC1394_VIDEO_MODE_1600x1200_MONO8:
-    *color_mode=DC1394_COLOR_CODING_MONO8;
+    *color_coding=DC1394_COLOR_CODING_MONO8;
     return DC1394_SUCCESS;
   case DC1394_VIDEO_MODE_800x600_MONO16:
   case DC1394_VIDEO_MODE_640x480_MONO16:
   case DC1394_VIDEO_MODE_1024x768_MONO16:
   case DC1394_VIDEO_MODE_1280x960_MONO16:
   case DC1394_VIDEO_MODE_1600x1200_MONO16:
-    *color_mode=DC1394_COLOR_CODING_MONO16;
+    *color_coding=DC1394_COLOR_CODING_MONO16;
     return DC1394_SUCCESS;
   case DC1394_VIDEO_MODE_FORMAT7_0:
   case DC1394_VIDEO_MODE_FORMAT7_1:
@@ -208,10 +224,30 @@ dc1394_get_color_mode_from_mode(dc1394video_mode_t mode, uint_t *color_mode)
   case DC1394_VIDEO_MODE_FORMAT7_5:
   case DC1394_VIDEO_MODE_FORMAT7_6:
   case DC1394_VIDEO_MODE_FORMAT7_7:
+    // get the current color mode from the camera
+    err=dc1394_format7_get_color_coding(camera, video_mode, &id);
+    if (err!=DC1394_SUCCESS) {
+      return err;
+    }
+    else {
+      *color_coding=id;
+    }
+    return DC1394_SUCCESS;
   case DC1394_VIDEO_MODE_EXIF:
-    // TODO get size from camera.
     return DC1394_FAILURE;
   }
 
   return DC1394_FAILURE;
+}
+
+dc1394bool_t
+dc1394_is_video_mode_scalable(dc1394video_mode_t video_mode)
+{
+  return ((video_mode>=DC1394_VIDEO_MODE_FORMAT7_MIN)&&(video_mode<=DC1394_VIDEO_MODE_FORMAT7_MAX));
+}
+
+dc1394bool_t
+dc1394_is_video_mode_still_image(dc1394video_mode_t video_mode)
+{
+  return ((video_mode>=DC1394_VIDEO_MODE_FORMAT6_MIN)&&(video_mode<=DC1394_VIDEO_MODE_FORMAT6_MAX));
 }

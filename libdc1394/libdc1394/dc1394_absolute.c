@@ -24,7 +24,7 @@
 
 
 dc1394error_t
-dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, dc1394feature_id_t feature, float *min, float *max)
+dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, dc1394feature_t feature, float *min, float *max)
 {
   dc1394error_t err=DC1394_SUCCESS;
   
@@ -42,7 +42,7 @@ dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, dc1394feature_id_
 
 
 dc1394error_t
-dc1394_feature_get_absolute_value(dc1394camera_t *camera, dc1394feature_id_t feature, float *value)
+dc1394_feature_get_absolute_value(dc1394camera_t *camera, dc1394feature_t feature, float *value)
 {
   dc1394error_t err=DC1394_SUCCESS;
 
@@ -57,7 +57,7 @@ dc1394_feature_get_absolute_value(dc1394camera_t *camera, dc1394feature_id_t fea
 
 
 dc1394error_t
-dc1394_feature_set_absolute_value(dc1394camera_t *camera, dc1394feature_id_t feature, float value)
+dc1394_feature_set_absolute_value(dc1394camera_t *camera, dc1394feature_t feature, float value)
 {
   dc1394error_t err=DC1394_SUCCESS;
   

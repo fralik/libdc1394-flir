@@ -20,6 +20,7 @@
 #include "dc1394_control.h"
 #include "dc1394_internal.h"
 #include "dc1394_offsets.h"
+#include "dc1394_utils.h"
 #include "config.h"
 
 /* Note: debug modes can be very verbose. */
@@ -60,7 +61,7 @@
 dc1394error_t
 GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 {
-  int retval, retry= DC1394_MAX_RETRIES;
+  int retval=1, retry= DC1394_MAX_RETRIES;
 
   /* retry a few times if necessary (addition by PDJ) */
   while(retry--)  {
@@ -71,6 +72,7 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 #ifdef DC1394_DEBUG_LOWEST_LEVEL
     fprintf(stderr,"0x%lx\n",*value);
 #endif
+    usleep(DC1394_SLOW_DOWN);
 
     if (!retval) {
       /* conditionally byte swap the value */
@@ -81,7 +83,6 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
       return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );;
     }
     
-    usleep(DC1394_SLOW_DOWN);
   }
   
   *value= ntohl(*value);
@@ -91,7 +92,7 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 dc1394error_t
 SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
 {
-  int retval, retry= DC1394_MAX_RETRIES;
+  int retval=1, retry= DC1394_MAX_RETRIES;
 
   /* conditionally byte swap the value (addition by PDJ) */
   value= htonl(value);
@@ -103,11 +104,12 @@ SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
 #endif
     retval= raw1394_write(camera->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, &value);
 
+    usleep(DC1394_SLOW_DOWN);
+
     if (!retval || (errno != EAGAIN)) {
       return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );;
     }
     
-    usleep(DC1394_SLOW_DOWN);
   }
   
   return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );
@@ -123,12 +125,13 @@ GetCameraControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t *val
 
   if (camera == NULL)
     return DC1394_FAILURE;
-  
+  /*
   if (camera->command_registers_base == 0) {
     fprintf(stderr,"this should not happen\n");
     if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
       return DC1394_FAILURE;
   }
+  */
   //fprintf(stderr,"trying to get 0x%llx",camera->command_registers_base+offset);
   retval = GetCameraROMValue(camera, camera->command_registers_base+offset, value);
 
@@ -144,12 +147,12 @@ SetCameraControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t valu
 
   if (camera == NULL)
     return DC1394_FAILURE;
-  
+  /*
   if (camera->command_registers_base == 0) {
     if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
       return DC1394_FAILURE;
   }
-  
+  */
   //fprintf(stderr,"trying to set 0x%llx\n",camera->command_registers_base+offset);
   retval= SetCameraROMValue(camera, camera->command_registers_base+offset, value);
 
@@ -164,12 +167,12 @@ GetCameraAdvControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t *
 {
   if (camera == NULL)
     return DC1394_FAILURE;
-  
+  /*
   if (camera->advanced_features_csr == 0) {
     if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
       return DC1394_FAILURE;
   }
-  
+  */
   return GetCameraROMValue(camera, camera->advanced_features_csr+offset, value);
 }
 
@@ -178,12 +181,12 @@ SetCameraAdvControlRegister(dc1394camera_t *camera, octlet_t offset, quadlet_t v
 {
   if (camera == NULL)
     return DC1394_FAILURE;
-  
+  /*
   if (camera->advanced_features_csr == 0) {
     if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
       return DC1394_FAILURE;
   }
-  
+  */
   return SetCameraROMValue(camera, camera->advanced_features_csr+offset, value);
 }
 
@@ -201,9 +204,8 @@ QueryFormat7CSROffset(dc1394camera_t *camera, dc1394video_mode_t mode, octlet_t 
     return DC1394_FAILURE;
   }
 
-  if ( (mode > DC1394_VIDEO_MODE_FORMAT7_MAX) || (mode < DC1394_VIDEO_MODE_FORMAT7_MIN) ) {
+  if (!dc1394_is_video_mode_scalable(mode))
     return DC1394_FAILURE;
-  }
   
   retval=GetCameraControlRegister(camera, REG_CAMERA_V_CSR_INQ_BASE + ((mode - DC1394_VIDEO_MODE_FORMAT7_MIN) * 0x04U), &temp);
   //fprintf(stderr,"got register 0x%llx : 0x%x, err=%d\n",
@@ -219,9 +221,8 @@ GetCameraFormat7Register(dc1394camera_t *camera, dc1394video_mode_t mode, octlet
     return DC1394_FAILURE;
   }
 
-  if ( (mode > DC1394_VIDEO_MODE_FORMAT7_MAX) || (mode < DC1394_VIDEO_MODE_FORMAT7_MIN) ) {
+  if (!dc1394_is_video_mode_scalable(mode))
     return DC1394_FAILURE;
-  }
 
   if (camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]==0) {
     //fprintf(stderr,"getting offset for mode %d: ",mode);
@@ -245,9 +246,8 @@ SetCameraFormat7Register(dc1394camera_t *camera, dc1394video_mode_t mode, octlet
     return DC1394_FAILURE;
   }
 
-  if ( (mode > DC1394_VIDEO_MODE_FORMAT7_MAX) || (mode < DC1394_VIDEO_MODE_FORMAT7_MIN) ) {
+  if (!dc1394_is_video_mode_scalable(mode))
     return DC1394_FAILURE;
-  }
 
   if (camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]==0) {
     QueryFormat7CSROffset(camera, mode, &camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]);
@@ -262,7 +262,7 @@ SetCameraFormat7Register(dc1394camera_t *camera, dc1394video_mode_t mode, octlet
 /********************************************************************************/
 
 dc1394error_t
-QueryAbsoluteCSROffset(dc1394camera_t *camera, dc1394feature_id_t feature, octlet_t *value)
+QueryAbsoluteCSROffset(dc1394camera_t *camera, dc1394feature_t feature, octlet_t *value)
 {
   int offset, retval;
   quadlet_t quadlet=0;
@@ -281,7 +281,7 @@ QueryAbsoluteCSROffset(dc1394camera_t *camera, dc1394feature_id_t feature, octle
 }
 
 dc1394error_t
-GetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_id_t feature, octlet_t offset, quadlet_t *value)
+GetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, octlet_t offset, quadlet_t *value)
 {
   if (camera == NULL) {
     return DC1394_FAILURE;
@@ -295,7 +295,7 @@ GetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_id_t feature, oc
 }
 
 dc1394error_t
-SetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_id_t feature, octlet_t offset, quadlet_t value)
+SetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, octlet_t offset, quadlet_t value)
 {
   if (camera == NULL) {
     return DC1394_FAILURE;

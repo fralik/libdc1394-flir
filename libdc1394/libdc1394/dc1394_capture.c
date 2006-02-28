@@ -113,8 +113,8 @@ _dc1394_video_iso_handler(raw1394handle_t handle, int channel, size_t length, qu
  Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
 *************************************************************/
 dc1394error_t 
-_dc1394_basic_setup(dc1394camera_t *camera, uint_t mode,
-                    uint_t speed, uint_t frame_rate)
+_dc1394_basic_setup(dc1394camera_t *camera, dc1394video_mode_t video_mode,
+                    dc1394speed_t speed, dc1394framerate_t frame_rate)
 {
   dc1394error_t err;
   dc1394switch_t is_iso_on= DC1394_OFF;
@@ -138,8 +138,8 @@ _dc1394_basic_setup(dc1394camera_t *camera, uint_t mode,
   err=dc1394_video_set_iso_speed(camera, speed);
   DC1394_ERR_CHK(err, "Unable to set speed");
   
-  err=dc1394_video_set_mode(camera,mode);
-  DC1394_ERR_CHK(err, "Unable to set video mode %d!", mode);
+  err=dc1394_video_set_mode(camera, video_mode);
+  DC1394_ERR_CHK(err, "Unable to set video mode %d!", video_mode);
 
   err=dc1394_video_set_framerate(camera,frame_rate);
   DC1394_ERR_CHK(err, "Unable to set framerate %d!", frame_rate);
@@ -153,21 +153,21 @@ _dc1394_basic_setup(dc1394camera_t *camera, uint_t mode,
   camera->capture.handle=raw1394_new_handle();
   raw1394_set_port(camera->capture.handle,camera->port);
 
-  err=_dc1394_get_quadlets_per_packet(mode, frame_rate, &camera->capture.quadlets_per_packet);
+  err=_dc1394_get_quadlets_per_packet(video_mode, frame_rate, &camera->capture.quadlets_per_packet);
   DC1394_ERR_CHK(err, "Unable to get quadlets per packet");
 
   if (camera->capture.quadlets_per_packet < 0) {
     return DC1394_FAILURE;
   }
   
-  err= _dc1394_quadlets_from_format(mode, &camera->capture.quadlets_per_frame);
+  err= _dc1394_quadlets_from_format(camera, video_mode, &camera->capture.quadlets_per_frame);
   DC1394_ERR_CHK(err,"Could not get quadlets from format");
 
   if (camera->capture.quadlets_per_frame < 0)  {
     return DC1394_FAILURE;
   }
   
-  err=dc1394_get_wh_from_mode(mode,&camera->capture.frame_width,&camera->capture.frame_height);
+  err=dc1394_get_image_size_from_video_mode(camera, video_mode,&camera->capture.frame_width,&camera->capture.frame_height);
   DC1394_ERR_CHK(err,"Could not get width/height from format/mode");
   
   return err;
@@ -193,11 +193,11 @@ _dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t num_dma_buffers)
   DC1394_ERR_CHK(err,"Could not allocate ISO channel and bandwidth!");
 
   /* using_fd counter array NULL if not used yet -- initialize */
-  if( NULL == _dc1394_num_using_fd ) {
+  if ( _dc1394_num_using_fd == NULL ) {
     _dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(uint_t) );
     _dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(uint_t) );
   }
-	
+
   if (_dc1394_open_dma_device(camera) != DC1394_SUCCESS) {
     return DC1394_INVALID_VIDEO1394_DEVICE;
   }
@@ -289,17 +289,17 @@ dc1394_set_dma_device_filename(dc1394camera_t* camera, char *filename)
  Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
 **************************************************************/
 dc1394error_t 
-dc1394_setup_capture(dc1394camera_t *camera, dc1394video_mode_t mode, 
+dc1394_setup_capture(dc1394camera_t *camera, dc1394video_mode_t video_mode, 
                      dc1394speed_t speed, dc1394framerate_t frame_rate) 
 {
   dc1394error_t err;
   uint_t format;
 
-  err=_dc1394_get_format_from_mode(mode, &format);
+  err=_dc1394_get_format_from_mode(video_mode, &format);
   DC1394_ERR_CHK(err, "Invalid mode ID");
 
   if( format == DC1394_FORMAT7) {
-    err=dc1394_setup_format7_capture(camera, mode, DC1394_QUERY_FROM_CAMERA, speed,
+    err=dc1394_setup_format7_capture(camera, video_mode, DC1394_QUERY_FROM_CAMERA, speed,
 				     DC1394_QUERY_FROM_CAMERA, /*bytes_per_paket*/
 				     DC1394_QUERY_FROM_CAMERA, /*left*/
 				     DC1394_QUERY_FROM_CAMERA, /*top*/
@@ -308,7 +308,7 @@ dc1394_setup_capture(dc1394camera_t *camera, dc1394video_mode_t mode,
     DC1394_ERR_CHK(err,"Could not setup F7 capture");
   }
   else {
-    err=_dc1394_basic_setup(camera, mode, speed,frame_rate);
+    err=_dc1394_basic_setup(camera, video_mode, speed,frame_rate);
     DC1394_ERR_CHK(err,"Could not setup capture");
     
     camera->capture.capture_buffer= (uchar_t*)malloc(camera->capture.quadlets_per_frame*4);
@@ -440,18 +440,18 @@ dc1394_capture(dc1394camera_t **cams, uint_t num)
  routines
 ******************************************************/
 dc1394error_t
-dc1394_dma_setup_capture(dc1394camera_t *camera, dc1394video_mode_t mode,
+dc1394_dma_setup_capture(dc1394camera_t *camera, dc1394video_mode_t video_mode,
                          dc1394speed_t speed, dc1394framerate_t frame_rate,
                          uint_t num_dma_buffers, uint_t drop_frames)
 {
   dc1394error_t err;
   uint_t format;
 
-  err=_dc1394_get_format_from_mode(mode, &format);
+  err=_dc1394_get_format_from_mode(video_mode, &format);
   DC1394_ERR_CHK(err, "Invalid mode ID");
 
   if( format == DC1394_FORMAT7) {
-    err=dc1394_dma_setup_format7_capture(camera, mode, DC1394_QUERY_FROM_CAMERA, speed,
+    err=dc1394_dma_setup_format7_capture(camera, video_mode, DC1394_QUERY_FROM_CAMERA, speed,
 					 DC1394_QUERY_FROM_CAMERA, /*bytes_per_paket*/
 					 DC1394_QUERY_FROM_CAMERA, /*left*/
 					 DC1394_QUERY_FROM_CAMERA, /*top*/
@@ -464,7 +464,7 @@ dc1394_dma_setup_capture(dc1394camera_t *camera, dc1394video_mode_t mode,
   else {
     camera->capture.drop_frames = drop_frames;
     
-    err=_dc1394_basic_setup(camera, mode, speed, frame_rate);
+    err=_dc1394_basic_setup(camera, video_mode, speed, frame_rate);
     DC1394_ERR_CHK(err,"Could not setup capture");
     
     err=_dc1394_dma_basic_setup (camera, num_dma_buffers);
@@ -488,18 +488,19 @@ dc1394_dma_release_camera(dc1394camera_t *camera)
   
   if (camera->capture.dma_ring_buffer) {
     munmap((void*)camera->capture.dma_ring_buffer,camera->capture.dma_buffer_size);
-    
-    _dc1394_num_using_fd[camera->port]--;
-    
-    if (_dc1394_num_using_fd[camera->port] == 0) {
-      
-      while (close(camera->capture.dma_fd) != 0) {
-	printf("(%s) waiting for dma_fd to close\n", __FILE__);
-	sleep(1);
-      }
-      
-    }
   }
+
+  _dc1394_num_using_fd[camera->port]--;
+    
+  if (_dc1394_num_using_fd[camera->port] == 0) {
+    
+    while (close(camera->capture.dma_fd) != 0) {
+      printf("(%s) waiting for dma_fd to close\n", __FILE__);
+      sleep(1);
+    }
+    
+  }
+
   // this dma_device file is allocated by the strdup() function and can be freed here without problems.
   free(camera->capture.dma_device_file);
   camera->capture.dma_device_file=NULL;
@@ -537,7 +538,7 @@ dc1394_dma_unlisten(dc1394camera_t *camera)
 
 *****************************************************/
 dc1394error_t
-dc1394_dma_capture(dc1394camera_t **cams, uint_t num, dc1394videopolicy_t policy) 
+dc1394_dma_capture(dc1394camera_t **cameras, uint_t num, dc1394video_policy_t policy) 
 {
   struct video1394_wait vwait;
   int i;
@@ -549,31 +550,31 @@ dc1394_dma_capture(dc1394camera_t **cams, uint_t num, dc1394videopolicy_t policy
   
   //fprintf(stderr,"test0\n");
   for (i= 0; i < num; i++) {
-    last_buffer_orig = cams[i]->capture.dma_last_buffer;
-    cb = (cams[i]->capture.dma_last_buffer + 1) % cams[i]->capture.num_dma_buffers;
-    cams[i]->capture.dma_last_buffer = cb;
+    last_buffer_orig = cameras[i]->capture.dma_last_buffer;
+    cb = (cameras[i]->capture.dma_last_buffer + 1) % cameras[i]->capture.num_dma_buffers;
+    cameras[i]->capture.dma_last_buffer = cb;
     
-    vwait.channel = cams[i]->iso_channel;
+    vwait.channel = cameras[i]->iso_channel;
     vwait.buffer = cb;
     switch (policy) {
     case DC1394_VIDEO1394_POLL:
-      result=ioctl(cams[i]->capture.dma_fd, VIDEO1394_IOC_LISTEN_POLL_BUFFER, &vwait);
+      result=ioctl(cameras[i]->capture.dma_fd, VIDEO1394_IOC_LISTEN_POLL_BUFFER, &vwait);
       break;
     case DC1394_VIDEO1394_WAIT:
     default:
-      result=ioctl(cams[i]->capture.dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER, &vwait);
+      result=ioctl(cameras[i]->capture.dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER, &vwait);
       break;
     }
     //fprintf(stderr,"test1\n");
     if ( result != 0) {       
-      cams[i]->capture.dma_last_buffer = last_buffer_orig;
+      cameras[i]->capture.dma_last_buffer = last_buffer_orig;
       if ((policy==DC1394_VIDEO1394_POLL) && (errno == EINTR)) {                       
 	// when no frames is present, say so.
 	return DC1394_NO_FRAME;
       }
       else {
 	printf("(%s) VIDEO1394_IOC_LISTEN_WAIT/POLL_BUFFER ioctl failed!\n", __FILE__);
-	cams[i]->capture.dma_last_buffer++; //Ringbuffer-index or counter?
+	cameras[i]->capture.dma_last_buffer++; //Ringbuffer-index or counter?
 	return DC1394_FAILURE;
       }
     }
@@ -581,20 +582,20 @@ dc1394_dma_capture(dc1394camera_t **cams, uint_t num, dc1394videopolicy_t policy
 
     extra_buf = vwait.buffer;
     
-    if (cams[i]->capture.drop_frames) {
+    if (cameras[i]->capture.drop_frames) {
       if (extra_buf > 0) {
 	for (j = 0; j < extra_buf; j++) {
-	  vwait.buffer = (cb + j) % cams[i]->capture.num_dma_buffers;
-	  if (ioctl(cams[i]->capture.dma_fd, VIDEO1394_IOC_LISTEN_QUEUE_BUFFER, &vwait) < 0)  {
+	  vwait.buffer = (cb + j) % cameras[i]->capture.num_dma_buffers;
+	  if (ioctl(cameras[i]->capture.dma_fd, VIDEO1394_IOC_LISTEN_QUEUE_BUFFER, &vwait) < 0)  {
 	    printf("(%s) VIDEO1394_IOC_LISTEN_QUEUE_BUFFER failed in multi capture!\n", __FILE__);
 	    return DC1394_FAILURE;
 	  }
 	}
-	cams[i]->capture.dma_last_buffer = (cb + extra_buf) % cams[i]->capture.num_dma_buffers;
+	cameras[i]->capture.dma_last_buffer = (cb + extra_buf) % cameras[i]->capture.num_dma_buffers;
 	
 	/* Get the corresponding filltime: */
-	vwait.buffer = cams[i]->capture.dma_last_buffer;
-	if(ioctl(cams[i]->capture.dma_fd, VIDEO1394_IOC_LISTEN_POLL_BUFFER, &vwait) < 0) {
+	vwait.buffer = cameras[i]->capture.dma_last_buffer;
+	if(ioctl(cameras[i]->capture.dma_fd, VIDEO1394_IOC_LISTEN_POLL_BUFFER, &vwait) < 0) {
 	  printf("(%s) VIDEO1394_IOC_LISTEN_POLL_BUFFER failed in multi capture!\n", __FILE__);
 	  return DC1394_FAILURE;
 	}
@@ -603,12 +604,12 @@ dc1394_dma_capture(dc1394camera_t **cams, uint_t num, dc1394videopolicy_t policy
     //fprintf(stderr,"test3\n");
     
     /* point to the next buffer in the dma ringbuffer */
-    cams[i]->capture.capture_buffer = (uchar_t*)(cams[i]->capture.dma_ring_buffer +
-						 cams[i]->capture.dma_last_buffer *
-						 cams[i]->capture.dma_frame_size);
+    cameras[i]->capture.capture_buffer = (uchar_t*)(cameras[i]->capture.dma_ring_buffer +
+						 cameras[i]->capture.dma_last_buffer *
+						 cameras[i]->capture.dma_frame_size);
     
-    cams[i]->capture.filltime = vwait.filltime;
-    cams[i]->capture.num_dma_buffers_behind = extra_buf;
+    cameras[i]->capture.filltime = vwait.filltime;
+    cameras[i]->capture.num_dma_buffers_behind = extra_buf;
   }
   
   return DC1394_SUCCESS;

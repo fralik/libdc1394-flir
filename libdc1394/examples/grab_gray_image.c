@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
+#include <libdc1394/dc1394_utils.h>
 #include <stdlib.h>
 
 
@@ -35,7 +36,12 @@ int main(int argc, char *argv[])
   dc1394camera_t *camera, **cameras=NULL;
   uint_t numCameras, i;
   dc1394featureset_t features;
-  
+  dc1394framerates_t framerates;
+  dc1394video_modes_t video_modes;
+  dc1394framerate_t framerate;
+  dc1394video_mode_t video_mode;
+  dc1394color_coding_t coding;
+
   /* Find cameras */
   int err=dc1394_find_cameras(&cameras, &numCameras);
 
@@ -63,16 +69,48 @@ int main(int argc, char *argv[])
   free(cameras);
 
   /*-----------------------------------------------------------------------
+   *  get the best video mode and highest framerate. This can be skipped
+   *  if you already know which mode/framerate you want...
+   *-----------------------------------------------------------------------*/
+  // get video modes:
+  if (dc1394_video_get_supported_modes(camera,&video_modes)!=DC1394_SUCCESS) {
+    fprintf(stderr,"Can't get video modes\n");
+    cleanup_and_exit(camera);
+  }
+
+  // select highest res mode:
+  for (i=video_modes.num-1;i>=0;i++) {
+    dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
+    if ((!dc1394_is_video_mode_scalable(video_modes.modes[i]))&&
+	(coding==DC1394_COLOR_CODING_MONO8)) {
+      video_mode=video_modes.modes[i];
+      break;
+    }
+  }
+  
+  dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
+  if ((!dc1394_is_video_mode_scalable(video_modes.modes[i]))&&
+      (coding==DC1394_COLOR_CODING_MONO8)) {
+    fprintf(stderr,"Could not get a valid MONO8 mode\n");
+    cleanup_and_exit(camera);
+  }
+
+  // get highest framerate
+  if (dc1394_video_get_supported_framerates(camera,video_mode,&framerates)!=DC1394_SUCCESS) {
+    fprintf(stderr,"Can't get framrates\n");
+    cleanup_and_exit(camera);
+  }
+  framerate=framerates.framerates[framerates.num-1];
+    
+  /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
   fprintf(stderr,"Setting capture\n");
-  if (dc1394_setup_capture(camera, 
-                           DC1394_VIDEO_MODE_1024x768_MONO8,
-                           DC1394_ISO_SPEED_400,
-                           DC1394_FRAMERATE_7_5)!=DC1394_SUCCESS) {
+
+  if (dc1394_setup_capture(camera, video_mode, DC1394_ISO_SPEED_400, framerate)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
-             "that the video mode,framerate and format are\n"
+             "that the video mode and framerate are\n"
              "supported by your camera\n",
              __LINE__,__FILE__);
     cleanup_and_exit(camera);

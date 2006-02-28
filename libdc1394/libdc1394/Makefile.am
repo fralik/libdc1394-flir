@@ -1,10 +1,10 @@
 # the libdc1394_control itself
 MAINTAINERCLEANFILES = Makefile.in
-lib_LTLIBRARIES = libdc1394_control.la
+lib_LTLIBRARIES = libdc1394.la
 
-libdc1394_control_la_LDFLAGS = -version-info @lt_major@:@lt_revision@:@lt_age@
+libdc1394_la_LDFLAGS = -version-info @lt_major@:@lt_revision@:@lt_age@
 
-libdc1394_control_la_SOURCES =  \
+libdc1394_la_SOURCES =  \
 	dc1394_control.c 	\
         dc1394_control.h	\
 	dc1394_offsets.h	\
@@ -25,4 +25,4 @@ libdc1394_control_la_SOURCES =  \
 	kernel-video1394.h
 
 # headers to be installed
-pkginclude_HEADERS = dc1394_control.h dc1394_utils.h dc1394_vendor_avt.h dc1394_conversions.h
+pkginclude_HEADERS = dc1394_control.h dc1394_utils.h dc1394_vendor_avt.h dc1394_conversions.h dc1394_register.h

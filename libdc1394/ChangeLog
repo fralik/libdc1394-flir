@@ -738,3 +738,63 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-12-21 Damien <ddouxchamps@users.sf.net>
     * Added VNG bayer decoding, thanks to Frederic Devernay. The trunk of
       the original code is from dcraw. It's very, very slow but looks nice.
+
+2005-12-23 Damien <ddouxchamps@users.sf.net>
+    * following a suggestion from Frederic Devernay, I have changed two things
+      in the library installation:
+      - the binaries are installed as libdc1394.a/la/so instead of 
+	libdc1394_control.a/la/so.
+      - the include files are now located in dc1394/ instead of libdc1394/
+      This should allow simultaneous installation of the v1 and v2 libraries
+      while sticking to the usual naming conventions. One more thing must be
+      done: renaming the source files from dc1394_whatever.c/h to whatever.c/h.
+      This requires a support request on SF so I don't do it at this time.
+    * updarte some utility functions so that they work with format_7
+	
+2005-12-26 Damien <ddouxchamps@users.sf.net>
+    * further hides formats. Only "video modes" are now visible, with the
+      exception of "Format_7".
+    * added a member 'color_coding' to dc1394formatmode_t.
+    * updated conversion functions and cleanup their interface.
+
+2005-12-27 Damien <ddouxchamps@users.sf.net>
+    * update in the name conventions, notably replacing 'mode' by 'video mode' and
+      'color mode' by 'color coding', 'feature_id' by 'feature', etc...
+    * more code cleanup and name changes
+    * fixed a serious bug in feature detection. This was due to some macros that
+      were changing the value of the feature_id argument, resulting in subsequent
+      tests to be performed on features IDs like 2 or 3 or 15, while those should
+      have been 418, 419 or 431. It dod not have much consequences thanks to most
+      features falling into the 'default' section, but it killed the trigger stuff.
+
+2006-01-03 Damien <ddouxchamps@users.sf.net>
+    * fix missing "#ifdef __cplusplus", thanks to Boris Zingerman.
+    
+2006-01-10 Damien <ddouxchamps@users.sf.net>
+    * fixed the order of size/position changes in _dc1394_basic_format7_setup
+      thanks to Boris Zingerman.
+    * added a test for Xv libraries.
+    * dc1394_register.h is now exported.
+
+2006-01-23 Damien <ddouxchamps@users.sf.net>
+    * RAW8 and RAW16 formats are considered grayscale for conversion. If you want
+      color you should run de-bayering before.
+
+2006-01-25 Damien <ddouxchamps@users.sf.net>
+    * cleaned up _dc1394_open_dma_device()
+    * fixed dc1394_dma_release_camera()
+
+2006-01-25 Damien <ddouxchamps@users.sf.net>
+    * trigger modes > 3 added (4, 5, 14 and 15)
+    * trigger source selection implemented
+	
+2006-02-07 Damien <ddouxchamps@users.sf.net>
+    * force a DC1394_SLOW_DOWN delay even when the transaction returns successfuly
+      Otherwise we can have too many requests following each other and the camera
+      does not have time to adapt its ROM to reflect the changes made by the
+      previous transaction. Thanks to Dirk Farin for finding this bug.
+    * fixed a missing device assignement in _dc1394_open_dma_device. From Dirk
+      Farin again ;-)
+
+2006-02-12 Damien <ddouxchamps@users.sf.net>
+    * upgraded grab_gray_image

@@ -139,7 +139,7 @@ void get_options(int argc,char *argv[])
 				"        2 = set framerate tp 3.75 fps\n"
 				"        3 = set framerate to 7.5 fps\n"
 				"        4 = set framerate to 15 fps\n"
-			    "        5 = set framerate to 30 fps\n"
+			        "        5 = set framerate to 30 fps\n"
 				,argv[0],argv[0]);
 			exit(0);
 			}
