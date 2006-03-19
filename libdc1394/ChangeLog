@@ -798,3 +798,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2006-02-12 Damien <ddouxchamps@users.sf.net>
     * upgraded grab_gray_image
+	
+2006-03-19 Damien <ddouxchamps@users.sf.net>
+    * fixed broken link to "dc1394_internal.h" in dc1394_vendor_avt.h.
+    * manual iso channel allocation is available. Iso channels handling
+      was upgraded too.
+

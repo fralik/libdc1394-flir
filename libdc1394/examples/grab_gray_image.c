@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
       break;
     }
   }
-  
+
   dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
   if ((!dc1394_is_video_mode_scalable(video_modes.modes[i]))&&
       (coding==DC1394_COLOR_CODING_MONO8)) {

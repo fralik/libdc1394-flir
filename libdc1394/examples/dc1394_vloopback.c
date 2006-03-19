@@ -21,6 +21,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.11.2.24  2006/03/19 07:36:08  ddouxchamps
+**  Manual setting of ISO channels as well as better auto handling
+**
 **  Revision 1.11.2.23  2005/12/21 10:52:43  ddouxchamps
 **  major update: bayer-VNG, auto iso channel,...
 **

@@ -405,7 +405,8 @@ typedef struct __dc1394_camera
   dc1394video_mode_t video_mode;
   dc1394framerate_t  framerate;
   dc1394switch_t     is_iso_on;
-  int                iso_channel; // this variable can be -1 if no channel was allocated, hence 'int' type
+  int                iso_channel; // this variable contains the iso channel requests or the current iso channel
+  int                iso_channel_is_set; // >0 if the iso_channel above has been allocated within libraw1394
   uint_t             iso_bandwidth;
   dc1394bool_t       capture_is_set;
   dc1394speed_t      iso_speed;
@@ -659,6 +660,10 @@ dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, uint_t *depth)
 /* start/stop isochronous data transmission */
 dc1394error_t dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr);
 dc1394error_t dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch_t *pwr);
+  /* The following function is not necessary in general. You should only use it if you
+     want a specific ISO channel. Usage: Call it before setting up capture and transmission */
+dc1394error_t dc1394_video_specify_iso_channel(dc1394camera_t *camera, int iso_channel);
+
 
 /* turn one shot mode on or off */
 dc1394error_t dc1394_video_set_one_shot(dc1394camera_t *camera, dc1394switch_t pwr);

@@ -522,6 +522,7 @@ dc1394_dma_unlisten(dc1394camera_t *camera)
     return DC1394_FAILURE;
   else {
     camera->capture_is_set=0;
+    dc1394_free_iso_channel_and_bandwidth(camera);
     return DC1394_SUCCESS;
   }
 }

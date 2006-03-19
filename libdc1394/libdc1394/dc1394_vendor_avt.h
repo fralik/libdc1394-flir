@@ -26,7 +26,6 @@
 #include <libraw1394/raw1394.h>
 #include "dc1394_control.h"
 #include "dc1394_register.h"
-#include "dc1394_internal.h"
 #include "config.h"
 
 typedef struct __dc1394_avt_adv_feature_info_struct 

@@ -42,6 +42,7 @@ dc1394_new_camera(uint_t port, nodeid_t node)
   cam->port=port;
   cam->node=node;
   cam->capture.dma_device_file=NULL;
+  cam->iso_channel_is_set=0;
   cam->iso_channel=-1;
   cam->iso_bandwidth=0;
   cam->capture_is_set=0;
@@ -1319,14 +1320,19 @@ dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr)
     DC1394_ERR_CHK(err, "Could not allocate ISO channel and bandwidth");
     // then we start ISO
     err=SetCameraControlRegister(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_ON);
+    if (err==DC1394_SUCCESS)
+      camera->is_iso_on=1;
     DC1394_ERR_CHK(err, "Could not start ISO transmission");
   }
   else {
-    // first free iso bandwidth and iso channels
-    err=dc1394_free_iso_channel_and_bandwidth(camera);
-    DC1394_ERR_CHK(err, "Could not free ISO channel and bandwidth");
-    // then we stop ISO
+    // first we stop ISO
     err=SetCameraControlRegister(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_OFF);
+    if (err==DC1394_SUCCESS) {
+      camera->is_iso_on=0;
+      // then we free iso bandwidth and iso channels
+      err=dc1394_free_iso_channel_and_bandwidth(camera);
+      DC1394_ERR_CHK(err, "Could not free ISO channel and bandwidth");
+    }
     DC1394_ERR_CHK(err, "Could not stop ISO transmission");
   }
 
@@ -2193,6 +2199,14 @@ dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
   
   // free bandwidth
   raw1394_bandwidth_modify(camera->handle, 4915, RAW1394_MODIFY_FREE);
+
+  return DC1394_SUCCESS;
+}
+
+dc1394error_t
+dc1394_video_specify_iso_channel(dc1394camera_t *camera, int iso_channel)
+{
+  camera->iso_channel=iso_channel;
 
   return DC1394_SUCCESS;
 }
