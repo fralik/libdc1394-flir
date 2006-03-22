@@ -803,4 +803,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed broken link to "dc1394_internal.h" in dc1394_vendor_avt.h.
     * manual iso channel allocation is available. Iso channels handling
       was upgraded too.
-
+    * release 2.0.0-pre6
+	
+2006-03-22 Damien <ddouxchamps@users.sf.net>
+    * Applied a patch from Seemant Kulleen (replaces CLK_TCK with CLOCKS_PER_SEC)
