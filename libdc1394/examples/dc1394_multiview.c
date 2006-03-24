@@ -290,8 +290,7 @@ void cleanup(void) {
 	int i;
 	for (i=0; i < numCameras; i++)
 	{
-		dc1394_dma_unlisten(cameras[i]);
-		dc1394_dma_release_camera(cameras[i]);
+		dc1394_capture_stop(cameras[i]);
 	}
 	if ((void *)window != NULL)
 		XUnmapWindow(display,window);
@@ -377,14 +376,16 @@ int main(int argc,char *argv[])
     }
     
     if (device_name!=NULL) {
-      if (dc1394_set_dma_device_filename(cameras[i],device_name) != DC1394_SUCCESS) {
+      if (dc1394_capture_set_dma_device_filename(cameras[i],device_name) != DC1394_SUCCESS) {
 	fprintf(stderr,"unable to set dma device filename!\n");
 	return 0;
       }
     }
 
-    if (dc1394_dma_setup_capture(cameras[i], res,
-				 DC1394_ISO_SPEED_400, fps, NUM_BUFFERS, DROP_FRAMES) != DC1394_SUCCESS) {
+    dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_400);
+    dc1394_video_set_mode(cameras[i],res);
+    dc1394_video_set_framerate(cameras[i],fps);
+    if (dc1394_capture_setup_dma(cameras[i], NUM_BUFFERS, DROP_FRAMES) != DC1394_SUCCESS) {
       fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 	      __LINE__,__FILE__);
       perror("that the video mode,framerate and format are supported\n");
@@ -458,8 +459,8 @@ int main(int argc,char *argv[])
   while(1){
 
     //fprintf(stderr,"capturing...\n");
-    err=dc1394_dma_capture(cameras, numCameras, DC1394_VIDEO1394_WAIT);
-    DC1394_ERR_CHK(err,"failed to capture\n");
+    err=dc1394_capture_dma(cameras, numCameras, DC1394_VIDEO1394_WAIT);
+    DC1394_ERR_RTN(err,"failed to capture\n");
 		
     display_frames();
     XFlush(display);
@@ -528,7 +529,7 @@ int main(int argc,char *argv[])
     } /* XPending */
     
     for (i = 0; i < numCameras; i++) {
-      dc1394_dma_done_with_buffer(cameras[i]);
+      dc1394_capture_dma_done_with_buffer(cameras[i]);
     }
     
   } /* while not interrupted */

@@ -807,3 +807,24 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2006-03-22 Damien <ddouxchamps@users.sf.net>
     * Applied a patch from Seemant Kulleen (replaces CLK_TCK with CLOCKS_PER_SEC)
+
+2006-03-23 Damien <ddouxchamps@users.sf.net>
+    * Capture functions have been simplified both in content and interface. One must
+      now do the video settings before calling the capture_setup(_dma) functions. This
+      allows F7 capture to be merged in the other capture functions. Oh, and names
+      have been changed too ;-( Needless to say it's a compatibility break. Hopefuly
+      the last big one.
+    * A new function that sets up a format7 ROI is born from the ashes of the f7
+      capture function.
+    * ISO channels and bandwidth are now allocated for RAW1394 too.
+    * two more error handling macros have been added. The name of the macros have
+      changed too. The macros are now:
+	- DC1394_ERR (returns)
+	- DC1394_ERR_RTN (returns an error code)
+	- DC1394_ERR_CLN (execute cleanup function, then returns)
+	- DC1394_ERR_CLN_RTN (cleanup followed by a return of an error code)
+	
+2006-03-24 Damien <ddouxchamps@users.sf.net>
+    * fixed serious error with raw capture (garbled images)
+    * fixed grab_gray_image
+

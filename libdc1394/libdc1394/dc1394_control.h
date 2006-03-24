@@ -368,11 +368,11 @@ typedef struct __dc1394_capture
   unsigned int             num_dma_buffers;
   unsigned int             dma_last_buffer;
   unsigned int             num_dma_buffers_behind;
-  char              *dma_device_file;
-  int                dma_fd;
-  struct timeval     filltime;
+  char                    *dma_device_file;
+  int                      dma_fd;
+  struct timeval           filltime;
   unsigned int             drop_frames;
-  raw1394handle_t    handle;
+  raw1394handle_t          handle;
 } dc1394capture_t;
 
 /* Camera structure */
@@ -408,11 +408,12 @@ typedef struct __dc1394_camera
   int                iso_channel; // this variable contains the iso channel requests or the current iso channel
   int                iso_channel_is_set; // >0 if the iso_channel above has been allocated within libraw1394
   uint_t             iso_bandwidth;
-  dc1394bool_t       capture_is_set;
   dc1394speed_t      iso_speed;
   uint_t             mem_channel_number;
   uint_t             save_channel;
   uint_t             load_channel;
+
+  int                capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
 
   // Private:
   // capture structure
@@ -505,7 +506,22 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 /* Error checking function. displays an error string on stderr and exit current function
    if error is positive. Neg errors are messages and are thus ignored */
 
-#define DC1394_ERR_CHK(err, err_string...)                   \
+#define DC1394_ERR(err, err_string...)                       \
+    {                                                        \
+    if ((err<0)||(err>DC1394_ERROR_NUM))                     \
+      err=DC1394_INVALID_ERROR_CODE;                         \
+                                                             \
+    if (err>DC1394_SUCCESS) {                                \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
+	      __FILE__, __FUNCTION__, __LINE__,              \
+	      dc1394_error_strings[err]);                    \
+      fprintf(stderr, err_string);                           \
+      fprintf(stderr,"\n");                                  \
+      return;                                                \
+    }                                                        \
+    }
+
+#define DC1394_ERR_RTN(err, err_string...)                   \
     {                                                        \
     if ((err<0)||(err>DC1394_ERROR_NUM))                     \
       err=DC1394_INVALID_ERROR_CODE;                         \
@@ -520,7 +536,23 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
     }                                                        \
     }
 
-#define DC1394_ERR_CHK_WITH_CLEANUP(err, cleanup, err_string...)     \
+#define DC1394_ERR_CLN(err, cleanup, err_string...)                  \
+    {                                                                \
+    if ((err<0)||(err>DC1394_ERROR_NUM))                             \
+      err=DC1394_INVALID_ERROR_CODE;                                 \
+                                                                     \
+    if (err>DC1394_SUCCESS) {                                        \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
+	      __FILE__, __FUNCTION__, __LINE__,                      \
+	      dc1394_error_strings[err]);                            \
+      fprintf(stderr, err_string);                                   \
+      fprintf(stderr,"\n");                                          \
+      cleanup;                                                       \
+      return;                                                \
+    }                                                                \
+    }
+
+#define DC1394_ERR_CLN_RTN(err, cleanup, err_string...)              \
     {                                                                \
     if ((err<0)||(err>DC1394_ERROR_NUM))                             \
       err=DC1394_INVALID_ERROR_CODE;                                 \
@@ -664,7 +696,6 @@ dc1394error_t dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch
      want a specific ISO channel. Usage: Call it before setting up capture and transmission */
 dc1394error_t dc1394_video_specify_iso_channel(dc1394camera_t *camera, int iso_channel);
 
-
 /* turn one shot mode on or off */
 dc1394error_t dc1394_video_set_one_shot(dc1394camera_t *camera, dc1394switch_t pwr);
 dc1394error_t dc1394_video_get_one_shot(dc1394camera_t *camera, dc1394bool_t *is_on);
@@ -679,44 +710,28 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *b
 /***************************************************************************
      Capture Functions
  ***************************************************************************/
-/* Note: the DMA functions are much faster and should be used in most cases.
-         Legacy libraw1394 transfers are only there for debug purposes.    */
 
-/* setup the DMA capture */
-dc1394error_t dc1394_dma_setup_capture(dc1394camera_t *camera,
-				       dc1394video_mode_t video_mode, dc1394speed_t speed, dc1394framerate_t frame_rate, 
-				       uint_t num_dma_buffers, uint_t drop_frames);
-dc1394error_t dc1394_dma_setup_format7_capture(dc1394camera_t *camera, dc1394video_mode_t video_mode,
-					       dc1394color_coding_t color_coding,dc1394speed_t speed,
-					       uint_t bytes_per_packet,
-					       uint_t left, uint_t top, uint_t width, uint_t height,
-					       uint_t num_dma_buffers, uint_t drop_frames);
+/* setup the capture (DMA or RAW1394)*/
+dc1394error_t dc1394_capture_setup_dma(dc1394camera_t *camera, uint_t num_dma_buffers, uint_t drop_frames);
+dc1394error_t dc1394_capture_setup(dc1394camera_t *camera);
+
+/* capture video frames (DMA or RAW1394)*/
+dc1394error_t dc1394_capture_dma(dc1394camera_t **camera, uint_t num, dc1394video_policy_t policy);
+dc1394error_t dc1394_capture(dc1394camera_t **camera, uint_t num);
+
+/* releases memory, channels, bandwidth,... */
+dc1394error_t dc1394_capture_stop(dc1394camera_t *camera);
+
+/* DMA specific functions*/
+
 /* Set the DMA device filename manually. In most cases this is not necessary because the capture
    functions probe common filenames such as /dev/video1394/x or /dev/video1394. */
-dc1394error_t dc1394_set_dma_device_filename(dc1394camera_t* camera, char *filename);
-/* captures a frame from the given cameras. */
-dc1394error_t dc1394_dma_capture(dc1394camera_t **camera, uint_t num, dc1394video_policy_t policy);
+dc1394error_t dc1394_capture_set_dma_device_filename(dc1394camera_t* camera, char *filename);
 /* returns the buffer previously handed to the user by dc1394_dma_*_capture to the DMA ring buffer */
-dc1394error_t dc1394_dma_done_with_buffer(dc1394camera_t *camera);
-/* tells video1394 to halt iso reception. */
-dc1394error_t dc1394_dma_unlisten(dc1394camera_t *camera);
-/* releases memory that was mapped by dc1394_dma_setup_camera */
-dc1394error_t dc1394_dma_release_camera(dc1394camera_t *camera);
-
-
-/* Non DMA capture functions for legacy/debug purposes */
-dc1394error_t dc1394_setup_capture(dc1394camera_t *camera, 
-				   dc1394video_mode_t video_mode, dc1394speed_t speed, dc1394framerate_t frame_rate);
-dc1394error_t dc1394_setup_format7_capture(dc1394camera_t *camera, dc1394video_mode_t video_mode,
-					   dc1394color_coding_t color_coding, dc1394speed_t speed, 
-					   uint_t bytes_per_packet,
-					   uint_t left, uint_t top, uint_t width, uint_t height);
-dc1394error_t dc1394_capture(dc1394camera_t **camera, uint_t num);
-dc1394error_t dc1394_release_camera(dc1394camera_t *camera);
-
+dc1394error_t dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera);
 /* Functions for accessing the buffer content: */
-uchar_t*        dc1394_video_get_buffer(dc1394camera_t *camera);
-struct timeval* dc1394_video_get_filltime(dc1394camera_t *camera);
+uchar_t*        dc1394_capture_get_dma_buffer(dc1394camera_t *camera);
+struct timeval* dc1394_capture_get_dma_filltime(dc1394camera_t *camera);
 
 
 /***************************************************************************
@@ -757,6 +772,12 @@ dc1394error_t dc1394_format7_get_total_bytes(dc1394camera_t *camera, dc1394video
 /* These functions get the properties of (one or all) format7 mode(s) */
 dc1394error_t dc1394_format7_get_modeset(dc1394camera_t *camera, dc1394format7modeset_t *info);
 dc1394error_t dc1394_format7_get_mode_info(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394format7mode_t *f7_mode);
+
+/* Joint function that fully sets a certain ROI taking all parameters into account
+   Note that this function does not SWITCH to the video mode passed as argument, it mearly sets it */
+dc1394error_t dc1394_format7_set_roi(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t color_coding,
+				     uint_t bytes_per_packet, uint_t left, uint_t top, uint_t width, uint_t height);
+
 
 /* This will have to be fixed or removed: it's ugly...*/
 dc1394error_t

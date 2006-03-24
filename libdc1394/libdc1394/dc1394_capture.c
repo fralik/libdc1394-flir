@@ -38,7 +38,7 @@
 /* Variables used for simultaneous capture of video from muliple cameras
    This is only used by RAW1394 capture. VIDEO1394 (aka DMA) capture
    doesn't use this */
-uchar_t *_dc1394_buffer[DC1394_NUM_ISO_CHANNELS];
+int *_dc1394_buffer[DC1394_NUM_ISO_CHANNELS];
 int _dc1394_frame_captured[DC1394_NUM_ISO_CHANNELS];
 int _dc1394_offset[DC1394_NUM_ISO_CHANNELS];
 int _dc1394_quadlets_per_frame[DC1394_NUM_ISO_CHANNELS];
@@ -113,84 +113,89 @@ _dc1394_video_iso_handler(raw1394handle_t handle, int channel, size_t length, qu
  Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
 *************************************************************/
 dc1394error_t 
-_dc1394_basic_setup(dc1394camera_t *camera, dc1394video_mode_t video_mode,
-                    dc1394speed_t speed, dc1394framerate_t frame_rate)
+_dc1394_capture_basic_setup(dc1394camera_t *camera)
 {
   dc1394error_t err;
-  dc1394switch_t is_iso_on= DC1394_OFF;
 
-  /* Addition by Alexis Weiland: Certain cameras start sending iso
-     data when they are reset, so we need to stop them so we can set
-     up the camera properly.  Setting camera parameters "on the fly"
-     while they are sending data doesn't seem to work.  I don't think
-     this will cause any problems for other cameras. */
-  /* Addition by Dan Dennedy: Restart iso transmission later if it is on */
-
-  err=dc1394_video_get_transmission(camera, &is_iso_on);
-  DC1394_ERR_CHK(err,"Unable to get ISO status");
-  
-  if (is_iso_on) {
-    // this also frees the channel/bandwidth allocations
-    err=dc1394_video_set_transmission(camera, DC1394_OFF);
-    DC1394_ERR_CHK(err,"Unable to pause iso transmission");
-  }
-  
-  err=dc1394_video_set_iso_speed(camera, speed);
-  DC1394_ERR_CHK(err, "Unable to set speed");
-  
-  err=dc1394_video_set_mode(camera, video_mode);
-  DC1394_ERR_CHK(err, "Unable to set video mode %d!", video_mode);
-
-  err=dc1394_video_set_framerate(camera,frame_rate);
-  DC1394_ERR_CHK(err, "Unable to set framerate %d!", frame_rate);
-  
-  if (is_iso_on) {
-    // this also allocates the channel/bandwidth allocations
-    err=dc1394_video_set_transmission(camera, DC1394_ON);
-    DC1394_ERR_CHK(err,"Unable to restart iso transmission");
-  }
-
+  // TODO: check if we already have a valid handle before allocating a new one...
   camera->capture.handle=raw1394_new_handle();
   raw1394_set_port(camera->capture.handle,camera->port);
 
-  err=_dc1394_get_quadlets_per_packet(video_mode, frame_rate, &camera->capture.quadlets_per_packet);
-  DC1394_ERR_CHK(err, "Unable to get quadlets per packet");
+  err=dc1394_video_get_mode(camera,&camera->video_mode);
+  DC1394_ERR_RTN(err, "Unable to get current video mode");
 
-  if (camera->capture.quadlets_per_packet < 0) {
+  err=dc1394_get_image_size_from_video_mode(camera, camera->video_mode, &camera->capture.frame_width, &camera->capture.frame_height);
+  DC1394_ERR_RTN(err,"Could not get width/height from format/mode");
+
+  if (dc1394_is_video_mode_scalable(camera->video_mode)==DC1394_TRUE) {
+    unsigned int packet_bytes;
+    unsigned int packets_per_frame;
+    //fprintf(stderr,"Scalable format detected\n");
+    err=dc1394_format7_get_byte_per_packet(camera, camera->video_mode, &packet_bytes);
+    DC1394_ERR_RTN(err, "Unable to get format 7 bytes per packet for mode %d", camera->video_mode);
+    camera->capture.quadlets_per_packet= packet_bytes /4;
+
+    if (camera->capture.quadlets_per_packet<=0) {
+      printf("(%s) No format 7 bytes per packet %d \n", __FILE__, camera->video_mode);
+      return DC1394_FAILURE;
+    }
+    // ensure that quadlet aligned buffers are big enough, still expect
+    // problems when width*height  != quadlets_per_frame*4
+    if (camera->iidc_version >= DC1394_IIDC_VERSION_1_30) { // if version is 1.30
+      err=dc1394_format7_get_packet_per_frame(camera, camera->video_mode, &packets_per_frame);
+      DC1394_ERR_RTN(err, "Unable to get format 7 packets per frame %d", camera->video_mode);
+      camera->capture.quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
+    }
+    else {
+      // For other specs revisions, we use a trick to determine the total bytes.
+      // We don't use the total_bytes register in 1.20 as it has been interpreted in
+      // different ways by manufacturers. Thanks to Martin Gramatke for pointing this trick out.
+      dc1394color_coding_t color_coding;
+      float bpp;
+      err=dc1394_format7_get_color_coding(camera,camera->video_mode, &color_coding);
+      DC1394_ERR_RTN(err, "Unable to get current color coding");
+
+      err=dc1394_get_bytes_per_pixel(color_coding, &bpp);
+      DC1394_ERR_RTN(err, "Unable to infer bpp from color coding");
+      packets_per_frame = ((int)(camera->capture.frame_width * camera->capture.frame_height * bpp) +
+			   packet_bytes -1) / packet_bytes;
+      camera->capture.quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
+    }
+    
+  }
+  else {
+    err=dc1394_video_get_framerate(camera,&camera->framerate);
+    DC1394_ERR_RTN(err, "Unable to get current video framerate");
+    
+    err=_dc1394_get_quadlets_per_packet(camera->video_mode, camera->framerate, &camera->capture.quadlets_per_packet);
+    DC1394_ERR_RTN(err, "Unable to get quadlets per packet");
+    
+    err= _dc1394_quadlets_from_format(camera, camera->video_mode, &camera->capture.quadlets_per_frame);
+    DC1394_ERR_RTN(err,"Could not get quadlets per frame");
+  }
+
+  if ((camera->capture.quadlets_per_frame<=0 )||
+      (camera->capture.quadlets_per_packet<=0)) {
     return DC1394_FAILURE;
   }
-  
-  err= _dc1394_quadlets_from_format(camera, video_mode, &camera->capture.quadlets_per_frame);
-  DC1394_ERR_CHK(err,"Could not get quadlets from format");
-
-  if (camera->capture.quadlets_per_frame < 0)  {
-    return DC1394_FAILURE;
-  }
-  
-  err=dc1394_get_image_size_from_video_mode(camera, video_mode,&camera->capture.frame_width,&camera->capture.frame_height);
-  DC1394_ERR_CHK(err,"Could not get width/height from format/mode");
   
   return err;
 }
 
 
 /*****************************************************
- dc1394_dma_basic_setup
+ _ dc1394_dma_basic_setup
 
- This sets up the dma for the given camera
+ This sets up the dma for the given camera. 
+ _dc1394_capture_basic_setup must be called before
 
 ******************************************************/
 dc1394error_t
-_dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t num_dma_buffers)
+_dc1394_capture_dma_setup(dc1394camera_t *camera, uint_t num_dma_buffers)
 {
-  dc1394error_t err;
   struct video1394_mmap vmmap;
   struct video1394_wait vwait;
   uint_t i;
-  
-  // we first have to verify that channels/bandwidth have been allocated.
-  err=dc1394_allocate_iso_channel_and_bandwidth(camera);
-  DC1394_ERR_CHK(err,"Could not allocate ISO channel and bandwidth!");
 
   /* using_fd counter array NULL if not used yet -- initialize */
   if ( _dc1394_num_using_fd == NULL ) {
@@ -214,7 +219,7 @@ _dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t num_dma_buffers)
     return DC1394_FAILURE;
   }
   // starting from here we use the ISO channel so we set the flag in the camera struct:
-  camera->capture_is_set=1;
+  camera->capture_is_set=2;
 
   //fprintf(stderr,"listening channel set\n");
   
@@ -254,12 +259,10 @@ _dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t num_dma_buffers)
   return DC1394_SUCCESS;
 }
 
-/*
-  This function allows you to specify the DMA device filename manually.
-*/
 
+/* This function allows you to specify the DMA device filename manually. */
 dc1394error_t
-dc1394_set_dma_device_filename(dc1394camera_t* camera, char *filename)
+dc1394_capture_set_dma_device_filename(dc1394camera_t* camera, char *filename)
 {
   if (camera->capture.dma_device_file==NULL) {
     camera->capture.dma_device_file=(char*)malloc(64*sizeof(char));
@@ -271,88 +274,120 @@ dc1394_set_dma_device_filename(dc1394camera_t* camera, char *filename)
   return DC1394_SUCCESS;
 }
 
-/********************************
- libraw Capture Functions
-
- These functions use libraw
- to grab frames from the cameras,
- the dma routines are faster, and 
- should be used instead.
-*********************************/
-
 /*************************************************************
- dc1394_setup_capture
-
- Sets up both the camera and the cameracapture structure
- to be used other places.
-
- Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
+ CAPTURE SETUP
 **************************************************************/
 dc1394error_t 
-dc1394_setup_capture(dc1394camera_t *camera, dc1394video_mode_t video_mode, 
-                     dc1394speed_t speed, dc1394framerate_t frame_rate) 
+dc1394_capture_setup(dc1394camera_t *camera) 
 {
   dc1394error_t err;
-  uint_t format;
 
-  err=_dc1394_get_format_from_mode(video_mode, &format);
-  DC1394_ERR_CHK(err, "Invalid mode ID");
+  // we first have to verify that channels/bandwidth have been allocated.
+  err=dc1394_allocate_iso_channel_and_bandwidth(camera);
+  DC1394_ERR_RTN(err,"Could not allocate ISO channel and bandwidth!");
 
-  if( format == DC1394_FORMAT7) {
-    err=dc1394_setup_format7_capture(camera, video_mode, DC1394_QUERY_FROM_CAMERA, speed,
-				     DC1394_QUERY_FROM_CAMERA, /*bytes_per_paket*/
-				     DC1394_QUERY_FROM_CAMERA, /*left*/
-				     DC1394_QUERY_FROM_CAMERA, /*top*/
-				     DC1394_QUERY_FROM_CAMERA, /*width*/
-				     DC1394_QUERY_FROM_CAMERA  /*height*/);
-    DC1394_ERR_CHK(err,"Could not setup F7 capture");
-  }
-  else {
-    err=_dc1394_basic_setup(camera, video_mode, speed,frame_rate);
-    DC1394_ERR_CHK(err,"Could not setup capture");
-    
-    camera->capture.capture_buffer= (uchar_t*)malloc(camera->capture.quadlets_per_frame*4);
-   
-    if (camera->capture.capture_buffer == NULL) {
-      printf("(%s) unable to allocate memory for capture buffer\n", __FILE__);
-      return DC1394_FAILURE;
-    }
-  }
+  err=_dc1394_capture_basic_setup(camera);
+  DC1394_ERR_RTN(err,"Could not setup capture");
+  /*
+  fprintf(stderr,"qpf: %d qpp: %d size [%d x %d]\n",
+	  camera->capture.quadlets_per_frame, camera->capture.quadlets_per_packet,
+	  camera->capture.frame_width, camera->capture.frame_height);
+  */
+  camera->capture.capture_buffer= (uchar_t*)malloc(camera->capture.quadlets_per_frame*4);
   
+  if (camera->capture.capture_buffer == NULL) {
+    printf("(%s) unable to allocate memory for capture buffer\n", __FILE__);
+    return DC1394_FAILURE;
+  }
+  else
+    camera->capture_is_set=1;
+
   return err;
 }
 
-/****************************************************
- dc1394_release_camera
-
- Frees buffer space contained in the cameracapture 
- structure
-*****************************************************/
-dc1394error_t 
-dc1394_release_camera(dc1394camera_t *camera)
+dc1394error_t
+dc1394_capture_setup_dma(dc1394camera_t *camera, uint_t num_dma_buffers, uint_t drop_frames)
 {
-  //fprintf(stderr,"Error a\n");
-  if (camera->capture.capture_buffer != NULL) {
-    //fprintf(stderr,"Error b\n");
-    free(camera->capture.capture_buffer);
-    camera->capture.capture_buffer=NULL;
-    //fprintf(stderr,"Error c\n");
+  dc1394error_t err;
+
+  // we first have to verify that channels/bandwidth have been allocated.
+  err=dc1394_allocate_iso_channel_and_bandwidth(camera);
+  DC1394_ERR_RTN(err,"Could not allocate ISO channel and bandwidth!");
+
+  err=_dc1394_capture_basic_setup(camera);
+  DC1394_ERR_RTN(err,"Could not setup capture");
+  
+  camera->capture.drop_frames = drop_frames;
+  
+  // the capture_is_set flag is set inside this function:
+  err=_dc1394_capture_dma_setup (camera, num_dma_buffers);
+  DC1394_ERR_RTN(err,"Could not setup DMA capture");
+
+  return err;
+}
+
+/*****************************************************
+ CAPTURE_STOP
+*****************************************************/
+
+dc1394error_t 
+dc1394_capture_stop(dc1394camera_t *camera) 
+{
+  if (camera->capture_is_set>0) {
+    switch (camera->capture_is_set) {
+    case 1: // RAW 1394
+      if (camera->capture.capture_buffer != NULL) {
+	free(camera->capture.capture_buffer);
+	camera->capture.capture_buffer=NULL;
+      }
+      break;
+    case 2: // DMA (VIDEO1394)
+      // unlisten
+      if (ioctl(camera->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(camera->iso_channel)) < 0) 
+	return DC1394_FAILURE;
+      
+      // release
+      if (camera->capture.dma_ring_buffer) {
+	munmap((void*)camera->capture.dma_ring_buffer,camera->capture.dma_buffer_size);
+      }
+      
+      _dc1394_num_using_fd[camera->port]--;
+      
+      if (_dc1394_num_using_fd[camera->port] == 0) {
+	
+	while (close(camera->capture.dma_fd) != 0) {
+	  printf("(%s) waiting for dma_fd to close\n", __FILE__);
+	  sleep(1);
+	}
+	
+      }
+      
+      // this dma_device file is allocated by the strdup() function and can be freed here without problems.
+      free(camera->capture.dma_device_file);
+      camera->capture.dma_device_file=NULL;
+      break;
+    default:
+      return DC1394_FAILURE; // TODO: invalid capture mode?
+      break;
+    }
+    
+    // capture is not set anymore
+    camera->capture_is_set=0;
+    dc1394_free_iso_channel_and_bandwidth(camera);
+    
+    // free the additional capture handle
+    raw1394_destroy_handle(camera->capture.handle);
   }
-  //fprintf(stderr,"Error d\n");
-  raw1394_destroy_handle(camera->capture.handle);
-  //fprintf(stderr,"Error e\n");
+  else {
+    return DC1394_FAILURE; // TODO: error CAPTURE_IS_NOT_SET
+  }
   
   return DC1394_SUCCESS;
 }
 
-/***************************************************************************
- dc1394_multi_capture
-
- This routine captures a frame from each camera specified in the cams array.
- Cameras must be set up first using dc1394_setup_camera.
-
- Returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it succeeds
-****************************************************************************/
+/****************************************************
+ CAPTURE
+*****************************************************/
 dc1394error_t 
 dc1394_capture(dc1394camera_t **cams, uint_t num) 
 {
@@ -367,9 +402,9 @@ dc1394_capture(dc1394camera_t **cams, uint_t num)
   */
   for (i= 0; i < num; i++)  {
     // we are about to use the iso channels, so set the capture flag
-    cams[i]->capture_is_set=1;
+    // cams[i]->capture_is_set=1;
 
-    _dc1394_buffer[cams[i]->iso_channel]= cams[i]->capture.capture_buffer;
+    _dc1394_buffer[cams[i]->iso_channel]= (int*)cams[i]->capture.capture_buffer;
     
     if (raw1394_set_iso_handler(cams[i]->capture.handle, cams[i]->iso_channel, _dc1394_video_iso_handler) < 0)  {
       /* error handling- for some reason something didn't work, 
@@ -419,127 +454,15 @@ dc1394_capture(dc1394camera_t **cams, uint_t num)
     raw1394_set_iso_handler(cams[i]->capture.handle,cams[i]->iso_channel, NULL);
 
     // we are not listening anymore, release the capture flags
-    cams[i]->capture_is_set=0;
+    // cams[i]->capture_is_set=0;
   }
   
   return DC1394_SUCCESS;
 }
 
-/**********************************
- DMA Capture Functions 
 
- These routines will be much faster
- than the above capture routines.
-***********************************/
-
-/*****************************************************
- dc1394_dma_setup_capture
-
- This sets up the given camera to capture images using
- the dma engine.  Should be much faster than the above
- routines
-******************************************************/
 dc1394error_t
-dc1394_dma_setup_capture(dc1394camera_t *camera, dc1394video_mode_t video_mode,
-                         dc1394speed_t speed, dc1394framerate_t frame_rate,
-                         uint_t num_dma_buffers, uint_t drop_frames)
-{
-  dc1394error_t err;
-  uint_t format;
-
-  err=_dc1394_get_format_from_mode(video_mode, &format);
-  DC1394_ERR_CHK(err, "Invalid mode ID");
-
-  if( format == DC1394_FORMAT7) {
-    err=dc1394_dma_setup_format7_capture(camera, video_mode, DC1394_QUERY_FROM_CAMERA, speed,
-					 DC1394_QUERY_FROM_CAMERA, /*bytes_per_paket*/
-					 DC1394_QUERY_FROM_CAMERA, /*left*/
-					 DC1394_QUERY_FROM_CAMERA, /*top*/
-					 DC1394_QUERY_FROM_CAMERA, /*width*/
-					 DC1394_QUERY_FROM_CAMERA, /*height*/
-					 num_dma_buffers,
-					 drop_frames); 
-    DC1394_ERR_CHK(err,"Could not setup F7 capture");
-  }
-  else {
-    camera->capture.drop_frames = drop_frames;
-    
-    err=_dc1394_basic_setup(camera, video_mode, speed, frame_rate);
-    DC1394_ERR_CHK(err,"Could not setup capture");
-    
-    err=_dc1394_dma_basic_setup (camera, num_dma_buffers);
-    DC1394_ERR_CHK(err,"Could not setup DMA capture");
-  }
-
-  return err;
-}
-
-/*****************************************************
- dc1394_dma_release_camera
-
- This releases memory that was mapped by
- dc1394_dma_setup_camera
-*****************************************************/
-dc1394error_t 
-dc1394_dma_release_camera(dc1394camera_t *camera) 
-{
-  //dc1394_stop_iso_transmission(handle,camera->node);
-  //ioctl(_dc1394_dma_fd,VIDEO1394_IOC_UNLISTEN_CHANNEL, &(camera->channel));
-  
-  if (camera->capture.dma_ring_buffer) {
-    munmap((void*)camera->capture.dma_ring_buffer,camera->capture.dma_buffer_size);
-  }
-
-  _dc1394_num_using_fd[camera->port]--;
-    
-  if (_dc1394_num_using_fd[camera->port] == 0) {
-    
-    while (close(camera->capture.dma_fd) != 0) {
-      printf("(%s) waiting for dma_fd to close\n", __FILE__);
-      sleep(1);
-    }
-    
-  }
-
-  // this dma_device file is allocated by the strdup() function and can be freed here without problems.
-  free(camera->capture.dma_device_file);
-  camera->capture.dma_device_file=NULL;
-
-  raw1394_destroy_handle(camera->capture.handle);
-  
-  return DC1394_SUCCESS;
-}
-
-/*****************************************************
- dc1394_dma_unlisten
-
- This tells video1394 to halt iso reception.
-*****************************************************/
-dc1394error_t 
-dc1394_dma_unlisten(dc1394camera_t *camera) 
-{
-  if (ioctl(camera->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(camera->iso_channel)) < 0) 
-    return DC1394_FAILURE;
-  else {
-    camera->capture_is_set=0;
-    dc1394_free_iso_channel_and_bandwidth(camera);
-    return DC1394_SUCCESS;
-  }
-}
-
-/****************************************************
- _dc1394_dma_multi_capture_private
-
- This capture a frame from each of the cameras passed
- in cams.  After you are finished with the frame, you
- must return the buffer to the pool by calling
- dc1394_dma_done_with_buffer.
-
- This function is private.
-
-*****************************************************/
-dc1394error_t
-dc1394_dma_capture(dc1394camera_t **cameras, uint_t num, dc1394video_policy_t policy) 
+dc1394_capture_dma(dc1394camera_t **cameras, uint_t num, dc1394video_policy_t policy) 
 {
   struct video1394_wait vwait;
   int i;
@@ -623,7 +546,7 @@ dc1394_dma_capture(dc1394camera_t **cameras, uint_t num, dc1394video_policy_t po
  handed to the user by dc1394_dma_*_capture
 *****************************************************/
 dc1394error_t 
-dc1394_dma_done_with_buffer(dc1394camera_t *camera) 
+dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera) 
 {  
   struct video1394_wait vwait;
   

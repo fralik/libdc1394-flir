@@ -82,7 +82,6 @@ void print_color_coding( uint_t color_id )
   case DC1394_COLOR_CODING_MONO8:
     printf("MONO8");
     break;
-
   case DC1394_COLOR_CODING_YUV411:
     printf("YUV411");
     break;
@@ -152,7 +151,7 @@ void print_mode_info( dc1394camera_t *camera , uint_t mode )
  *-----------------------------------------------------------------------*/
 void clean_up_exit(dc1394camera_t *camera)
 {
-  dc1394_release_camera(camera);
+  dc1394_capture_stop(camera);
   dc1394_free_camera(camera);
   exit(1);
 }
@@ -204,9 +203,8 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  List Capture Modes
    *-----------------------------------------------------------------------*/
-
   uint_t selected_mode=0;
-
+  /*
   printf("Listing Modes\n");
   for(i = 0; i < modes.num; i++ ) {
     uint_t mode = modes.modes[i];
@@ -215,16 +213,17 @@ int main(int argc, char *argv[])
 
     selected_mode = mode;
   }
-
+  */
+  selected_mode = modes.modes[modes.num-1];
+  dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+  dc1394_video_set_mode(camera,selected_mode);
+  dc1394_video_set_framerate(camera,DC1394_FRAMERATE_7_5);
 
   /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
   
-  if (dc1394_setup_capture(camera,
-                           selected_mode,
-                           DC1394_ISO_SPEED_400,
-                           DC1394_FRAMERATE_7_5)!=DC1394_SUCCESS) {
+  if (dc1394_capture_setup(camera)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode,framerate and format are\n"
@@ -332,8 +331,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
-  dc1394_release_camera(camera);
-  dc1394_free_camera(camera);
+  clean_up_exit(camera);
 
   return 0;
 }

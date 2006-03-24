@@ -68,22 +68,18 @@ int main(int argc, char *argv[])
 
   //fprintf(stderr,"handle: 0x%x\n",capture.handle);
 
-  if( dc1394_setup_format7_capture(camera, 
-                                   DC1394_VIDEO_MODE_FORMAT7_0,
-				   DC1394_COLOR_CODING_MONO8,
-                                   DC1394_ISO_SPEED_400,
-                                   DC1394_USE_MAX_AVAIL, /* use max packet size */
-                                   0, 0, /* left, top */
-                                   1280, 1024  /* width, height */) != DC1394_SUCCESS)
-  {
-    fprintf( stderr,"unable to setup camera in format 7 mode 0 -\n"
-             "check line %d of %s to make sure\n"
-             "that the video mode,framerate and format are\n"
-             "supported by your camera\n",
-             __LINE__,__FILE__);
-    dc1394_free_camera(camera);
-    exit(1);
-  }
+  dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+  dc1394_video_set_mode(camera, DC1394_VIDEO_MODE_FORMAT7_1);
+  dc1394_format7_set_roi(camera, DC1394_VIDEO_MODE_FORMAT7_1,
+			 DC1394_COLOR_CODING_MONO8,
+			 DC1394_USE_MAX_AVAIL, // use max packet size
+			 0, 0, // left, top
+			 1280, 1024);  // width, height
+  DC1394_ERR_RTN(err,"Unable to set Format7 mode 0.\nEdit the example file manually to fit your camera capabilities\n");
+
+  err=dc1394_capture_setup(camera);
+  DC1394_ERR_CLN_RTN(err, dc1394_free_camera(camera), "Error capturing\n");
+
   //fprintf(stderr,"handle: 0x%x\n",capture.handle);
 
   /* set trigger mode */
@@ -128,7 +124,7 @@ int main(int argc, char *argv[])
    *-----------------------------------------------------------------------*/
   if (dc1394_video_set_transmission(camera,DC1394_ON) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to start camera iso transmission\n");
-    dc1394_release_camera(camera);
+    dc1394_capture_stop(camera);
     dc1394_free_camera(camera);
     exit(1);
   }
@@ -147,7 +143,7 @@ int main(int argc, char *argv[])
     if (dc1394_capture(&camera,1)!=DC1394_SUCCESS) {
       //fprintf(stderr,"Error 1\n");
       //fprintf(stderr,"handle: 0x%x\n",capture.handle);
-      dc1394_release_camera(camera);
+      dc1394_capture_stop(camera);
       //fprintf(stderr,"Error 2\n");
       //fprintf(stderr,"handle: 0x%x\n",capture.handle);
       dc1394_free_camera(camera);
@@ -185,7 +181,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
-  dc1394_release_camera(camera);
+  dc1394_capture_stop(camera);
   dc1394_free_camera(camera);
   return 0;
 }

@@ -23,7 +23,7 @@
  *-----------------------------------------------------------------------*/
 void cleanup_and_exit(dc1394camera_t *camera)
 {
-  dc1394_release_camera(camera);
+  dc1394_capture_stop(camera);
   dc1394_free_camera(camera);
   exit(1);
 }
@@ -64,10 +64,14 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
-  if (dc1394_setup_capture(camera,
-                           DC1394_VIDEO_MODE_640x480_RGB8,
-                           DC1394_ISO_SPEED_400,
-                           DC1394_FRAMERATE_7_5)!=DC1394_SUCCESS) {
+
+  err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+  DC1394_ERR_RTN(err,"Could not set ISO speed");
+  dc1394_video_set_mode(camera,DC1394_VIDEO_MODE_640x480_RGB8);
+  DC1394_ERR_RTN(err,"Could not set video mode 640x480xRGB8");
+  dc1394_video_set_framerate(camera,DC1394_FRAMERATE_7_5);
+  DC1394_ERR_RTN(err,"Could not set framerate to 7.5fps");
+  if (dc1394_capture_setup(camera)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode,framerate and format are\n"
@@ -79,13 +83,14 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  report camera's features
    *-----------------------------------------------------------------------*/
+  /*
   if (dc1394_get_camera_feature_set(camera,&features) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to get feature set\n");
   }
   else {
     dc1394_print_feature_set(&features);
   }
-    
+  */
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
@@ -143,12 +148,11 @@ int main(int argc, char *argv[])
   fwrite((const char *)camera->capture.capture_buffer, 1,
          camera->capture.frame_height*camera->capture.frame_width*3, imagefile);
   fclose(imagefile);
-  printf("wrote: " IMAGE_FILE_NAME "\n");
+  printf("wrote: " IMAGE_FILE_NAME " (%d image bytes)\n",camera->capture.frame_height*camera->capture.frame_width*3);
 
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
-  dc1394_release_camera(camera);
-  dc1394_free_camera(camera);
+  cleanup_and_exit(camera);
   return 0;
 }

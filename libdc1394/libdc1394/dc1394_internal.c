@@ -139,7 +139,7 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
   dc1394error_t err;
 
   err=_dc1394_get_format_from_mode(mode, &format);
-  DC1394_ERR_CHK(err,"Invalid mode ID");
+  DC1394_ERR_RTN(err,"Invalid mode ID");
   
   //fprintf(stderr,"format: %d\n",format);
 
@@ -153,7 +153,7 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
     }
     else {
       err=DC1394_INVALID_MODE;
-      DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+      DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT1:
@@ -165,7 +165,7 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
     }
     else {
       err=DC1394_INVALID_MODE;
-      DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+      DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT2:
@@ -177,13 +177,13 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
     }
     else {
       err=DC1394_INVALID_MODE;
-      DC1394_ERR_CHK(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+      DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT6:
   case DC1394_FORMAT7:
     err=DC1394_INVALID_FORMAT;
-    DC1394_ERR_CHK(err,"Format 6 and 7 don't have qpp");
+    DC1394_ERR_RTN(err,"Format 6 and 7 don't have qpp");
     break;
   }
 
@@ -205,13 +205,13 @@ _dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mo
   dc1394error_t err;
 
   err=dc1394_get_image_size_from_video_mode(camera, video_mode, &w, &h);
-  DC1394_ERR_CHK(err, "Invalid mode ID");
+  DC1394_ERR_RTN(err, "Invalid mode ID");
 
   err=dc1394_get_color_coding_from_video_mode(camera, video_mode, &color_coding);
-  DC1394_ERR_CHK(err, "Invalid mode ID");
+  DC1394_ERR_RTN(err, "Invalid mode ID");
 
   err=dc1394_get_bytes_per_pixel(color_coding, &bpp);
-  DC1394_ERR_CHK(err, "Invalid color mode ID");
+  DC1394_ERR_RTN(err, "Invalid color mode ID");
 
   *quads=(uint_t)(w*h*bpp/4);
 
@@ -262,7 +262,7 @@ _dc1394_get_format_from_mode(dc1394video_mode_t mode, uint_t *format)
   }
   else {
     err=DC1394_INVALID_MODE;
-    DC1394_ERR_CHK(err, "The supplied mode does not correspond to any format");
+    DC1394_ERR_RTN(err, "The supplied mode does not correspond to any format");
   }
 
   return err;
@@ -364,14 +364,14 @@ dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
     else {
       // set channel in the camera
       err=dc1394_video_set_iso_channel(camera, camera->iso_channel);
-      DC1394_ERR_CHK(err, "Could not set ISO channel in the camera");
+      DC1394_ERR_RTN(err, "Could not set ISO channel in the camera");
     }
     
     if (camera->iso_bandwidth==0) {
       //fprintf(stderr,"Estimating ISO bandwidth\n");
       // then we book the bandwidth
       err=dc1394_video_get_bandwidth_usage(camera, &camera->iso_bandwidth);
-      DC1394_ERR_CHK(err, "Could not estimate ISO bandwidth");
+      DC1394_ERR_RTN(err, "Could not estimate ISO bandwidth");
       if (raw1394_bandwidth_modify(camera->handle, camera->iso_bandwidth, RAW1394_MODIFY_ALLOC)<0) {
 	camera->iso_bandwidth=0;
 	return DC1394_NO_BANDWIDTH;
@@ -433,25 +433,25 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel)
   int speed;
 
   err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
-  DC1394_ERR_CHK(err, "Could not get basic function register");
+  DC1394_ERR_RTN(err, "Could not get basic function register");
 
   err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
-  DC1394_ERR_CHK(err, "Could not get ISO data");
+  DC1394_ERR_RTN(err, "Could not get ISO data");
 
   // check if 1394b is available and if we are now using 1394b
   if ((value_inq & 0x00800000)&&(value & 0x00008000)) {
     err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
-    DC1394_ERR_CHK(err, "oops");
+    DC1394_ERR_RTN(err, "oops");
     speed=value & 0x7UL;
     err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
 				 (quadlet_t) ( ((channel & 0x3FUL) << 8) |
 					       (speed & 0x7UL) |
 					       (0x1 << 15) ));
-    DC1394_ERR_CHK(err, "oops");
+    DC1394_ERR_RTN(err, "oops");
   }
   else { // fallback to legacy
     err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
-    DC1394_ERR_CHK(err, "oops");
+    DC1394_ERR_RTN(err, "oops");
     speed=(value >> 24) & 0x3UL;
     if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
       fprintf(stderr,"(%s) line %d: an ISO speed >400Mbps was requested while the camera is in LEGACY mode\n",__FILE__,__LINE__);
@@ -462,7 +462,7 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel)
     err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
 				 (quadlet_t) (((channel & 0xFUL) << 28) |
 					      ((speed & 0x3UL) << 24) ));
-    DC1394_ERR_CHK(err, "Could not set ISO data register");
+    DC1394_ERR_RTN(err, "Could not set ISO data register");
   }
   
   return err;

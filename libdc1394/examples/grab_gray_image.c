@@ -25,7 +25,7 @@
  *-----------------------------------------------------------------------*/
 void cleanup_and_exit(dc1394camera_t *camera)
 {
-  dc1394_release_camera(camera);
+  dc1394_capture_stop(camera);
   dc1394_free_camera(camera);
   exit(1);
 }
@@ -79,18 +79,19 @@ int main(int argc, char *argv[])
   }
 
   // select highest res mode:
-  for (i=video_modes.num-1;i>=0;i++) {
-    dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
-    if ((!dc1394_is_video_mode_scalable(video_modes.modes[i]))&&
-	(coding==DC1394_COLOR_CODING_MONO8)) {
-      video_mode=video_modes.modes[i];
-      break;
+  for (i=video_modes.num-1;i>=0;i--) {
+    if (!dc1394_is_video_mode_scalable(video_modes.modes[i])) {
+      dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
+      if (coding==DC1394_COLOR_CODING_MONO8) {
+	video_mode=video_modes.modes[i];
+	break;
+      }
     }
   }
-
+  //fprintf(stderr,"Hello\n");
   dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
-  if ((!dc1394_is_video_mode_scalable(video_modes.modes[i]))&&
-      (coding==DC1394_COLOR_CODING_MONO8)) {
+  if ((dc1394_is_video_mode_scalable(video_modes.modes[i]))||
+      (coding!=DC1394_COLOR_CODING_MONO8)) {
     fprintf(stderr,"Could not get a valid MONO8 mode\n");
     cleanup_and_exit(camera);
   }
@@ -107,7 +108,10 @@ int main(int argc, char *argv[])
    *-----------------------------------------------------------------------*/
   fprintf(stderr,"Setting capture\n");
 
-  if (dc1394_setup_capture(camera, video_mode, DC1394_ISO_SPEED_400, framerate)!=DC1394_SUCCESS) {
+  dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+  dc1394_video_set_mode(camera, video_mode);
+  dc1394_video_set_framerate(camera, framerate);
+  if (dc1394_capture_setup(camera)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode and framerate are\n"
@@ -193,8 +197,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
-  dc1394_release_camera(camera);
-  dc1394_free_camera(camera);
+  cleanup_and_exit(camera);
 
   return 0;
 }
