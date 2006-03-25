@@ -157,9 +157,9 @@ dc1394error_t
 dc1394_format7_set_roi(dc1394camera_t *camera,
 		       dc1394video_mode_t video_mode,
 		       dc1394color_coding_t color_coding,
-		       uint_t bytes_per_packet,
-		       uint_t left, uint_t top,
-		       uint_t width, uint_t height)
+		       int bytes_per_packet,
+		       int left, int top,
+		       int width, int height)
 {
   uint_t unit_bytes, max_bytes;
   uint_t recom_bpp;
@@ -169,19 +169,22 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   uint_t camera_height = 0;
   uint_t max_width = 0;
   uint_t max_height = 0;
+  uint_t uint_bpp=0;
   dc1394error_t err;
 
-  // TODO protect this function to avoid problems if ISO is running and/or capture is set.
-
-  fprintf(stderr,"Setting ROI\n");
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
+  
+  //fprintf(stderr,"Setting ROI\n");
 
   err=dc1394_format7_set_color_coding(camera, video_mode, color_coding);
   DC1394_ERR_RTN(err, "Unable to set video mode %d", video_mode);
 
   // get BPP before setting sizes,...
   if (bytes_per_packet==DC1394_QUERY_FROM_CAMERA) {
-    err=dc1394_format7_get_byte_per_packet(camera, video_mode, &bytes_per_packet);
+    err=dc1394_format7_get_byte_per_packet(camera, video_mode, &uint_bpp);
     DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", video_mode);
+    bytes_per_packet=uint_bpp;
   }
 
   /* The image position should be checked regardless of the left and top values
@@ -566,6 +569,9 @@ dc1394_format7_set_image_size(dc1394camera_t *camera,
 {
   dc1394error_t err;
 
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
+
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_FAILURE;
 
@@ -584,6 +590,9 @@ dc1394_format7_set_color_coding(dc1394camera_t *camera,
 				dc1394video_mode_t video_mode, dc1394color_coding_t color_coding)
 {
   dc1394error_t err;
+
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_FAILURE;
@@ -606,6 +615,9 @@ dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
                                    uint_t packet_bytes)
 {
   dc1394error_t err;
+
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_FAILURE;

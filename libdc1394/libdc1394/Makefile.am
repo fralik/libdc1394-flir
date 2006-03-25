@@ -12,7 +12,6 @@ libdc1394_la_SOURCES =  \
 	dc1394_format7.c        \
 	dc1394_vendor_avt.c 	\
 	dc1394_vendor_avt.h	\
-	dc1394_absolute.c	\
 	dc1394_register.c       \
 	dc1394_register.h       \
 	dc1394_utils.c          \

@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
   FILE* imagefile;
   dc1394camera_t *camera, **cameras=NULL;
   uint_t numCameras, i;
-  dc1394featureset_t features;
+  //dc1394featureset_t features;
 
   /* Find cameras */
   int err=dc1394_find_cameras(&cameras, &numCameras);

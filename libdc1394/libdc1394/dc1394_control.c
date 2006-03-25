@@ -46,11 +46,34 @@ dc1394_new_camera(uint_t port, nodeid_t node)
   cam->iso_channel=-1;
   cam->iso_bandwidth=0;
   cam->capture_is_set=0;
+  cam->broadcast=DC1394_FALSE;
 
   raw1394_set_port(cam->handle, cam->port);
 
   //fprintf(stderr,"Created camera with handle 0x%x\n",cam->handle);
   return cam;
+}
+
+dc1394error_t
+dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
+{
+  if (pwr==DC1394_TRUE) {
+    if (camera->broadcast==DC1394_FALSE) {
+      camera->node_id_backup=camera->node;
+      camera->node=63;
+      camera->broadcast=DC1394_TRUE;
+    }
+  }
+  else if (pwr==DC1394_FALSE) {
+    if (camera->broadcast==DC1394_TRUE) {
+      camera->node=camera->node_id_backup;
+      camera->broadcast=DC1394_FALSE;
+    }
+  }
+  else
+    return DC1394_FAILURE;
+
+  return DC1394_SUCCESS;
 }
 
 int
@@ -644,7 +667,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   octlet_t offset;
   quadlet_t value;
   dc1394error_t err;
-  
+
   // check presence
   err=dc1394_feature_is_present(camera, feature->id, &(feature->available));
   DC1394_ERR_RTN(err, "Could not check feature %d presence",feature->id);
@@ -1050,15 +1073,6 @@ dc1394_video_get_supported_framerates(dc1394camera_t *camera, dc1394video_mode_t
   return err;
 }
 
-dc1394error_t
-dc1394_get_advanced_feature_offset(dc1394camera_t *camera, quadlet_t *value)
-{
-  dc1394error_t err;
-  err=GetCameraControlRegister(camera, REG_CAMERA_ADV_FEATURE_INQ, value);
-  DC1394_ERR_RTN(err, "Could not get the advanced features offset");
-
-  return err;
-}
 
 dc1394error_t
 dc1394_video_get_framerate(dc1394camera_t *camera, dc1394framerate_t *framerate)
@@ -1081,6 +1095,9 @@ dc1394_video_set_framerate(dc1394camera_t *camera, dc1394framerate_t framerate)
   if ( (framerate < DC1394_FRAMERATE_MIN) || (framerate > DC1394_FRAMERATE_MAX) ) {
     return DC1394_FAILURE;
   }
+
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
   
   err=SetCameraControlRegister(camera, REG_CAMERA_FRAME_RATE,
 			       (quadlet_t)(((framerate - DC1394_FRAMERATE_MIN) & 0x7UL) << 29));
@@ -1138,6 +1155,9 @@ dc1394_video_set_mode(dc1394camera_t *camera, dc1394video_mode_t  mode)
 {
   uint_t format, min;
   dc1394error_t err;
+  
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
   
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_RTN(err, "Invalid video mode code");
@@ -1207,6 +1227,9 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
   quadlet_t value;
   int channel;
 
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
+  
   err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
 
@@ -1266,6 +1289,9 @@ dc1394_video_set_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t  
   dc1394error_t err;
   quadlet_t value;
 
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
+  
   err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
   
@@ -2193,6 +2219,10 @@ dc1394error_t
 dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
 {
   int i;
+
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
+  
   // free all iso channels 
   for (i=0;i<DC1394_NUM_ISO_CHANNELS;i++)
     raw1394_channel_modify(camera->handle, i, RAW1394_MODIFY_FREE);
@@ -2206,7 +2236,62 @@ dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
 dc1394error_t
 dc1394_video_specify_iso_channel(dc1394camera_t *camera, int iso_channel)
 {
+  if (camera->capture_is_set>0)
+    return DC1394_FAILURE;
+  
   camera->iso_channel=iso_channel;
 
   return DC1394_SUCCESS;
 }
+
+dc1394error_t
+dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, dc1394feature_t feature, float *min, float *max)
+{
+  dc1394error_t err=DC1394_SUCCESS;
+  
+  if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
+    return DC1394_FAILURE;
+  }
+
+  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MAX, (quadlet_t*)max);
+  DC1394_ERR_RTN(err,"Could not get maximal absolute value");
+  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MIN, (quadlet_t*)min);
+  DC1394_ERR_RTN(err,"Could not get minimal absolute value");
+
+  return err;
+}
+
+
+dc1394error_t
+dc1394_feature_get_absolute_value(dc1394camera_t *camera, dc1394feature_t feature, float *value)
+{
+  dc1394error_t err=DC1394_SUCCESS;
+
+  if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
+    return DC1394_FAILURE;
+  }
+  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (quadlet_t*)value);
+  DC1394_ERR_RTN(err,"Could not get current absolute value");
+
+  return err;
+}
+
+
+dc1394error_t
+dc1394_feature_set_absolute_value(dc1394camera_t *camera, dc1394feature_t feature, float value)
+{
+  dc1394error_t err=DC1394_SUCCESS;
+  
+  quadlet_t tempq;
+  memcpy(&tempq,&value,4);
+
+  if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
+    return DC1394_FAILURE;
+  }
+
+  SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, tempq);
+  DC1394_ERR_RTN(err,"Could not get current absolute value");
+
+  return err;
+}
+ 

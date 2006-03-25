@@ -253,13 +253,13 @@ typedef enum {
 
 /* Return values for visible functions*/
 typedef enum {
-  DC1394_SUCCESS=0, /* Success is zero */
-  DC1394_FAILURE,/* Errors are positive numbers */
+  DC1394_SUCCESS=0,   /* Success is zero */
+  DC1394_FAILURE,     /* Errors are positive numbers */
   DC1394_NO_FRAME=-2, /* Warnings or info are negative numbers*/
   DC1394_NO_CAMERA=3,
   DC1394_NOT_A_CAMERA,
   DC1394_FUNCTION_NOT_SUPPORTED,
-  DC1394_CAMERA_NOT_INITITIALIZED, 
+  DC1394_CAMERA_NOT_INITITIALIZED,
   DC1394_INVALID_FEATURE,
   DC1394_INVALID_FORMAT,
   DC1394_INVALID_MODE,
@@ -390,7 +390,7 @@ typedef struct __dc1394_camera
   octlet_t           unit_dependent_directory;
   octlet_t           advanced_features_csr;
   octlet_t           format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
-  uint_t             iidc_version;
+  dc1394iidc_version_t iidc_version;
   char               vendor[MAX_CHARS + 1];
   char               model[MAX_CHARS + 1];
   quadlet_t          vendor_id;
@@ -414,6 +414,10 @@ typedef struct __dc1394_camera
   uint_t             load_channel;
 
   int                capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
+
+  // for broadcast:
+  dc1394bool_t       broadcast;
+  nodeid_t           node_id_backup;
 
   // Private:
   // capture structure
@@ -587,6 +591,14 @@ dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCame
 dc1394error_t dc1394_get_camera_info(dc1394camera_t *camera);
 dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
 
+/* Sets and resets the broadcast flag of a camera. If the broadcast flag is set,
+   all devices on the bus will execute the command. Useful to sync ISO start
+   commands or setting a bunch of cameras at the same time. Broadcast only works
+   with identical devices (brand/model). If the devices are not identical your
+   mileage may vary. Some cameras may not answer broadcast commands at all. Also,
+   this only works with cameras on the SAME bus (IOW, the same port).*/
+dc1394error_t dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr);
+
 /***************************************************************************
      Other functionalities
  ***************************************************************************/
@@ -692,8 +704,8 @@ dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, uint_t *depth)
 /* start/stop isochronous data transmission */
 dc1394error_t dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr);
 dc1394error_t dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch_t *pwr);
-  /* The following function is not necessary in general. You should only use it if you
-     want a specific ISO channel. Usage: Call it before setting up capture and transmission */
+/* The following function is not necessary in general. You should only use it if you
+   want a specific ISO channel. Usage: Call it before setting up capture and transmission */
 dc1394error_t dc1394_video_specify_iso_channel(dc1394camera_t *camera, int iso_channel);
 
 /* turn one shot mode on or off */
@@ -776,23 +788,14 @@ dc1394error_t dc1394_format7_get_mode_info(dc1394camera_t *camera, dc1394video_m
 /* Joint function that fully sets a certain ROI taking all parameters into account
    Note that this function does not SWITCH to the video mode passed as argument, it mearly sets it */
 dc1394error_t dc1394_format7_set_roi(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t color_coding,
-				     uint_t bytes_per_packet, uint_t left, uint_t top, uint_t width, uint_t height);
+				     int bytes_per_packet, int left, int top, int width, int height);
 
 
 /* This will have to be fixed or removed: it's ugly...*/
-dc1394error_t
-dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera);
+dc1394error_t dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __DC1394_CAMERA_CONTROL_H__ */
-
-
-/* TODO: 
-- add dummy broadcast camera
-- add typedef for capture type (drop frames or not)
-- bullet-proof functions. This should be optional and set with a flag in the camera structure.
-- move error macros to functions?
-*/

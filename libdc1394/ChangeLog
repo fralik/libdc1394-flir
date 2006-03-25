@@ -825,6 +825,13 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	- DC1394_ERR_CLN_RTN (cleanup followed by a return of an error code)
 	
 2006-03-24 Damien <ddouxchamps@users.sf.net>
-    * fixed serious error with raw capture (garbled images)
+    * fixed serious error with raw capture (garbled images of 1/4 size)
     * fixed grab_gray_image
-
+    * merged dc1394_absolute.c in dc1394_control.c
+    * a new function can be used to set a camera in broadcast mode.
+    * functions that can influence capture settings are disabled (and return and
+      error) if called while capture is set.
+    * fixed the signedness of a few arguments of dc1394_format7_set_roi() (thanks
+      to James Sherman)
+    * properly free iso channel allocation if bandwidth allocation fails (James
+      Sherman too)

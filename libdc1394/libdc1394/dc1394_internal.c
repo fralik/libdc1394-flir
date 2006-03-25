@@ -374,6 +374,8 @@ dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
       DC1394_ERR_RTN(err, "Could not estimate ISO bandwidth");
       if (raw1394_bandwidth_modify(camera->handle, camera->iso_bandwidth, RAW1394_MODIFY_ALLOC)<0) {
 	camera->iso_bandwidth=0;
+	if (raw1394_channel_modify(camera->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1)
+	  fprintf(stderr,"Error: could not free iso channel %d!\n",camera->iso_channel);
 	return DC1394_NO_BANDWIDTH;
       }
       else
@@ -467,3 +469,67 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel)
   
   return err;
 }
+
+// not used yet. example of thing we need to do for checking IIDC versions.
+// problem: what about Point Grey cameras ??
+/*
+dc1394bool_t
+_dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
+{
+  dc1394iidc_version_t min_version;
+  switch (mode) {
+  case DC1394_VIDEO_MODE_160x120_YUV444:
+  case DC1394_VIDEO_MODE_320x240_YUV422:
+  case DC1394_VIDEO_MODE_640x480_YUV411:
+  case DC1394_VIDEO_MODE_640x480_YUV422:
+  case DC1394_VIDEO_MODE_640x480_RGB8:
+  case DC1394_VIDEO_MODE_640x480_MONO8:
+    min_version=DC1394_IIDC_VERSION_1_04;
+    break;
+  case DC1394_VIDEO_MODE_640x480_MONO16:
+    min_version=DC1394_IIDC_VERSION_1_30;
+    break;
+  case DC1394_VIDEO_MODE_800x600_YUV422:
+  case DC1394_VIDEO_MODE_800x600_RGB8:
+  case DC1394_VIDEO_MODE_800x600_MONO8:
+  case DC1394_VIDEO_MODE_1024x768_YUV422:
+  case DC1394_VIDEO_MODE_1024x768_RGB8:
+  case DC1394_VIDEO_MODE_1024x768_MONO8:
+    min_version=DC1394_IIDC_VERSION_1_20;
+    break;
+  case DC1394_VIDEO_MODE_800x600_MONO16:
+  case DC1394_VIDEO_MODE_1024x768_MONO16:
+    min_version=DC1394_IIDC_VERSION_1_30;
+    break;
+  case DC1394_VIDEO_MODE_1280x960_YUV422:
+  case DC1394_VIDEO_MODE_1280x960_RGB8:
+  case DC1394_VIDEO_MODE_1280x960_MONO8:
+  case DC1394_VIDEO_MODE_1600x1200_YUV422:
+  case DC1394_VIDEO_MODE_1600x1200_RGB8:
+  case DC1394_VIDEO_MODE_1600x1200_MONO8:
+    min_version=DC1394_IIDC_VERSION_1_20;
+    break;
+  case DC1394_VIDEO_MODE_1280x960_MONO16:
+  case DC1394_VIDEO_MODE_1600x1200_MONO16:
+    min_version=DC1394_IIDC_VERSION_1_30;
+    break;
+  case DC1394_VIDEO_MODE_EXIF:
+  case DC1394_VIDEO_MODE_FORMAT7_0:
+  case DC1394_VIDEO_MODE_FORMAT7_1:
+  case DC1394_VIDEO_MODE_FORMAT7_2:
+  case DC1394_VIDEO_MODE_FORMAT7_3:
+  case DC1394_VIDEO_MODE_FORMAT7_4:
+  case DC1394_VIDEO_MODE_FORMAT7_5:
+  case DC1394_VIDEO_MODE_FORMAT7_6:
+  case DC1394_VIDEO_MODE_FORMAT7_7:
+    min_version=DC1394_IIDC_VERSION_1_20;
+    break;
+  }
+
+  if (min_version>=camera->iidc_version)
+    return DC1394_TRUE;
+  else
+    return DC1394_FALSE;
+
+}
+*/
