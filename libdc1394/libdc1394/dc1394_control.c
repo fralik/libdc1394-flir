@@ -200,7 +200,7 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
 }
 
 dc1394error_t
-dc1394_get_camera_info(dc1394camera_t *camera)
+dc1394_update_camera_info(dc1394camera_t *camera)
 {
   dc1394error_t err;
   uint_t len, i, count;
@@ -504,7 +504,7 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	return DC1394_MEMORY_ALLOCATION_FAILURE;
       }
       
-      err=dc1394_get_camera_info(tmpcam);
+      err=dc1394_update_camera_info(tmpcam);
       
       // This segment has been removed. Reason: some devices (like my hub) refuse to honour read requests even at offset 0x414.
       // The result of this is a low-level error that is translated by DC1394_FAILURE. The latter error code was interpreted as
@@ -699,14 +699,8 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
       }
     }
 
-    feature->trigger_sources.num=0;
-    value_tmp=( (value & (0xF << 23)) >>23 );
-    for (i=DC1394_TRIGGER_SOURCE_MIN;i<=DC1394_TRIGGER_SOURCE_MAX;i++) {
-      if (value_tmp & (0x1 << (i-DC1394_TRIGGER_SOURCE_MIN))){ 
-	feature->trigger_sources.sources[feature->trigger_sources.num]=i;
-	feature->trigger_sources.num++;
-      }
-    }
+    err=dc1394_external_trigger_get_supported_sources(camera,&feature->trigger_sources);
+    DC1394_ERR_RTN(err, "Could not get supported trigger sources");
 
     feature->auto_capable= DC1394_FALSE;
     feature->manual_capable= DC1394_FALSE;
@@ -1561,6 +1555,32 @@ dc1394_external_trigger_set_mode(dc1394camera_t *camera, dc1394trigger_mode_t mo
   DC1394_ERR_RTN(err, "Could not set trigger mode");
   return err;
 }
+
+
+dc1394error_t
+dc1394_external_trigger_get_supported_sources(dc1394camera_t *camera, dc1394trigger_sources_t *sources)
+{
+  quadlet_t value;
+  dc1394error_t err;
+  octlet_t offset;
+  int i;
+
+  FEATURE_TO_INQUIRY_OFFSET(DC1394_FEATURE_TRIGGER, offset);
+  err=GetCameraControlRegister(camera, offset, &value);
+  DC1394_ERR_RTN(err,"Could not query supported trigger sources");
+
+  sources->num=0;
+  value=( (value & (0xF << 23)) >>23 );
+  for (i=DC1394_TRIGGER_SOURCE_MIN;i<=DC1394_TRIGGER_SOURCE_MAX;i++) {
+    if (value & (0x1 << (i-DC1394_TRIGGER_SOURCE_MIN))){ 
+      sources->sources[sources->num]=i;
+      sources->num++;
+    }
+  }
+
+  return err;
+}
+
 
 dc1394error_t
 dc1394_external_trigger_get_source(dc1394camera_t *camera, dc1394trigger_source_t *source)

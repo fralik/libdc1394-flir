@@ -787,8 +787,7 @@ dc1394_bayer_Downsample(const uchar_t *restrict bayer, uchar_t *restrict rgb, in
     case DC1394_COLOR_FILTER_GBRG:
 	for (i = 0; i < sy*sx; i += (sx<<1)) {
 	    for (j = 0; j < sx; j += 2) {
-		tmp =
-		    ((bayer[i + j] + bayer[i + sx + j + 1]) >> 1);
+		tmp = ((bayer[i + j] + bayer[i + sx + j + 1]) >> 1);
 		CLIP(tmp, outG[((i >> 2) + (j >> 1)) * 3]);
 		tmp = bayer[i + sx + j + 1];
 		CLIP(tmp, outR[((i >> 2) + (j >> 1)) * 3]);
@@ -801,8 +800,7 @@ dc1394_bayer_Downsample(const uchar_t *restrict bayer, uchar_t *restrict rgb, in
     case DC1394_COLOR_FILTER_RGGB:
 	for (i = 0; i < sy*sx; i += (sx<<1)) {
 	    for (j = 0; j < sx; j += 2) {
-		tmp =
-		    ((bayer[i + sx + j] + bayer[i + j + 1]) >> 1);
+		tmp = ((bayer[i + sx + j] + bayer[i + j + 1]) >> 1);
 		CLIP(tmp, outG[((i >> 2) + (j >> 1)) * 3]);
 		tmp = bayer[i + sx + j + 1];
 		CLIP(tmp, outR[((i >> 2) + (j >> 1)) * 3]);

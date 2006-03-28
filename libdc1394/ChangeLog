@@ -314,15 +314,15 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2003-09-02  Dan Dennedy <dan@dennedy.org>
     * examples/*.c: call dc1394_destroy_handle() to cleanup mem and show
       proper technique
-    * examples/dc1394_multiview.c: show new proper technique of multi-capture by
-      creating a handle for each camera as opposed to port.
+    * examples/dc1394_multiview.c: show new proper technique of multi-capture
+      by creating a handle for each camera as opposed to port.
     * examples/gray_color_image.c: new example similar to grab_gray_image, but
       also contains example code how to locate first camera on any port and 
       attempt to make the camera non-root.
 
 2003-09-15 Damien <ddouxchamps@users.sf.net>
-    * fixed format7 capture setting when the current size register is initialized
-      to zero at the camera boot.
+    * fixed format7 capture setting when the current size register is
+      initialized to zero at the camera boot.
 	  
 2003-09-02  Dan Dennedy <dan@dennedy.org>
     * examples/grab_color_image.c: remove auto settings, add --guid option, add
@@ -341,11 +341,13 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixes/additions by Johann Schoonees:
     * fixed format7 capture setup function missing some parameters 
     * fixed compil warning in dc1394_absolute.c, line 261.
-    * fixed harmless but misleading bug in dc1394_format7.c: line 802 should be removed.
+    * fixed harmless but misleading bug in dc1394_format7.c: line 802 should be
+      removed.
     * add functions dc1394_get_one_shot and dc1394_get_multi_shot.
-    * changed dc1394_get_camera_misc_info to avoid probing memory psec registers
-      if no user memory is available. This is necessary for the iSight camera from Apple,
-      which does not implement registers 0x618h thru 0x62Ch.
+    * changed dc1394_get_camera_misc_info to avoid probing memory psec
+      registers if no user memory is available. This is necessary for the
+      iSight camera from Apple, which does not implement registers 0x618h thru
+      0x62Ch.
 	
 2003-12-04 Damien <ddouxchamps@users.sf.net>
     * little tag commit for version 0.9.2
@@ -358,23 +360,24 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * temporary fix for bpp settings in dc1394_format7_basic_setup
 	
 2003-12-24 Damien <ddouxchamps@users.sf.net>
-    * updated the IOCTLs for kernels 2.4.21+ and 2.6.0+. This breaks compatibility with
-      previous kernel versions.
+    * updated the IOCTLs for kernels 2.4.21+ and 2.6.0+. This breaks
+      compatibility with previous kernel versions.
 
 2004-01-04 Dan Dennedy <dan@dennedy.org>
-    * simplify video1394 includes and correct Damien's ChangLog entry about kernel 2.4
-      compatibility.
+    * simplify video1394 includes and correct Damien's ChangLog entry about
+      kernel 2.4 compatibility.
     * examples/dc1394_vloopback.c: minor bugfixes.
     * autogen.sh: add missing libtoolize.
 	
 2004-01-14 Damien <ddouxchamps@users.sf.net>
-    * fixed a bug related to IIDC version in format7 functions. All registers specific 
-      of v1.30 are now only probed if the version is 1.30.
+    * fixed a bug related to IIDC version in format7 functions. All registers
+      specific of v1.30 are now only probed if the version is 1.30.
 
 2004-01-14 Dan Dennedy <dan@dennedy.org>
     * libdc1394/ieee1394-ioctl.h: removed unnecessary
-    * examples/dc1394_vloopback: added support for palettes yuv422p and yuv420p,
-      added support for scaling up to 1024x768, greater v4l application compatibility.
+    * examples/dc1394_vloopback: added support for palettes yuv422p and
+      yuv420p, added support for scaling up to 1024x768, greater v4l
+      application compatibility.
 
 2004-01-15 Damien <ddouxchamps@users.sf.net>
     * little additional fix regarding F7 and version issues.
@@ -483,7 +486,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Added most IIDC 1.31 functions and definitions
 	
 2004-09-30 Damien <ddouxchamps@users.sf.net>
-    * Introduced the IIDC_VERSION_X_XX definitions. Interface version is now 12.
+    * Introduced the IIDC_VERSION_X_XX definitions. Interface version is now
+      12.
 
 2004-09-30 Damien <ddouxchamps@users.sf.net>
     * Fixed small issue in the IIDC version detection
@@ -492,7 +496,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Applied a patch from F. Devernay to allow compilation on x86_64.
 
 2004-11-11 Damien <ddouxchamps@users.sf.net>
-    * fixed format quadlets per packet access in _dc1394_get_quadlets_per_packet()
+    * fixed format quadlets per packet access in
+      _dc1394_get_quadlets_per_packet()
 
 2004-11-12 Damien <ddouxchamps@users.sf.net>
     * update for previous fix: use NUM_FRAMERATES
@@ -500,8 +505,10 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-01-26 Damien <ddouxchamps@users.sf.net>
     * update the get/set_operation_mode functions.
     * applied a patch from Yves Jaeger to add software trigger functions
-    * updated the configure.in script to link properly against libraw1394 (Peter 'p2' De Schrijver)
-    * removed the deprecated file acconfig.h and updated configure.in accordingly.
+    * updated the configure.in script to link properly against libraw1394
+      (Peter 'p2' De Schrijver)
+    * removed the deprecated file acconfig.h and updated configure.in
+      accordingly.
 	
 2005-01-27 Damien <ddouxchamps@users.sf.net>
     * fixed 1394b operation thanks to inputs and patches from Christoph Ganser.
@@ -513,7 +520,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Version 1.1.0
 
 2005-02-28 Damien <ddouxchamps@users.sf.net>
-    * fixed definition of IIDC_VERSION_MIN (thx to D. Bahadir for spotting this)
+    * fixed definition of IIDC_VERSION_MIN (thx to D. Bahadir for spotting
+      this)
 	
 2005-03-25 Damien <ddouxchamps@users.sf.net>
     * added missing feature strings (thx to Obelix for spotting this)
@@ -522,11 +530,12 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed bandwidth usage estimation
 	
 2005-04-19 Damien <ddouxchamps@users.sf.net>
-    * added AVT advanced functions and cleaned up the registers/offsets detection
+    * added AVT advanced functions and cleaned up the registers/offsets
+      detection
 	
 2005-04-19 Damien <ddouxchamps@users.sf.net>
-    * more cleaning and reordering. files dc1394_offsets.h and dc1394_register.c/h
-      created to avoid a big mess in dc1394_control.c.
+    * more cleaning and reordering. files dc1394_offsets.h and
+      dc1394_register.c/h created to avoid a big mess in dc1394_control.c.
 	
 2005-04-19 Damien <ddouxchamps@users.sf.net>
     * fixed big addressing problem
@@ -686,8 +695,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed bad array adressing in dc1394_format7_get_modeset()
 
 2005-10-11 Damien <ddouxchamps@users.sf.net>
-    * we were not looking at a non-initialized "camera->capture.dma_device_file"
-      instead of the function argument "dma_device_file" (Thanks to Irv Elshoff)
+    * we were not looking at a non-initialized
+      "camera->capture.dma_device_file" instead of the function argument
+      "dma_device_file" (Thanks to Irv Elshoff)
 
 2005-10-14 Damien <ddouxchamps@users.sf.net>
     * removed manual input of the video1394 device filename argument. The video
@@ -717,7 +727,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       of an input parameter.
     * the type of image buffers is uchat_t*, NOT uint_t*.
     * new functions to access the capture data (image buffer and fill time).
-      The capture structure will removed from the API, but I don't know how yet.
+      The capture structure will removed from the API, but I don't know how
+      yet.
 
 2005-12-12 Damien <ddouxchamps@users.sf.net>
     * fixed the absolute settings.
@@ -725,7 +736,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2005-12-18 Damien <ddouxchamps@users.sf.net>
     * stronger typing: most enum types have now defined types, like
       dc1394framerate_t or dc1394video_mode_t
-    * changed the video mode names from DC1394_MODE_xxx to DC1394_VIDEO_MODE_xxx
+    * changed the video mode names from DC1394_MODE_xxx to
+      DC1394_VIDEO_MODE_xxx
 
 2005-12-19 Damien <ddouxchamps@users.sf.net>
     * start implementation of automatic ISO channel/bandwidth  allocation
@@ -758,14 +770,15 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * updated conversion functions and cleanup their interface.
 
 2005-12-27 Damien <ddouxchamps@users.sf.net>
-    * update in the name conventions, notably replacing 'mode' by 'video mode' and
-      'color mode' by 'color coding', 'feature_id' by 'feature', etc...
+    * update in the name conventions, notably replacing 'mode' by 'video mode'
+      and 'color mode' by 'color coding', 'feature_id' by 'feature', etc...
     * more code cleanup and name changes
-    * fixed a serious bug in feature detection. This was due to some macros that
-      were changing the value of the feature_id argument, resulting in subsequent
-      tests to be performed on features IDs like 2 or 3 or 15, while those should
-      have been 418, 419 or 431. It dod not have much consequences thanks to most
-      features falling into the 'default' section, but it killed the trigger stuff.
+    * fixed a serious bug in feature detection. This was due to some macros
+      that were changing the value of the feature_id argument, resulting in
+      subsequent tests to be performed on features IDs like 2 or 3 or 15, while
+      those should have been 418, 419 or 431. It dod not have much consequences
+      thanks to most features falling into the 'default' section, but it killed
+      the trigger stuff.
 
 2006-01-03 Damien <ddouxchamps@users.sf.net>
     * fix missing "#ifdef __cplusplus", thanks to Boris Zingerman.
@@ -777,8 +790,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * dc1394_register.h is now exported.
 
 2006-01-23 Damien <ddouxchamps@users.sf.net>
-    * RAW8 and RAW16 formats are considered grayscale for conversion. If you want
-      color you should run de-bayering before.
+    * RAW8 and RAW16 formats are considered grayscale for conversion. If you
+      want color you should run de-bayering before.
 
 2006-01-25 Damien <ddouxchamps@users.sf.net>
     * cleaned up _dc1394_open_dma_device()
@@ -789,10 +802,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * trigger source selection implemented
 	
 2006-02-07 Damien <ddouxchamps@users.sf.net>
-    * force a DC1394_SLOW_DOWN delay even when the transaction returns successfuly
-      Otherwise we can have too many requests following each other and the camera
-      does not have time to adapt its ROM to reflect the changes made by the
-      previous transaction. Thanks to Dirk Farin for finding this bug.
+    * force a DC1394_SLOW_DOWN delay even when the transaction returns
+      successfuly Otherwise we can have too many requests following each other
+      and the camera does not have time to adapt its ROM to reflect the changes
+      made by the previous transaction. Thanks to Dirk Farin for finding this
+      bug.
     * fixed a missing device assignement in _dc1394_open_dma_device. From Dirk
       Farin again ;-)
 
@@ -806,19 +820,20 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * release 2.0.0-pre6
 	
 2006-03-22 Damien <ddouxchamps@users.sf.net>
-    * Applied a patch from Seemant Kulleen (replaces CLK_TCK with CLOCKS_PER_SEC)
+    * Applied a patch from Seemant Kulleen (replaces CLK_TCK with
+      CLOCKS_PER_SEC)
 
 2006-03-23 Damien <ddouxchamps@users.sf.net>
-    * Capture functions have been simplified both in content and interface. One must
-      now do the video settings before calling the capture_setup(_dma) functions. This
-      allows F7 capture to be merged in the other capture functions. Oh, and names
-      have been changed too ;-( Needless to say it's a compatibility break. Hopefuly
-      the last big one.
-    * A new function that sets up a format7 ROI is born from the ashes of the f7
-      capture function.
+    * Capture functions have been simplified both in content and interface. One
+      must now do the video settings before calling the capture_setup(_dma)
+      functions. This allows F7 capture to be merged in the other capture
+      functions. Oh, and names have been changed too ;-( Needless to say it's a
+      compatibility break. Hopefuly the last big one.
+    * A new function that sets up a format7 ROI is born from the ashes of the
+      f7 capture function.
     * ISO channels and bandwidth are now allocated for RAW1394 too.
-    * two more error handling macros have been added. The name of the macros have
-      changed too. The macros are now:
+    * two more error handling macros have been added. The name of the macros
+      have changed too. The macros are now:
 	- DC1394_ERR (returns)
 	- DC1394_ERR_RTN (returns an error code)
 	- DC1394_ERR_CLN (execute cleanup function, then returns)
@@ -829,9 +844,13 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed grab_gray_image
     * merged dc1394_absolute.c in dc1394_control.c
     * a new function can be used to set a camera in broadcast mode.
-    * functions that can influence capture settings are disabled (and return and
-      error) if called while capture is set.
-    * fixed the signedness of a few arguments of dc1394_format7_set_roi() (thanks
-      to James Sherman)
+    * functions that can influence capture settings are disabled (and return
+      and error) if called while capture is set.
+    * fixed the signedness of a few arguments of dc1394_format7_set_roi()
+      (thanks to James Sherman)
     * properly free iso channel allocation if bandwidth allocation fails (James
       Sherman too)
+	
+2006-03-28 Damien <ddouxchamps@users.sf.net>
+    * added missing dc1394_external_trigger_get_supported_sources()
+    * this CHangeLog now respects the 80-columns format.

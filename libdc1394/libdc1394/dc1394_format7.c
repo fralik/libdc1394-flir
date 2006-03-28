@@ -177,8 +177,13 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   
   //fprintf(stderr,"Setting ROI\n");
 
+  if (color_coding==DC1394_QUERY_FROM_CAMERA) {
+    err=dc1394_format7_get_color_coding(camera, video_mode, &color_coding);
+    DC1394_ERR_RTN(err, "Unable to set color_coding %d", color_coding);
+  }
+
   err=dc1394_format7_set_color_coding(camera, video_mode, color_coding);
-  DC1394_ERR_RTN(err, "Unable to set video mode %d", video_mode);
+  DC1394_ERR_RTN(err, "Unable to set color coding %d", color_coding);
 
   // get BPP before setting sizes,...
   if (bytes_per_packet==DC1394_QUERY_FROM_CAMERA) {

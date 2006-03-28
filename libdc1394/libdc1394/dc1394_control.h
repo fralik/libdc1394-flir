@@ -269,7 +269,7 @@ typedef enum {
   DC1394_INVALID_ISO_SPEED,
   DC1394_INVALID_IIDC_VERSION,
   DC1394_INVALID_COLOR_CODING,
-  DC1394_INVALID_FORMAT7_COLOR_TILE,
+  DC1394_INVALID_COLOR_FILTER,
   DC1394_REQ_VALUE_OUTSIDE_RANGE,
   DC1394_INVALID_ERROR_CODE,
   DC1394_MEMORY_ALLOCATION_FAILURE,
@@ -510,6 +510,20 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 /* Error checking function. displays an error string on stderr and exit current function
    if error is positive. Neg errors are messages and are thus ignored */
 
+#define DC1394_WRN(err, err_string...)                       \
+    {                                                        \
+    if ((err<0)||(err>DC1394_ERROR_NUM))                     \
+      err=DC1394_INVALID_ERROR_CODE;                         \
+                                                             \
+    if (err>DC1394_SUCCESS) {                                \
+      fprintf(stderr,"Libdc1394 warning (%s:%s:%d): %s : ",  \
+	      __FILE__, __FUNCTION__, __LINE__,              \
+	      dc1394_error_strings[err]);                    \
+      fprintf(stderr, err_string);                           \
+      fprintf(stderr,"\n");                                  \
+    }                                                        \
+    }
+
 #define DC1394_ERR(err, err_string...)                       \
     {                                                        \
     if ((err<0)||(err>DC1394_ERROR_NUM))                     \
@@ -587,8 +601,8 @@ void dc1394_free_camera(dc1394camera_t *camera);
 /* locate and initialise the cameras */
 dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras);
 
-/* get / print the camera information */
-dc1394error_t dc1394_get_camera_info(dc1394camera_t *camera);
+/* print the camera information */
+//dc1394error_t dc1394_get_camera_info(dc1394camera_t *camera);
 dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
 
 /* Sets and resets the broadcast flag of a camera. If the broadcast flag is set,
@@ -630,6 +644,7 @@ dc1394error_t dc1394_external_trigger_set_mode(dc1394camera_t *camera, dc1394tri
 dc1394error_t dc1394_external_trigger_get_mode(dc1394camera_t *camera, dc1394trigger_mode_t *mode);
 dc1394error_t dc1394_external_trigger_set_source(dc1394camera_t *camera, dc1394trigger_source_t source);
 dc1394error_t dc1394_external_trigger_get_source(dc1394camera_t *camera, dc1394trigger_source_t *source);
+dc1394error_t dc1394_external_trigger_get_supported_sources(dc1394camera_t *camera, dc1394trigger_sources_t *sources);
 
 /* Turn one software trigger on or off and get state */
 dc1394error_t dc1394_software_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr);

@@ -567,13 +567,14 @@ dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera)
 /* functions to access the capture data */
 
 uchar_t*
-dc1394_video_get_buffer(dc1394camera_t *camera)
+dc1394_capture_get_dma_buffer(dc1394camera_t *camera)
 {
   return camera->capture.capture_buffer;
 }
 
 struct timeval*
-dc1394_video_get_filltime(dc1394camera_t *camera)
+dc1394_capture_get_dma_filltime(dc1394camera_t *camera)
 {
   return &(camera->capture.filltime);
 }
+
