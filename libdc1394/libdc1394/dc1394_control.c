@@ -1166,9 +1166,9 @@ dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value)
     }
     else {
       if (version!=-1)
-	return DC1394_FALSE;
+	*value=DC1394_TRUE;
       else
-	return DC1394_SUCCESS;
+	*value=DC1394_FALSE;
     }
 
     return DC1394_SUCCESS;

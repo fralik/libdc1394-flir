@@ -535,3 +535,16 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       to dc1394_get_sw_version(). Thanks to Frederic Devernay for spotting the
       bug.
     * fixed compilation warnings due to mixed signedness in the whole code.
+	
+2006-03-29 Damien <ddouxchamps@users.sf.net>
+    * Release 1.2.0
+
+2006-03-31 Damien <ddouxchamps@users.sf.net>
+    * fixed a serious bug in the camera detection. Thanks to Denis Bahadir for spotting
+      and correcting this!
+    * updated TRIGGER_MODE_NUM definition
+    * Release 1.2.1
+	
+2006-04-05 Damien <ddouxchamps@users.sf.net>
+    * replaced CLK_TCK by CLOCKS_PER_SEC. Thanks to Sean Darcy for (re)
+      spotting this in version 1.

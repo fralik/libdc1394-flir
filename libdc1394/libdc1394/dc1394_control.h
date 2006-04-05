@@ -159,7 +159,7 @@ enum {
 };
 #define TRIGGER_MODE_MIN            TRIGGER_MODE_0
 #define TRIGGER_MODE_MAX            TRIGGER_MODE_3
-#define NUM_TRIGGER_MODE            (TRIGGER_MODE_3 - TRIGGER_MODE_0 + 1)
+#define NUM_TRIGGER_MODE            (TRIGGER_MODE_MAX - TRIGGER_MODE_MIN + 1)
 
 /* Enumeration of camera image formats */
 enum {

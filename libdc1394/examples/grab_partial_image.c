@@ -12,6 +12,9 @@
 **-------------------------------------------------------------------------
 **
 **  $Log$
+**  Revision 1.6  2006/04/05 02:34:43  ddouxchamps
+**  replaced CLK_TCK by CLOCKS_PER_SEC.
+**
 **  Revision 1.5  2005/08/18 07:03:06  ddouxchamps
 **  I looked at the bug reports on SF and applied some fixes
 **
@@ -218,7 +221,7 @@ int main(int argc, char *argv[])
     /*---------------------------------------------------------------------
      *  output elapsed time
      *---------------------------------------------------------------------*/
-    elapsed_time = (float)(times(&tms_buf) - start_time) / CLK_TCK;
+    elapsed_time = (float)(times(&tms_buf) - start_time) / CLOCKS_PER_SEC;
     printf( "got frame %d. elapsed time: %g sec ==> %g frames/second\n",
             i, elapsed_time, (float)i / elapsed_time);
   }
