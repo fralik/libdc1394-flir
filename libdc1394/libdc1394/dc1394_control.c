@@ -553,6 +553,12 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	  numCam++;
 	}
       }
+      // don't forget to free the 1394 device we just found if it's not a camera
+      // thanks to Jack Morrison for spotting this.
+      else {
+	dc1394_free_camera(tmpcam);
+	tmpcam=NULL;
+      }
       
       if (numCam>=allocated_size) {
 	allocated_size*=2;
@@ -2069,6 +2075,14 @@ dc1394error_t
 dc1394_external_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr)
 {
   dc1394error_t err=dc1394_feature_set_power(camera, DC1394_FEATURE_TRIGGER, pwr);
+  DC1394_ERR_RTN(err, "Could not set external trigger");
+  return err;
+}
+
+dc1394error_t
+dc1394_external_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr)
+{
+  dc1394error_t err=dc1394_feature_get_power(camera, DC1394_FEATURE_TRIGGER, pwr);
   DC1394_ERR_RTN(err, "Could not set external trigger");
   return err;
 }

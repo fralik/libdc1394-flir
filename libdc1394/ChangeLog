@@ -837,7 +837,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	- DC1394_ERR (returns)
 	- DC1394_ERR_RTN (returns an error code)
 	- DC1394_ERR_CLN (execute cleanup function, then returns)
-	- DC1394_ERR_CLN_RTN (cleanup followed by a return of an error code)
+	- DC1394_ERR_CLN_RTN (cleanup followed by the return of an error code)
 	
 2006-03-24 Damien <ddouxchamps@users.sf.net>
     * fixed serious error with raw capture (garbled images of 1/4 size)
@@ -853,4 +853,13 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2006-03-28 Damien <ddouxchamps@users.sf.net>
     * added missing dc1394_external_trigger_get_supported_sources()
-    * this CHangeLog now respects the 80-columns format.
+    * this ChangeLog now respects the 80-columns format.
+
+2006-03-31 Damien <ddouxchamps@users.sf.net>
+    * fixed missing dc1394_free_cameras() in dc1394_find_cameras. Thanks to
+      Jack Morrison for finding this bug.
+	
+2006-04-04 Damien <ddouxchamps@users.sf.net>
+    * Add missing definition of dc1394_external_trigger_get_power() (the
+      prototype was in the .h but nothing was in the .c!). Thanks to Diego Ruiz
+      for the tip!
