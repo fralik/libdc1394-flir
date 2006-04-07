@@ -863,3 +863,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Add missing definition of dc1394_external_trigger_get_power() (the
       prototype was in the .h but nothing was in the .c!). Thanks to Diego Ruiz
       for the tip!
+
+2006-04-07 Damien <ddouxchamps@users.sf.net>
+    * applied a patch from Seemant Kulleen and Phil Lamoreaux which fixes the
+      AVT mirroring function (it used to return DC1394_FAILURE everytime).

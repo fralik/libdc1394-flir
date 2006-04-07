@@ -650,7 +650,6 @@ dc1394_avt_get_mirror(dc1394camera_t *camera, dc1394bool_t *on_off)
   /* Retrieve Mirror mode */
   err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_MIRROR_IMAGE, &value);
   DC1394_ERR_RTN(err,"Could not get AVT mirror image");
-    return DC1394_FAILURE;
   
   /* mirror ON / OFF : Bit 6 */
   *on_off = (uint_t)((value & 0x2000000UL) >> 25); 
