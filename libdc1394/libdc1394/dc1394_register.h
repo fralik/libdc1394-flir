@@ -26,6 +26,10 @@
 #include <stdlib.h>
 #include <libraw1394/raw1394.h>
  
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 dc1394error_t
 GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value);
 
@@ -76,5 +80,9 @@ SetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, octlet_t
 /********************************************************************************/
 dc1394error_t
 GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, octlet_t *offset, quadlet_t *value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __DC1394_REGISTER_H__ */
