@@ -689,7 +689,7 @@ dc1394_avt_get_dsnu(dc1394camera_t *camera, dc1394bool_t *on_off,uint_t *frame_n
   DC1394_ERR_RTN(err,"Could not get AVT DSNU control");
   
   /* ON / OFF : Bit 6 */
-  *on_off = (uint_t)((value & 0x2000000UL) >> 25); 
+  *on_off = !(uint_t)((value & 0x2000000UL) >> 25); 
   
   /* Number of images : Bits 24..31 */
   *frame_nb =(uint_t)((value & 0xFFUL));
@@ -715,7 +715,7 @@ dc1394_avt_set_dsnu(dc1394camera_t *camera,
   curval = (curval & 0xFBFFFFFFUL) | ((compute ) << 26); 
   
   /* ON / OFF : Bit 6 */
-  curval = (curval & 0xFDFFFFFFUL) | ((on_off ) << 25); 
+  curval = (curval & 0xFDFFFFFFUL) | ((!on_off ) << 25); 
   
   /* Number of images : Bits 24..31 */
   curval = (curval & 0xFFFFFF00UL) | ((frame_nb & 0xFFUL ));   
@@ -723,7 +723,15 @@ dc1394_avt_set_dsnu(dc1394camera_t *camera,
   /* Set new dsnu parameters */        
   err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DSNU_CONTROL, curval);
   DC1394_ERR_RTN(err,"Could not set AVT DSNU control");
-  
+
+  int cont=1;
+  while (cont) {
+    usleep(50000);
+    err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DSNU_CONTROL, &curval);
+    DC1394_ERR_RTN(err,"Could not get AVT DSNU control");
+    if ((curval & 0x01000000UL)==0)
+      cont=0;
+  }
   return DC1394_SUCCESS;
 }
 
@@ -775,6 +783,15 @@ dc1394_avt_set_blemish(dc1394camera_t *camera,
   err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, curval);
   DC1394_ERR_RTN(err,"Could not set AVT blemish control");
   
+  int cont=1;
+  while (cont) {
+    usleep(50000);
+    err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, &curval);
+    DC1394_ERR_RTN(err,"Could not get AVT DSNU control");
+    if ((curval & 0x01000000UL)==0)
+      cont=0;
+  }
+
   return DC1394_SUCCESS;
 }
 

@@ -12,6 +12,8 @@ libdc1394_la_SOURCES =  \
 	dc1394_format7.c        \
 	dc1394_vendor_avt.c 	\
 	dc1394_vendor_avt.h	\
+	dc1394_vendor_pixelink.c\
+	dc1394_vendor_pixelink.h\
 	dc1394_register.c       \
 	dc1394_register.h       \
 	dc1394_utils.c          \
@@ -24,4 +26,4 @@ libdc1394_la_SOURCES =  \
 	kernel-video1394.h
 
 # headers to be installed
-pkginclude_HEADERS = dc1394_control.h dc1394_utils.h dc1394_vendor_avt.h dc1394_conversions.h dc1394_register.h
+pkginclude_HEADERS = dc1394_control.h dc1394_utils.h dc1394_vendor_avt.h dc1394_conversions.h dc1394_register.h dc1394_vendor_pixelink.h 

@@ -871,3 +871,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-04-24 Damien <ddouxchamps@users.sf.net>
     * fixed missing "#ifdef __cplusplus" in dc1394_register.h. THanks to Rober
       for bringing this to my attention.
+	
+2006-05-02 Damien <ddouxchamps@users.sf.net>
+    * fixed a bug in AVT functions. Also added a check of the busy flag
+      after setting the DSNU and BLEMISH controls.
+
+2006-05-15 Damien <ddouxchamps@users.sf.net>
+    * new vendor specific extensions for pixelink cameras thanks to Aravind
+      Sundaresan and James Sherman.
