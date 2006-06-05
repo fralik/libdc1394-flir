@@ -47,6 +47,7 @@ dc1394_new_camera(uint_t port, nodeid_t node)
   cam->iso_bandwidth=0;
   cam->capture_is_set=0;
   cam->broadcast=DC1394_FALSE;
+  cam->absolute_control_csr=0;
 
   raw1394_set_port(cam->handle, cam->port);
 

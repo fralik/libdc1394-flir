@@ -879,3 +879,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-05-15 Damien <ddouxchamps@users.sf.net>
     * new vendor specific extensions for pixelink cameras thanks to Aravind
       Sundaresan and James Sherman.
+	
+2006-06-05 Damien <ddouxchamps@users.sf.net>
+    * fixed a bug in the low-level access of absolute control registers. Thanks to
+      David Moore for the patch.

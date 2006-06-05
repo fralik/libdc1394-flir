@@ -389,6 +389,7 @@ typedef struct __dc1394_camera
   octlet_t           unit_directory;
   octlet_t           unit_dependent_directory;
   octlet_t           advanced_features_csr;
+  octlet_t           absolute_control_csr;
   octlet_t           format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
   dc1394iidc_version_t iidc_version;
   char               vendor[MAX_CHARS + 1];
