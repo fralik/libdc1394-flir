@@ -133,6 +133,10 @@ typedef struct __dc1394_pxl_adv_feature_info_struct {
   char name[PxL_MAX_STRING_LENGTH];
 } dc1394_pxl_adv_feature_info_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* List of functions */
 dc1394error_t
 dc1394_pxl_convert_float32_to_quadlet(double , quadlet_t *);
@@ -169,6 +173,10 @@ dc1394_pxl_set_gpio_mode_param(dc1394camera_t *, uint_t ,
 
 dc1394error_t
 dc1394_pxl_print_camera_info(dc1394camera_t *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif 
 
