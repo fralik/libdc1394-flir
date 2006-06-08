@@ -770,6 +770,9 @@ dc1394_format7_get_color_filter(dc1394camera_t *camera,
 
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_FAILURE;
+
+  if (camera->iidc_version<DC1394_IIDC_VERSION_1_31)
+    return DC1394_FAILURE;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID, &value);
   DC1394_ERR_RTN(err, "Could not get color filter ID");
@@ -787,6 +790,9 @@ dc1394_format7_set_color_filter(dc1394camera_t *camera,
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_FAILURE;
   
+  if (camera->iidc_version<DC1394_IIDC_VERSION_1_31)
+    return DC1394_FAILURE;
+
   color_filter -= DC1394_COLOR_FILTER_MIN;
   color_filter <<= 24;
 

@@ -883,3 +883,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-06-05 Damien <ddouxchamps@users.sf.net>
     * fixed a bug in the low-level access of absolute control registers. Thanks to
       David Moore for the patch.
+
+2006-06-08 Damien <ddouxchamps@users.sf.net>
+    * allow color filter access only when IIDC version is >= 1.31. Thanks to Alain
+      Perrier.
