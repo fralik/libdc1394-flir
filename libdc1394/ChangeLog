@@ -888,3 +888,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * allow color filter access only when IIDC version is >= 1.31. Thanks to Alain
       Perrier.
     * missing #ifdef c++ added in dc1394_vendor_pixelink.h
+
+2006-06-12 Damien <ddouxchamps@users.sf.net>
+    * Important changes to allow compilation on other platforms (OSX comes in mind)
+      Many thanks to David Moore for the phatt patch!

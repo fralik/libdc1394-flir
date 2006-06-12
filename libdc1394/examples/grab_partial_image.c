@@ -14,8 +14,8 @@
 **************************************************************************/
 
 #include <stdio.h>
-#include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
+#include <libdc1394/dc1394_utils.h>
 #include <stdlib.h>
 #include <time.h>
 #include <sys/times.h>
@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
   unsigned int min_bytes, max_bytes;
   unsigned int actual_bytes;
   unsigned long long int total_bytes = 0;
+  unsigned int width, height;
 
   int err=dc1394_find_cameras(&cameras, &numCameras);
 
@@ -171,10 +172,11 @@ int main(int argc, char *argv[])
    *-----------------------------------------------------------------------*/
   imagefile=fopen("Part.pgm","w");
     
-  fprintf(imagefile,"P5\n%u %u\n255\n", camera->capture.frame_width,
-          camera->capture.frame_height );
-  fwrite((const char *)camera->capture.capture_buffer, 1,
-         camera->capture.frame_height*camera->capture.frame_width, imagefile);
+  dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_FORMAT7_1,
+          &width, &height);
+  fprintf(imagefile,"P5\n%u %u\n255\n", width, height);
+  fwrite((const char *)dc1394_capture_get_dma_buffer (camera), 1,
+         height * width, imagefile);
   fclose(imagefile);
   printf("wrote: Part.pgm\n");
   

@@ -229,7 +229,7 @@ void display_frames()
 		{
 			switch (res) {
 			case DC1394_VIDEO_MODE_640x480_YUV411:
-				iyu12yuy2( (unsigned char *) cameras[i]->capture.capture_buffer,
+				iyu12yuy2( (unsigned char *) dc1394_capture_get_dma_buffer (cameras[i]),
 					(unsigned char *)(frame_buffer + (i * frame_length)),
 					(device_width*device_height) );
 				break;
@@ -237,11 +237,11 @@ void display_frames()
 			case DC1394_VIDEO_MODE_320x240_YUV422:
 			case DC1394_VIDEO_MODE_640x480_YUV422:
 				memcpy( frame_buffer + (i * frame_length),
-					cameras[i]->capture.capture_buffer, device_width*device_height*2);
+					dc1394_capture_get_dma_buffer (cameras[i]), device_width*device_height*2);
 				break;
 					
 			case DC1394_VIDEO_MODE_640x480_RGB8:
-				rgb2yuy2( (unsigned char *) cameras[i]->capture.capture_buffer,
+				rgb2yuy2( (unsigned char *) dc1394_capture_get_dma_buffer (cameras[i]),
 					(unsigned char *) (frame_buffer + (i * frame_length)),
 					(device_width*device_height) );
 				break;

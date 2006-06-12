@@ -36,12 +36,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <netinet/in.h>
-#include <libraw1394/raw1394.h>
 
 #define uint_t   unsigned int
 #define uint16_t unsigned short int
 #define uint64_t unsigned long long int
 #define uchar_t  unsigned char
+
+#ifndef octlet_t
+typedef u_int64_t octlet_t;
+#endif
+#ifndef quadlet_t
+typedef u_int32_t quadlet_t;
+#endif
+#ifndef nodeid_t
+typedef u_int16_t nodeid_t;
+#endif
+
 
 /* Note on the coding of libdc1394 versions:
    - LIBDC1394_VERSION represent the release number of the library,
@@ -354,34 +364,12 @@ typedef struct
   dc1394trigger_source_t    sources[DC1394_TRIGGER_SOURCE_NUM];
 } dc1394trigger_sources_t;
 
-typedef struct __dc1394_capture
-{
-  unsigned int             frame_width;
-  unsigned int             frame_height;
-  unsigned char            *capture_buffer;
-  unsigned int             quadlets_per_frame;
-  unsigned int             quadlets_per_packet;
-  /* components needed for the DMA based video capture */
-  const unsigned char     *dma_ring_buffer;
-  unsigned int             dma_buffer_size;
-  unsigned int             dma_frame_size;
-  unsigned int             num_dma_buffers;
-  unsigned int             dma_last_buffer;
-  unsigned int             num_dma_buffers_behind;
-  char                    *dma_device_file;
-  int                      dma_fd;
-  struct timeval           filltime;
-  unsigned int             drop_frames;
-  raw1394handle_t          handle;
-} dc1394capture_t;
-
 /* Camera structure */
 typedef struct __dc1394_camera
 {
   // system/firmware information
-  raw1394handle_t    handle;
-  nodeid_t           node;
   int                port;
+  nodeid_t           node;
   uint64_t           euid_64;
   quadlet_t          ud_reg_tag_12;
   quadlet_t          ud_reg_tag_13;
@@ -420,10 +408,9 @@ typedef struct __dc1394_camera
   dc1394bool_t       broadcast;
   nodeid_t           node_id_backup;
 
-  // Private:
-  // capture structure
-  dc1394capture_t   capture;
+  // bus information
   
+
 } dc1394camera_t;
 
 typedef struct __dc1394feature_info_t_struct 
@@ -596,7 +583,7 @@ extern "C" {
  ***************************************************************************/
 
 /* create / free camera structure */
-dc1394camera_t* dc1394_new_camera(uint_t port, nodeid_t node);
+//dc1394camera_t* dc1394_new_camera(uint_t port, nodeid_t node);
 void dc1394_free_camera(dc1394camera_t *camera);
 
 /* locate and initialise the cameras */
@@ -760,6 +747,10 @@ dc1394error_t dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera);
 /* Functions for accessing the buffer content: */
 uchar_t*        dc1394_capture_get_dma_buffer(dc1394camera_t *camera);
 struct timeval* dc1394_capture_get_dma_filltime(dc1394camera_t *camera);
+uint_t          dc1394_capture_get_width(dc1394camera_t *camera);
+uint_t          dc1394_capture_get_height(dc1394camera_t *camera);
+uint_t          dc1394_capture_get_height(dc1394camera_t *camera);
+uint_t          dc1394_capture_get_bytes_per_frame(dc1394camera_t *camera);
 
 
 /***************************************************************************

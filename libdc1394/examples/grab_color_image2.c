@@ -163,6 +163,7 @@ int main(int argc, char *argv[])
   //int numNodes;
   uint_t numCameras, i;
   dc1394featureset_t features;
+  unsigned int width, height;
   
   /* Find cameras */
   int err=dc1394_find_cameras(&cameras, &numCameras);
@@ -304,12 +305,14 @@ int main(int argc, char *argv[])
    *  Convert the image from what ever format it is to its RGB8
    *-----------------------------------------------------------------------*/
 
-  uint64_t numPixels = camera->capture.frame_height*camera->capture.frame_width;
+  dc1394_get_image_size_from_video_mode(camera, selected_mode,
+          &width, &height);
+  uint64_t numPixels = height*width;
 
   uchar_t *rgb_image = (uchar_t *)malloc(3*numPixels);
 
-  dc1394_convert_to_RGB8((uchar_t *)camera->capture.capture_buffer, rgb_image, camera->capture.frame_width,
-			 camera->capture.frame_height, DC1394_BYTE_ORDER_YUYV, selected_mode, 16);
+  dc1394_convert_to_RGB8((uchar_t *)dc1394_capture_get_dma_buffer (camera),
+          rgb_image, width, height, DC1394_BYTE_ORDER_YUYV, selected_mode, 16);
 
   /*-----------------------------------------------------------------------
    *  save image as 'Image.pgm'
@@ -322,8 +325,7 @@ int main(int argc, char *argv[])
   }
   
     
-  fprintf(imagefile,"P6\n%u %u\n255\n", camera->capture.frame_width,
-          camera->capture.frame_height );
+  fprintf(imagefile,"P6\n%u %u\n255\n", width, height);
   fwrite((const char *)rgb_image, 1,numPixels*3, imagefile);
   fclose(imagefile);
   printf("wrote: " IMAGE_FILE_NAME "\n");

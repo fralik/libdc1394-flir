@@ -11,11 +11,22 @@ AM_PROG_LIBTOOL
 # check if the 'restrict' prefix is supported
 AC_C_RESTRICT
 
-# Check for the new version of libraw1394 first since they might have both
-# installed and we want to use the newest version
-AC_CHECK_LIB(raw1394, raw1394_channel_modify,
-   [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) LIBS="$LIBS -lraw1394";break],
-    AC_MSG_ERROR(libraw1394 not found or too old. Please upgrade to >1.2.0.))
+case "$host" in
+  *-*-linux*)
+    # Check for the new version of libraw1394 first since they might have both
+    # installed and we want to use the newest version
+    AC_CHECK_LIB(raw1394, raw1394_channel_modify,
+       [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) raw1394=true LIBS="$LIBS -lraw1394";break],
+        AC_MSG_ERROR(libraw1394 not found or too old. Please upgrade to >1.2.0.))
+    ;;
+  *-*-darwin*)
+    AC_CHECK_LIB(IOKit, IOMasterPort,
+       [AC_DEFINE(HAVE_IOKITLIB,[],[Defined if IOKitLib is present]) iokit=true],
+       [AC_MSG_ERROR(IOKitLib not found.)])
+    ;;
+esac
+AM_CONDITIONAL(USE_LINUX, test x$raw1394 = xtrue)
+AM_CONDITIONAL(USE_IOKIT, test x$iokit = xtrue)
 
 # check for Xv extensions (necessary for examples/dc1394_multiview)
 # imported from Coriander

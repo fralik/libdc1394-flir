@@ -21,7 +21,6 @@
 
 #include "dc1394_control.h"
 #include "dc1394_offsets.h"
-#include <libraw1394/raw1394.h>
 
 /* Definitions which application developers shouldn't care about */
 #define CONFIG_ROM_BASE             0xFFFFF0000000ULL
@@ -117,9 +116,6 @@ enum {
 
 /* Internal functions required by two different source files */
 
-dc1394error_t
-_dc1394_dma_basic_setup(dc1394camera_t *camera, uint_t num_dma_buffers);
-	
 dc1394error_t 
 _dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp);
 
@@ -133,9 +129,6 @@ dc1394bool_t
 IsFeatureBitSet(quadlet_t value, uint_t feature);
 
 dc1394error_t
-_dc1394_open_dma_device(dc1394camera_t *camera);
-
-dc1394error_t
 dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera);
 
 dc1394error_t
@@ -147,4 +140,17 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel);
 dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);
 */
+dc1394camera_t*
+dc1394_new_camera_platform (uint_t port, nodeid_t node);
+void
+dc1394_free_camera_platform (dc1394camera_t *camera);
+dc1394error_t
+dc1394_print_camera_info_platform (dc1394camera_t *camera);
+dc1394error_t
+dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras);
+dc1394error_t
+GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value);
+dc1394error_t
+SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value);
+
 #endif /* _DC1394_INTERNAL_H */

@@ -58,62 +58,6 @@
     }
 
 
-dc1394error_t
-GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
-{
-  int retval=1, retry= DC1394_MAX_RETRIES;
-
-  /* retry a few times if necessary (addition by PDJ) */
-  while(retry--)  {
-#ifdef DC1394_DEBUG_LOWEST_LEVEL
-    fprintf(stderr,"get reg at 0x%llx : ", offset + CONFIG_ROM_BASE);
-#endif
-    retval= raw1394_read(camera->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, value);
-#ifdef DC1394_DEBUG_LOWEST_LEVEL
-    fprintf(stderr,"0x%lx\n",*value);
-#endif
-    usleep(DC1394_SLOW_DOWN);
-
-    if (!retval) {
-      /* conditionally byte swap the value */
-      *value= ntohl(*value);
-      return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );;
-    }
-    else if (errno != EAGAIN) {
-      return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );;
-    }
-    
-  }
-  
-  *value= ntohl(*value);
-  return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );
-}
-
-dc1394error_t
-SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
-{
-  int retval=1, retry= DC1394_MAX_RETRIES;
-
-  /* conditionally byte swap the value (addition by PDJ) */
-  value= htonl(value);
-  
-  /* retry a few times if necessary */
-  while(retry--) {
-#ifdef DC1394_DEBUG_LOWEST_LEVEL
-    fprintf(stderr,"set reg at 0x%llx to value 0x%lx\n", offset + CONFIG_ROM_BASE, value);
-#endif
-    retval= raw1394_write(camera->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, &value);
-
-    usleep(DC1394_SLOW_DOWN);
-
-    if (!retval || (errno != EAGAIN)) {
-      return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );;
-    }
-    
-  }
-  
-  return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );
-}
 
 /********************************************************************************/
 /* Get/Set Command Registers                                                    */

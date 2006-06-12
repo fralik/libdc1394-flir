@@ -23,7 +23,6 @@
 #ifndef __DC1394_VENDOR_AVT_H__
 #define __DC1394_VENDOR_AVT_H__
 
-#include <libraw1394/raw1394.h>
 #include "dc1394_control.h"
 #include "dc1394_register.h"
 //#include "config.h"

@@ -12,7 +12,6 @@
 **************************************************************************/
 
 #include <stdio.h>
-#include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
 #include <libdc1394/dc1394_utils.h>
 #include <stdlib.h>
@@ -41,6 +40,7 @@ int main(int argc, char *argv[])
   dc1394framerate_t framerate;
   dc1394video_mode_t video_mode;
   dc1394color_coding_t coding;
+  unsigned int width, height;
 
   /* Find cameras */
   int err=dc1394_find_cameras(&cameras, &numCameras);
@@ -187,10 +187,11 @@ int main(int argc, char *argv[])
     cleanup_and_exit(camera);
   }
   
-  fprintf(imagefile,"P5\n%u %u 255\n", camera->capture.frame_width,
-          camera->capture.frame_height );
-  fwrite((const char *)camera->capture.capture_buffer, 1,
-         camera->capture.frame_height*camera->capture.frame_width, imagefile);
+  dc1394_get_image_size_from_video_mode(camera, video_mode,
+          &width, &height);
+  fprintf(imagefile,"P5\n%u %u 255\n", width, height);
+  fwrite((const char *)dc1394_capture_get_dma_buffer (camera), 1,
+         height*width, imagefile);
   fclose(imagefile);
   printf("wrote: " IMAGE_FILE_NAME "\n");
 

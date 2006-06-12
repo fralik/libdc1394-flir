@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
+#include <libdc1394/dc1394_utils.h>
 #include <stdlib.h>
 
 #define IMAGE_FILE_NAME "image.ppm"
@@ -33,6 +34,7 @@ int main(int argc, char *argv[])
   FILE* imagefile;
   dc1394camera_t *camera, **cameras=NULL;
   uint_t numCameras, i;
+  unsigned int width, height;
   //dc1394featureset_t features;
 
   /* Find cameras */
@@ -143,12 +145,13 @@ int main(int argc, char *argv[])
     cleanup_and_exit(camera);
   }
   
-  fprintf(imagefile,"P6\n%u %u\n255\n", camera->capture.frame_width,
-          camera->capture.frame_height );
-  fwrite((const char *)camera->capture.capture_buffer, 1,
-         camera->capture.frame_height*camera->capture.frame_width*3, imagefile);
+  dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_640x480_RGB8,
+          &width, &height);
+  fprintf(imagefile,"P6\n%u %u\n255\n", width, height);
+  fwrite((const char *)dc1394_capture_get_dma_buffer (camera), 1,
+         height*width*3, imagefile);
   fclose(imagefile);
-  printf("wrote: " IMAGE_FILE_NAME " (%d image bytes)\n",camera->capture.frame_height*camera->capture.frame_width*3);
+  printf("wrote: " IMAGE_FILE_NAME " (%d image bytes)\n",height*width*3);
 
   /*-----------------------------------------------------------------------
    *  Close camera

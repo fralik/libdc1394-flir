@@ -24,7 +24,6 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <libraw1394/raw1394.h>
  
 #ifdef __cplusplus
 extern "C" {

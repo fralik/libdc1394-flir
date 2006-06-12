@@ -17,13 +17,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <libraw1394/raw1394.h>
 #include "dc1394_internal.h"
 #include "dc1394_utils.h"
 #include "dc1394_register.h"
-
-extern int *_dc1394_dma_fd;
-extern int *_dc1394_num_using_fd;
 
 const char *dc1394_feature_desc[DC1394_FEATURE_NUM] =
 {
@@ -123,6 +119,29 @@ const int quadlets_per_packet_format_2[64] =
   160, 320,  640, 1280, 2560, 5120,   -1, -1,
   250, 500, 1000, 2000, 4000, 8000,   -1, -1
 };
+
+dc1394camera_t*
+dc1394_new_camera(uint_t port, nodeid_t node)
+{
+  dc1394camera_t *cam;
+ 
+  cam=(dc1394camera_t *)malloc(sizeof(dc1394camera_t));
+  cam = dc1394_new_camera_platform (port, node);
+ 
+  if (cam==NULL)
+    return NULL;
+  
+   cam->port=port;
+   cam->node=node;
+   cam->iso_channel_is_set=0;
+   cam->iso_channel=-1;
+   cam->iso_bandwidth=0;
+   cam->capture_is_set=0;
+   cam->broadcast=DC1394_FALSE;
+   cam->absolute_control_csr=0;
+ 
+   return cam;
+}
 
 /********************************************************
  _dc1394_get_quadlets_per_packet
@@ -268,164 +287,6 @@ _dc1394_get_format_from_mode(dc1394video_mode_t mode, uint_t *format)
   return err;
 }
 
-dc1394error_t
-_dc1394_open_dma_device(dc1394camera_t *camera)
-{
-  char filename[64];
-
-  // if the file has already been opened: increment the number of uses and return
-  if (_dc1394_num_using_fd[camera->port] != 0) {
-    _dc1394_num_using_fd[camera->port]++;
-    camera->capture.dma_fd = _dc1394_dma_fd[camera->port];
-    return DC1394_SUCCESS;
-  }
-
-  // if the dma device file has been set manually, use that device name
-  if (camera->capture.dma_device_file!=NULL) {
-    if ( (camera->capture.dma_fd = open(camera->capture.dma_device_file,O_RDONLY)) < 0 ) {
-      return DC1394_INVALID_VIDEO1394_DEVICE;
-    }
-    else {
-      _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-      _dc1394_num_using_fd[camera->port]++;
-      return DC1394_SUCCESS;
-    }
-  }
-
-  // automatic mode: try to open several usual device files.
-  sprintf(filename,"/dev/video1394/%d",camera->port);
-  if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
-    _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-    _dc1394_num_using_fd[camera->port]++;
-    return DC1394_SUCCESS;
-  }
-
-  sprintf(filename,"/dev/video1394-%d",camera->port);
-  if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
-    _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-    _dc1394_num_using_fd[camera->port]++;
-    return DC1394_SUCCESS;
-  }
-  
-  if (camera->port==0) {
-    sprintf(filename,"/dev/video1394");
-    if ( (camera->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
-      _dc1394_dma_fd[camera->port] = camera->capture.dma_fd;
-      _dc1394_num_using_fd[camera->port]++;
-      return DC1394_SUCCESS;
-    }
-  }
-
-  return DC1394_FAILURE;
-}
-
-
-dc1394error_t
-dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
-{
-  dc1394error_t err;
-  int i;
-
-  if (camera->capture_is_set==0) {
-    // capture is not set, and thus channels/bandwidth have not been allocated.
-    // We can safely allocate that in advance. 
-
-    // first we need to assign an ISO channel:  
-    if (camera->iso_channel_is_set==0){
-      if (camera->iso_channel>=0) {
-	// a specific channel is requested. try to book it.
-	if (raw1394_channel_modify(camera->handle, camera->iso_channel, RAW1394_MODIFY_ALLOC)==0) {
-	  // channel allocated.
-	  fprintf(stderr,"Allocated channel %d as requested\n",camera->iso_channel);
-	  camera->iso_channel_is_set=1;
-	}
-	else {
-	  fprintf(stderr,"Channel %d already reserved. Trying other channels\n",camera->iso_channel);
-	}
-      }  
-    }
-
-    if (camera->iso_channel_is_set==0){
-      for (i=0;i<DC1394_NUM_ISO_CHANNELS;i++) {
-	if (raw1394_channel_modify(camera->handle, i, RAW1394_MODIFY_ALLOC)==0) {
-	  // channel allocated.
-	  camera->iso_channel=i;
-	  camera->iso_channel_is_set=1;
-	  fprintf(stderr,"Allocated channel %d\n",camera->iso_channel);
-	  break;
-	}
-      }
-    }
-
-    // check if channel was allocated:
-    if (camera->iso_channel_is_set==0) {
-      return DC1394_NO_ISO_CHANNEL;
-    }
-    else {
-      // set channel in the camera
-      err=dc1394_video_set_iso_channel(camera, camera->iso_channel);
-      DC1394_ERR_RTN(err, "Could not set ISO channel in the camera");
-    }
-    
-    if (camera->iso_bandwidth==0) {
-      //fprintf(stderr,"Estimating ISO bandwidth\n");
-      // then we book the bandwidth
-      err=dc1394_video_get_bandwidth_usage(camera, &camera->iso_bandwidth);
-      DC1394_ERR_RTN(err, "Could not estimate ISO bandwidth");
-      if (raw1394_bandwidth_modify(camera->handle, camera->iso_bandwidth, RAW1394_MODIFY_ALLOC)<0) {
-	camera->iso_bandwidth=0;
-	if (raw1394_channel_modify(camera->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1)
-	  fprintf(stderr,"Error: could not free iso channel %d!\n",camera->iso_channel);
-	return DC1394_NO_BANDWIDTH;
-      }
-      else
-	fprintf(stderr,"Allocated %d bandwidth units\n",camera->iso_bandwidth);
-    }
-  }
-  else {
-    // do nothing, capture is running, and channels/bandwidth is already allocated
-  }
-  
-  return DC1394_SUCCESS;
-}
-
-dc1394error_t
-dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera)
-{
-  fprintf(stderr,"capture: %d ISO: %d\n",camera->capture_is_set,camera->is_iso_on);
-  if ((camera->capture_is_set==0)&&(camera->is_iso_on==0)) {
-    // capture is not set and transmission is not active: channels/bandwidth can be freed without interfering
-
-    if (camera->iso_bandwidth>0) {
-      // first free the bandwidth
-      if (raw1394_bandwidth_modify(camera->handle, camera->iso_bandwidth, RAW1394_MODIFY_FREE)<0) {
-	fprintf(stderr,"Error: could not free %d units of bandwidth!\n", camera->iso_bandwidth);
-	return DC1394_FAILURE;
-      }
-      else {
-	fprintf(stderr,"Freed %d bandwidth units\n",camera->iso_bandwidth);
-	camera->iso_bandwidth=0;
-      }
-    }
-    
-    // then free the ISO channel if it was allocated
-    if (camera->iso_channel_is_set>0) {
-      if (raw1394_channel_modify(camera->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1) {
-	fprintf(stderr,"Error: could not free iso channel %d!\n",camera->iso_channel);
-	return DC1394_FAILURE;
-      }
-      else {
-	fprintf(stderr,"Freed channel %d\n",camera->iso_channel);
-	//camera->iso_channel=-1; // we don't need this line anymore.
-	camera->iso_channel_is_set=0;
-      }
-    }
-  }
-  else {
-    // capture is running, don't free any channel/bandwidth allocation
-  }
-  return DC1394_SUCCESS;
-} 
  
 dc1394error_t
 dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel)
