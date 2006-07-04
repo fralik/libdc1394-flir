@@ -152,6 +152,7 @@ void print_mode_info( dc1394camera_t *camera , uint_t mode )
 void clean_up_exit(dc1394camera_t *camera)
 {
   dc1394_capture_stop(camera);
+  dc1394_video_set_transmission(camera, DC1394_OFF);
   dc1394_free_camera(camera);
   exit(1);
 }

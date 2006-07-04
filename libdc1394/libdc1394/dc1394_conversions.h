@@ -77,15 +77,15 @@ extern "C" {
  **********************************************************************/
 
 dc1394error_t
-dc1394_convert_to_YUV422(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+dc1394_convert_to_YUV422(uchar_t *src, uchar_t *dest, uint_t width, uint_t height, uint_t byte_order,
 			 dc1394color_coding_t source_coding, uint_t bits);
 
 dc1394error_t
-dc1394_convert_to_MONO8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+dc1394_convert_to_MONO8(uchar_t *src, uchar_t *dest, uint_t width, uint_t height, uint_t byte_order,
 			dc1394color_coding_t source_coding, uint_t bits);
 
 dc1394error_t
-dc1394_convert_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height, uint_t byte_order,
+dc1394_convert_to_RGB8(uchar_t *src, uchar_t *dest, uint_t width, uint_t height, uint_t byte_order,
 		       dc1394color_coding_t source_coding, uint_t bits);
 
 /**********************************************************************
@@ -93,7 +93,7 @@ dc1394_convert_to_RGB8(uchar_t *restrict src, uchar_t *restrict dest, uint_t wid
  **********************************************************************/
 
 //changes a 16bit stereo image (8bit/channel) into two 8bit images on top of each other
-void dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, uint_t width, uint_t height);
+void dc1394_deinterlace_stereo(uchar_t *src, uchar_t *dest, uint_t width, uint_t height);
 
 /************************************************************************************************
  *                                                                                              *
@@ -122,10 +122,10 @@ void dc1394_deinterlace_stereo(uchar_t *restrict src, uchar_t *restrict dest, ui
  *                                                                                              *
  ************************************************************************************************/
 
-dc1394error_t dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb,
+dc1394error_t dc1394_bayer_decoding_8bit(const uchar_t *bayer, uchar_t *rgb,
 					 uint_t width, uint_t height, dc1394color_filter_t tile,
 					 dc1394bayer_method_t method);
-dc1394error_t dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb,
+dc1394error_t dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
 					  uint_t width, uint_t height, dc1394color_filter_t tile,
 					  dc1394bayer_method_t, uint_t bits);
 

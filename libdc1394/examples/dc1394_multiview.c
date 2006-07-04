@@ -290,7 +290,8 @@ void cleanup(void) {
 	int i;
 	for (i=0; i < numCameras; i++)
 	{
-		dc1394_capture_stop(cameras[i]);
+	  dc1394_capture_stop(cameras[i]);
+	  dc1394_video_set_transmission(cameras[i], DC1394_OFF);
 	}
 	if ((void *)window != NULL)
 		XUnmapWindow(display,window);

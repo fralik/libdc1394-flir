@@ -892,3 +892,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-06-12 Damien <ddouxchamps@users.sf.net>
     * Important changes to allow compilation on other platforms (OSX comes in mind)
       Many thanks to David Moore for the phatt patch!
+
+2006-07-04 Damien <ddouxchamps@users.sf.net>
+    * fixed missing tranmission stop command in the examples, thanks to Diego Ruiz

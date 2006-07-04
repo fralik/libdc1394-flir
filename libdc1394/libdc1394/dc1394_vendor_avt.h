@@ -25,7 +25,6 @@
 
 #include "dc1394_control.h"
 #include "dc1394_register.h"
-//#include "config.h"
 
 typedef struct __dc1394_avt_adv_feature_info_struct 
 {
