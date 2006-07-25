@@ -904,3 +904,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * intriduced a new typedef replacing the drop-frames argument. We now use either
       DC1394_RING_BUFFER_NEXT or DC1394_RING_BUFFER_LAST
     * Oh yeah, and this is release RC1!!
+
+2006-07-25 Damien <ddouxchamps@users.sf.net>
+    * fixed serious issues concerning camera and feature detection

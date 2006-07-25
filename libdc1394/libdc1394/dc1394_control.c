@@ -484,7 +484,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   DC1394_ERR_RTN(err, "Could not check feature %d presence",feature->id);
   
   if (feature->available == DC1394_FALSE) {
-    return DC1394_FUNCTION_NOT_SUPPORTED;
+    return DC1394_SUCCESS;
   }
 
   // get capabilities

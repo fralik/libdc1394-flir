@@ -34,7 +34,7 @@ dc1394_new_camera_platform (uint_t port, nodeid_t node)
 {
   dc1394camera_linux_t *cam;
 
-  cam=(dc1394camera_linux_t *)malloc(sizeof(dc1394camera_linux_t));
+  cam=(dc1394camera_linux_t *)calloc(1,sizeof(dc1394camera_linux_t));
   if (cam==NULL)
     return NULL;
 
@@ -120,26 +120,30 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
     numNodes = raw1394_get_nodecount(handle);
     raw1394_destroy_handle(handle);
     handle=NULL;
+    //fprintf(stderr,"testing port %d with %d nodes ============\n",port,numNodes);
     
     for (node=0;node<numNodes;node++){
       //fprintf(stderr,"------------------------ New device -----------------\n");
       // create a camera struct for probing
-      if (tmpcam==NULL)
-	tmpcam=dc1394_new_camera_platform(port,node);
-      
       if (tmpcam==NULL) {
-	
+	//fprintf(stderr,"Allocating new cam struct %d %d\n",port, node);
+	tmpcam=dc1394_new_camera(port,node);
+      } 
+      // verify memory allocation
+      if (tmpcam==NULL) {
 	for (i=0;i<numCam;i++) {
 	  dc1394_free_camera(cameras[i]);
 	  cameras[i]=NULL;
 	}
 	free(cameras);
-	
-	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't allocate camera structure\n");
+	//fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't allocate camera structure\n");
 	return DC1394_MEMORY_ALLOCATION_FAILURE;
       }
       
+      // get camera information
+      //fprintf(stderr,"info update...\n");
       err=dc1394_update_camera_info(tmpcam);
+      //fprintf(stderr,"info updated\n");
       
       // This segment has been removed. Reason: some devices (like my hub) refuse to honour read requests even at offset 0x414.
       // The result of this is a low-level error that is translated by DC1394_FAILURE. The latter error code was interpreted as
@@ -163,6 +167,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
       if (err == DC1394_SUCCESS) { // is it a camera?
 	// check if this camera was not found yet. (a camera might appear twice with strange bus topologies)
 	// this hack comes from coriander.
+	//fprintf(stderr,"camera found: %s\n",tmpcam->model);
 	if (numCam>0) {
 	  for (i=0;i<numCam;i++) {
 	    if (tmpcam->euid_64==cameras[i]->euid_64) {
@@ -173,16 +178,19 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 	  }
 	  i--; // remove 1 since i might be =numCam and the max index is numCam-1
 	  if (tmpcam->euid_64!=cameras[i]->euid_64) {
+	    //fprintf(stderr,"another camera added\n");
 	    cameras[numCam]=tmpcam;
 	    tmpcam=NULL;
 	    numCam++;
 	  }
 	  else {
+	    //fprintf(stderr,"camera already there, removing duplicate\n");
 	    dc1394_free_camera(tmpcam);
 	    tmpcam=NULL;
 	  }
 	}
 	else { // numcam == 0: we add the first camera without questions
+	  //fprintf(stderr,"first camera added\n");
 	  cameras[numCam]=tmpcam;
 	  tmpcam=NULL;
 	  numCam++;
@@ -191,6 +199,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
       // don't forget to free the 1394 device we just found if it's not a camera
       // thanks to Jack Morrison for spotting this.
       else {
+	//fprintf(stderr,"Not a camera\n");
 	dc1394_free_camera(tmpcam);
 	tmpcam=NULL;
       }
@@ -264,10 +273,10 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
     if (!retval) {
       /* conditionally byte swap the value */
       *value= ntohl(*value);
-      return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );;
+      return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
     }
     else if (errno != EAGAIN) {
-      return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );;
+      return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
     }
     
   }
