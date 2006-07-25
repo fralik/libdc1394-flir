@@ -881,29 +881,34 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       Sundaresan and James Sherman.
 	
 2006-06-05 Damien <ddouxchamps@users.sf.net>
-    * fixed a bug in the low-level access of absolute control registers. Thanks to
-      David Moore for the patch.
+    * fixed a bug in the low-level access of absolute control registers. Thanks
+      to David Moore for the patch.
 
 2006-06-08 Damien <ddouxchamps@users.sf.net>
-    * allow color filter access only when IIDC version is >= 1.31. Thanks to Alain
-      Perrier.
+    * allow color filter access only when IIDC version is >= 1.31. Thanks to
+      Alain Perrier.
     * missing #ifdef c++ added in dc1394_vendor_pixelink.h
 
 2006-06-12 Damien <ddouxchamps@users.sf.net>
-    * Important changes to allow compilation on other platforms (OSX comes in mind)
-      Many thanks to David Moore for the phatt patch!
+    * Important changes to allow compilation on other platforms (OSX comes in
+      mind) Many thanks to David Moore for the phatt patch!
 
 2006-07-04 Damien <ddouxchamps@users.sf.net>
-    * fixed missing tranmission stop command in the examples, thanks to Diego Ruiz
+    * fixed missing tranmission stop command in the examples, thanks to Diego
+      Ruiz
 	
 2006-07-23 Damien <ddouxchamps@users.sf.net>
     * code cleanup
     * minor fixes
     * proper error codes are now returned
     * some new/changed/removed error codes
-    * intriduced a new typedef replacing the drop-frames argument. We now use either
-      DC1394_RING_BUFFER_NEXT or DC1394_RING_BUFFER_LAST
+    * intriduced a new typedef replacing the drop-frames argument. We now use
+      either DC1394_RING_BUFFER_NEXT or DC1394_RING_BUFFER_LAST
     * Oh yeah, and this is release RC1!!
 
 2006-07-25 Damien <ddouxchamps@users.sf.net>
     * fixed serious issues concerning camera and feature detection
+
+2006-07-25 Damien <ddouxchamps@users.sf.net>
+    * removed autogen.sh. From now on you should use autoreconf instead.
+    * small update of configure.in
