@@ -263,16 +263,16 @@ typedef enum {
 
 /* Return values for visible functions*/
 typedef enum {
-  DC1394_SUCCESS=0,   /* Success is zero */
-  DC1394_FAILURE,     /* Errors are positive numbers */
-  DC1394_NO_FRAME=-2, /* Warnings or info are negative numbers*/
-  DC1394_NO_CAMERA=3,
+  DC1394_SUCCESS = 0,   /* Success is zero */
+  DC1394_FAILURE,       /* Errors are positive numbers */
+  DC1394_NO_FRAME = -2, /* Warnings or info are negative numbers */
+  DC1394_NO_CAMERA = 3,
   DC1394_NOT_A_CAMERA,
   DC1394_FUNCTION_NOT_SUPPORTED,
-  DC1394_CAMERA_NOT_INITITIALIZED,
+  DC1394_CAMERA_NOT_INITIALIZED,
   DC1394_INVALID_FEATURE,
-  DC1394_INVALID_FORMAT,
-  DC1394_INVALID_MODE,
+  DC1394_INVALID_VIDEO_FORMAT,
+  DC1394_INVALID_VIDEO_MODE,
   DC1394_INVALID_FRAMERATE,
   DC1394_INVALID_TRIGGER_MODE,
   DC1394_INVALID_TRIGGER_SOURCE,
@@ -280,6 +280,7 @@ typedef enum {
   DC1394_INVALID_IIDC_VERSION,
   DC1394_INVALID_COLOR_CODING,
   DC1394_INVALID_COLOR_FILTER,
+  DC1394_INVALID_CAPTURE_MODE,
   DC1394_REQ_VALUE_OUTSIDE_RANGE,
   DC1394_INVALID_ERROR_CODE,
   DC1394_MEMORY_ALLOCATION_FAILURE,
@@ -287,13 +288,17 @@ typedef enum {
   DC1394_FORMAT7_ERROR_FLAG_1,
   DC1394_FORMAT7_ERROR_FLAG_2,
   DC1394_INVALID_BAYER_METHOD,
-  DC1394_HANDLE_CREATION_FAILURE,
-  DC1394_GENERIC_INVALID_ARGUMENT,
+  DC1394_INVALID_ARGUMENT_VALUE,
   DC1394_INVALID_VIDEO1394_DEVICE,
   DC1394_NO_ISO_CHANNEL,
-  DC1394_NO_BANDWIDTH
+  DC1394_NO_BANDWIDTH,
+  DC1394_IOCTL_FAILURE,
+  DC1394_CAPTURE_IS_NOT_SET = -30,
+  DC1394_RAW1394_CAPTURE_FAILURE = 31,
+  DC1394_CAPTURE_IS_RUNNING,
+  DC1394_RAW1394_FAILURE
 } dc1394error_t;
-#define DC1394_ERROR_NUM DC1394_NO_BANDWIDTH+1
+#define DC1394_ERROR_NUM DC1394_RAW1394_FAILURE+1
 
 /* Parameter flags for dc1394_setup_format7_capture() */
 #define DC1394_QUERY_FROM_CAMERA -1
@@ -306,6 +311,18 @@ typedef enum {
   DC1394_VIDEO1394_WAIT=0,
   DC1394_VIDEO1394_POLL
 } dc1394video_policy_t;
+
+/* Using this policy you can choose between two ring buffer behaviour:
+  1. FIFO: the function returns the next frame received
+  2. LIFO: the buffer always returns the last frame
+  The first one is good if you don't want to drop frames, the second
+  one is better if you want to limit latency.
+*/
+
+typedef enum { 
+  DC1394_RING_BUFFER_NEXT=0,
+  DC1394_RING_BUFFER_LAST
+} dc1394ring_buffer_policy_t;
 
 /* Yet another boolean data type */
 typedef enum {
@@ -727,7 +744,7 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *b
  ***************************************************************************/
 
 /* setup the capture (DMA or RAW1394)*/
-dc1394error_t dc1394_capture_setup_dma(dc1394camera_t *camera, uint_t num_dma_buffers, uint_t drop_frames);
+dc1394error_t dc1394_capture_setup_dma(dc1394camera_t *camera, uint_t num_dma_buffers, dc1394ring_buffer_policy_t policy);
 dc1394error_t dc1394_capture_setup(dc1394camera_t *camera);
 
 /* capture video frames (DMA or RAW1394)*/

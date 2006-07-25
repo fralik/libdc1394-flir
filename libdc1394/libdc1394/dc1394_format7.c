@@ -55,7 +55,7 @@ dc1394_format7_get_value_setting(dc1394camera_t *camera,
   }
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_VALUE_SETTING, &value);
   DC1394_ERR_RTN(err, "could note get value setting");
@@ -173,7 +173,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   dc1394error_t err;
 
   if (camera->capture_is_set>0)
-    return DC1394_FAILURE;
+    return DC1394_CAPTURE_IS_RUNNING;
   
   //fprintf(stderr,"Setting ROI\n");
 
@@ -331,7 +331,7 @@ dc1394_format7_get_max_image_size(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get max image sizes");
@@ -354,7 +354,7 @@ dc1394_format7_get_unit_size(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_UNIT_SIZE_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get unit sizes");
@@ -375,7 +375,8 @@ dc1394_format7_get_image_position(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
+
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_IMAGE_POSITION, &value);
   DC1394_ERR_RTN(err, "Could not get image position");
 
@@ -396,7 +397,7 @@ dc1394_format7_get_image_size(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_IMAGE_SIZE, &value);
   DC1394_ERR_RTN(err, "could not get current image size");
@@ -416,7 +417,7 @@ dc1394_format7_get_color_coding(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_COLOR_CODING_ID, &value);
   DC1394_ERR_RTN(err, "Could not get current color_id");
@@ -437,7 +438,7 @@ dc1394_format7_get_color_codings(dc1394camera_t *camera,
   quadlet_t value;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_COLOR_CODING_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get available color codings");
@@ -467,7 +468,7 @@ dc1394_format7_get_pixel_number(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_PIXEL_NUMBER_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get pixel number");
@@ -487,7 +488,7 @@ dc1394_format7_get_total_bytes(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_TOTAL_BYTES_HI_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get total bytes - LSB");
@@ -513,7 +514,7 @@ dc1394_format7_get_packet_para(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err= GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_PACKET_PARA_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get F7 packet parameters");
@@ -533,7 +534,7 @@ dc1394_format7_get_byte_per_packet(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
   DC1394_ERR_RTN(err, "Could not get bytes per packet");
@@ -555,7 +556,7 @@ dc1394_format7_set_image_position(dc1394camera_t *camera,
   dc1394error_t err;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   err=SetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_IMAGE_POSITION, (quadlet_t)((left << 16) | top));
   DC1394_ERR_RTN(err, "Format7 image position setting failure");
@@ -575,10 +576,10 @@ dc1394_format7_set_image_size(dc1394camera_t *camera,
   dc1394error_t err;
 
   if (camera->capture_is_set>0)
-    return DC1394_FAILURE;
+    return DC1394_CAPTURE_IS_RUNNING;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   err=SetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_IMAGE_SIZE, (quadlet_t)((width << 16) | height));
   DC1394_ERR_RTN(err, "Format7 image size setting failure");
@@ -597,10 +598,10 @@ dc1394_format7_set_color_coding(dc1394camera_t *camera,
   dc1394error_t err;
 
   if (camera->capture_is_set>0)
-    return DC1394_FAILURE;
+    return DC1394_CAPTURE_IS_RUNNING;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   color_coding-= DC1394_COLOR_CODING_MIN;
   color_coding=color_coding<<24;
@@ -622,10 +623,10 @@ dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
   dc1394error_t err;
 
   if (camera->capture_is_set>0)
-    return DC1394_FAILURE;
+    return DC1394_CAPTURE_IS_RUNNING;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   err=SetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, (quadlet_t)(packet_bytes) << 16 );
   DC1394_ERR_RTN(err, "Format7 bytes-per-packet setting failure");
@@ -645,7 +646,7 @@ dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err= GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
   DC1394_ERR_RTN(err, "Could not get recommended BPP");
@@ -665,7 +666,7 @@ dc1394_format7_get_packet_per_frame(dc1394camera_t *camera,
   uint64_t total_bytes;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
     
   if (camera->iidc_version>=DC1394_IIDC_VERSION_1_30) {
 
@@ -708,7 +709,7 @@ dc1394_format7_get_unit_position(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   if (camera->iidc_version>=DC1394_IIDC_VERSION_1_30) {
     err = GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_UNIT_POSITION_INQ, &value);
@@ -734,7 +735,7 @@ dc1394_format7_get_frame_interval(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_FRAME_INTERVAL_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get frame interval");
@@ -752,12 +753,13 @@ dc1394_format7_get_data_depth(dc1394camera_t *camera,
   quadlet_t value;
   
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_DATA_DEPTH_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get data depth");
 
   *data_depth=value >> 24;
+
   return err;
 }   
     
@@ -769,10 +771,10 @@ dc1394_format7_get_color_filter(dc1394camera_t *camera,
   quadlet_t value;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   if (camera->iidc_version<DC1394_IIDC_VERSION_1_31)
-    return DC1394_FAILURE;
+    return DC1394_FUNCTION_NOT_SUPPORTED;
   
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID, &value);
   DC1394_ERR_RTN(err, "Could not get color filter ID");
@@ -788,10 +790,13 @@ dc1394_format7_set_color_filter(dc1394camera_t *camera,
   dc1394error_t err;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
   
   if (camera->iidc_version<DC1394_IIDC_VERSION_1_31)
-    return DC1394_FAILURE;
+    return DC1394_FUNCTION_NOT_SUPPORTED;
+
+  if ((color_filter<DC1394_COLOR_FILTER_MIN)||(color_filter>DC1394_COLOR_FILTER_MAX))
+    return DC1394_INVALID_COLOR_FILTER;
 
   color_filter -= DC1394_COLOR_FILTER_MIN;
   color_filter <<= 24;
@@ -810,7 +815,7 @@ dc1394_format7_get_mode_info(dc1394camera_t *camera,
   dc1394error_t err=DC1394_SUCCESS;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_FAILURE;
+    return DC1394_INVALID_VIDEO_MODE;
 
   if (f7_mode->present>0) { // check for mode presence before query
     err=dc1394_format7_get_max_image_size(camera,video_mode,&f7_mode->max_size_x,&f7_mode->max_size_y);

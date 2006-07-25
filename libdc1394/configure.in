@@ -1,7 +1,7 @@
 # process this file with autoconf to get a configure script
 AC_INIT(libdc1394/dc1394_control.c)
 
-AM_INIT_AUTOMAKE(dc1394, 2.0.0-pre7)
+AM_INIT_AUTOMAKE(dc1394, 2.0.0-rc1)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC

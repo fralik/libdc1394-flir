@@ -45,7 +45,7 @@ typedef struct __dc1394_capture
   unsigned int             num_dma_buffers_behind;
   int                      dma_fd;
   struct timeval           filltime;
-  unsigned int             drop_frames;
+  dc1394ring_buffer_policy_t ring_buffer_policy;
   raw1394handle_t          handle;
 } dc1394capture_t;
 

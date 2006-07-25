@@ -94,7 +94,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
   handle=raw1394_new_handle();
 
   if(handle == NULL)
-    return DC1394_HANDLE_CREATION_FAILURE;
+    return DC1394_RAW1394_FAILURE;
   
   port_num=raw1394_get_port_info(handle, NULL, 0);
   
@@ -125,7 +125,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
       //fprintf(stderr,"------------------------ New device -----------------\n");
       // create a camera struct for probing
       if (tmpcam==NULL)
-	tmpcam=dc1394_new_camera(port,node);
+	tmpcam=dc1394_new_camera_platform(port,node);
       
       if (tmpcam==NULL) {
 	
@@ -264,16 +264,16 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
     if (!retval) {
       /* conditionally byte swap the value */
       *value= ntohl(*value);
-      return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );;
+      return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );;
     }
     else if (errno != EAGAIN) {
-      return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );;
+      return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );;
     }
     
   }
   
   *value= ntohl(*value);
-  return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );
+  return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
 }
 
 dc1394error_t
@@ -295,12 +295,12 @@ SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
     usleep(DC1394_SLOW_DOWN);
 
     if (!retval || (errno != EAGAIN)) {
-      return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );;
+      return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );;
     }
     
   }
   
-  return ( retval ? DC1394_FAILURE : DC1394_SUCCESS );
+  return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
 }
 
 dc1394error_t
@@ -385,7 +385,7 @@ dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera)
       // first free the bandwidth
       if (raw1394_bandwidth_modify(craw->handle, camera->iso_bandwidth, RAW1394_MODIFY_FREE)<0) {
 	fprintf(stderr,"Error: could not free %d units of bandwidth!\n", camera->iso_bandwidth);
-	return DC1394_FAILURE;
+	return DC1394_RAW1394_FAILURE;
       }
       else {
 	fprintf(stderr,"Freed %d bandwidth units\n",camera->iso_bandwidth);
@@ -397,7 +397,7 @@ dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera)
     if (camera->iso_channel_is_set>0) {
       if (raw1394_channel_modify(craw->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1) {
 	fprintf(stderr,"Error: could not free iso channel %d!\n",camera->iso_channel);
-	return DC1394_FAILURE;
+	return DC1394_RAW1394_FAILURE;
       }
       else {
 	fprintf(stderr,"Freed channel %d\n",camera->iso_channel);
@@ -419,7 +419,7 @@ dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
   int i;
 
   if (camera->capture_is_set>0)
-    return DC1394_FAILURE;
+    return DC1394_CAPTURE_IS_RUNNING;
   
   // free all iso channels 
   for (i=0;i<DC1394_NUM_ISO_CHANNELS;i++)

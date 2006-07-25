@@ -2098,7 +2098,7 @@ dc1394_bayer_VNG_uint16(const uint16_t *restrict bayer,
   free (brow[4]);
 }
 
-int
+dc1394error_t
 dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method)
 {
   switch (method) {
@@ -2128,7 +2128,7 @@ dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb,
   return DC1394_INVALID_BAYER_METHOD;
 }
 
-int
+dc1394error_t
 dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t bits, uint_t method)
 {
   switch (method) {

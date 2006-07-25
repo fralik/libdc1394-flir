@@ -57,8 +57,8 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Function not supported by this camera",
   "Camera not initialized",
   "Invalid feature",
-  "Invalid format",
-  "Invalid mode",
+  "Invalid video format",
+  "Invalid video mode",
   "Invalid framerate",
   "Invalid trigger mode",
   "Invalid trigger source",
@@ -72,12 +72,16 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Tagged register not found",
   "Format_7 Error_flag_1 is set",
   "Format_7 Error_flag_2 is set",
-  "Invalid Bayer method code",
-  "Could not create a raw1394 handle",
-  "Invalid argument",
-  "Invalid video1394 device filename",
-  "Could not allocate an ISO channel"
-  "Could not allocate bandwidth"
+  "Invalid Bayer method",
+  "Invalid argument value",
+  "Invalid video1394 device",
+  "Could not allocate an ISO channel",
+  "Could not allocate bandwidth",
+  "IOCTL failure",
+  "Capture is not set",
+  "RAW1394 capture failure",
+  "Capture is running",
+  "RAW1394 failure"
 };
 
 /*
@@ -171,7 +175,7 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
       *qpp=quadlets_per_packet_format_0[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
     else {
-      err=DC1394_INVALID_MODE;
+      err=DC1394_INVALID_VIDEO_MODE;
       DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
@@ -183,7 +187,7 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
       *qpp=quadlets_per_packet_format_1[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
     else {
-      err=DC1394_INVALID_MODE;
+      err=DC1394_INVALID_VIDEO_MODE;
       DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
@@ -195,13 +199,13 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
       *qpp=quadlets_per_packet_format_2[DC1394_FRAMERATE_NUM*mode_index+frame_rate_index];
     }
     else {
-      err=DC1394_INVALID_MODE;
+      err=DC1394_INVALID_VIDEO_MODE;
       DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT6:
   case DC1394_FORMAT7:
-    err=DC1394_INVALID_FORMAT;
+    err=DC1394_INVALID_VIDEO_FORMAT;
     DC1394_ERR_RTN(err,"Format 6 and 7 don't have qpp");
     break;
   }
@@ -280,7 +284,7 @@ _dc1394_get_format_from_mode(dc1394video_mode_t mode, uint_t *format)
     *format=DC1394_FORMAT7;
   }
   else {
-    err=DC1394_INVALID_MODE;
+    err=DC1394_INVALID_VIDEO_MODE;
     DC1394_ERR_RTN(err, "The supplied mode does not correspond to any format");
   }
 

@@ -895,3 +895,12 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2006-07-04 Damien <ddouxchamps@users.sf.net>
     * fixed missing tranmission stop command in the examples, thanks to Diego Ruiz
+	
+2006-07-23 Damien <ddouxchamps@users.sf.net>
+    * code cleanup
+    * minor fixes
+    * proper error codes are now returned
+    * some new/changed/removed error codes
+    * intriduced a new typedef replacing the drop-frames argument. We now use either
+      DC1394_RING_BUFFER_NEXT or DC1394_RING_BUFFER_LAST
+    * Oh yeah, and this is release RC1!!

@@ -28,9 +28,6 @@
 /* To debug config rom structure: */
 //#define DC1394_DEBUG_TAGGED_REGISTER_ACCESS
 
-/* To debug low-level access (raw1394 read/write): */
-//#define DC1394_DEBUG_LOWEST_LEVEL
-
 #define FEATURE_TO_ABS_VALUE_OFFSET(feature, offset)                  \
     {                                                                 \
     if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) )  \
