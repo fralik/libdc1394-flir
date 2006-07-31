@@ -1,4 +1,5 @@
 MAINTAINERCLEANFILES = Makefile.in
+AM_CPPFLAGS = -I $(top_srcdir)
 
 if USE_LINUX
 bin_PROGRAMS = dc1394_vloopback

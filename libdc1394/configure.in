@@ -1,12 +1,12 @@
 # process this file with autoconf to get a configure script
-AC_INIT(dc1394, 2.0.0-rc2, libdc1394-devel@lists.sf.net)
-AC_CONFIG_SRCDIR(libdc1394/dc1394_control.c)
-AM_INIT_AUTOMAKE
-AM_CONFIG_HEADER(config.h)
+AC_PREREQ([2.6.0])
+AC_INIT([dc1394],[2.0.0-rc2],[libdc1394-devel@lists.sf.net])
+AC_CONFIG_SRCDIR([libdc1394/dc1394_control.c])
+AM_INIT_AUTOMAKE([--warnings=all 1.9.6])
+AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
-AM_PROG_LIBTOOL
 
 # check if the 'restrict' prefix is supported
 AC_C_RESTRICT
@@ -34,11 +34,11 @@ AC_DEFUN([AC_CHECK_XV],[
 	AC_SUBST(XV_CFLAGS)
 	AC_SUBST(XV_LIBS)
 	AC_MSG_CHECKING(for Xv extensions)
-	AC_TRY_COMPILE([
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 	#include <X11/Xlib.h>
- 	#include <X11/extensions/Xvlib.h>],[
+ 	#include <X11/extensions/Xvlib.h>]], [[
 	int main(void) { (void) XvGetPortAttribute(0, 0, 0, 0); return 0; }
-	],xv=yes,xv=no);
+	]])],[xv=yes],[xv=no]);
 	AC_MSG_RESULT($xv)
  	if test x$xv = xyes; then
            XV_LIBS="-lXv -lXext"
@@ -68,4 +68,5 @@ AC_SUBST(lt_age)
 
 dnl AX_CFLAGS_WARN_ALL(CFLAGS)
 CFLAGS="$CFLAGS -Wall -Wunused"
-AC_OUTPUT([ Makefile libdc1394/Makefile examples/Makefile ])
+AC_CONFIG_FILES([ Makefile libdc1394/Makefile examples/Makefile ])
+AC_OUTPUT

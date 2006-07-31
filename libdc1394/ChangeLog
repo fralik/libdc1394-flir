@@ -912,3 +912,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-07-25 Damien <ddouxchamps@users.sf.net>
     * removed autogen.sh. From now on you should use autoreconf instead.
     * small update of configure.in
+
+2006-07-26 Brant Gurganus <gurganbl@rose-hulman.edu>
+    * Corrected Makefile.am in examples directory for VPATH builds
+    * Updated more Autoconf macros to more non-obsolete variants
