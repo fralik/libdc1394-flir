@@ -424,10 +424,6 @@ typedef struct __dc1394_camera
   // for broadcast:
   dc1394bool_t       broadcast;
   nodeid_t           node_id_backup;
-
-  // bus information
-  
-
 } dc1394camera_t;
 
 typedef struct __dc1394feature_info_t_struct 

@@ -916,3 +916,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-07-26 Brant Gurganus <gurganbl@rose-hulman.edu>
     * Corrected Makefile.am in examples directory for VPATH builds
     * Updated more Autoconf macros to more non-obsolete variants
+
+2006-07-31 David Moore <dcm@acm.org>
+    * Major addition of Mac OS X control and capture functions

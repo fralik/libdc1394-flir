@@ -14,7 +14,6 @@
 **************************************************************************/
 
 #include <stdio.h>
-#include <libraw1394/raw1394.h>
 #include <libdc1394/dc1394_control.h>
 #include <libdc1394/dc1394_conversions.h>
 #include <libdc1394/dc1394_utils.h>

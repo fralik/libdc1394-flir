@@ -26,7 +26,7 @@ case "$host" in
     ;;
 esac
 AM_CONDITIONAL(USE_LINUX, test x$raw1394 = xtrue)
-AM_CONDITIONAL(USE_IOKIT, test x$iokit = xtrue)
+AM_CONDITIONAL(USE_MACOSX, test x$iokit = xtrue)
 
 # check for Xv extensions (necessary for examples/dc1394_multiview)
 # imported from Coriander
