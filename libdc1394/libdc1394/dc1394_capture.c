@@ -34,7 +34,7 @@
 #include "dc1394_utils.h"
 #include "dc1394_linux.h"
 
-#define MAX_NUM_PORTS 8
+#define MAX_NUM_PORTS 16
 
 /* Variables used for simultaneous capture of video from muliple cameras
    This is only used by RAW1394 capture. VIDEO1394 (aka DMA) capture
