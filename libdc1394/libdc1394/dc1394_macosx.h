@@ -28,6 +28,8 @@
 #include "dc1394_capture_macosx.h"
 #include <IOKit/firewire/IOFireWireLib.h>
 
+#define DC1394_CAST_CAMERA_TO_MACOSX(camosx, camera) dc1394camera_macosx_t * camosx = (dc1394camera_macosx_t *) camera
+
 typedef enum {
   BUFFER_EMPTY = 0,
   BUFFER_FILLED = 1,

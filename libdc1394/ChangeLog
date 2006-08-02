@@ -926,3 +926,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-08-02 Damien <ddouxchamps@users.sf.net>
     * update the number of ports to 16, remove duplicate declaration
       (James Sherman)
+	
+2006-08-02 Damien <ddouxchamps@users.sf.net>
+    * introduce missing dc1394_capture_get_frames_behind()
+    * camera casting (camera > craw) in OSX changed to a macro.

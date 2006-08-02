@@ -54,7 +54,7 @@
 dc1394error_t 
 _dc1394_capture_basic_setup(dc1394camera_t *camera)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394error_t err;
 
   err=dc1394_video_get_mode(camera,&camera->video_mode);
@@ -189,7 +189,7 @@ callback (buffer_info * buffer, NuDCLRef dcl)
 DCLCommand *
 CreateDCLProgram (dc1394camera_t * camera)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   IOVirtualRange * buffer = &(capture->databuf);
   NuDCLRef dcl = NULL;
@@ -256,7 +256,7 @@ dc1394error_t
 dc1394_capture_setup_dma(dc1394camera_t *camera, uint_t num_dma_buffers,
         dc1394ring_buffer_policy_t policy)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   dc1394error_t err;
   IOFireWireLibDeviceRef d = craw->iface;
@@ -372,7 +372,7 @@ dc1394_capture_setup(dc1394camera_t *camera)
 dc1394error_t 
 dc1394_capture_stop(dc1394camera_t *camera) 
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   IOVirtualRange * buffer = &(capture->databuf);
 
@@ -420,7 +420,7 @@ dc1394_capture_dma(dc1394camera_t **cameras, uint_t num,
   int i;
 
   for (i = 0; i < num; i++) {
-    dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) cameras[i];
+    DC1394_CAST_CAMERA_TO_MACOSX(craw, cameras[i]);
     dc1394capture_t * capture = &(craw->capture);
     int next = NEXT_BUFFER (capture, capture->current);
     buffer_info * buffer = capture->buffers + next;
@@ -449,7 +449,7 @@ dc1394_capture_dma(dc1394camera_t **cameras, uint_t num,
   }
 
   for (i = 0; i < num; i++) {
-    dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) cameras[i];
+    DC1394_CAST_CAMERA_TO_MACOSX(craw, cameras[i]);
     dc1394capture_t * capture = &(craw->capture);
     int next = NEXT_BUFFER (capture, capture->current);
 
@@ -497,7 +497,7 @@ dc1394_capture(dc1394camera_t **cams, uint_t num)
 dc1394error_t 
 dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera) 
 {  
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   int prev = PREV_BUFFER (capture, capture->current);
   buffer_info * buffer = capture->buffers + capture->current;
@@ -524,7 +524,7 @@ dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera)
 uchar_t*
 dc1394_capture_get_dma_buffer(dc1394camera_t *camera)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   buffer_info * buffer = capture->buffers + capture->current;
   IOVirtualRange * databuf = &(capture->databuf);
@@ -540,7 +540,7 @@ dc1394_capture_get_dma_buffer(dc1394camera_t *camera)
 struct timeval*
 dc1394_capture_get_dma_filltime(dc1394camera_t *camera)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   buffer_info * buffer = capture->buffers + capture->current;
 
@@ -551,7 +551,7 @@ int
 dc1394_capture_schedule_with_runloop (dc1394camera_t * camera,
         CFRunLoopRef run_loop, CFStringRef run_loop_mode)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
 
   if (camera->capture_is_set) {
@@ -568,9 +568,16 @@ void
 dc1394_capture_set_callback (dc1394camera_t * camera,
         dc1394capture_callback_t callback, void * user_data)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
 
   capture->callback = callback;
   capture->callback_user_data = user_data;
+}
+
+uint_t
+dc1394_capture_get_frames_behind(dc1394camera_t *camera)
+{
+  //DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  return 0;
 }

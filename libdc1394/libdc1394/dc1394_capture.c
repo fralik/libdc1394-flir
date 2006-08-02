@@ -671,3 +671,10 @@ dc1394_capture_get_bytes_per_frame(dc1394camera_t *camera)
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   return craw->capture.quadlets_per_frame*4;
 }
+
+uint_t
+dc1394_capture_get_frames_behind(dc1394camera_t *camera)
+{
+  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  return craw->capture.num_dma_buffers_behind;
+}

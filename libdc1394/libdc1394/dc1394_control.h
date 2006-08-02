@@ -763,7 +763,7 @@ struct timeval* dc1394_capture_get_dma_filltime(dc1394camera_t *camera);
 uint_t          dc1394_capture_get_width(dc1394camera_t *camera);
 uint_t          dc1394_capture_get_height(dc1394camera_t *camera);
 uint_t          dc1394_capture_get_bytes_per_frame(dc1394camera_t *camera);
-
+uint_t          dc1394_capture_get_frames_behind(dc1394camera_t *camera);
 
 /***************************************************************************
      Format_7 (scalable image format)
