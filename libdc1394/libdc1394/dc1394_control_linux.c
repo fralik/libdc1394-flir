@@ -329,7 +329,9 @@ dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
 	// a specific channel is requested. try to book it.
 	if (raw1394_channel_modify(craw->handle, camera->iso_channel, RAW1394_MODIFY_ALLOC)==0) {
 	  // channel allocated.
+#ifdef DEBUG
 	  fprintf(stderr,"Allocated channel %d as requested\n",camera->iso_channel);
+#endif
 	  camera->iso_channel_is_set=1;
 	}
 	else {
@@ -344,7 +346,9 @@ dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
 	  // channel allocated.
 	  camera->iso_channel=i;
 	  camera->iso_channel_is_set=1;
+#ifdef DEBUG
 	  fprintf(stderr,"Allocated channel %d\n",camera->iso_channel);
+#endif
 	  break;
 	}
       }
@@ -367,12 +371,15 @@ dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
       DC1394_ERR_RTN(err, "Could not estimate ISO bandwidth");
       if (raw1394_bandwidth_modify(craw->handle, camera->iso_bandwidth, RAW1394_MODIFY_ALLOC)<0) {
 	camera->iso_bandwidth=0;
-	if (raw1394_channel_modify(craw->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1)
+	if (raw1394_channel_modify(craw->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1) {
 	  fprintf(stderr,"Error: could not free iso channel %d!\n",camera->iso_channel);
+	}
 	return DC1394_NO_BANDWIDTH;
       }
+#ifdef DEBUG
       else
 	fprintf(stderr,"Allocated %d bandwidth units\n",camera->iso_bandwidth);
+#endif
     }
   }
   else {
@@ -386,7 +393,9 @@ dc1394error_t
 dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+#ifdef DEBUG
   fprintf(stderr,"capture: %d ISO: %d\n",camera->capture_is_set,camera->is_iso_on);
+#endif
   if ((camera->capture_is_set==0)&&(camera->is_iso_on==0)) {
     // capture is not set and transmission is not active: channels/bandwidth can be freed without interfering
 
@@ -397,7 +406,9 @@ dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera)
 	return DC1394_RAW1394_FAILURE;
       }
       else {
+#ifdef DEBUG
 	fprintf(stderr,"Freed %d bandwidth units\n",camera->iso_bandwidth);
+#endif
 	camera->iso_bandwidth=0;
       }
     }
@@ -409,7 +420,9 @@ dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera)
 	return DC1394_RAW1394_FAILURE;
       }
       else {
+#ifdef DEBUG
 	fprintf(stderr,"Freed channel %d\n",camera->iso_channel);
+#endif
 	//camera->iso_channel=-1; // we don't need this line anymore.
 	camera->iso_channel_is_set=0;
       }

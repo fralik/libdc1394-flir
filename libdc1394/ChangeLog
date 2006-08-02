@@ -919,3 +919,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2006-07-31 David Moore <dcm@acm.org>
     * Major addition of Mac OS X control and capture functions
+
+2006-07-25 Damien <ddouxchamps@users.sf.net>
+    * remove debug output in channel allocations (Phil Lamoreaux)
+	
