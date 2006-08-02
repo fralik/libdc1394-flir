@@ -50,7 +50,7 @@ dc1394_new_camera_platform (uint_t port, nodeid_t node)
 void
 dc1394_free_camera_platform (dc1394camera_t *camera)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   if (craw == NULL)
     return;
   
@@ -65,7 +65,7 @@ dc1394_free_camera_platform (dc1394camera_t *camera)
 dc1394error_t
 dc1394_print_camera_info_platform (dc1394camera_t *camera) 
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   printf("------ Camera platform-specific information ------\n");
   printf("Interface                       :     0x%x\n", (uint_t)craw->iface);
   printf("Generation                      :     %lu\n", craw->generation);
@@ -199,7 +199,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
 dc1394error_t
 GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   IOFireWireLibDeviceRef d = craw->iface;
   FWAddress full_addr;
   int retval;
@@ -223,7 +223,7 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 dc1394error_t
 SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
 {
-  dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   IOFireWireLibDeviceRef d = craw->iface;
   FWAddress full_addr;
   int retval;
