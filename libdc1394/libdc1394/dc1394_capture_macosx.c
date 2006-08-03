@@ -597,6 +597,27 @@ dc1394_capture_set_callback (dc1394camera_t * camera,
 }
 
 uint_t
+dc1394_capture_get_width(dc1394camera_t *camera)
+{
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  return craw->capture.frame_width;
+}
+
+uint_t
+dc1394_capture_get_height(dc1394camera_t *camera)
+{
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  return craw->capture.frame_height;
+}
+
+uint_t
+dc1394_capture_get_bytes_per_frame(dc1394camera_t *camera)
+{
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  return craw->capture.quadlets_per_frame*4;
+}
+
+uint_t
 dc1394_capture_get_frames_behind(dc1394camera_t *camera)
 {
   //DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);

@@ -930,3 +930,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-08-02 Damien <ddouxchamps@users.sf.net>
     * introduce missing dc1394_capture_get_frames_behind()
     * camera casting (camera > craw) in OSX changed to a macro.
+
+2006-08-02 David Moore <dcm@acm.org>
+    * Added the "update" mechanism to the Mac OS X NuDCL program according
+      to suggestions from Apple engineers.
+    * Added a few missing Mac OS X capture utility functions
