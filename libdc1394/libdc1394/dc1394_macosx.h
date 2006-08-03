@@ -39,9 +39,9 @@ typedef struct _buffer_info {
   dc1394camera_t * camera;
   int              i;
   buffer_status    status;
-  NuDCLRef         dcl;
-  NuDCLRef         dcl2;
   struct timeval   filltime;
+  int              num_dcls;
+  NuDCLRef *       dcl_list;
 } buffer_info;
 
 typedef struct __dc1394_capture

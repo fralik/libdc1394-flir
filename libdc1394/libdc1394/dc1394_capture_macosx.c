@@ -130,6 +130,9 @@ allocate_port (IOFireWireLibIsochPortRef rem_port,
   return kIOReturnSuccess;
 }
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define DATA_SIZE 12
+
 static void
 callback (buffer_info * buffer, NuDCLRef dcl)
 {
@@ -137,6 +140,7 @@ callback (buffer_info * buffer, NuDCLRef dcl)
   dc1394capture_t * capture;
   UInt32 bus, cycle, dma_time, dma_sec, dma_cycle;
   int usec;
+  int i;
 
   if (!buffer) {
     fprintf (stderr, "Error: callback buffer is null\n");
@@ -150,16 +154,27 @@ callback (buffer_info * buffer, NuDCLRef dcl)
     fprintf (stderr, "Error: buffer %d should have been empty\n",
         buffer->i);
 
+  for (i = 0; i < buffer->num_dcls; i += 30) {
+    (*capture->loc_port)->Notify (capture->loc_port,
+                                  kFWNuDCLUpdateNotification,
+                                  (void **) buffer->dcl_list + i,
+                                  MIN (buffer->num_dcls - i, 30));
+  }
+
   buffer->status = BUFFER_FILLED;
 
   (*craw->iface)->GetBusCycleTime (craw->iface, &bus, &cycle);
   gettimeofday (&buffer->filltime, NULL);
 
   /* Get the bus timestamp of when the packet was received */
+  //dma_time = *(UInt32 *)(capture->databuf.address + buffer->i *
+  //    DATA_SIZE + 4);
+  //printf ("status %08lx\n", dma_time);
   dma_time = *(UInt32 *)(capture->databuf.address + buffer->i *
-      capture->frame_pages * getpagesize());
-  dma_sec = (dma_time & 0xe000) >> 13;
-  dma_cycle = dma_time & 0x1fff;
+      DATA_SIZE + 8);
+  //printf ("%08lx\n", dma_time);
+  dma_sec = (dma_time & 0xe000000) >> 25;
+  dma_cycle = (dma_time & 0x1fff000) >> 12;
 
   /* Compute how many usec ago the packet was received by comparing
    * the current bus time to the timestamp of the first ISO packet */
@@ -184,65 +199,67 @@ callback (buffer_info * buffer, NuDCLRef dcl)
   }
 }
 
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-
 DCLCommand *
 CreateDCLProgram (dc1394camera_t * camera)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
-  IOVirtualRange * buffer = &(capture->databuf);
+  IOVirtualRange * databuf = &(capture->databuf);
   NuDCLRef dcl = NULL;
   IOFireWireLibNuDCLPoolRef dcl_pool = capture->dcl_pool;
-  int i;
   int packet_size = capture->quadlets_per_packet * 4;
+  int bytesperframe = capture->quadlets_per_frame * 4;
+  int i;
 
-  buffer->length = capture->num_frames *
-    capture->frame_pages * getpagesize ();
-  buffer->address = (UInt32) mmap (NULL, buffer->length,
+  databuf->length = (capture->num_frames *
+    capture->frame_pages + 1) * getpagesize ();
+  databuf->address = (UInt32) mmap (NULL, databuf->length,
       PROT_READ | PROT_WRITE, MAP_ANON, -1, 0);
-  if (!buffer->address) {
+  if (!databuf->address) {
     fprintf (stderr, "Error: mmap failed\n");
     return NULL;
   }
 
   for (i = 0; i < capture->num_frames; i++) {
-    int bytesleft = capture->quadlets_per_frame * 4;
-    UInt32 baseaddress = buffer->address + i * capture->frame_pages *
+    UInt32 frame_address = databuf->address + (i * capture->frame_pages + 1) *
       getpagesize();
+    UInt32 data_address = databuf->address + i * DATA_SIZE;
+    int num_dcls = (bytesperframe - 1) / packet_size + 1;
+    buffer_info * buffer = capture->buffers + i;
+    int j;
     IOVirtualRange ranges[2] = {
-      {baseaddress, 8},
-      {baseaddress + getpagesize(), packet_size},
+      {data_address, 4},
+      {frame_address, packet_size},
     };
 
     dcl = (*dcl_pool)->AllocateReceivePacket (dcl_pool, NULL,
-        8, 2, ranges);
+        4, 2, ranges);
     (*dcl_pool)->SetDCLWaitControl (dcl, true);
     (*dcl_pool)->SetDCLFlags (dcl, kNuDCLDynamic);
+    (*dcl_pool)->SetDCLStatusPtr (dcl, (UInt32 *)(data_address + 4));
+    (*dcl_pool)->SetDCLTimeStampPtr (dcl, (UInt32 *)(data_address + 8));
 
-    capture->buffers[i].camera = camera;
-    capture->buffers[i].i = i;
-    capture->buffers[i].dcl = dcl;
-    capture->buffers[i].dcl2 = NULL;
-    capture->buffers[i].status = BUFFER_EMPTY;
-    bytesleft -= packet_size;
+    buffer->camera = camera;
+    buffer->i = i;
+    buffer->status = BUFFER_EMPTY;
+    buffer->num_dcls = num_dcls;
+    buffer->dcl_list = malloc (num_dcls * sizeof (NuDCLRef));
 
-    while (bytesleft > 0) {
-      ranges[0].address += 8;
+    buffer->dcl_list[0] = dcl;
+
+    for (j = 1; j < num_dcls; j++) {
       ranges[1].address += packet_size;
       dcl = (*dcl_pool)->AllocateReceivePacket (dcl_pool, NULL,
           0, 1, ranges+1);
-      if (!capture->buffers[i].dcl2) {
-        capture->buffers[i].dcl2 = dcl;
-      }
-      bytesleft -= packet_size;
+      buffer->dcl_list[j] = dcl;
     }
+
     (*dcl_pool)->SetDCLRefcon (dcl, capture->buffers + i);
     (*dcl_pool)->SetDCLCallback (dcl, (NuDCLCallback) callback);
   }
-  (*dcl_pool)->SetDCLBranch (dcl, capture->buffers[0].dcl);
+  (*dcl_pool)->SetDCLBranch (dcl, capture->buffers[0].dcl_list[0]);
 
-  dcl = capture->buffers[capture->num_frames-1].dcl;
+  dcl = capture->buffers[capture->num_frames-1].dcl_list[0];
   (*dcl_pool)->SetDCLBranch (dcl, dcl);
 
   //(*dcl_pool)->PrintProgram (dcl_pool);
@@ -314,7 +331,7 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint_t num_dma_buffers,
   capture->buffers = malloc (capture->num_frames * sizeof (buffer_info));
   capture->current = -1;
   frame_size = capture->quadlets_per_frame * 4;
-  capture->frame_pages = ((frame_size - 1) / getpagesize()) + 2;
+  capture->frame_pages = ((frame_size - 1) / getpagesize()) + 1;
 
   numdcls = (capture->quadlets_per_frame / capture->quadlets_per_packet + 1)
     * capture->num_frames;
@@ -374,15 +391,15 @@ dc1394_capture_stop(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
-  IOVirtualRange * buffer = &(capture->databuf);
+  IOVirtualRange * databuf = &(capture->databuf);
 
   if (capture->chan) {
     (*capture->chan)->Stop (capture->chan);
     (*capture->chan)->ReleaseChannel (capture->chan);
   }
 
-  if (buffer->address)
-    vm_deallocate (current_task (), buffer->address, buffer->length);
+  if (databuf->address)
+    munmap ((void *) databuf->address, databuf->length);
 
   if (capture->chan)
     (*capture->chan)->Release (capture->chan);
@@ -393,8 +410,12 @@ dc1394_capture_stop(dc1394camera_t *camera)
   if (capture->dcl_pool)
     (*capture->dcl_pool)->Release (capture->dcl_pool);
 
-  if (capture->buffers)
+  if (capture->buffers) {
+    int i;
+    for (i = 0; i < capture->num_frames; i++)
+      free (capture->buffers[i].dcl_list);
     free (capture->buffers);
+  }
 
   capture->chan = NULL;
   capture->rem_port = NULL;
@@ -510,10 +531,10 @@ dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera)
     return DC1394_FAILURE;
 
   buffer->status = BUFFER_EMPTY;
-  (*dcl_pool)->SetDCLBranch (buffer->dcl, buffer->dcl);
-  (*dcl_pool)->SetDCLBranch (prev_buffer->dcl, prev_buffer->dcl2);
-  dcl_list[0] = prev_buffer->dcl;
-  dcl_list[1] = buffer->dcl;
+  (*dcl_pool)->SetDCLBranch (buffer->dcl_list[0], buffer->dcl_list[0]);
+  (*dcl_pool)->SetDCLBranch (prev_buffer->dcl_list[0], prev_buffer->dcl_list[1]);
+  dcl_list[0] = prev_buffer->dcl_list[0];
+  dcl_list[1] = buffer->dcl_list[0];
   (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list, 1);
   (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list+1, 1);
   return DC1394_SUCCESS;
