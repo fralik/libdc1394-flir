@@ -862,8 +862,13 @@ dc1394_format7_get_mode_info(dc1394camera_t *camera,
     DC1394_ERR_RTN(err,"Got a problem querying format7 color coding");
 
     // WARNING: this requires to set the format7 mode!!
-    err=dc1394_format7_get_color_filter(camera,video_mode,&f7_mode->color_filter);
-    DC1394_ERR_RTN(err,"Got a problem querying format7 bayer pattern");
+    if (camera->iidc_version >= DC1394_IIDC_VERSION_1_31) {
+      err=dc1394_format7_get_color_filter(camera,video_mode,&f7_mode->color_filter);
+      DC1394_ERR_RTN(err,"Got a problem querying format7 bayer pattern");
+    }
+    else {
+      f7_mode->color_filter = 0;
+    }
 
     //fprintf(stderr,"# color codings for mode %d: %d\n", video_mode, mode->color_codings.num);
   }
