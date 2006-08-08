@@ -318,10 +318,19 @@ dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   dc1394error_t err;
   int i;
+  dc1394switch_t iso_was_on;
+
+  // if transmission is ON, stop it:
+  err=dc1394_video_get_transmission(camera,&iso_was_on);
+  DC1394_ERR_RTN(err, "Could not get ISO status");
+
+  if (iso_was_on==DC1394_ON) {
+    err=dc1394_video_set_transmission(camera, DC1394_OFF);
+    DC1394_ERR_RTN(err, "Could not pause ISO transmission");
+  }
 
   if (camera->capture_is_set==0) {
     // capture is not set, and thus channels/bandwidth have not been allocated.
-    // We can safely allocate that in advance. 
 
     // first we need to assign an ISO channel:  
     if (camera->iso_channel_is_set==0){
@@ -384,6 +393,13 @@ dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
   }
   else {
     // do nothing, capture is running, and channels/bandwidth is already allocated
+  }
+
+
+  // if transmission was ON, restart it:
+  if (iso_was_on==DC1394_ON) {
+    err=dc1394_video_set_transmission(camera, DC1394_ON);
+    DC1394_ERR_RTN(err, "Could not restart ISO transmission");
   }
   
   return DC1394_SUCCESS;

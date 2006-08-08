@@ -939,3 +939,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-08-03 Damien <ddouxchamps@users.sf.net>
     * fixed invalid query of F7 color filter when a cam is not > IIDC 1.31
       (from David Moore)
+	
+2006-08-08 Damien <ddouxchamps@users.sf.net>
+    * add PIO, SIO and strobe CSR register offset in dc1394camera_t. For
+      future use.
+    * following a suggestion of David Moore, don't allocate ISO/bandwidth in
+      dc1394_video_set_transmission(). This way we can start the transmission
+      from another program or a remote host.
+    * release 2.0.0-rc3
