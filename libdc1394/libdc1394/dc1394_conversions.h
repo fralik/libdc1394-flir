@@ -77,23 +77,23 @@ extern "C" {
  **********************************************************************/
 
 dc1394error_t
-dc1394_convert_to_YUV422(uchar_t *src, uchar_t *dest, uint_t width, uint_t height, uint_t byte_order,
-			 dc1394color_coding_t source_coding, uint_t bits);
+dc1394_convert_to_YUV422(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
+			 dc1394color_coding_t source_coding, uint32_t bits);
 
 dc1394error_t
-dc1394_convert_to_MONO8(uchar_t *src, uchar_t *dest, uint_t width, uint_t height, uint_t byte_order,
-			dc1394color_coding_t source_coding, uint_t bits);
+dc1394_convert_to_MONO8(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
+			dc1394color_coding_t source_coding, uint32_t bits);
 
 dc1394error_t
-dc1394_convert_to_RGB8(uchar_t *src, uchar_t *dest, uint_t width, uint_t height, uint_t byte_order,
-		       dc1394color_coding_t source_coding, uint_t bits);
+dc1394_convert_to_RGB8(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
+		       dc1394color_coding_t source_coding, uint32_t bits);
 
 /**********************************************************************
  *  CONVERSION FUNCTIONS FOR STEREO IMAGES
  **********************************************************************/
 
 //changes a 16bit stereo image (8bit/channel) into two 8bit images on top of each other
-void dc1394_deinterlace_stereo(uchar_t *src, uchar_t *dest, uint_t width, uint_t height);
+void dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height);
 
 /************************************************************************************************
  *                                                                                              *
@@ -122,12 +122,12 @@ void dc1394_deinterlace_stereo(uchar_t *src, uchar_t *dest, uint_t width, uint_t
  *                                                                                              *
  ************************************************************************************************/
 
-dc1394error_t dc1394_bayer_decoding_8bit(const uchar_t *bayer, uchar_t *rgb,
-					 uint_t width, uint_t height, dc1394color_filter_t tile,
+dc1394error_t dc1394_bayer_decoding_8bit(const uint8_t *bayer, uint8_t *rgb,
+					 uint32_t width, uint32_t height, dc1394color_filter_t tile,
 					 dc1394bayer_method_t method);
 dc1394error_t dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
-					  uint_t width, uint_t height, dc1394color_filter_t tile,
-					  dc1394bayer_method_t, uint_t bits);
+					  uint32_t width, uint32_t height, dc1394color_filter_t tile,
+					  dc1394bayer_method_t, uint32_t bits);
 
 #ifdef __cplusplus
 }

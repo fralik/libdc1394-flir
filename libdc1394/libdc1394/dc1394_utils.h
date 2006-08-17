@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-dc1394error_t dc1394_get_image_size_from_video_mode(dc1394camera_t *camera, uint_t video_mode, uint_t *width, uint_t *height);
+dc1394error_t dc1394_get_image_size_from_video_mode(dc1394camera_t *camera, uint32_t video_mode, uint32_t *width, uint32_t *height);
 dc1394error_t dc1394_framerate_as_float(dc1394framerate_t framerate_enum, float *framerate);
 dc1394error_t dc1394_get_bytes_per_pixel(dc1394color_coding_t color_coding, float* bpp);
 dc1394error_t dc1394_get_color_coding_from_video_mode(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding);

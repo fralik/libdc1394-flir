@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 {
   FILE* imagefile;
   dc1394camera_t *camera, **cameras=NULL;
-  uint_t numCameras, i;
+  uint32_t numCameras, i;
   dc1394featureset_t features;
   dc1394framerates_t framerates;
   dc1394video_modes_t video_modes;

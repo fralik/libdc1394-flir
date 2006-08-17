@@ -51,7 +51,7 @@ dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
 }
 
 dc1394error_t
-dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
+dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint32_t* numCameras)
 {
   return dc1394_find_cameras_platform(cameras_ptr, numCameras);
 
@@ -188,7 +188,7 @@ dc1394error_t
 dc1394_update_camera_info(dc1394camera_t *camera)
 {
   dc1394error_t err;
-  uint_t len, i, count;
+  uint32_t len, i, count;
   octlet_t offset;
   quadlet_t value[2], quadval;
 
@@ -293,7 +293,7 @@ dc1394_update_camera_info(dc1394camera_t *camera)
     err=GetCameraROMValue(camera, offset, &value[0]);
     DC1394_ERR_RTN(err, "Could not get vendor leaf length");
     
-    len= (uint_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
+    len= (uint32_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
     
     if (len > MAX_CHARS) {
       len= MAX_CHARS;
@@ -334,7 +334,7 @@ dc1394_update_camera_info(dc1394camera_t *camera)
     err=GetCameraROMValue(camera, offset, &value[0]);
     DC1394_ERR_RTN(err, "Could not get model name leaf length");
     
-    len= (uint_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
+    len= (uint32_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
     
     if (len > MAX_CHARS) {
       len= MAX_CHARS;
@@ -454,7 +454,7 @@ dc1394_print_camera_info(dc1394camera_t *camera)
 dc1394error_t
 dc1394_get_camera_feature_set(dc1394camera_t *camera, dc1394featureset_t *features) 
 {
-  uint_t i, j;
+  uint32_t i, j;
   dc1394error_t err=DC1394_SUCCESS;
   
   for (i= DC1394_FEATURE_MIN, j= 0; i <= DC1394_FEATURE_MAX; i++, j++)  {
@@ -543,7 +543,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
     feature->one_push_active= DC1394_FALSE;
     feature->trigger_polarity=
       (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->trigger_mode= (uint_t)((value >> 14) & 0xF);
+    feature->trigger_mode= (uint32_t)((value >> 14) & 0xF);
     feature->auto_active= DC1394_FALSE;
     break;
   case DC1394_FEATURE_TRIGGER_DELAY:
@@ -721,7 +721,7 @@ dc1394_print_feature(dc1394feature_info_t *f)
 dc1394error_t
 dc1394_print_feature_set(dc1394featureset_t *features) 
 {
-  uint_t i, j;
+  uint32_t i, j;
   dc1394error_t err=DC1394_SUCCESS;
   
   printf("------ Features report ------\n");
@@ -839,7 +839,7 @@ dc1394_video_get_supported_framerates(dc1394camera_t *camera, dc1394video_mode_t
 {
   dc1394framerate_t framerate;
   dc1394error_t err;
-  uint_t format;
+  uint32_t format;
   quadlet_t value;
 
   err=_dc1394_get_format_from_mode(video_mode, &format);
@@ -888,7 +888,7 @@ dc1394_video_get_framerate(dc1394camera_t *camera, dc1394framerate_t *framerate)
   err=GetCameraControlRegister(camera, REG_CAMERA_FRAME_RATE, &value);
   DC1394_ERR_RTN(err, "Could not get video framerate");
   
-  *framerate= (uint_t)((value >> 29) & 0x7UL) + DC1394_FRAMERATE_MIN;
+  *framerate= (uint32_t)((value >> 29) & 0x7UL) + DC1394_FRAMERATE_MIN;
   
   return err;
 }
@@ -916,12 +916,12 @@ dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
 {
   dc1394error_t err;
   quadlet_t value;
-  uint_t format;
+  uint32_t format;
   
   err= GetCameraControlRegister(camera, REG_CAMERA_VIDEO_FORMAT, &value);
   DC1394_ERR_RTN(err, "Could not get video format");
 
-  format= (uint_t)((value >> 29) & 0x7UL) + DC1394_FORMAT_MIN;
+  format= (uint32_t)((value >> 29) & 0x7UL) + DC1394_FORMAT_MIN;
   
   //if (format>FORMAT2)
   //format-=3;
@@ -933,19 +933,19 @@ dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
   
   switch(format) {
   case DC1394_FORMAT0:
-    *mode= (uint_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT0_MIN;
+    *mode= (uint32_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT0_MIN;
     break;
   case DC1394_FORMAT1:
-    *mode= (uint_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT1_MIN;
+    *mode= (uint32_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT1_MIN;
     break;
   case DC1394_FORMAT2:
-    *mode= (uint_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT2_MIN;
+    *mode= (uint32_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT2_MIN;
     break;
   case DC1394_FORMAT6:
-    *mode= (uint_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT6_MIN;
+    *mode= (uint32_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT6_MIN;
     break;
   case DC1394_FORMAT7:
-    *mode= (uint_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT7_MIN;
+    *mode= (uint32_t)((value >> 29) & 0x7UL) + DC1394_VIDEO_MODE_FORMAT7_MIN;
     break;
   default:
     return DC1394_INVALID_VIDEO_FORMAT;
@@ -958,7 +958,7 @@ dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
 dc1394error_t
 dc1394_video_set_mode(dc1394camera_t *camera, dc1394video_mode_t  mode)
 {
-  uint_t format, min;
+  uint32_t format, min;
   dc1394error_t err;
   
   if (camera->capture_is_set>0)
@@ -1015,14 +1015,14 @@ dc1394_video_get_iso_speed(dc1394camera_t *camera, dc1394speed_t *speed)
 
   if (camera->bmode_capable) { // check if 1394b is available
     if (value & 0x00008000) { //check if we are now using 1394b
-      *speed= (uint_t)(value& 0x7UL);
+      *speed= (uint32_t)(value& 0x7UL);
     }
     else { // fallback to legacy
-      *speed= (uint_t)((value >> 24) & 0x3UL);
+      *speed= (uint32_t)((value >> 24) & 0x3UL);
     }
   }
   else { // legacy
-    *speed= (uint_t)((value >> 24) & 0x3UL);
+    *speed= (uint32_t)((value >> 24) & 0x3UL);
   }
   
   return err;
@@ -1216,7 +1216,7 @@ dc1394_video_get_one_shot(dc1394camera_t *camera, dc1394bool_t *is_on)
 }
 
 dc1394error_t
-dc1394_video_get_multi_shot(dc1394camera_t *camera, dc1394bool_t *is_on, uint_t *numFrames)
+dc1394_video_get_multi_shot(dc1394camera_t *camera, dc1394bool_t *is_on, uint32_t *numFrames)
 {
   quadlet_t value;
   dc1394error_t err = GetCameraControlRegister(camera, REG_CAMERA_ONE_SHOT, &value);
@@ -1228,7 +1228,7 @@ dc1394_video_get_multi_shot(dc1394camera_t *camera, dc1394bool_t *is_on, uint_t 
 }
 
 dc1394error_t
-dc1394_video_set_multi_shot(dc1394camera_t *camera, uint_t numFrames, dc1394switch_t pwr)
+dc1394_video_set_multi_shot(dc1394camera_t *camera, uint32_t numFrames, dc1394switch_t pwr)
 {
   dc1394error_t err;
   switch (pwr) {
@@ -1249,19 +1249,19 @@ dc1394_video_set_multi_shot(dc1394camera_t *camera, uint_t numFrames, dc1394swit
 }
 
 dc1394error_t
-dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint_t *u_b_value, uint_t *v_r_value)
+dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint32_t *u_b_value, uint32_t *v_r_value)
 {
   quadlet_t value;
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_WHITE_BALANCE, &value);
   DC1394_ERR_RTN(err, "Could not get white balance");
 
-  *u_b_value= (uint_t)((value & 0xFFF000UL) >> 12);
-  *v_r_value= (uint_t)(value & 0xFFFUL);
+  *u_b_value= (uint32_t)((value & 0xFFF000UL) >> 12);
+  *v_r_value= (uint32_t)(value & 0xFFFUL);
   return err;
 }
 
 dc1394error_t
-dc1394_feature_whitebalance_set_value(dc1394camera_t *camera, uint_t u_b_value, uint_t v_r_value)
+dc1394_feature_whitebalance_set_value(dc1394camera_t *camera, uint32_t u_b_value, uint32_t v_r_value)
 {
   quadlet_t curval;
   dc1394error_t err;
@@ -1276,18 +1276,18 @@ dc1394_feature_whitebalance_set_value(dc1394camera_t *camera, uint_t u_b_value, 
 }
 
 dc1394error_t
-dc1394_feature_temperature_get_value(dc1394camera_t *camera, uint_t *target_temperature, uint_t *temperature)
+dc1394_feature_temperature_get_value(dc1394camera_t *camera, uint32_t *target_temperature, uint32_t *temperature)
 {
   quadlet_t value;
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TEMPERATURE, &value);
   DC1394_ERR_RTN(err, "Could not get temperature");
-  *target_temperature= (uint_t)((value >> 12) & 0xFFF);
-  *temperature= (uint_t)(value & 0xFFFUL);
+  *target_temperature= (uint32_t)((value >> 12) & 0xFFF);
+  *temperature= (uint32_t)(value & 0xFFFUL);
   return err;
 }
 
 dc1394error_t
-dc1394_feature_temperature_set_value(dc1394camera_t *camera, uint_t target_temperature)
+dc1394_feature_temperature_set_value(dc1394camera_t *camera, uint32_t target_temperature)
 {
   dc1394error_t err;
   quadlet_t curval;
@@ -1303,21 +1303,21 @@ dc1394_feature_temperature_set_value(dc1394camera_t *camera, uint_t target_tempe
 }
 
 dc1394error_t
-dc1394_feature_whiteshading_get_value(dc1394camera_t *camera, uint_t *r_value, uint_t *g_value, uint_t *b_value)
+dc1394_feature_whiteshading_get_value(dc1394camera_t *camera, uint32_t *r_value, uint32_t *g_value, uint32_t *b_value)
 {
   quadlet_t value;
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_WHITE_SHADING, &value);
   DC1394_ERR_RTN(err, "Could not get white shading");
   
-  *r_value= (uint_t)((value & 0xFF0000UL) >> 16);
-  *g_value= (uint_t)((value & 0xFF00UL) >> 8);
-  *b_value= (uint_t)(value & 0xFFUL);
+  *r_value= (uint32_t)((value & 0xFF0000UL) >> 16);
+  *g_value= (uint32_t)((value & 0xFF00UL) >> 8);
+  *b_value= (uint32_t)(value & 0xFFUL);
 
   return err;
 }
 
 dc1394error_t
-dc1394_feature_whiteshading_set_value(dc1394camera_t *camera, uint_t r_value, uint_t g_value, uint_t b_value)
+dc1394_feature_whiteshading_set_value(dc1394camera_t *camera, uint32_t r_value, uint32_t g_value, uint32_t b_value)
 {
   quadlet_t curval;
   
@@ -1340,7 +1340,7 @@ dc1394_external_trigger_get_mode(dc1394camera_t *camera, dc1394trigger_mode_t *m
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get trigger mode");
   
-  *mode= (uint_t)( ((value >> 16) & 0xFUL) );
+  *mode= (uint32_t)( ((value >> 16) & 0xFUL) );
   if ((*mode)>5)
     (*mode)-=8;
   (*mode)+= DC1394_TRIGGER_MODE_MIN;
@@ -1403,7 +1403,7 @@ dc1394_external_trigger_get_source(dc1394camera_t *camera, dc1394trigger_source_
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get trigger source");
   
-  *source= (uint_t)( ((value >> 21) & 0x8UL) );
+  *source= (uint32_t)( ((value >> 21) & 0x8UL) );
   (*source)+= DC1394_TRIGGER_SOURCE_MIN;
 
   return err;
@@ -1430,7 +1430,7 @@ dc1394_external_trigger_set_source(dc1394camera_t *camera, dc1394trigger_source_
 }
 
 dc1394error_t
-dc1394_feature_get_value(dc1394camera_t *camera, dc1394feature_t feature, uint_t *value)
+dc1394_feature_get_value(dc1394camera_t *camera, dc1394feature_t feature, uint32_t *value)
 {
   quadlet_t quadval;
   octlet_t offset;
@@ -1447,13 +1447,13 @@ dc1394_feature_get_value(dc1394camera_t *camera, dc1394feature_t feature, uint_t
   
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get feature %d value",feature);
-  *value= (uint_t)(quadval & 0xFFFUL);
+  *value= (uint32_t)(quadval & 0xFFFUL);
   
   return err;
 }
 
 dc1394error_t
-dc1394_feature_set_value(dc1394camera_t *camera, dc1394feature_t feature, uint_t value)
+dc1394_feature_set_value(dc1394camera_t *camera, dc1394feature_t feature, uint32_t value)
 {
   quadlet_t quadval;
   octlet_t offset;
@@ -1751,7 +1751,7 @@ dc1394_feature_set_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394f
 }
 
 dc1394error_t
-dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, uint_t *min, uint_t *max)
+dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, uint32_t *min, uint32_t *max)
 {
   dc1394error_t err;
   octlet_t offset;
@@ -1766,8 +1766,8 @@ dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, u
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get feature %d min value",feature);
   
-  *min= (uint_t)((quadval & 0xFFF000UL) >> 12);
-  *max= (uint_t)(quadval & 0xFFFUL);
+  *min= (uint32_t)((quadval & 0xFFF000UL) >> 12);
+  *max= (uint32_t)(quadval & 0xFFFUL);
   return err;
 }
 
@@ -1775,23 +1775,23 @@ dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, u
  * Memory load/save functions
  */
 dc1394error_t
-dc1394_memory_get_save_ch(dc1394camera_t *camera, uint_t *channel)
+dc1394_memory_get_save_ch(dc1394camera_t *camera, uint32_t *channel)
 {
   quadlet_t value;
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_MEM_SAVE_CH, &value);
   DC1394_ERR_RTN(err, "Could not get memory save channel");
-  *channel= (uint_t)((value >> 28) & 0xFUL);
+  *channel= (uint32_t)((value >> 28) & 0xFUL);
   return err;
 }
 
 
 dc1394error_t
-dc1394_memory_get_load_ch(dc1394camera_t *camera, uint_t *channel)
+dc1394_memory_get_load_ch(dc1394camera_t *camera, uint32_t *channel)
 {
   quadlet_t value;
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_CUR_MEM_CH, &value);
   DC1394_ERR_RTN(err, "Could not get memory load channel");
-  *channel= (uint_t)((value >> 28) & 0xFUL);
+  *channel= (uint32_t)((value >> 28) & 0xFUL);
   return err;
 }
 
@@ -1807,7 +1807,7 @@ dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value)
 }
 
 dc1394error_t
-dc1394_memory_save(dc1394camera_t *camera, uint_t channel)
+dc1394_memory_save(dc1394camera_t *camera, uint32_t channel)
 {
   dc1394error_t err=SetCameraControlRegister(camera, REG_CAMERA_MEM_SAVE_CH,
 				  (quadlet_t)((channel & 0xFUL) << 28));
@@ -1819,7 +1819,7 @@ dc1394_memory_save(dc1394camera_t *camera, uint_t channel)
 }
 
 dc1394error_t
-dc1394_memory_load(dc1394camera_t *camera, uint_t channel)
+dc1394_memory_load(dc1394camera_t *camera, uint32_t channel)
 {
   dc1394error_t err=SetCameraControlRegister(camera, REG_CAMERA_CUR_MEM_CH,
 				  (quadlet_t)((channel & 0xFUL) << 28));
@@ -1853,7 +1853,7 @@ dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polar
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get trigger polarity");
   
-  *polarity= (uint_t)( ((value >> 24) & 0x1UL) );
+  *polarity= (uint32_t)( ((value >> 24) & 0x1UL) );
   return err;
 }
 
@@ -1957,7 +1957,7 @@ dc1394_feature_get_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
 }
 
 dc1394error_t
-dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, uint_t value)
+dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, uint32_t value)
 {
   dc1394error_t err;
   octlet_t offset;
@@ -2014,9 +2014,9 @@ dc1394_feature_has_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
 */
 
 dc1394error_t
-dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint_t *bandwidth)
+dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t *bandwidth)
 {
-  uint_t format, qpp;
+  uint32_t format, qpp;
   dc1394video_mode_t video_mode;
   dc1394speed_t speed;
   dc1394framerate_t framerate=0;

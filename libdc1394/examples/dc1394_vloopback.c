@@ -406,7 +406,7 @@ int capture_mmap(int frame)
 int dc_init()
 {
   int reset;
-  uint_t camCount = 0;
+  uint32_t camCount = 0;
   int found = 0;
   dc1394camera_t **cameras=NULL;
   int err, i;

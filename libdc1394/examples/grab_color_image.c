@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 {
   FILE* imagefile;
   dc1394camera_t *camera, **cameras=NULL;
-  uint_t numCameras, i;
+  uint32_t numCameras, i;
   unsigned int width, height;
   //dc1394featureset_t features;
 

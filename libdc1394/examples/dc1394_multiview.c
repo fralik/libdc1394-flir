@@ -57,7 +57,7 @@
 
 
 /* declarations for libdc1394 */
-uint_t numCameras = 0;
+uint32_t numCameras = 0;
 dc1394camera_t **cameras;
 dc1394featureset_t features;
 
@@ -150,7 +150,7 @@ void get_options(int argc,char *argv[])
 /* image format conversion functions */
 
 static inline
-void iyu12yuy2 (unsigned char *src, unsigned char *dest, uint_t NumPixels) {
+void iyu12yuy2 (unsigned char *src, unsigned char *dest, uint32_t NumPixels) {
   int i=0,j=0;
   register int y0, y1, y2, y3, u, v;
   while (i < NumPixels*3/2)
@@ -188,7 +188,7 @@ void iyu12yuy2 (unsigned char *src, unsigned char *dest, uint_t NumPixels) {
   v = v > 255 ? 255 : v
 
 static inline
-void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, uint_t NumPixels) {
+void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, uint32_t NumPixels) {
   int i, j;
   register int y0, y1, u0, u1, v0, v1 ;
   register int r, g, b;
@@ -222,7 +222,7 @@ void set_frame_length(unsigned long size, int numCameras)
 
 void display_frames()
 {
-	uint_t i;
+	uint32_t i;
 	
 	if(!freeze && adaptor>=0){
 		for (i = 0; i < numCameras; i++)
@@ -260,7 +260,7 @@ void display_frames()
 
 void QueryXv()
 {
-	uint_t num_adaptors;
+	uint32_t num_adaptors;
 	int num_formats;
 	XvImageFormatValues *formats=NULL;
 	int i,j;

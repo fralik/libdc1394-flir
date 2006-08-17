@@ -270,7 +270,7 @@ CreateDCLProgram (dc1394camera_t * camera)
  CAPTURE SETUP
 **************************************************************/
 dc1394error_t 
-dc1394_capture_setup_dma(dc1394camera_t *camera, uint_t num_dma_buffers,
+dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
         dc1394ring_buffer_policy_t policy)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
@@ -435,7 +435,7 @@ dc1394_capture_stop(dc1394camera_t *camera)
 #define PREV_BUFFER(c,i) (((i) == 0) ? (c)->num_frames-1 : ((i)-1))
 
 dc1394error_t
-dc1394_capture_dma(dc1394camera_t **cameras, uint_t num,
+dc1394_capture_dma(dc1394camera_t **cameras, uint32_t num,
     dc1394video_policy_t policy) 
 {
   int i;
@@ -499,7 +499,7 @@ dc1394_capture_dma(dc1394camera_t **cameras, uint_t num,
 }
 
 dc1394error_t 
-dc1394_capture(dc1394camera_t **cams, uint_t num) 
+dc1394_capture(dc1394camera_t **cams, uint32_t num) 
 {
   int i;
   for (i = 0; i < num; i++) {
@@ -542,7 +542,7 @@ dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera)
 
 /* functions to access the capture data */
 
-uchar_t*
+uint8_t*
 dc1394_capture_get_dma_buffer(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
@@ -553,7 +553,7 @@ dc1394_capture_get_dma_buffer(dc1394camera_t *camera)
   if (capture->current == -1 || buffer->status != BUFFER_FILLED)
     return NULL;
 
-  return (uchar_t *) (databuf->address +
+  return (uint8_t *) (databuf->address +
       buffer->i * capture->frame_pages * getpagesize() +
       getpagesize());
 }
@@ -596,28 +596,28 @@ dc1394_capture_set_callback (dc1394camera_t * camera,
   capture->callback_user_data = user_data;
 }
 
-uint_t
+uint32_t
 dc1394_capture_get_width(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   return craw->capture.frame_width;
 }
 
-uint_t
+uint32_t
 dc1394_capture_get_height(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   return craw->capture.frame_height;
 }
 
-uint_t
+uint32_t
 dc1394_capture_get_bytes_per_frame(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   return craw->capture.quadlets_per_frame*4;
 }
 
-uint_t
+uint32_t
 dc1394_capture_get_frames_behind(dc1394camera_t *camera)
 {
   //DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);

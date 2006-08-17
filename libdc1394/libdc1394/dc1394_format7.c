@@ -41,10 +41,10 @@
 dc1394error_t
 dc1394_format7_get_value_setting(dc1394camera_t *camera,
 				 dc1394video_mode_t video_mode,
-				 uint_t *present,
-        			 uint_t *setting1,
-				 uint_t *err_flag1,
-				 uint_t *err_flag2)
+				 uint32_t *present,
+        			 uint32_t *setting1,
+				 uint32_t *err_flag1,
+				 uint32_t *err_flag2)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -60,10 +60,10 @@ dc1394_format7_get_value_setting(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_VALUE_SETTING, &value);
   DC1394_ERR_RTN(err, "could note get value setting");
   
-  *present= (uint_t) ( value & 0x80000000UL ) >> 31;
-  *setting1= (uint_t) ( value & 0x40000000UL ) >> 30;
-  *err_flag1= (uint_t) ( value & 0x00800000UL ) >> 23;
-  *err_flag2= (uint_t) ( value & 0x00400000UL ) >> 22;
+  *present= (uint32_t) ( value & 0x80000000UL ) >> 31;
+  *setting1= (uint32_t) ( value & 0x40000000UL ) >> 30;
+  *err_flag1= (uint32_t) ( value & 0x00800000UL ) >> 23;
+  *err_flag2= (uint32_t) ( value & 0x00400000UL ) >> 22;
 
   return err;
 }
@@ -82,8 +82,8 @@ dc1394_format7_set_value_setting(dc1394camera_t *camera,
 dc1394error_t
 _dc1394_v130_handshake(dc1394camera_t *camera, dc1394video_mode_t video_mode)
 {
-  uint_t setting_1, err_flag1, err_flag2, v130handshake;
-  uint_t exit_loop;
+  uint32_t setting_1, err_flag1, err_flag2, v130handshake;
+  uint32_t exit_loop;
   dc1394error_t err;
 
   if (camera->iidc_version >= DC1394_IIDC_VERSION_1_30) {
@@ -126,7 +126,7 @@ _dc1394_v130_handshake(dc1394camera_t *camera, dc1394video_mode_t video_mode)
 dc1394error_t
 _dc1394_v130_errflag2(dc1394camera_t *camera, dc1394video_mode_t video_mode)
 {
-  uint_t setting_1, err_flag1, err_flag2, v130handshake;
+  uint32_t setting_1, err_flag1, err_flag2, v130handshake;
   dc1394error_t err;
 
   //fprintf(stderr,"Checking error flags\n");
@@ -161,15 +161,15 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
 		       int left, int top,
 		       int width, int height)
 {
-  uint_t unit_bytes, max_bytes;
-  uint_t recom_bpp;
-  uint_t camera_left = 0;
-  uint_t camera_top = 0;
-  uint_t camera_width = 0;
-  uint_t camera_height = 0;
-  uint_t max_width = 0;
-  uint_t max_height = 0;
-  uint_t uint_bpp=0;
+  uint32_t unit_bytes, max_bytes;
+  uint32_t recom_bpp;
+  uint32_t camera_left = 0;
+  uint32_t camera_top = 0;
+  uint32_t camera_width = 0;
+  uint32_t camera_height = 0;
+  uint32_t max_width = 0;
+  uint32_t max_height = 0;
+  uint32_t uint_bpp=0;
   dc1394error_t err;
 
   if (camera->capture_is_set>0)
@@ -324,8 +324,8 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
 dc1394error_t
 dc1394_format7_get_max_image_size(dc1394camera_t *camera,
 				  dc1394video_mode_t video_mode,
-				  uint_t *horizontal_size,
-				  uint_t *vertical_size)
+				  uint32_t *horizontal_size,
+				  uint32_t *vertical_size)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -336,8 +336,8 @@ dc1394_format7_get_max_image_size(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_MAX_IMAGE_SIZE_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get max image sizes");
 
-  *horizontal_size  = (uint_t) ( value & 0xFFFF0000UL ) >> 16;
-  *vertical_size= (uint_t) ( value & 0x0000FFFFUL );
+  *horizontal_size  = (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
+  *vertical_size= (uint32_t) ( value & 0x0000FFFFUL );
   
   //fprintf(stderr,"got size: %d %d\n", *horizontal_size, *vertical_size);
 
@@ -347,8 +347,8 @@ dc1394_format7_get_max_image_size(dc1394camera_t *camera,
 dc1394error_t
 dc1394_format7_get_unit_size(dc1394camera_t *camera,
 			     dc1394video_mode_t video_mode,
-			     uint_t *horizontal_unit,
-			     uint_t *vertical_unit)
+			     uint32_t *horizontal_unit,
+			     uint32_t *vertical_unit)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -359,8 +359,8 @@ dc1394_format7_get_unit_size(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_UNIT_SIZE_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get unit sizes");
 
-  *horizontal_unit  = (uint_t) ( value & 0xFFFF0000UL ) >> 16;
-  *vertical_unit= (uint_t) ( value & 0x0000FFFFUL );
+  *horizontal_unit  = (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
+  *vertical_unit= (uint32_t) ( value & 0x0000FFFFUL );
   
   return err;
 }
@@ -368,8 +368,8 @@ dc1394_format7_get_unit_size(dc1394camera_t *camera,
 dc1394error_t
 dc1394_format7_get_image_position(dc1394camera_t *camera,
 				  dc1394video_mode_t video_mode,
-				  uint_t *left_position,
-				  uint_t *top_position)
+				  uint32_t *left_position,
+				  uint32_t *top_position)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -380,8 +380,8 @@ dc1394_format7_get_image_position(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_IMAGE_POSITION, &value);
   DC1394_ERR_RTN(err, "Could not get image position");
 
-  *left_position = (uint_t) ( value & 0xFFFF0000UL ) >> 16;
-  *top_position= (uint_t) ( value & 0x0000FFFFUL );       
+  *left_position = (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
+  *top_position= (uint32_t) ( value & 0x0000FFFFUL );       
 
   return err;
 }
@@ -390,8 +390,8 @@ dc1394_format7_get_image_position(dc1394camera_t *camera,
 dc1394error_t
 dc1394_format7_get_image_size(dc1394camera_t *camera,
 			      dc1394video_mode_t video_mode,
-			      uint_t *width,
-			      uint_t *height)
+			      uint32_t *width,
+			      uint32_t *height)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -402,8 +402,8 @@ dc1394_format7_get_image_size(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_IMAGE_SIZE, &value);
   DC1394_ERR_RTN(err, "could not get current image size");
 
-  *width= (uint_t) ( value & 0xFFFF0000UL ) >> 16;
-  *height = (uint_t) ( value & 0x0000FFFFUL );       
+  *width= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
+  *height = (uint32_t) ( value & 0x0000FFFFUL );       
   
   return err;
 }
@@ -423,7 +423,7 @@ dc1394_format7_get_color_coding(dc1394camera_t *camera,
   DC1394_ERR_RTN(err, "Could not get current color_id");
 
   value=value>>24;
-  *color_coding= (uint_t)value+DC1394_COLOR_CODING_MIN;
+  *color_coding= (uint32_t)value+DC1394_COLOR_CODING_MIN;
   
   return err;
 }
@@ -462,7 +462,7 @@ dc1394_format7_get_color_codings(dc1394camera_t *camera,
 dc1394error_t
 dc1394_format7_get_pixel_number(dc1394camera_t *camera,
  				dc1394video_mode_t video_mode,
-				uint_t *pixnum)
+				uint32_t *pixnum)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -473,7 +473,7 @@ dc1394_format7_get_pixel_number(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_PIXEL_NUMBER_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get pixel number");
 
-  *pixnum= (uint_t) value;
+  *pixnum= (uint32_t) value;
   
   return err;
 }
@@ -507,8 +507,8 @@ dc1394_format7_get_total_bytes(dc1394camera_t *camera,
 
 dc1394error_t
 dc1394_format7_get_packet_para(dc1394camera_t *camera,
-			       dc1394video_mode_t video_mode, uint_t *min_bytes,
-			       uint_t *max_bytes)
+			       dc1394video_mode_t video_mode, uint32_t *min_bytes,
+			       uint32_t *max_bytes)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -519,8 +519,8 @@ dc1394_format7_get_packet_para(dc1394camera_t *camera,
   err= GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_PACKET_PARA_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get F7 packet parameters");
 
-  *min_bytes= (uint_t) ( value & 0xFFFF0000UL ) >> 16;
-  *max_bytes= (uint_t) ( value & 0x0000FFFFUL );       
+  *min_bytes= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
+  *max_bytes= (uint32_t) ( value & 0x0000FFFFUL );       
   
   return err;
 }
@@ -528,7 +528,7 @@ dc1394_format7_get_packet_para(dc1394camera_t *camera,
 dc1394error_t
 dc1394_format7_get_byte_per_packet(dc1394camera_t *camera,
 				   dc1394video_mode_t video_mode,
-				   uint_t *packet_bytes)
+				   uint32_t *packet_bytes)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -539,7 +539,7 @@ dc1394_format7_get_byte_per_packet(dc1394camera_t *camera,
   err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
   DC1394_ERR_RTN(err, "Could not get bytes per packet");
 
-  *packet_bytes= (uint_t) ( value & 0xFFFF0000UL ) >> 16;
+  *packet_bytes= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
   
   if (packet_bytes==0) {
     printf("(%s): BYTES_PER_PACKET is zero. This should not happen.\n", __FILE__);
@@ -550,8 +550,8 @@ dc1394_format7_get_byte_per_packet(dc1394camera_t *camera,
 
 dc1394error_t
 dc1394_format7_set_image_position(dc1394camera_t *camera,
- 				  dc1394video_mode_t video_mode, uint_t left,
- 				  uint_t top)
+ 				  dc1394video_mode_t video_mode, uint32_t left,
+ 				  uint32_t top)
 {
   dc1394error_t err;
 
@@ -570,8 +570,8 @@ dc1394_format7_set_image_position(dc1394camera_t *camera,
 
 dc1394error_t
 dc1394_format7_set_image_size(dc1394camera_t *camera,
-                              dc1394video_mode_t video_mode, uint_t width,
-                              uint_t height)
+                              dc1394video_mode_t video_mode, uint32_t width,
+                              uint32_t height)
 {
   dc1394error_t err;
 
@@ -618,7 +618,7 @@ dc1394_format7_set_color_coding(dc1394camera_t *camera,
 dc1394error_t
 dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
  				   dc1394video_mode_t video_mode,
-                                   uint_t packet_bytes)
+                                   uint32_t packet_bytes)
 {
   dc1394error_t err;
 
@@ -640,7 +640,7 @@ dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
 
 dc1394error_t
 dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera,
-					       dc1394video_mode_t video_mode, uint_t *bpp)
+					       dc1394video_mode_t video_mode, uint32_t *bpp)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -651,18 +651,18 @@ dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera,
   err= GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
   DC1394_ERR_RTN(err, "Could not get recommended BPP");
 
-  *bpp= (uint_t) ( value & 0x0000FFFFUL );
+  *bpp= (uint32_t) ( value & 0x0000FFFFUL );
   
   return err;
 }
 
 dc1394error_t
 dc1394_format7_get_packet_per_frame(dc1394camera_t *camera,
-				    dc1394video_mode_t video_mode, uint_t *ppf)
+				    dc1394video_mode_t video_mode, uint32_t *ppf)
 {
   dc1394error_t err;
   quadlet_t value;
-  uint_t packet_bytes;
+  uint32_t packet_bytes;
   uint64_t total_bytes;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
@@ -673,7 +673,7 @@ dc1394_format7_get_packet_per_frame(dc1394camera_t *camera,
     err= GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ, &value);
     DC1394_ERR_RTN(err, "Could not get the number of packets per frame");
 
-    *ppf= (uint_t) (value);
+    *ppf= (uint32_t) (value);
     
     return err;
   }
@@ -702,8 +702,8 @@ dc1394_format7_get_packet_per_frame(dc1394camera_t *camera,
 dc1394error_t
 dc1394_format7_get_unit_position(dc1394camera_t *camera,
 				 dc1394video_mode_t video_mode,
-				 uint_t *horizontal_pos,
-				 uint_t *vertical_pos)
+				 uint32_t *horizontal_pos,
+				 uint32_t *vertical_pos)
 {
   dc1394error_t err;
   quadlet_t value;
@@ -721,8 +721,8 @@ dc1394_format7_get_unit_position(dc1394camera_t *camera,
     DC1394_ERR_RTN(err, "Could not get unit size");
   }
   
-  *horizontal_pos = (uint_t) (( value & 0xFFFF0000UL )>>16);
-  *vertical_pos   = (uint_t) ( value & 0x0000FFFFUL );
+  *horizontal_pos = (uint32_t) (( value & 0xFFFF0000UL )>>16);
+  *vertical_pos   = (uint32_t) ( value & 0x0000FFFFUL );
   
   return err;
 }
@@ -747,7 +747,7 @@ dc1394_format7_get_frame_interval(dc1394camera_t *camera,
     
 dc1394error_t
 dc1394_format7_get_data_depth(dc1394camera_t *camera,
-			      dc1394video_mode_t video_mode, uint_t *data_depth)
+			      dc1394video_mode_t video_mode, uint32_t *data_depth)
 {   
   dc1394error_t err;
   quadlet_t value;

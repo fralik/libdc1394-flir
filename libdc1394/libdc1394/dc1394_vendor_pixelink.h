@@ -108,7 +108,7 @@ typedef float float32_t;
 
 /* GPIO Information structure */
 typedef struct __dc1394_pxl_gpio_info_struct {
-  uint_t       number;
+  uint32_t       number;
   dc1394bool_t presence;
   dc1394bool_t polarity;
   dc1394bool_t mode_strobe;
@@ -145,30 +145,30 @@ dc1394error_t
 dc1394_pxl_convert_quadlet_to_float32(quadlet_t , double *);
 
 dc1394error_t
-dc1394_pxl_get_camera_name(dc1394camera_t *, char *, uint_t);
+dc1394_pxl_get_camera_name(dc1394camera_t *, char *, uint32_t);
 
 dc1394error_t
 dc1394_pxl_get_camera_info(dc1394camera_t *, dc1394_pxl_camera_info_t *);
 
 dc1394error_t
-dc1394_pxl_get_camera_serial_number(dc1394camera_t *, uint_t *);
+dc1394_pxl_get_camera_serial_number(dc1394camera_t *, uint32_t *);
 
 dc1394error_t
-dc1394_pxl_get_gpo_param(dc1394camera_t *, uint_t, quadlet_t *, quadlet_t *, quadlet_t *);
+dc1394_pxl_get_gpo_param(dc1394camera_t *, uint32_t, quadlet_t *, quadlet_t *, quadlet_t *);
 
 dc1394error_t
-dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *, uint_t, quadlet_t *, 
+dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *, uint32_t, quadlet_t *, 
 		quadlet_t *, quadlet_t *, quadlet_t *, quadlet_t *, quadlet_t *, 
 		quadlet_t *, quadlet_t *, quadlet_t *);
 
 dc1394error_t
-dc1394_pxl_get_gpo_config(dc1394camera_t *, uint_t, quadlet_t *);
+dc1394_pxl_get_gpo_config(dc1394camera_t *, uint32_t, quadlet_t *);
 
 dc1394error_t
-dc1394_pxl_set_gpo_config(dc1394camera_t *, uint_t, quadlet_t);
+dc1394_pxl_set_gpo_config(dc1394camera_t *, uint32_t, quadlet_t);
 
 dc1394error_t
-dc1394_pxl_set_gpio_mode_param(dc1394camera_t *, uint_t , 
+dc1394_pxl_set_gpio_mode_param(dc1394camera_t *, uint32_t , 
 	dc1394pxl_gpio_polarity_t, dc1394pxl_gpio_mode_t, double, double, double);
 
 dc1394error_t

@@ -70,7 +70,7 @@ dc1394_pxl_convert_quadlet_to_float32(quadlet_t i, double *d) {
  * Internal function.
  */
 dc1394error_t
-dc1394_pxl_read_n_bytes(dc1394camera_t *camera, quadlet_t offset, char *str, uint_t n) {
+dc1394_pxl_read_n_bytes(dc1394camera_t *camera, quadlet_t offset, char *str, uint32_t n) {
   if (camera == NULL)
 	return DC1394_FAILURE;
 
@@ -92,7 +92,7 @@ dc1394_pxl_read_n_bytes(dc1394camera_t *camera, quadlet_t offset, char *str, uin
  * the camera.
  */
 dc1394error_t
-dc1394_pxl_get_camera_serial_number(dc1394camera_t *camera, uint_t *serial_num_int) {
+dc1394_pxl_get_camera_serial_number(dc1394camera_t *camera, uint32_t *serial_num_int) {
   if (camera == NULL)
 	return DC1394_FAILURE;
 
@@ -241,7 +241,7 @@ dc1394_pxl_get_gpio_inq(dc1394camera_t *camera, dc1394_pxl_gpio_info_t *gpio_inf
   printf("                                 |||||  |  ||\n");
   printf("  GPIO_INQ : ");
 
-  uint_t i;
+  uint32_t i;
   for (i = 0; i < 32; i++) {
 	(gpio_inq & (1<<i))? printf("1"): printf("0");
   }
@@ -255,7 +255,7 @@ dc1394_pxl_get_gpio_inq(dc1394camera_t *camera, dc1394_pxl_gpio_info_t *gpio_inf
  * Function to get the GPO parameters Parameter1, Parameter2, Parameter3
  */
 dc1394error_t
-dc1394_pxl_get_gpo_param(dc1394camera_t *camera, uint_t gpio_id, 
+dc1394_pxl_get_gpo_param(dc1394camera_t *camera, uint32_t gpio_id, 
 	quadlet_t *p1_val, quadlet_t *p2_val, quadlet_t *p3_val) {
   dc1394error_t err;
   dc1394_pxl_gpio_info_t gpio_info;
@@ -299,7 +299,7 @@ dc1394_pxl_get_gpo_param(dc1394camera_t *camera, uint_t gpio_id,
  * as well as the corresponding minimum and maximum values.
  */
 dc1394error_t
-dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *camera, uint_t gpio_id,
+dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *camera, uint32_t gpio_id,
 	quadlet_t *p1_val, quadlet_t *p2_val, quadlet_t *p3_val,
 	quadlet_t *p1_min, quadlet_t *p2_min, quadlet_t *p3_min,
 	quadlet_t *p1_max, quadlet_t *p2_max, quadlet_t *p3_max) {
@@ -374,7 +374,7 @@ dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *camera, uint_t gpio_id,
  * 
  */
 dc1394error_t
-dc1394_pxl_set_gpo_param(dc1394camera_t *camera, uint_t gpio_id, 
+dc1394_pxl_set_gpo_param(dc1394camera_t *camera, uint32_t gpio_id, 
 	quadlet_t p1_val, quadlet_t p2_val, quadlet_t p3_val) {
 
   dc1394error_t err;
@@ -413,7 +413,7 @@ dc1394_pxl_set_gpo_param(dc1394camera_t *camera, uint_t gpio_id,
  * Function to read GPIO config. Internal function?
  */
 dc1394error_t
-dc1394_pxl_get_gpo_config(dc1394camera_t *camera, uint_t gpio_id, 
+dc1394_pxl_get_gpo_config(dc1394camera_t *camera, uint32_t gpio_id, 
 		quadlet_t *gpio_cfg) {
   dc1394error_t err;
   if (camera == NULL)
@@ -433,7 +433,7 @@ dc1394_pxl_get_gpo_config(dc1394camera_t *camera, uint_t gpio_id,
  * Function to set GPIO config. Internal function?
  */
 dc1394error_t
-dc1394_pxl_set_gpo_config(dc1394camera_t *camera, uint_t gpio_id, quadlet_t gpio_cfg) {
+dc1394_pxl_set_gpo_config(dc1394camera_t *camera, uint32_t gpio_id, quadlet_t gpio_cfg) {
   
   dc1394error_t err;
   if (camera == NULL)
@@ -478,7 +478,7 @@ dc1394_pxl_print_camera_info(dc1394camera_t *camera) {
  * Function to activate GPIO mode with the parameters
  */
 dc1394error_t
-dc1394_pxl_set_gpio_mode_param(dc1394camera_t *camera, uint_t gpio_id, 
+dc1394_pxl_set_gpio_mode_param(dc1394camera_t *camera, uint32_t gpio_id, 
 	dc1394pxl_gpio_polarity_t gpio_polarity, dc1394pxl_gpio_mode_t gpio_mode, 
 	double f1_val, double f2_val, double f3_val) {
 

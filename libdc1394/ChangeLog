@@ -947,3 +947,14 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       dc1394_video_set_transmission(). This way we can start the transmission
       from another program or a remote host.
     * release 2.0.0-rc3
+
+2006-08-16 Mikael Olenfalk <mikael.olenfalk@tobii.com>
+    * removed defines of uint_t, uchar_t, uint32_t and uint64_t from
+      dc1394_control.h, includes stdint.h instead because including
+      dc1394_control.h breaks the BOOST libraries
+    * fixed all files to use defines from stdint.h:
+       uint_t -> uint32_t
+       uchar_t -> uint8_t
+	
+2006-08-17 Damien <ddouxchamps@users.sf.net>
+    * small beautifications and further cleanup of int types.

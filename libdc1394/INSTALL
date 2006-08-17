@@ -41,10 +41,21 @@ a newer version of `autoconf'.
 
 The simplest way to compile this package is:
 
+  0. If you use a CVS tree:
+     (go directly to 1. if you use a source package)
+
+     `cd' to the directory containing the package's source code and type
+     `autoreconf -i -f' to create the `configure' file. This step is not
+     necessary if the configure file already exists.
+
+     Note that this step used to be performed with the command
+     `sh autogen.sh'. This creation method is deprecated and the other
+     procedure mentionned above must be used instead.
+
   1. `cd' to the directory containing the package's source code and type
      `./configure' to configure the package for your system.  If you're
      using `csh' on an old version of System V, you might need to type
-     `sh ./configure' instead to prevent `csh' from trying to execute
+     `sh ./configure' instead to prevent `csh'  from trying to execute
      `configure' itself.
 
      Running `configure' takes awhile.  While running, it prints some
@@ -66,6 +77,13 @@ The simplest way to compile this package is:
      for the package's developers.  If you use it, you may have to get
      all sorts of other programs in order to regenerate files that came
      with the distribution.
+
+** From CVS:
+
+  1. `cd' to the directory containing the package's source code and type
+     `autoreconf -i -f' to configure the package for your system.
+
+
 
 Compilers and Options
 =====================

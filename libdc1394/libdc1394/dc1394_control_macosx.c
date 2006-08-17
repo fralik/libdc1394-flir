@@ -34,7 +34,7 @@
 #include "dc1394_utils.h"
 
 dc1394camera_t*
-dc1394_new_camera_platform (uint_t port, nodeid_t node)
+dc1394_new_camera_platform (uint32_t port, nodeid_t node)
 {
   dc1394camera_macosx_t *cam;
 
@@ -67,13 +67,13 @@ dc1394_print_camera_info_platform (dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   printf("------ Camera platform-specific information ------\n");
-  printf("Interface                       :     0x%x\n", (uint_t)craw->iface);
+  printf("Interface                       :     0x%x\n", (uint32_t)craw->iface);
   printf("Generation                      :     %lu\n", craw->generation);
   return DC1394_SUCCESS;
 }
 
 dc1394error_t
-dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
+dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras)
 {
   kern_return_t res;
   mach_port_t master_port;
@@ -84,7 +84,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
   CFNumberRef spec_id_ref;
   dc1394camera_t **cameras;
   int numCam;
-  uint_t allocated_size;
+  uint32_t allocated_size;
 
   res = IOMasterPort (MACH_PORT_NULL, &master_port);
   if (res != KERN_SUCCESS) {
@@ -114,7 +114,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras)
     SInt32 score;
     dc1394camera_macosx_t * craw;
     dc1394camera_t * camera;
-    uint_t err;
+    uint32_t err;
 
     camera = dc1394_new_camera (0, 0);
     if (!camera) {

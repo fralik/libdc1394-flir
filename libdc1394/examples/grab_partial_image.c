@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 {
   FILE* imagefile;
   dc1394camera_t *camera, **cameras=NULL;
-  uint_t numCameras;
+  uint32_t numCameras;
   int grab_n_frames = 10;
   struct tms tms_buf;
   clock_t start_time;

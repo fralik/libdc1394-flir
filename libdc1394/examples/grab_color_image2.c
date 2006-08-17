@@ -25,7 +25,7 @@
 /*-----------------------------------------------------------------------
  *  Prints the type of format to standard out
  *-----------------------------------------------------------------------*/
-void print_format( uint_t format )
+void print_format( uint32_t format )
 {
 #define print_case(A) case A: printf(#A ""); break;
 
@@ -64,8 +64,8 @@ void print_format( uint_t format )
 /*-----------------------------------------------------------------------
  *  Returns the number of pixels in the image based upon the format
  *-----------------------------------------------------------------------*/
-uint_t get_num_pixels(dc1394camera_t *camera, uint_t format ) {
-  uint_t w,h;
+uint32_t get_num_pixels(dc1394camera_t *camera, uint32_t format ) {
+  uint32_t w,h;
 
   dc1394_get_image_size_from_video_mode(camera, format,&w,&h);
 
@@ -75,7 +75,7 @@ uint_t get_num_pixels(dc1394camera_t *camera, uint_t format ) {
 /*-----------------------------------------------------------------------
  *  Prints the type of color encoding
  *-----------------------------------------------------------------------*/
-void print_color_coding( uint_t color_id )
+void print_color_coding( uint32_t color_id )
 {
   switch( color_id ) {
   case DC1394_COLOR_CODING_MONO8:
@@ -121,7 +121,7 @@ void print_color_coding( uint_t color_id )
 /*-----------------------------------------------------------------------
  *  Prints various information about the mode the camera is in
  *-----------------------------------------------------------------------*/
-void print_mode_info( dc1394camera_t *camera , uint_t mode )
+void print_mode_info( dc1394camera_t *camera , uint32_t mode )
 {
   int j;
 
@@ -137,7 +137,7 @@ void print_mode_info( dc1394camera_t *camera , uint_t mode )
   
   printf("Frame Rates:\n");
   for( j = 0; j < framerates.num; j++ ) {
-    uint_t rate = framerates.framerates[j];
+    uint32_t rate = framerates.framerates[j];
     float f_rate;
     dc1394_framerate_as_float(rate,&f_rate);
     printf("  [%d] rate = %f\n",j,f_rate );
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
   FILE* imagefile;
   dc1394camera_t *camera, **cameras=NULL;
   //int numNodes;
-  uint_t numCameras, i;
+  uint32_t numCameras, i;
   dc1394featureset_t features;
   unsigned int width, height;
   
@@ -204,11 +204,11 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  List Capture Modes
    *-----------------------------------------------------------------------*/
-  uint_t selected_mode=0;
+  uint32_t selected_mode=0;
   /*
   printf("Listing Modes\n");
   for(i = 0; i < modes.num; i++ ) {
-    uint_t mode = modes.modes[i];
+    uint32_t mode = modes.modes[i];
     
     print_mode_info( camera , mode );
 
@@ -309,9 +309,9 @@ int main(int argc, char *argv[])
           &width, &height);
   uint64_t numPixels = height*width;
 
-  uchar_t *rgb_image = (uchar_t *)malloc(3*numPixels);
+  uint8_t *rgb_image = (uint8_t *)malloc(3*numPixels);
 
-  dc1394_convert_to_RGB8((uchar_t *)dc1394_capture_get_dma_buffer (camera),
+  dc1394_convert_to_RGB8((uint8_t *)dc1394_capture_get_dma_buffer (camera),
           rgb_image, width, height, DC1394_BYTE_ORDER_YUYV, selected_mode, 16);
 
   /*-----------------------------------------------------------------------

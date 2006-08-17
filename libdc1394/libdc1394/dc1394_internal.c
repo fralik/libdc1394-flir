@@ -125,7 +125,7 @@ const int quadlets_per_packet_format_2[64] =
 };
 
 dc1394camera_t*
-dc1394_new_camera(uint_t port, nodeid_t node)
+dc1394_new_camera(uint32_t port, nodeid_t node)
 {
   dc1394camera_t *cam;
  
@@ -154,11 +154,11 @@ dc1394_new_camera(uint_t port, nodeid_t node)
  per packet
 *********************************************************/
 dc1394error_t
-_dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame_rate, uint_t *qpp) // ERROR handling to be updated
+_dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame_rate, uint32_t *qpp) // ERROR handling to be updated
 {
-  uint_t mode_index;
-  uint_t frame_rate_index= frame_rate - DC1394_FRAMERATE_MIN;
-  uint_t format;
+  uint32_t mode_index;
+  uint32_t frame_rate_index= frame_rate - DC1394_FRAMERATE_MIN;
+  uint32_t format;
   dc1394error_t err;
 
   err=_dc1394_get_format_from_mode(mode, &format);
@@ -220,10 +220,10 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
  frame given the format and mode
 ***********************************************************/
 dc1394error_t
-_dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint_t *quads) 
+_dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *quads) 
 {
 
-  uint_t w, h, color_coding;
+  uint32_t w, h, color_coding;
   float bpp;
   dc1394error_t err;
 
@@ -236,7 +236,7 @@ _dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mo
   err=dc1394_get_bytes_per_pixel(color_coding, &bpp);
   DC1394_ERR_RTN(err, "Invalid color mode ID");
 
-  *quads=(uint_t)(w*h*bpp/4);
+  *quads=(uint32_t)(w*h*bpp/4);
 
   return err;
 }
@@ -264,7 +264,7 @@ IsFeatureBitSet(quadlet_t value, dc1394feature_t feature)
 }
 
 dc1394error_t
-_dc1394_get_format_from_mode(dc1394video_mode_t mode, uint_t *format)
+_dc1394_get_format_from_mode(dc1394video_mode_t mode, uint32_t *format)
 {
   dc1394error_t err=DC1394_SUCCESS;
 
@@ -293,7 +293,7 @@ _dc1394_get_format_from_mode(dc1394video_mode_t mode, uint_t *format)
 
  
 dc1394error_t
-dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel)
+dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
 {
   dc1394error_t err;
   quadlet_t value_inq, value;

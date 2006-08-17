@@ -117,16 +117,16 @@ enum {
 /* Internal functions required by two different source files */
 
 dc1394error_t 
-_dc1394_get_quadlets_per_packet(uint_t mode, uint_t frame_rate, uint_t *qpp);
+_dc1394_get_quadlets_per_packet(uint32_t mode, uint32_t frame_rate, uint32_t *qpp);
 
 dc1394error_t
-_dc1394_quadlets_from_format(dc1394camera_t *camera, uint_t mode, uint_t *quads);
+_dc1394_quadlets_from_format(dc1394camera_t *camera, uint32_t mode, uint32_t *quads);
 
 dc1394error_t
-_dc1394_get_format_from_mode(uint_t mode, uint_t *format);
+_dc1394_get_format_from_mode(uint32_t mode, uint32_t *format);
 		
 dc1394bool_t
-IsFeatureBitSet(quadlet_t value, uint_t feature);
+IsFeatureBitSet(quadlet_t value, uint32_t feature);
 
 dc1394error_t
 dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera);
@@ -135,21 +135,21 @@ dc1394error_t
 dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera);
 
 dc1394error_t
-dc1394_video_set_iso_channel(dc1394camera_t *camera, uint_t channel);
+dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel);
 /*
 dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);
 */
 dc1394camera_t*
-dc1394_new_camera (uint_t port, nodeid_t node);
+dc1394_new_camera (uint32_t port, nodeid_t node);
 dc1394camera_t*
-dc1394_new_camera_platform (uint_t port, nodeid_t node);
+dc1394_new_camera_platform (uint32_t port, nodeid_t node);
 void
 dc1394_free_camera_platform (dc1394camera_t *camera);
 dc1394error_t
 dc1394_print_camera_info_platform (dc1394camera_t *camera);
 dc1394error_t
-dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint_t* numCameras);
+dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras);
 dc1394error_t
 GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value);
 dc1394error_t

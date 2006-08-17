@@ -36,7 +36,7 @@
    out=in;
   
 void
-ClearBorders(uchar_t *rgb, int sx, int sy, int w)
+ClearBorders(uint8_t *rgb, int sx, int sy, int w)
 {
     int i, j;
     // black edges are added with a width w:
@@ -95,7 +95,7 @@ ClearBorders_uint16(uint16_t * rgb, int sx, int sy, int w)
 /* insprired by OpenCV's Bayer decoding */
 
 void
-dc1394_bayer_NearestNeighbor(const uchar_t *restrict bayer, uchar_t *restrict rgb, int sx, int sy, int tile)
+dc1394_bayer_NearestNeighbor(const uint8_t *restrict bayer, uint8_t *restrict rgb, int sx, int sy, int tile)
 {
     const int bayerStep = sx;
     const int rgbStep = 3 * sx;
@@ -125,7 +125,7 @@ dc1394_bayer_NearestNeighbor(const uchar_t *restrict bayer, uchar_t *restrict rg
 
     for (; height--; bayer += bayerStep, rgb += rgbStep) {
       //int t0, t1;
-	const uchar_t *bayerEnd = bayer + width;
+	const uint8_t *bayerEnd = bayer + width;
 
         if (start_with_green) {
             rgb[-blue] = bayer[1];
@@ -175,7 +175,7 @@ dc1394_bayer_NearestNeighbor(const uchar_t *restrict bayer, uchar_t *restrict rg
 
 /* OpenCV's Bayer decoding */
 void
-dc1394_bayer_Bilinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int sx, int sy, int tile)
+dc1394_bayer_Bilinear(const uint8_t *restrict bayer, uint8_t *restrict rgb, int sx, int sy, int tile)
 {
     const int bayerStep = sx;
     const int rgbStep = 3 * sx;
@@ -205,16 +205,16 @@ dc1394_bayer_Bilinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int 
 
     for (; height--; bayer += bayerStep, rgb += rgbStep) {
 	int t0, t1;
-	const uchar_t *bayerEnd = bayer + width;
+	const uint8_t *bayerEnd = bayer + width;
 
 	if (start_with_green) {
 	    /* OpenCV has a bug in the next line, which was
 	       t0 = (bayer[0] + bayer[bayerStep * 2] + 1) >> 1; */
 	    t0 = (bayer[1] + bayer[bayerStep * 2 + 1] + 1) >> 1;
 	    t1 = (bayer[bayerStep] + bayer[bayerStep + 2] + 1) >> 1;
-	    rgb[-blue] = (uchar_t) t0;
+	    rgb[-blue] = (uint8_t) t0;
 	    rgb[0] = bayer[bayerStep + 1];
-	    rgb[blue] = (uchar_t) t1;
+	    rgb[blue] = (uint8_t) t1;
 	    bayer++;
 	    rgb += 3;
 	}
@@ -226,16 +226,16 @@ dc1394_bayer_Bilinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int 
 		t1 = (bayer[1] + bayer[bayerStep] +
 		      bayer[bayerStep + 2] + bayer[bayerStep * 2 + 1] +
 		      2) >> 2;
-		rgb[-1] = (uchar_t) t0;
-		rgb[0] = (uchar_t) t1;
+		rgb[-1] = (uint8_t) t0;
+		rgb[0] = (uint8_t) t1;
 		rgb[1] = bayer[bayerStep + 1];
 
 		t0 = (bayer[2] + bayer[bayerStep * 2 + 2] + 1) >> 1;
 		t1 = (bayer[bayerStep + 1] + bayer[bayerStep + 3] +
 		      1) >> 1;
-		rgb[2] = (uchar_t) t0;
+		rgb[2] = (uint8_t) t0;
 		rgb[3] = bayer[bayerStep + 2];
-		rgb[4] = (uchar_t) t1;
+		rgb[4] = (uint8_t) t1;
 	    }
 	} else {
 	    for (; bayer <= bayerEnd - 2; bayer += 2, rgb += 6) {
@@ -244,16 +244,16 @@ dc1394_bayer_Bilinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int 
 		t1 = (bayer[1] + bayer[bayerStep] +
 		      bayer[bayerStep + 2] + bayer[bayerStep * 2 + 1] +
 		      2) >> 2;
-		rgb[1] = (uchar_t) t0;
-		rgb[0] = (uchar_t) t1;
+		rgb[1] = (uint8_t) t0;
+		rgb[0] = (uint8_t) t1;
 		rgb[-1] = bayer[bayerStep + 1];
 
 		t0 = (bayer[2] + bayer[bayerStep * 2 + 2] + 1) >> 1;
 		t1 = (bayer[bayerStep + 1] + bayer[bayerStep + 3] +
 		      1) >> 1;
-		rgb[4] = (uchar_t) t0;
+		rgb[4] = (uint8_t) t0;
 		rgb[3] = bayer[bayerStep + 2];
-		rgb[2] = (uchar_t) t1;
+		rgb[2] = (uint8_t) t1;
 	    }
 	}
 
@@ -263,8 +263,8 @@ dc1394_bayer_Bilinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int 
 	    t1 = (bayer[1] + bayer[bayerStep] +
 		  bayer[bayerStep + 2] + bayer[bayerStep * 2 + 1] +
 		  2) >> 2;
-	    rgb[-blue] = (uchar_t) t0;
-	    rgb[0] = (uchar_t) t1;
+	    rgb[-blue] = (uint8_t) t0;
+	    rgb[0] = (uint8_t) t1;
 	    rgb[blue] = bayer[bayerStep + 1];
 	    bayer++;
 	    rgb += 3;
@@ -282,7 +282,7 @@ dc1394_bayer_Bilinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int 
    Bayer-Patterned Color Images, by Henrique S. Malvar, Li-wei He, and
    Ross Cutler, in ICASSP'04 */
 void
-dc1394_bayer_HQLinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int sx, int sy, int tile)
+dc1394_bayer_HQLinear(const uint8_t *restrict bayer, uint8_t *restrict rgb, int sx, int sy, int tile)
 {
     const int bayerStep = sx;
     const int rgbStep = 3 * sx;
@@ -303,7 +303,7 @@ dc1394_bayer_HQLinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int 
 
     for (; height--; bayer += bayerStep, rgb += rgbStep) {
 	int t0, t1;
-	const uchar_t *bayerEnd = bayer + width;
+	const uint8_t *bayerEnd = bayer + width;
 	const int bayerStep2 = bayerStep * 2;
 	const int bayerStep3 = bayerStep * 3;
 	const int bayerStep4 = bayerStep * 4;
@@ -478,9 +478,9 @@ dc1394_bayer_HQLinear(const uchar_t *restrict bayer, uchar_t *restrict rgb, int 
      interpolating a full color image utilizing chrominance gradients"
      U.S. Patent 5,373,322) */
 void
-dc1394_bayer_EdgeSense(const uchar_t *restrict bayer, uchar_t *restrict rgb, int sx, int sy, int tile)
+dc1394_bayer_EdgeSense(const uint8_t *restrict bayer, uint8_t *restrict rgb, int sx, int sy, int tile)
 {
-    uchar_t *outR, *outG, *outB;
+    uint8_t *outR, *outG, *outB;
     register int i3, j3, base;
     int i, j;
     int dh, dv;
@@ -755,9 +755,9 @@ dc1394_bayer_EdgeSense(const uchar_t *restrict bayer, uchar_t *restrict rgb, int
 
 /* coriander's Bayer decoding */
 void
-dc1394_bayer_Downsample(const uchar_t *restrict bayer, uchar_t *restrict rgb, int sx, int sy, int tile)
+dc1394_bayer_Downsample(const uint8_t *restrict bayer, uint8_t *restrict rgb, int sx, int sy, int tile)
 {
-    uchar_t *outR, *outG, *outB;
+    uint8_t *outR, *outG, *outB;
     register int i, j;
     int tmp;
 
@@ -820,7 +820,7 @@ dc1394_bayer_Downsample(const uchar_t *restrict bayer, uchar_t *restrict rgb, in
 
 /* this is the method used inside AVT cameras. See AVT docs. */
 void
-dc1394_bayer_Simple(const uchar_t *restrict bayer, uchar_t *restrict rgb, int sx, int sy, int tile)
+dc1394_bayer_Simple(const uint8_t *restrict bayer, uint8_t *restrict rgb, int sx, int sy, int tile)
 {
     const int bayerStep = sx;
     const int rgbStep = 3 * sx;
@@ -849,7 +849,7 @@ dc1394_bayer_Simple(const uchar_t *restrict bayer, uchar_t *restrict rgb, int sx
     height -= 1;
 
     for (; height--; bayer += bayerStep, rgb += rgbStep) {
-        const uchar_t *bayerEnd = bayer + width;
+        const uint8_t *bayerEnd = bayer + width;
 
         if (start_with_green) {
             rgb[-blue] = bayer[1];
@@ -2099,7 +2099,7 @@ dc1394_bayer_VNG_uint16(const uint16_t *restrict bayer,
 }
 
 dc1394error_t
-dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t method)
+dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb, uint32_t sx, uint32_t sy, uint32_t tile, uint32_t method)
 {
   switch (method) {
   case DC1394_BAYER_METHOD_NEAREST:
@@ -2129,7 +2129,7 @@ dc1394_bayer_decoding_8bit(const uchar_t *restrict bayer, uchar_t *restrict rgb,
 }
 
 dc1394error_t
-dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint_t sx, uint_t sy, uint_t tile, uint_t bits, uint_t method)
+dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint32_t sx, uint32_t sy, uint32_t tile, uint32_t bits, uint32_t method)
 {
   switch (method) {
   case DC1394_BAYER_METHOD_NEAREST:

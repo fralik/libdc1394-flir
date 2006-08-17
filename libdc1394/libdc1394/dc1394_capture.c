@@ -244,17 +244,17 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
 
 ******************************************************/
 dc1394error_t
-_dc1394_capture_dma_setup(dc1394camera_t *camera, uint_t num_dma_buffers)
+_dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   struct video1394_mmap vmmap;
   struct video1394_wait vwait;
-  uint_t i;
+  uint32_t i;
 
   /* using_fd counter array NULL if not used yet -- initialize */
   if ( _dc1394_num_using_fd == NULL ) {
-    _dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(uint_t) );
-    _dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(uint_t) );
+    _dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(uint32_t) );
+    _dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(uint32_t) );
   }
 
   if (_dc1394_open_dma_device(camera) != DC1394_SUCCESS) {
@@ -299,7 +299,7 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint_t num_dma_buffers)
 				 PROT_READ,MAP_SHARED, craw->capture.dma_fd, 0);
   
   /* make sure the ring buffer was allocated */
-  if (craw->capture.dma_ring_buffer == (uchar_t*)(-1)) {
+  if (craw->capture.dma_ring_buffer == (uint8_t*)(-1)) {
     printf("(%s) mmap failed!\n", __FILE__);
     ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
     camera->capture_is_set=0;
@@ -350,7 +350,7 @@ dc1394_capture_setup(dc1394camera_t *camera)
 	  craw->capture.quadlets_per_frame, craw->capture.quadlets_per_packet,
 	  craw->capture.frame_width, craw->capture.frame_height);
   */
-  craw->capture.capture_buffer= (uchar_t*)malloc(craw->capture.quadlets_per_frame*4);
+  craw->capture.capture_buffer= (uint8_t*)malloc(craw->capture.quadlets_per_frame*4);
   
   if (craw->capture.capture_buffer == NULL) {
     printf("(%s) unable to allocate memory for capture buffer\n", __FILE__);
@@ -363,7 +363,7 @@ dc1394_capture_setup(dc1394camera_t *camera)
 }
 
 dc1394error_t
-dc1394_capture_setup_dma(dc1394camera_t *camera, uint_t num_dma_buffers, dc1394ring_buffer_policy_t policy)
+dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers, dc1394ring_buffer_policy_t policy)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   dc1394error_t err;
@@ -449,7 +449,7 @@ dc1394_capture_stop(dc1394camera_t *camera)
  CAPTURE
 *****************************************************/
 dc1394error_t 
-dc1394_capture(dc1394camera_t **cams, uint_t num) 
+dc1394_capture(dc1394camera_t **cams, uint32_t num) 
 {
   int i, j;
   _dc1394_all_captured= num;
@@ -527,7 +527,7 @@ dc1394_capture(dc1394camera_t **cams, uint_t num)
 
 
 dc1394error_t
-dc1394_capture_dma(dc1394camera_t **cameras, uint_t num, dc1394video_policy_t policy) 
+dc1394_capture_dma(dc1394camera_t **cameras, uint32_t num, dc1394video_policy_t policy) 
 {
   struct video1394_wait vwait;
   int i;
@@ -598,7 +598,7 @@ dc1394_capture_dma(dc1394camera_t **cameras, uint_t num, dc1394video_policy_t po
     //fprintf(stderr,"test3\n");
     
     /* point to the next buffer in the dma ringbuffer */
-    captures[i]->capture_buffer = (uchar_t*)(captures[i]->dma_ring_buffer +
+    captures[i]->capture_buffer = (uint8_t*)(captures[i]->dma_ring_buffer +
 						 captures[i]->dma_last_buffer *
 						 captures[i]->dma_frame_size);
     
@@ -637,7 +637,7 @@ dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera)
 
 /* functions to access the capture data */
 
-uchar_t*
+uint8_t*
 dc1394_capture_get_dma_buffer(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
@@ -651,28 +651,28 @@ dc1394_capture_get_dma_filltime(dc1394camera_t *camera)
   return &(craw->capture.filltime);
 }
 
-uint_t
+uint32_t
 dc1394_capture_get_width(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   return craw->capture.frame_width;
 }
 
-uint_t
+uint32_t
 dc1394_capture_get_height(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   return craw->capture.frame_height;
 }
 
-uint_t
+uint32_t
 dc1394_capture_get_bytes_per_frame(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   return craw->capture.quadlets_per_frame*4;
 }
 
-uint_t
+uint32_t
 dc1394_capture_get_frames_behind(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
