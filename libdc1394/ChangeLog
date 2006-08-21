@@ -961,3 +961,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2006-08-21 Damien <ddouxchamps@users.sf.net>
     * Fixed missing error message in dc1394_internal.h (thanks to ArgentumBrom)
+    * Fixed a compilation error with an AVT function
+    * Removed spurious error concerning libraw1394 when compiling under OSX
+      (thanks to Aidan Lane)
+

@@ -17,7 +17,7 @@ case "$host" in
     # installed and we want to use the newest version
     AC_CHECK_LIB(raw1394, raw1394_channel_modify,
        [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) raw1394=true LIBS="$LIBS -lraw1394";break],
-        AC_MSG_ERROR(libraw1394 not found or too old. Please upgrade to >1.2.0.))
+        AC_MSG_ERROR(libraw1394 not found or too old. Please upgrade to 1.2.0 or a more recent version.))
     ;;
   *-*-darwin*)
     AC_CHECK_LIB(IOKit, IOMasterPort,

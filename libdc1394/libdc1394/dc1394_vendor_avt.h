@@ -529,7 +529,7 @@ dc1394error_t dc1394_avt_get_pdata_buffer(dc1394camera_t *camera,
 /* will Set the  buffer	...						*/
 /************************************************************************/
 dc1394error_t dc1394_avt_set_pdata_buffer(dc1394camera_t *camera, 
-					  unsigned long buff);
+					  uint32_t buff);
 
 
 #ifdef __cplusplus
