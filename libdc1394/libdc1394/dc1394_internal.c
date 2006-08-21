@@ -66,6 +66,7 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Invalid IIDC version",
   "Invalid Format_7 color coding",
   "Invalid Format_7 elementary Bayer tile",
+  "Invalid capture mode",
   "Requested value is out of range",
   "Invalid error code",
   "Memory allocation failure",
