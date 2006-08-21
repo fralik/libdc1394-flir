@@ -6,9 +6,9 @@ bin_PROGRAMS = dc1394_vloopback
 endif
 
 if XVOK
-A = grab_gray_image grab_partial_image grab_color_image grab_color_image2 dc1394_multiview
+A = grab_gray_image grab_partial_image grab_color_image grab_color_image2 helloworld dc1394_multiview
 else
-A = grab_gray_image grab_partial_image grab_color_image grab_color_image2
+A = grab_gray_image grab_partial_image grab_color_image grab_color_image2 helloworld
 endif
 
 noinst_PROGRAMS = $(A)
@@ -21,6 +21,9 @@ if USE_MACOSX
 AM_LDFLAGS = -framework CoreFoundation
 LDADD += -lIOKit
 endif
+
+helloworld_SOURCES = helloworld.c
+helloworld_LDADD = $(LDADD) ../libdc1394/libdc1394.la
 
 grab_gray_image_SOURCES = grab_gray_image.c
 grab_gray_image_LDADD = $(LDADD) ../libdc1394/libdc1394.la

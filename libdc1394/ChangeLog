@@ -964,4 +964,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Fixed a compilation error with an AVT function
     * Removed spurious error concerning libraw1394 when compiling under OSX
       (thanks to Aidan Lane)
+    * new example minimalist program (helloworld.c)
 
