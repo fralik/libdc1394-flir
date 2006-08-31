@@ -423,6 +423,7 @@ dc1394_capture_stop(dc1394camera_t *camera)
   capture->dcl_pool = NULL;
   capture->databuf.address = (vm_address_t) NULL;
   capture->buffers = NULL;
+  capture->run_loop = NULL;
 
   camera->capture_is_set=0;
   return DC1394_SUCCESS;

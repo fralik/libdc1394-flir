@@ -966,3 +966,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       (thanks to Aidan Lane)
     * new example minimalist program (helloworld.c)
 
+2006-08-30 David Moore <dcm@acm.org>
+
+    * Unset Mac OS X run_loop at capture stop to ensure it can be used later
+	  in a different thread.
