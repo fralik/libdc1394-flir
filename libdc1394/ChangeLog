@@ -970,3 +970,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
     * Unset Mac OS X run_loop at capture stop to ensure it can be used later
 	  in a different thread.
+
+2006-08-21 Damien <ddouxchamps@users.sf.net>
+    * fix bad #includes related to libdc1394 in the example programs (thx to
+      Thomas Passot)

@@ -39,8 +39,7 @@
 #include <linux/videodev.h>
 #include <getopt.h>
 
-// #include <libraw1394/raw1394.h>
-#include <dc1394/dc1394_control.h>
+#include "libdc1394/dc1394_control.h"
 #include "affine.h"
 
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
