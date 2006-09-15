@@ -974,3 +974,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-08-21 Damien <ddouxchamps@users.sf.net>
     * fix bad #includes related to libdc1394 in the example programs (thx to
       Thomas Passot)
+
+2006-09-14 David Moore <dcm@acm.org>
+    * Added possible fix for runtime capture hangs on PPC Mac OS.

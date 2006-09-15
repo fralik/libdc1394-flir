@@ -119,6 +119,18 @@ _dc1394_capture_basic_setup(dc1394camera_t *camera)
 }
 
 static IOReturn
+supported_channels (IOFireWireLibIsochPortRef rem_port, IOFWSpeed * maxSpeed,
+  UInt64 * chanSupported)
+{
+  /* TODO: support other speeds */
+  *maxSpeed = kFWSpeed400MBit;
+
+  /* Only the first 16 channels are allowed */
+  *chanSupported = 0xFFFFULL << 48;
+  return kIOReturnSuccess;
+}
+
+static IOReturn
 allocate_port (IOFireWireLibIsochPortRef rem_port,
         IOFWSpeed speed, UInt32 chan)
 {
@@ -326,6 +338,7 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
   }
   capture->rem_port = rem_port;
   (*rem_port)->SetAllocatePortHandler (rem_port, &allocate_port);
+  (*rem_port)->SetGetSupportedHandler (rem_port, &supported_channels);
   (*rem_port)->SetRefCon ((IOFireWireLibIsochPortRef)rem_port, camera);
 
   capture->buffers = malloc (capture->num_frames * sizeof (buffer_info));
