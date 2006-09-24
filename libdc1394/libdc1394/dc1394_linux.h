@@ -20,10 +20,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef __DC1394_RAW1394_H__
-#define __DC1394_RAW1394_H__
+#ifndef __DC1394_LINUX_H__
+#define __DC1394_LINUX_H__
 
 #include <libraw1394/raw1394.h>
+#include <libraw1394/csr.h>
+#include "raw1394support.h"
 #include "dc1394_control.h"
 
 #define DC1394_CAST_CAMERA_TO_LINUX(camlinux, camera) dc1394camera_linux_t * camlinux = (dc1394camera_linux_t *) camera
@@ -54,6 +56,8 @@ typedef struct __dc1394_camera_linux
   dc1394camera_t     camera;
   raw1394handle_t    handle;
   dc1394capture_t    capture;
+  SelfIdPacket_t     selfid_packet;
+  
 } dc1394camera_linux_t;
 
 #endif

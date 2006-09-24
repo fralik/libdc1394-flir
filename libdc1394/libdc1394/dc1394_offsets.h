@@ -27,7 +27,9 @@
 
 #define ROM_BUS_INFO_BLOCK             0x400U
 #define ROM_ROOT_DIRECTORY             0x414U
+#ifndef CSR_CONFIG_ROM_END
 #define CSR_CONFIG_ROM_END             0x800U
+#endif
 
 /* Absolute feature */
 

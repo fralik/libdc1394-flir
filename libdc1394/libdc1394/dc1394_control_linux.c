@@ -22,12 +22,62 @@
  */
 #include <stdio.h>
 #include <libraw1394/raw1394.h>
+#include <libraw1394/csr.h>
 #include "config.h"
 #include "dc1394_internal.h"
+#include "raw1394support.h"
+#include "dc1394_topology.h"
 #include "dc1394_register.h"
 #include "dc1394_offsets.h"
 #include "dc1394_linux.h"
 #include "dc1394_utils.h"
+
+
+void
+GrabSelfIds(dc1394camera_t **cams, int ncams)
+{
+  // TODO TODO TODO **************************************************************
+  RAW1394topologyMap *topomap;
+  SelfIdPacket_t packet;
+  unsigned int* pselfid_int;
+  int i, port,k;
+  dc1394camera_linux_t* camera_ptr;
+  raw1394handle_t handle;
+  
+  handle=raw1394_new_handle();
+  int port_num=raw1394_get_port_info(handle, NULL, 0);
+  
+  for (port=0;port<port_num;port++) {
+    raw1394_set_port(handle,port);
+    // get and decode SelfIds.
+    topomap=raw1394GetTopologyMap(handle);
+      
+    for (i=0;i<topomap->selfIdCount;i++) {
+      pselfid_int = (unsigned int *) &topomap->selfIdPacket[i];
+      decode_selfid(&packet,pselfid_int);
+      // find the camera related to this packet:
+	
+      for (k=0;k<ncams;k++) {
+	camera_ptr = (dc1394camera_linux_t *) cams[k];
+	if ((cams[k]->node==packet.packetZero.phyID) &&
+	    (cams[k]->port==port)) { // added a check for the port too!!
+	  camera_ptr->selfid_packet=packet;
+	}
+      }
+    }
+  }
+  
+  raw1394_destroy_handle(handle);
+
+  // interpret data:
+  for (k=0;k<ncams;k++) {
+    camera_ptr = (dc1394camera_linux_t *) cams[k];
+    cams[k]->phy_delay=camera_ptr->selfid_packet.packetZero.phyDelay+DC1394_PHY_DELAY_MIN;
+    cams[k]->phy_speed=camera_ptr->selfid_packet.packetZero.phySpeed+DC1394_ISO_SPEED_MIN;
+    cams[k]->power_class=camera_ptr->selfid_packet.packetZero.powerClass+DC1394_POWER_CLASS_MIN;  
+  }
+
+}
 
 dc1394camera_t*
 dc1394_new_camera_platform (uint32_t port, nodeid_t node)
@@ -41,6 +91,7 @@ dc1394_new_camera_platform (uint32_t port, nodeid_t node)
   cam->handle=raw1394_new_handle();
   raw1394_set_port(cam->handle, port);
   cam->capture.dma_device_file=NULL;
+
   //fprintf(stderr,"Created camera with handle 0x%x\n",cam->handle);
 
   return (dc1394camera_t *) cam;
@@ -249,6 +300,9 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
   
   if (numCam==0)
     return DC1394_NO_CAMERA;
+  else {
+    GrabSelfIds(cameras, numCam);
+  }
 
   return DC1394_SUCCESS;
 }
@@ -468,4 +522,3 @@ dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
 
   return DC1394_SUCCESS;
 }
-

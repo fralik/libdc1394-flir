@@ -29,6 +29,9 @@ if USE_LINUX
 libdc1394_la_SOURCES += \
 	dc1394_capture.c \
 	dc1394_control_linux.c \
+	dc1394_topology.h \
+	dc1394_topology.c \
+        raw1394support.h \
 	dc1394_linux.h
 endif
 

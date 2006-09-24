@@ -250,9 +250,35 @@ typedef enum {
   DC1394_TRIGGER_SOURCE_2,
   DC1394_TRIGGER_SOURCE_3,
 } dc1394trigger_source_t;
-#define DC1394_TRIGGER_SOURCE_MIN     DC1394_TRIGGER_SOURCE_0
-#define DC1394_TRIGGER_SOURCE_MAX     DC1394_TRIGGER_SOURCE_3
-#define DC1394_TRIGGER_SOURCE_NUM    (DC1394_TRIGGER_SOURCE_MAX - DC1394_TRIGGER_SOURCE_MIN + 1)
+#define DC1394_TRIGGER_SOURCE_MIN      DC1394_TRIGGER_SOURCE_0
+#define DC1394_TRIGGER_SOURCE_MAX      DC1394_TRIGGER_SOURCE_3
+#define DC1394_TRIGGER_SOURCE_NUM     (DC1394_TRIGGER_SOURCE_MAX - DC1394_TRIGGER_SOURCE_MIN + 1)
+
+/* Enumeration of power classes */
+typedef enum {
+  DC1394_POWER_CLASS_NONE=608,
+  DC1394_POWER_CLASS_PROV_MIN_15W,
+  DC1394_POWER_CLASS_PROV_MIN_30W,
+  DC1394_POWER_CLASS_PROV_MIN_45W,
+  DC1394_POWER_CLASS_USES_MAX_1W,
+  DC1394_POWER_CLASS_USES_MAX_3W,
+  DC1394_POWER_CLASS_USES_MAX_6W,
+  DC1394_POWER_CLASS_USES_MAX_10W
+} dc1394power_class_t;
+#define DC1394_POWER_CLASS_MIN         DC1394_POWER_CLASS_NONE
+#define DC1394_POWER_CLASS_MAX         DC1394_POWER_CLASS_USES_MAX_10W
+#define DC1394_POWER_CLASS_NUM        (DC1394_POWER_CLASS_MAX - DC1394_POWER_CLASS_MIN + 1)
+
+/* Enumeration of PHY delays */
+typedef enum {
+  DC1394_PHY_DELAY_MAX_144_NS=640,
+  DC1394_PHY_DELAY_UNKNOWN_0,
+  DC1394_PHY_DELAY_UNKNOWN_1,
+  DC1394_PHY_DELAY_UNKNOWN_2
+} dc1394phy_delay_t;
+#define DC1394_PHY_DELAY_MIN           DC1394_PHY_DELAY_MAX_144_NS
+#define DC1394_PHY_DELAY_MAX           DC1394_PHY_DELAY_UNKNOWN_0
+#define DC1394_PHY_DELAY_NUM          (DC1394_PHY_DELAY_MAX - DC1394_PHY_DELAY_MIN + 1)
 
 /* Maximum number of characters in vendor and model strings */
 #define MAX_CHARS                      256
@@ -381,48 +407,54 @@ typedef struct
 typedef struct __dc1394_camera
 {
   // system/firmware information
-  int                port;
-  nodeid_t           node;
-  uint64_t           euid_64;
-  quadlet_t          ud_reg_tag_12;
-  quadlet_t          ud_reg_tag_13;
-  octlet_t           command_registers_base;
-  octlet_t           unit_directory;
-  octlet_t           unit_dependent_directory;
-  octlet_t           advanced_features_csr;
-  octlet_t           absolute_control_csr;
-  octlet_t           PIO_control_csr; // future use
-  octlet_t           SIO_control_csr; // future use
-  octlet_t           strobe_control_csr; // future use
-  octlet_t           format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
+  int                  port;
+  nodeid_t             node;
+  uint64_t             euid_64;
+  quadlet_t            ud_reg_tag_12;
+  quadlet_t            ud_reg_tag_13;
+  octlet_t             command_registers_base;
+  octlet_t             unit_directory;
+  octlet_t             unit_dependent_directory;
+  octlet_t             advanced_features_csr;
+  octlet_t             absolute_control_csr;
+  octlet_t             PIO_control_csr; // future use
+  octlet_t             SIO_control_csr; // future use
+  octlet_t             strobe_control_csr; // future use
+  octlet_t             format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
   dc1394iidc_version_t iidc_version;
-  char               vendor[MAX_CHARS + 1];
-  char               model[MAX_CHARS + 1];
-  quadlet_t          vendor_id;
-  quadlet_t          model_id;
-  dc1394bool_t       bmode_capable;
-  dc1394bool_t       one_shot_capable;
-  dc1394bool_t       multi_shot_capable;
-  dc1394bool_t       adv_features_capable;
-  dc1394bool_t       can_switch_on_off;
+  char                 vendor[MAX_CHARS + 1];
+  char                 model[MAX_CHARS + 1];
+  quadlet_t            vendor_id;
+  quadlet_t            model_id;
+  dc1394bool_t         bmode_capable;
+  dc1394bool_t         one_shot_capable;
+  dc1394bool_t         multi_shot_capable;
+  dc1394bool_t         adv_features_capable;
+  dc1394bool_t         can_switch_on_off;
 
   // some current values
-  dc1394video_mode_t video_mode;
-  dc1394framerate_t  framerate;
-  dc1394switch_t     is_iso_on;
-  int                iso_channel; // this variable contains the iso channel requests or the current iso channel
-  int                iso_channel_is_set; // >0 if the iso_channel above has been allocated within libraw1394
-  uint32_t           iso_bandwidth;
-  dc1394speed_t      iso_speed;
-  uint32_t           mem_channel_number;
-  uint32_t           save_channel;
-  uint32_t           load_channel;
+  dc1394video_mode_t   video_mode;
+  dc1394framerate_t    framerate;
+  dc1394switch_t       is_iso_on;
+  int                  iso_channel; // this variable contains the iso channel requests or the current iso channel
+  int                  iso_channel_is_set; // >0 if the iso_channel above has been allocated within libraw1394
+  uint32_t             iso_bandwidth;
+  dc1394speed_t        iso_speed;
+  uint32_t             mem_channel_number;
+  uint32_t             save_channel;
+  uint32_t             load_channel;
 
-  int                capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
+  int                  capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
 
   // for broadcast:
-  dc1394bool_t       broadcast;
-  nodeid_t           node_id_backup;
+  dc1394bool_t         broadcast;
+  nodeid_t             node_id_backup;
+
+  // 1394 PHY interface data:
+  dc1394speed_t        phy_speed;
+  dc1394power_class_t  power_class;
+  dc1394phy_delay_t    phy_delay;
+
 } dc1394camera_t;
 
 typedef struct __dc1394feature_info_t_struct 
@@ -595,14 +627,12 @@ extern "C" {
  ***************************************************************************/
 
 /* create / free camera structure */
-//dc1394camera_t* dc1394_new_camera(uint32_t port, nodeid_t node);
 void dc1394_free_camera(dc1394camera_t *camera);
 
 /* locate and initialise the cameras */
 dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint32_t* numCameras);
 
 /* print the camera information */
-//dc1394error_t dc1394_get_camera_info(dc1394camera_t *camera);
 dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
 
 /* Sets and resets the broadcast flag of a camera. If the broadcast flag is set,

@@ -144,6 +144,10 @@ dc1394_new_camera(uint32_t port, nodeid_t node)
    cam->capture_is_set=0;
    cam->broadcast=DC1394_FALSE;
    cam->absolute_control_csr=0;
+   // default values for PHY stuff:
+   cam->phy_speed=-1;
+   cam->power_class=DC1394_POWER_CLASS_NONE;
+   cam->phy_delay=DC1394_PHY_DELAY_MAX_144_NS;
  
    return cam;
 }
