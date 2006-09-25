@@ -3,6 +3,10 @@
 SUBDIRS = libdc1394 examples
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config.h.in \
 	stamp-h.in
+EXTRA_DIST = libdc1394.pc.in
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libdc1394.pc
 
 if USE_LINUX
 install-exec-hook:

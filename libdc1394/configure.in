@@ -68,5 +68,5 @@ AC_SUBST(lt_age)
 
 dnl AX_CFLAGS_WARN_ALL(CFLAGS)
 CFLAGS="$CFLAGS -Wall -Wunused"
-AC_CONFIG_FILES([ Makefile libdc1394/Makefile examples/Makefile ])
+AC_CONFIG_FILES([ Makefile libdc1394.pc libdc1394/Makefile examples/Makefile ])
 AC_OUTPUT

@@ -981,3 +981,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-09-24 Damien <ddouxchamps@users.sf.net>
     * Added PHY specs detection (Linux only). Currently this is limited to
       PHY speed, PHY power class and PHY delay.
+
+2006-09-25 Damien <ddouxchamps@users.sf.net>
+    * Added pkg-config file (thx to Daniel Drake)
