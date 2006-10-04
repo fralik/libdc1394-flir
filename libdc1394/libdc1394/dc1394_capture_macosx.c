@@ -1,7 +1,6 @@
 /*
- * 1394-Based Digital Camera Capture Code for the Control Library
- * Written by Chris Urmson <curmson@ri.cmu.edu>
- * Additions by David Moore <dcm@acm.org>
+ * Mac OS X Digital Camera Capture Code
+ * Written by David Moore <dcm@acm.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

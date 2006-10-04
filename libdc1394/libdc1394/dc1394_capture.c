@@ -1,6 +1,8 @@
 /*
  * 1394-Based Digital Camera Capture Code for the Control Library
  * Written by Chris Urmson <curmson@ri.cmu.edu>
+ * Additions by Damien Douxchamps <ddouxchamps@users.sf.net>
+ * Additions by David Moore <dcm@acm.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,6 +35,7 @@
 #include "kernel-video1394.h"
 #include "dc1394_utils.h"
 #include "dc1394_linux.h"
+#include "dc1394_capture_linux.h"
 
 #define MAX_NUM_PORTS 16
 
@@ -559,3 +562,11 @@ dc1394_capture_enqueue_dma (dc1394camera_t * camera, dc1394video_frame_t * frame
   
   return DC1394_SUCCESS;
 }
+
+int
+dc1394_capture_get_dma_fd (dc1394camera_t * camera)
+{
+  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  return craw->capture.dma_fd;
+}
+
