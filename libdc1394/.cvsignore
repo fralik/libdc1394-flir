@@ -18,3 +18,4 @@ missing
 install-sh
 depcomp
 .DS_Store
+libdc1394.pc
