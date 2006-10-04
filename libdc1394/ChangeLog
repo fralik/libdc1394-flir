@@ -987,6 +987,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-10-03 David Moore <dcm@acm.org>
     * Migrated both Linux and Mac OS capture routines to use the new
       enqueue/dequeue semantics for DMA-based capture.
+    * Ported examples to new capture API.
+    * Added new example grab_gray_image_dma that demonstrates the new API.
     * Mac OS compile fix suggested by Rudi Leitgeb.
     * Mac OS improved cleanup during capture_stop() suggested by Matt
       Robinson.
