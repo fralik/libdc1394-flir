@@ -130,7 +130,6 @@ dc1394_new_camera(uint32_t port, nodeid_t node)
 {
   dc1394camera_t *cam;
  
-  cam=(dc1394camera_t *)malloc(sizeof(dc1394camera_t));
   cam = dc1394_new_camera_platform (port, node);
  
   if (cam==NULL)
@@ -403,3 +402,87 @@ _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
 
 }
 */
+
+dc1394error_t
+_dc1394_capture_basic_setup (dc1394camera_t * camera,
+    dc1394video_frame_t * frame)
+{
+  dc1394error_t err;
+  float bpp;
+  int bits_per_pixel;
+
+  frame->camera = camera;
+
+  err=dc1394_video_get_mode(camera,&camera->video_mode);
+  DC1394_ERR_RTN(err, "Unable to get current video mode");
+  frame->video_mode = camera->video_mode;
+
+  err=dc1394_get_image_size_from_video_mode(camera, camera->video_mode,
+      frame->size, frame->size + 1);
+  DC1394_ERR_RTN(err,"Could not get width/height from format/mode");
+
+  if (dc1394_is_video_mode_scalable(camera->video_mode)==DC1394_TRUE) {
+    //fprintf(stderr,"Scalable format detected\n");
+    err=dc1394_format7_get_byte_per_packet(camera, camera->video_mode,
+        &frame->bytes_per_packet);
+    DC1394_ERR_RTN(err, "Unable to get format 7 bytes per packet for mode %d",
+        camera->video_mode);
+
+    err=dc1394_format7_get_packet_per_frame(camera, camera->video_mode,
+        &frame->packets_per_frame);
+    DC1394_ERR_RTN(err, "Unable to get format 7 packets per frame %d",
+        camera->video_mode);
+
+    err = dc1394_format7_get_image_position (camera, camera->video_mode,
+        frame->position, frame->position + 1);
+    DC1394_ERR_RTN(err, "Unable to get format 7 image position");
+
+    dc1394_format7_get_color_filter (camera, camera->video_mode,
+        &frame->color_filter);
+  }
+  else {
+    err=dc1394_video_get_framerate(camera,&camera->framerate);
+    DC1394_ERR_RTN(err, "Unable to get current video framerate");
+
+    err=_dc1394_get_quadlets_per_packet(camera->video_mode, camera->framerate,
+        &frame->bytes_per_packet);
+    DC1394_ERR_RTN(err, "Unable to get quadlets per packet");
+    frame->bytes_per_packet *= 4;
+
+    err= _dc1394_quadlets_from_format(camera, camera->video_mode,
+        &frame->packets_per_frame);
+    DC1394_ERR_RTN(err,"Could not get quadlets per frame");
+    frame->packets_per_frame /= frame->bytes_per_packet/4;
+
+    frame->position[0] = 0;
+    frame->position[1] = 0;
+    frame->color_filter = 0;
+  }
+
+  if ((frame->bytes_per_packet <=0 )||
+      (frame->packets_per_frame <= 0)) {
+    return DC1394_FAILURE;
+  }
+
+  frame->yuv_byte_order = DC1394_BYTE_ORDER_YUYV;
+
+  frame->total_bytes = frame->packets_per_frame * frame->bytes_per_packet;
+
+  err = dc1394_get_color_coding_from_video_mode (camera, camera->video_mode,
+      &frame->color_coding);
+  DC1394_ERR_RTN(err, "Unable to get color coding");
+
+  err = dc1394_video_get_data_depth (camera, &frame->bit_depth);
+  DC1394_ERR_RTN(err, "Unable to get data depth");
+
+  err = dc1394_get_bytes_per_pixel (frame->color_coding, &bpp);
+  DC1394_ERR_RTN(err, "Unable to get bytes per pixel");
+
+  bits_per_pixel = bpp * 8 + 0.5;
+  frame->stride = bits_per_pixel * frame->size[0] / 8;
+  frame->image_bytes = frame->size[1] * frame->stride;
+  frame->padding_bytes = frame->total_bytes - frame->image_bytes;
+
+  return DC1394_SUCCESS;
+}
+

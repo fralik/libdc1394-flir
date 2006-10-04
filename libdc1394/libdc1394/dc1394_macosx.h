@@ -46,15 +46,10 @@ typedef struct _buffer_info {
 
 typedef struct __dc1394_capture
 {
-  unsigned int             frame_width;
-  unsigned int             frame_height;
-  unsigned int             quadlets_per_frame;
-  unsigned int             quadlets_per_packet;
   unsigned int             num_frames;
   int                      frame_pages;
-  unsigned int             current;
+  int                      current;
   /* components needed for the DMA based video capture */
-  dc1394ring_buffer_policy_t      ring_buffer_policy;
   IOFireWireLibIsochChannelRef    chan;
   IOFireWireLibRemoteIsochPortRef rem_port;
   IOFireWireLibLocalIsochPortRef  loc_port;
@@ -65,6 +60,9 @@ typedef struct __dc1394_capture
   CFStringRef              run_loop_mode;
   dc1394capture_callback_t callback;
   void *                   callback_user_data;
+  uint8_t                  finalize_called;
+
+  dc1394video_frame_t     *frames;
 } dc1394capture_t;
 
 typedef struct __dc1394_camera_macosx

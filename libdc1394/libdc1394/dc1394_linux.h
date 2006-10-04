@@ -32,11 +32,7 @@
 
 typedef struct __dc1394_capture
 {
-  unsigned int             frame_width;
-  unsigned int             frame_height;
   unsigned char            *capture_buffer;
-  unsigned int             quadlets_per_frame;
-  unsigned int             quadlets_per_packet;
   /* components needed for the DMA based video capture */
   const unsigned char     *dma_ring_buffer;
   char                    *dma_device_file;
@@ -44,11 +40,10 @@ typedef struct __dc1394_capture
   unsigned int             dma_frame_size;
   unsigned int             num_dma_buffers;
   unsigned int             dma_last_buffer;
-  unsigned int             num_dma_buffers_behind;
   int                      dma_fd;
-  struct timeval           filltime;
-  dc1394ring_buffer_policy_t ring_buffer_policy;
   raw1394handle_t          handle;
+
+  dc1394video_frame_t     *frames;
 } dc1394capture_t;
 
 typedef struct __dc1394_camera_linux

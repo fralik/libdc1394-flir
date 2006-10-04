@@ -1,14 +1,14 @@
 MAINTAINERCLEANFILES = Makefile.in
 AM_CPPFLAGS = -I $(top_srcdir)
 
+A = grab_gray_image grab_gray_image_dma grab_partial_image grab_color_image \
+	grab_color_image2 helloworld
+
 if USE_LINUX
 bin_PROGRAMS = dc1394_vloopback
-endif
-
 if XVOK
-A = grab_gray_image grab_partial_image grab_color_image grab_color_image2 helloworld dc1394_multiview
-else
-A = grab_gray_image grab_partial_image grab_color_image grab_color_image2 helloworld
+A += dc1394_multiview
+endif
 endif
 
 noinst_PROGRAMS = $(A)
@@ -27,6 +27,9 @@ helloworld_LDADD = $(LDADD) ../libdc1394/libdc1394.la
 
 grab_gray_image_SOURCES = grab_gray_image.c
 grab_gray_image_LDADD = $(LDADD) ../libdc1394/libdc1394.la
+
+grab_gray_image_dma_SOURCES = grab_gray_image_dma.c
+grab_gray_image_dma_LDADD = $(LDADD) ../libdc1394/libdc1394.la
 
 grab_color_image_SOURCES = grab_color_image.c
 grab_color_image_LDADD = $(LDADD) ../libdc1394/libdc1394.la

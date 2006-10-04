@@ -535,6 +535,59 @@ typedef struct __dc1394format7modeset_t
   dc1394format7mode_t mode[DC1394_VIDEO_MODE_FORMAT7_NUM];
 } dc1394format7modeset_t;
 
+/* video frame structure */
+typedef struct __dc1394_video_frame
+{
+  unsigned char          * image;              
+        /* the image. May contain padding data too (vendor specific) */
+  uint32_t                 size[2];               
+        /* the image size [width, height] */
+  uint32_t                 position[2];      
+        /* the WOI/ROI position [horizontal, vertical] == [0,0] for full
+         * frame */
+  dc1394color_coding_t     color_coding;        
+        /* the color coding used. This field is valid for all video modes. */
+  dc1394color_filter_t     color_filter;        
+        /* the color filter used. This field is valid only for RAW modes
+         * on recent cameras */
+  uint32_t                 yuv_byte_order;
+        /* the order of the fields for 422 formats: YUYV or UYVY */
+  uint32_t                 bit_depth;           
+        /* the number of bits per pixel. The number of grayscale levels is
+         * 2^(this_number) */
+  uint32_t                 stride;
+        /* the number of bytes per image line */
+  dc1394video_mode_t       video_mode;          
+        /* the video mode used for capturing this frame */
+  uint64_t                 total_bytes;         
+        /* the total size of the frame buffer in bytes. May include packet-
+         * multiple padding and intentional padding (vendor specific) */
+  uint32_t                 image_bytes;         
+        /* the number of bytes used for the image (image data only, no
+         * padding) */
+  uint32_t                 padding_bytes;       
+        /* the number of extra bytes, i.e. total_bytes-image_bytes.  */
+  uint32_t                 bytes_per_packet;    
+        /* the number of bytes per packet. (IIDC data) */
+  uint32_t                 packets_per_frame;    
+        /* the number of packets per frame. (IIDC data) */
+  uint64_t                 timestamp;           
+        /* the unix time [microseconds] at which the frame was captured in
+         * the video1394 ringbuffer */
+  uint32_t                 frames_behind;
+        /* the number of frames in the ring buffer that are yet to be
+         * accessed by the user */
+  dc1394camera_t           *camera;
+        /* the parent camera of this frame */
+  uint32_t                 id;
+        /* the frame position in the ring buffer */
+} dc1394video_frame_t;
+
+enum {
+  DC1394_BYTE_ORDER_UYVY=0,
+  DC1394_BYTE_ORDER_YUYV
+};
+
 /* Feature descriptions */
 extern const char *dc1394_feature_desc[DC1394_FEATURE_NUM];
 extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
@@ -769,12 +822,18 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t 
  ***************************************************************************/
 
 /* setup the capture (DMA or RAW1394)*/
-dc1394error_t dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers, dc1394ring_buffer_policy_t policy);
+dc1394error_t dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers);
 dc1394error_t dc1394_capture_setup(dc1394camera_t *camera);
 
 /* capture video frames (DMA or RAW1394)*/
-dc1394error_t dc1394_capture_dma(dc1394camera_t **camera, uint32_t num, dc1394video_policy_t policy);
 dc1394error_t dc1394_capture(dc1394camera_t **camera, uint32_t num);
+dc1394video_frame_t *
+dc1394_capture_dequeue_dma (dc1394camera_t * camera, dc1394video_policy_t policy);
+dc1394error_t
+dc1394_capture_enqueue_dma (dc1394camera_t * camera, dc1394video_frame_t * frame);
+
+/* Functions for accessing the buffer content: */
+uint8_t*        dc1394_capture_get_buffer(dc1394camera_t *camera);
 
 /* releases memory, channels, bandwidth,... */
 dc1394error_t dc1394_capture_stop(dc1394camera_t *camera);
@@ -784,15 +843,6 @@ dc1394error_t dc1394_capture_stop(dc1394camera_t *camera);
 /* Set the DMA device filename manually. In most cases this is not necessary because the capture
    functions probe common filenames such as /dev/video1394/x or /dev/video1394. */
 dc1394error_t dc1394_capture_set_dma_device_filename(dc1394camera_t* camera, char *filename);
-/* returns the buffer previously handed to the user by dc1394_dma_*_capture to the DMA ring buffer */
-dc1394error_t dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera);
-/* Functions for accessing the buffer content: */
-uint8_t*        dc1394_capture_get_dma_buffer(dc1394camera_t *camera);
-struct timeval* dc1394_capture_get_dma_filltime(dc1394camera_t *camera);
-uint32_t          dc1394_capture_get_width(dc1394camera_t *camera);
-uint32_t          dc1394_capture_get_height(dc1394camera_t *camera);
-uint32_t          dc1394_capture_get_bytes_per_frame(dc1394camera_t *camera);
-uint32_t          dc1394_capture_get_frames_behind(dc1394camera_t *camera);
 
 /***************************************************************************
      Format_7 (scalable image format)

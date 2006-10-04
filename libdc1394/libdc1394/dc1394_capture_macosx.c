@@ -19,9 +19,9 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -44,80 +44,6 @@
 /* Internal functions */
 /**********************/
 
-/************************************************************
- _dc1394_basic_setup
-
- Sets up camera features that are capture type independent
-
- Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
-*************************************************************/
-dc1394error_t 
-_dc1394_capture_basic_setup(dc1394camera_t *camera)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  dc1394error_t err;
-
-  err=dc1394_video_get_mode(camera,&camera->video_mode);
-  DC1394_ERR_RTN(err, "Unable to get current video mode");
-
-  err=dc1394_get_image_size_from_video_mode(camera, camera->video_mode, &craw->capture.frame_width, &craw->capture.frame_height);
-  DC1394_ERR_RTN(err,"Could not get width/height from format/mode");
-
-  if (dc1394_is_video_mode_scalable(camera->video_mode)==DC1394_TRUE) {
-    unsigned int packet_bytes;
-    unsigned int packets_per_frame;
-    //fprintf(stderr,"Scalable format detected\n");
-    err=dc1394_format7_get_byte_per_packet(camera, camera->video_mode, &packet_bytes);
-    DC1394_ERR_RTN(err, "Unable to get format 7 bytes per packet for mode %d", camera->video_mode);
-    craw->capture.quadlets_per_packet= packet_bytes /4;
-
-    if (craw->capture.quadlets_per_packet<=0) {
-      printf("(%s) No format 7 bytes per packet %d \n", __FILE__, camera->video_mode);
-      return DC1394_FAILURE;
-    }
-    // ensure that quadlet aligned buffers are big enough, still expect
-    // problems when width*height  != quadlets_per_frame*4
-    if (camera->iidc_version >= DC1394_IIDC_VERSION_1_30) { // if version is 1.30
-      err=dc1394_format7_get_packet_per_frame(camera, camera->video_mode, &packets_per_frame);
-      DC1394_ERR_RTN(err, "Unable to get format 7 packets per frame %d", camera->video_mode);
-      craw->capture.quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
-    }
-    else {
-      // For other specs revisions, we use a trick to determine the total bytes.
-      // We don't use the total_bytes register in 1.20 as it has been interpreted in
-      // different ways by manufacturers. Thanks to Martin Gramatke for pointing this trick out.
-      dc1394color_coding_t color_coding;
-      float bpp;
-      err=dc1394_format7_get_color_coding(camera,camera->video_mode, &color_coding);
-      DC1394_ERR_RTN(err, "Unable to get current color coding");
-
-      err=dc1394_get_bytes_per_pixel(color_coding, &bpp);
-      DC1394_ERR_RTN(err, "Unable to infer bpp from color coding");
-      packets_per_frame = ((int)(craw->capture.frame_width * craw->capture.frame_height * bpp) +
-			   packet_bytes -1) / packet_bytes;
-      craw->capture.quadlets_per_frame=(packets_per_frame*packet_bytes)/4;
-    }
-    
-  }
-  else {
-    err=dc1394_video_get_framerate(camera,&camera->framerate);
-    DC1394_ERR_RTN(err, "Unable to get current video framerate");
-    
-    err=_dc1394_get_quadlets_per_packet(camera->video_mode, camera->framerate, &craw->capture.quadlets_per_packet);
-    DC1394_ERR_RTN(err, "Unable to get quadlets per packet");
-    
-    err= _dc1394_quadlets_from_format(camera, camera->video_mode, &craw->capture.quadlets_per_frame);
-    DC1394_ERR_RTN(err,"Could not get quadlets per frame");
-  }
-
-  if ((craw->capture.quadlets_per_frame<=0 )||
-      (craw->capture.quadlets_per_packet<=0)) {
-    return DC1394_FAILURE;
-  }
-  
-  return err;
-}
-
 static IOReturn
 supported_channels (IOFireWireLibIsochPortRef rem_port, IOFWSpeed * maxSpeed,
   UInt64 * chanSupported)
@@ -139,6 +65,13 @@ allocate_port (IOFireWireLibIsochPortRef rem_port,
   camera->iso_channel_is_set = 1;
   camera->iso_channel = chan;
   dc1394_video_set_iso_channel(camera, camera->iso_channel);
+  return kIOReturnSuccess;
+}
+
+static IOReturn
+finalize_callback (dc1394capture_t * capture)
+{
+  capture->finalize_called = 1;
   return kIOReturnSuccess;
 }
 
@@ -219,8 +152,8 @@ CreateDCLProgram (dc1394camera_t * camera)
   IOVirtualRange * databuf = &(capture->databuf);
   NuDCLRef dcl = NULL;
   IOFireWireLibNuDCLPoolRef dcl_pool = capture->dcl_pool;
-  int packet_size = capture->quadlets_per_packet * 4;
-  int bytesperframe = capture->quadlets_per_frame * 4;
+  int packet_size = capture->frames[0].bytes_per_packet;
+  int bytesperframe = capture->frames[0].total_bytes;
   int i;
 
   databuf->length = (capture->num_frames *
@@ -238,6 +171,7 @@ CreateDCLProgram (dc1394camera_t * camera)
     UInt32 data_address = databuf->address + i * DATA_SIZE;
     int num_dcls = (bytesperframe - 1) / packet_size + 1;
     buffer_info * buffer = capture->buffers + i;
+    dc1394video_frame_t * frame = capture->frames + i;
     int j;
     IOVirtualRange ranges[2] = {
       {data_address, 4},
@@ -250,6 +184,11 @@ CreateDCLProgram (dc1394camera_t * camera)
     (*dcl_pool)->SetDCLFlags (dcl, kNuDCLDynamic);
     (*dcl_pool)->SetDCLStatusPtr (dcl, (UInt32 *)(data_address + 4));
     (*dcl_pool)->SetDCLTimeStampPtr (dcl, (UInt32 *)(data_address + 8));
+
+    if (i > 0)
+      memcpy (frame, capture->frames, sizeof (dc1394video_frame_t));
+    frame->image = (unsigned char *) frame_address;
+    frame->id = i;
 
     buffer->camera = camera;
     buffer->i = i;
@@ -282,8 +221,7 @@ CreateDCLProgram (dc1394camera_t * camera)
  CAPTURE SETUP
 **************************************************************/
 dc1394error_t 
-dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
-        dc1394ring_buffer_policy_t policy)
+dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
@@ -298,11 +236,13 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
   int frame_size;
   int numdcls;
 
-  err = _dc1394_capture_basic_setup(camera);
+  capture->frames = malloc (num_dma_buffers * sizeof (dc1394video_frame_t));
+  err = _dc1394_capture_basic_setup(camera, capture->frames);
+  if (err != DC1394_SUCCESS)
+    dc1394_capture_stop (camera);
   DC1394_ERR_RTN (err,"Could not setup capture");
 
   capture->num_frames = num_dma_buffers;
-  capture->ring_buffer_policy = policy;
   capture->chan = NULL;
   capture->rem_port = NULL;
   capture->loc_port = NULL;
@@ -322,9 +262,10 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
 
   (*d)->GetSpeedToNode (d, craw->generation, &speed);
   chan = (*d)->CreateIsochChannel (d, true,
-      craw->capture.quadlets_per_packet * 4, kFWSpeed400MBit,
+      capture->frames[0].bytes_per_packet, kFWSpeed400MBit,
       CFUUIDGetUUIDBytes (kIOFireWireIsochChannelInterfaceID));
   if (!chan) {
+    dc1394_capture_stop (camera);
     fprintf (stderr, "Could not create IsochChannelInterface\n");
     return DC1394_FAILURE;
   }
@@ -333,6 +274,7 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
   rem_port = (*d)->CreateRemoteIsochPort (d, true,
       CFUUIDGetUUIDBytes (kIOFireWireRemoteIsochPortInterfaceID));
   if (!rem_port) {
+    dc1394_capture_stop (camera);
     fprintf (stderr, "Could not create RemoteIsochPortInterface\n");
     return DC1394_FAILURE;
   }
@@ -343,15 +285,15 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
 
   capture->buffers = malloc (capture->num_frames * sizeof (buffer_info));
   capture->current = -1;
-  frame_size = capture->quadlets_per_frame * 4;
+  frame_size = capture->frames[0].total_bytes;
   capture->frame_pages = ((frame_size - 1) / getpagesize()) + 1;
 
-  numdcls = (capture->quadlets_per_frame / capture->quadlets_per_packet + 1)
-    * capture->num_frames;
+  numdcls = capture->frames[0].packets_per_frame * capture->num_frames;
 
   dcl_pool = (*d)->CreateNuDCLPool (d, numdcls,
       CFUUIDGetUUIDBytes (kIOFireWireNuDCLPoolInterfaceID));
   if (!dcl_pool) {
+    dc1394_capture_stop (camera);
     fprintf (stderr, "Could not create NuDCLPoolInterface\n");
     return DC1394_FAILURE;
   }
@@ -359,6 +301,7 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
 
   dcl_program = CreateDCLProgram (camera);
   if (!dcl_program) {
+    dc1394_capture_stop (camera);
     fprintf (stderr, "Could not create DCL Program\n");
     return DC1394_FAILURE;
   }
@@ -367,19 +310,26 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
       kFWDCLSyBitsEvent, 1, 1, nil, 0, &(capture->databuf), 1,
       CFUUIDGetUUIDBytes (kIOFireWireLocalIsochPortInterfaceID));
   if (!loc_port) {
+    dc1394_capture_stop (camera);
     fprintf (stderr, "Could not create LocalIsochPortInterface\n");
     return DC1394_FAILURE;
   }
   capture->loc_port = loc_port;
 
+  (*loc_port)->SetRefCon ((IOFireWireLibIsochPortRef) loc_port, capture);
+  (*loc_port)->SetFinalizeCallback (loc_port,
+                (IOFireWireLibIsochPortFinalizeCallback) finalize_callback);
+                
   (*chan)->AddListener (chan, (IOFireWireLibIsochPortRef) loc_port);
   (*chan)->SetTalker (chan, (IOFireWireLibIsochPortRef) rem_port);
 
   if ((*chan)->AllocateChannel (chan) != kIOReturnSuccess) {
+    dc1394_capture_stop (camera);
     fprintf (stderr, "Could not allocate channel\n");
     return DC1394_FAILURE;
   }
   if ((*chan)->Start (chan) != kIOReturnSuccess) {
+    dc1394_capture_stop (camera);
     fprintf (stderr, "Could not start channel\n");
     return DC1394_FAILURE;
   }
@@ -392,7 +342,7 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers,
 dc1394error_t
 dc1394_capture_setup(dc1394camera_t *camera) 
 {
-  return dc1394_capture_setup_dma (camera, 10, 0);
+  return dc1394_capture_setup_dma (camera, 10);
 }
 
 /*****************************************************
@@ -407,21 +357,27 @@ dc1394_capture_stop(dc1394camera_t *camera)
   IOVirtualRange * databuf = &(capture->databuf);
 
   if (capture->chan) {
-    (*capture->chan)->Stop (capture->chan);
+    IOReturn res;
+    capture->finalize_called = 0;
+    res = (*capture->chan)->Stop (capture->chan);
     (*capture->chan)->ReleaseChannel (capture->chan);
+
+    /* Wait for the finalize callback before releasing the channel */
+    while (res == kIOReturnSuccess && capture->finalize_called == 0)
+      CFRunLoopRunInMode (capture->run_loop_mode, 5, true);
+
+    (*capture->chan)->Release (capture->chan);
   }
 
-  if (databuf->address)
-    munmap ((void *) databuf->address, databuf->length);
-
-  if (capture->chan)
-    (*capture->chan)->Release (capture->chan);
   if (capture->loc_port)
     (*capture->loc_port)->Release (capture->loc_port);
   if (capture->rem_port)
     (*capture->rem_port)->Release (capture->rem_port);
   if (capture->dcl_pool)
     (*capture->dcl_pool)->Release (capture->dcl_pool);
+
+  if (databuf->address)
+    munmap ((void *) databuf->address, databuf->length);
 
   if (capture->buffers) {
     int i;
@@ -430,6 +386,9 @@ dc1394_capture_stop(dc1394camera_t *camera)
     free (capture->buffers);
   }
 
+  if (capture->frames)
+    free (capture->frames);
+
   capture->chan = NULL;
   capture->rem_port = NULL;
   capture->loc_port = NULL;
@@ -437,6 +396,7 @@ dc1394_capture_stop(dc1394camera_t *camera)
   capture->databuf.address = (vm_address_t) NULL;
   capture->buffers = NULL;
   capture->run_loop = NULL;
+  capture->frames = NULL;
 
   camera->capture_is_set=0;
   return DC1394_SUCCESS;
@@ -448,100 +408,96 @@ dc1394_capture_stop(dc1394camera_t *camera)
 #define NEXT_BUFFER(c,i) (((i) == -1) ? 0 : ((i)+1)%(c)->num_frames)
 #define PREV_BUFFER(c,i) (((i) == 0) ? (c)->num_frames-1 : ((i)-1))
 
-dc1394error_t
-dc1394_capture_dma(dc1394camera_t **cameras, uint32_t num,
-    dc1394video_policy_t policy) 
+dc1394video_frame_t *
+dc1394_capture_dequeue_dma (dc1394camera_t * camera,
+    dc1394video_policy_t policy)
 {
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  dc1394capture_t * capture = &(craw->capture);
+  int next = NEXT_BUFFER (capture, capture->current);
+  buffer_info * buffer = capture->buffers + next;
+  dc1394video_frame_t * frame = capture->frames + next;
   int i;
 
-  for (i = 0; i < num; i++) {
-    DC1394_CAST_CAMERA_TO_MACOSX(craw, cameras[i]);
-    dc1394capture_t * capture = &(craw->capture);
-    int next = NEXT_BUFFER (capture, capture->current);
-    buffer_info * buffer = capture->buffers + next;
-
-    while (buffer->status != BUFFER_FILLED) {
-      SInt32 code;
-      dc1394capture_callback_t callback;
-      if (capture->run_loop != CFRunLoopGetCurrent ()) {
-        fprintf (stderr, "Error: capturing from wrong thread\n");
-        return DC1394_NO_FRAME;
-      }
-
-      callback = capture->callback;
-      capture->callback = NULL;
-      if (policy == DC1394_VIDEO1394_POLL)
-        code = CFRunLoopRunInMode (capture->run_loop_mode, 0, true);
-      else
-        code = CFRunLoopRunInMode (capture->run_loop_mode, 5, true);
-
-      capture->callback = callback;
-      //printf ("capture runloop: %ld\n", code);
-      if (policy == DC1394_VIDEO1394_POLL &&
-          code != kCFRunLoopRunHandledSource)
-        return DC1394_NO_FRAME;
+  while (buffer->status != BUFFER_FILLED) {
+    SInt32 code;
+    dc1394capture_callback_t callback;
+    if (capture->run_loop != CFRunLoopGetCurrent ()) {
+      fprintf (stderr, "Error: capturing from wrong thread\n");
+      return NULL;
     }
+
+    /* We don't want the user's callback called recursively, so temporarily
+     * remove it. */
+    callback = capture->callback;
+    capture->callback = NULL;
+    if (policy == DC1394_VIDEO1394_POLL)
+      code = CFRunLoopRunInMode (capture->run_loop_mode, 0, true);
+    else
+      code = CFRunLoopRunInMode (capture->run_loop_mode, 5, true);
+
+    /* Flush any callbacks that are pending. */
+    while (code == kCFRunLoopRunHandledSource)
+      code = CFRunLoopRunInMode (capture->run_loop_mode, 0, true);
+
+    capture->callback = callback;
+    //printf ("capture runloop: %ld\n", code);
+    if (policy == DC1394_VIDEO1394_POLL &&
+        code != kCFRunLoopRunHandledSource)
+      return NULL;
   }
 
-  for (i = 0; i < num; i++) {
-    DC1394_CAST_CAMERA_TO_MACOSX(craw, cameras[i]);
-    dc1394capture_t * capture = &(craw->capture);
-    int next = NEXT_BUFFER (capture, capture->current);
+  capture->current = next;
 
-    capture->current = next;
-
-    /* Catch up to the latest buffer if the application desires it */
-    if (capture->ring_buffer_policy == DC1394_RING_BUFFER_LAST) {
-      SInt32 code;
-      buffer_info * buffer;
-      next = NEXT_BUFFER (capture, capture->current);
-      buffer = capture->buffers + next;
-
-      do {
-        while (buffer->status == BUFFER_FILLED) {
-          capture->current = next;
-          next = NEXT_BUFFER (capture, capture->current);
-          buffer = capture->buffers + next;
-        }
-        /* Run the first callback that is pending immediately */
-        code = CFRunLoopRunInMode (capture->run_loop_mode, 0, true);
-      } while (code == kCFRunLoopRunHandledSource);
-    }
+  for (i = 0; i < capture->num_frames; i++) {
+    buffer_info * future_buf = capture->buffers +
+      (next + i + 1) % capture->num_frames;
+    if (future_buf->status != BUFFER_FILLED)
+      break;
   }
+  frame->frames_behind = i;
+  frame->timestamp = buffer->filltime.tv_sec * 1000000 +
+    buffer->filltime.tv_usec;
 
-  return DC1394_SUCCESS;
+  return frame;
 }
 
 dc1394error_t 
 dc1394_capture(dc1394camera_t **cams, uint32_t num) 
 {
   int i;
+  dc1394error_t res = DC1394_SUCCESS;
   for (i = 0; i < num; i++) {
-    if (dc1394_capture_get_dma_buffer (cams[i]))
-      dc1394_capture_dma_done_with_buffer (cams[i]);
+    DC1394_CAST_CAMERA_TO_MACOSX(craw, cams[i]);
+    dc1394capture_t * capture = &(craw->capture);
+    if (capture->current >= 0)
+      dc1394_capture_enqueue_dma (cams[i], capture->frames + capture->current);
+    if (!dc1394_capture_dequeue_dma (cams[i], DC1394_VIDEO1394_WAIT))
+      res = DC1394_FAILURE;
   }
-  return dc1394_capture_dma (cams, num, DC1394_VIDEO1394_WAIT);
+  return res;
 }
 
-/****************************************************
- dc1394_dma_done_with_buffer
-
- This allows the driver to use the buffer previously
- handed to the user by dc1394_dma_*_capture
-*****************************************************/
-dc1394error_t 
-dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera) 
-{  
+dc1394error_t
+dc1394_capture_enqueue_dma (dc1394camera_t * camera,
+    dc1394video_frame_t * frame)
+{
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
-  int prev = PREV_BUFFER (capture, capture->current);
-  buffer_info * buffer = capture->buffers + capture->current;
+  int prev = PREV_BUFFER (capture, frame->id);
+  buffer_info * buffer = capture->buffers + frame->id;
   buffer_info * prev_buffer = capture->buffers + prev;
   IOFireWireLibNuDCLPoolRef dcl_pool = capture->dcl_pool;
   IOFireWireLibLocalIsochPortRef loc_port = capture->loc_port;
   void * dcl_list[2];
 
-  if (capture->current == -1 || buffer->status != BUFFER_FILLED)
+  if (frame->camera != camera) {
+    printf ("(%s) dc1394_camera_enqueue_dma: camera does not match frame's camera\n",
+        __FILE__);
+    return DC1394_INVALID_ARGUMENT_VALUE;
+  }
+
+  if (buffer->status != BUFFER_FILLED)
     return DC1394_FAILURE;
 
   buffer->status = BUFFER_EMPTY;
@@ -557,29 +513,16 @@ dc1394_capture_dma_done_with_buffer(dc1394camera_t *camera)
 /* functions to access the capture data */
 
 uint8_t*
-dc1394_capture_get_dma_buffer(dc1394camera_t *camera)
+dc1394_capture_get_buffer(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   buffer_info * buffer = capture->buffers + capture->current;
-  IOVirtualRange * databuf = &(capture->databuf);
 
   if (capture->current == -1 || buffer->status != BUFFER_FILLED)
     return NULL;
 
-  return (uint8_t *) (databuf->address +
-      buffer->i * capture->frame_pages * getpagesize() +
-      getpagesize());
-}
-
-struct timeval*
-dc1394_capture_get_dma_filltime(dc1394camera_t *camera)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  dc1394capture_t * capture = &(craw->capture);
-  buffer_info * buffer = capture->buffers + capture->current;
-
-  return &buffer->filltime;
+  return capture->frames[capture->current].image;
 }
 
 int
@@ -610,30 +553,3 @@ dc1394_capture_set_callback (dc1394camera_t * camera,
   capture->callback_user_data = user_data;
 }
 
-uint32_t
-dc1394_capture_get_width(dc1394camera_t *camera)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  return craw->capture.frame_width;
-}
-
-uint32_t
-dc1394_capture_get_height(dc1394camera_t *camera)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  return craw->capture.frame_height;
-}
-
-uint32_t
-dc1394_capture_get_bytes_per_frame(dc1394camera_t *camera)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  return craw->capture.quadlets_per_frame*4;
-}
-
-uint32_t
-dc1394_capture_get_frames_behind(dc1394camera_t *camera)
-{
-  //DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  return 0;
-}

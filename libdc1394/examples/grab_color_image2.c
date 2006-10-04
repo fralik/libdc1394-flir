@@ -168,9 +168,9 @@ int main(int argc, char *argv[])
   /* Find cameras */
   int err=dc1394_find_cameras(&cameras, &numCameras);
 
-  if (err!=DC1394_SUCCESS) {
+  if (err!=DC1394_SUCCESS && err != DC1394_NO_CAMERA) {
     fprintf( stderr, "Unable to look for cameras\n\n"
-             "Please check \n"
+             "On Linux, please check \n"
 	     "  - if the kernel modules `ieee1394',`raw1394' and `ohci1394' are loaded \n"
 	     "  - if you have read/write access to /dev/raw1394\n\n");
     exit(1);
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
 
   uint8_t *rgb_image = (uint8_t *)malloc(3*numPixels);
 
-  dc1394_convert_to_RGB8((uint8_t *)dc1394_capture_get_dma_buffer (camera),
+  dc1394_convert_to_RGB8((uint8_t *)dc1394_capture_get_buffer (camera),
           rgb_image, width, height, DC1394_BYTE_ORDER_YUYV, selected_mode, 16);
 
   /*-----------------------------------------------------------------------

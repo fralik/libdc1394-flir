@@ -38,9 +38,9 @@ int main(int argc, char *argv[])
 
   int err=dc1394_find_cameras(&cameras, &numCameras);
 
-  if (err!=DC1394_SUCCESS) {
+  if (err!=DC1394_SUCCESS && err != DC1394_NO_CAMERA) {
     fprintf( stderr, "Unable to look for cameras\n\n"
-             "Please check \n"
+             "On Linux, please check \n"
 	     "  - if the kernel modules `ieee1394',`raw1394' and `ohci1394' are loaded \n"
 	     "  - if you have read/write access to /dev/raw1394\n\n");
     exit(1);
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
   dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_FORMAT7_1,
           &width, &height);
   fprintf(imagefile,"P5\n%u %u\n255\n", width, height);
-  fwrite((const char *)dc1394_capture_get_dma_buffer (camera), 1,
+  fwrite((const char *)dc1394_capture_get_buffer (camera), 1,
          height * width, imagefile);
   fclose(imagefile);
   printf("wrote: Part.pgm\n");

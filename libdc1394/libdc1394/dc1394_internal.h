@@ -154,5 +154,7 @@ dc1394error_t
 GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value);
 dc1394error_t
 SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value);
+dc1394error_t _dc1394_capture_basic_setup (dc1394camera_t * camera,
+    dc1394video_frame_t * frame);
 
 #endif /* _DC1394_INTERNAL_H */

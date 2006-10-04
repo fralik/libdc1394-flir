@@ -1,13 +1,13 @@
 /**************************************************************************
-**       Title: grab one color image using libdc1394
+**       Title: grab one gray image using libdc1394
 **    $RCSfile$
 **   $Revision$$Name$
 **       $Date$
 **   Copyright: LGPL $Author$
 ** Description:
 **
-**    Get one  image using libdc1394 and store it as portable pix map
-**    (ppm). Based on 'grab_gray_image' from Olaf Ronneberger
+**    Get one gray image using libdc1394 and store it as portable gray map
+**    (pgm). Based on 'samplegrab' from Chris Urmson 
 **
 **************************************************************************/
 
@@ -16,7 +16,8 @@
 #include "libdc1394/dc1394_control.h"
 #include <stdlib.h>
 
-#define IMAGE_FILE_NAME "image.ppm"
+
+#define IMAGE_FILE_NAME "image.pgm"
 
 /*-----------------------------------------------------------------------
  *  Releases the cameras and exits
@@ -34,17 +35,23 @@ int main(int argc, char *argv[])
   FILE* imagefile;
   dc1394camera_t *camera, **cameras=NULL;
   uint32_t numCameras, i;
-  unsigned int width, height;
-  //dc1394featureset_t features;
+  dc1394featureset_t features;
+  dc1394framerates_t framerates;
+  dc1394video_modes_t video_modes;
+  dc1394framerate_t framerate;
+  dc1394video_mode_t video_mode;
+  dc1394color_coding_t coding;
+  dc1394video_frame_t * frames[4];
+
 
   /* Find cameras */
   int err=dc1394_find_cameras(&cameras, &numCameras);
 
   if (err!=DC1394_SUCCESS && err != DC1394_NO_CAMERA) {
-    fprintf( stderr, "Unable to look for an IIDC camera\n\n"
-             "On Linux, please check that\n"
-	     "  - the kernel modules `ieee1394',`raw1394' and `ohci1394' are loaded \n"
-	     "  - you have read/write access to /dev/raw1394\n\n");
+    fprintf( stderr, "Unable to look for cameras\n\n"
+             "On Linux, please check \n"
+	     "  - if the kernel modules `ieee1394',`raw1394' and `ohci1394' are loaded \n"
+	     "  - if you have read/write access to /dev/raw1394\n\n");
     exit(1);
   }
 
@@ -64,19 +71,52 @@ int main(int argc, char *argv[])
   free(cameras);
 
   /*-----------------------------------------------------------------------
+   *  get the best video mode and highest framerate. This can be skipped
+   *  if you already know which mode/framerate you want...
+   *-----------------------------------------------------------------------*/
+  // get video modes:
+  if (dc1394_video_get_supported_modes(camera,&video_modes)!=DC1394_SUCCESS) {
+    fprintf(stderr,"Can't get video modes\n");
+    cleanup_and_exit(camera);
+  }
+
+  // select highest res mode:
+  for (i=video_modes.num-1;i>=0;i--) {
+    if (!dc1394_is_video_mode_scalable(video_modes.modes[i])) {
+      dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
+      if (coding==DC1394_COLOR_CODING_MONO8) {
+	video_mode=video_modes.modes[i];
+	break;
+      }
+    }
+  }
+  //fprintf(stderr,"Hello\n");
+  dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
+  if ((dc1394_is_video_mode_scalable(video_modes.modes[i]))||
+      (coding!=DC1394_COLOR_CODING_MONO8)) {
+    fprintf(stderr,"Could not get a valid MONO8 mode\n");
+    cleanup_and_exit(camera);
+  }
+
+  // get highest framerate
+  if (dc1394_video_get_supported_framerates(camera,video_mode,&framerates)!=DC1394_SUCCESS) {
+    fprintf(stderr,"Can't get framrates\n");
+    cleanup_and_exit(camera);
+  }
+  framerate=framerates.framerates[framerates.num-1];
+    
+  /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
+  fprintf(stderr,"Setting capture\n");
 
-  err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
-  DC1394_ERR_RTN(err,"Could not set ISO speed");
-  dc1394_video_set_mode(camera,DC1394_VIDEO_MODE_640x480_RGB8);
-  DC1394_ERR_RTN(err,"Could not set video mode 640x480xRGB8");
-  dc1394_video_set_framerate(camera,DC1394_FRAMERATE_7_5);
-  DC1394_ERR_RTN(err,"Could not set framerate to 7.5fps");
-  if (dc1394_capture_setup(camera)!=DC1394_SUCCESS) {
+  dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+  dc1394_video_set_mode(camera, video_mode);
+  dc1394_video_set_framerate(camera, framerate);
+  if (dc1394_capture_setup_dma(camera, 8)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
-             "that the video mode,framerate and format are\n"
+             "that the video mode and framerate are\n"
              "supported by your camera\n",
              __LINE__,__FILE__);
     cleanup_and_exit(camera);
@@ -85,14 +125,15 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  report camera's features
    *-----------------------------------------------------------------------*/
-  /*
   if (dc1394_get_camera_feature_set(camera,&features) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to get feature set\n");
   }
   else {
     dc1394_print_feature_set(&features);
   }
-  */
+    
+
+  fprintf(stderr,"start transmission\n");
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
@@ -101,8 +142,9 @@ int main(int argc, char *argv[])
     cleanup_and_exit(camera);
   }
 
+  fprintf(stderr,"wait transmission\n");
   /*-----------------------------------------------------------------------
-   *  Sleep until the camera effectively started to transmit
+   *  Sleep untill the camera has a transmission
    *-----------------------------------------------------------------------*/
   dc1394switch_t status = DC1394_OFF;
 
@@ -120,14 +162,42 @@ int main(int argc, char *argv[])
     cleanup_and_exit(camera);
   }
 
+  fprintf(stderr,"capture\n");
   /*-----------------------------------------------------------------------
-   *  capture one frame
+   *  capture four frames and keep them available simultaneously
    *-----------------------------------------------------------------------*/
-  if (dc1394_capture(&camera,1)!=DC1394_SUCCESS) {
-    fprintf( stderr, "unable to capture a frame\n");
-    cleanup_and_exit(camera);
+  for (i = 0; i < 4; i++) {
+    frames[i] = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
+    if (!frames[i]) {
+      fprintf(stderr, "Error: unable to capture frame %d\n", i);
+      cleanup_and_exit(camera);
+    }
   }
 
+  /*-----------------------------------------------------------------------
+   *  save image as 'Image.pgm'
+   *-----------------------------------------------------------------------*/
+  imagefile=fopen(IMAGE_FILE_NAME, "w");
+
+  if( imagefile == NULL) {
+    perror( "Can't create '" IMAGE_FILE_NAME "'");
+    cleanup_and_exit(camera);
+  }
+  
+  fprintf(imagefile,"P5\n%u %u 255\n", frames[0]->size[0], frames[0]->size[1]*4);
+  for (i = 0; i < 4; i++) {
+    fwrite(frames[i]->image, 1,
+           frames[0]->size[0]*frames[0]->size[1], imagefile);
+  }
+  fclose(imagefile);
+  printf("wrote: " IMAGE_FILE_NAME "\n");
+  for (i = 0; i < 4; i++) {
+    if (dc1394_capture_enqueue_dma (camera, frames[i]) != DC1394_SUCCESS) {
+      fprintf (stderr, "Error: failed to enqueue frame %d\n", i);
+    }
+  }
+  
+  fprintf(stderr,"stop transmission\n");
   /*-----------------------------------------------------------------------
    *  Stop data transmission
    *-----------------------------------------------------------------------*/
@@ -135,27 +205,10 @@ int main(int argc, char *argv[])
     printf("couldn't stop the camera?\n");
   }
   
- /*-----------------------------------------------------------------------
-  *  save image as 'Image.pgm'
-  *-----------------------------------------------------------------------*/
-  imagefile=fopen(IMAGE_FILE_NAME, "w");
-
-  if( imagefile == NULL) {
-    perror( "Can't create output file");
-    cleanup_and_exit(camera);
-  }
-  
-  dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_640x480_RGB8,
-          &width, &height);
-  fprintf(imagefile,"P6\n%u %u\n255\n", width, height);
-  fwrite((const char *)dc1394_capture_get_buffer (camera), 1,
-         height*width*3, imagefile);
-  fclose(imagefile);
-  printf("wrote: " IMAGE_FILE_NAME " (%d image bytes)\n",height*width*3);
-
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
   cleanup_and_exit(camera);
+
   return 0;
 }

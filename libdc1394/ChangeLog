@@ -967,7 +967,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * new example minimalist program (helloworld.c)
 
 2006-08-30 David Moore <dcm@acm.org>
-
     * Unset Mac OS X run_loop at capture stop to ensure it can be used later
 	  in a different thread.
 
@@ -984,3 +983,10 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2006-09-25 Damien <ddouxchamps@users.sf.net>
     * Added pkg-config file (thx to Daniel Drake)
+
+2006-10-03 David Moore <dcm@acm.org>
+    * Migrated both Linux and Mac OS capture routines to use the new
+      enqueue/dequeue semantics for DMA-based capture.
+    * Mac OS compile fix suggested by Rudi Leitgeb.
+    * Mac OS improved cleanup during capture_stop() suggested by Matt
+      Robinson.

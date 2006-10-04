@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
 {
   dc1394camera_t **cameras=NULL;
   dc1394error_t err;
+  dc1394video_frame_t * frame;
   uint32_t numCameras;
 
   /* Find the cameras. Warning: this allocates memory... */
@@ -33,7 +34,7 @@ int main(int argc, char *argv[])
   DC1394_ERR_RTN(err,"No camera on the bus");
 
   /* Setup capture with VIDEO1394 */
-  err=dc1394_capture_setup_dma(cameras[0], 4, DC1394_VIDEO1394_WAIT);
+  err=dc1394_capture_setup_dma(cameras[0], 4);
   DC1394_ERR_RTN(err,"Problem setting capture");
   
   /* Start transmission */
@@ -41,11 +42,14 @@ int main(int argc, char *argv[])
   DC1394_ERR_RTN(err,"Problem starting transmission");
 
   /* Capture */
-  err=dc1394_capture(cameras,1);
-  DC1394_ERR_RTN(err,"Problem getting an image");
- 
+  frame=dc1394_capture_dequeue_dma(cameras[0], DC1394_VIDEO1394_WAIT);
+  if (!frame) {
+    fprintf (stderr, "Problem getting an image");
+    return 1;
+  }
+  
   /* Release the buffer */
-  err=dc1394_capture_dma_done_with_buffer(cameras[0]);
+  err=dc1394_capture_enqueue_dma(cameras[0], frame);
   DC1394_ERR_RTN(err,"Could not release buffer");
 
   /* Stop transmission */

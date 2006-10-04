@@ -150,8 +150,8 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
     (*craw->iface)->GetRemoteNodeID (craw->iface,
                                      craw->generation,
                                      &(camera->node));
-    //fprintf (stderr, "Node ID is %x, Generation is %lu\n",
-    //        camera->node, craw->generation);
+//    fprintf (stderr, "Node ID is %x, Generation is %lu\n",
+//            camera->node, craw->generation);
     err=dc1394_update_camera_info(camera);
     if (err != DC1394_SUCCESS) {
       dc1394_free_camera (camera);
