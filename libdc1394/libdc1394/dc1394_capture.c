@@ -111,6 +111,7 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   char filename[64];
+  struct stat statbuf;
 
   // if the file has already been opened: increment the number of uses and return
   if (_dc1394_num_using_fd[camera->port] != 0) {
@@ -133,14 +134,18 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
 
   // automatic mode: try to open several usual device files.
   sprintf(filename,"/dev/video1394/%d",camera->port);
-  if ( (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+  if ( stat (filename, &statbuf) == 0 &&
+          S_ISCHR (statbuf.st_mode) &&
+          (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
     _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
     _dc1394_num_using_fd[camera->port]++;
     return DC1394_SUCCESS;
   }
 
   sprintf(filename,"/dev/video1394-%d",camera->port);
-  if ( (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+  if ( stat (filename, &statbuf) == 0 &&
+          S_ISCHR (statbuf.st_mode) &&
+          (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
     _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
     _dc1394_num_using_fd[camera->port]++;
     return DC1394_SUCCESS;
@@ -148,7 +153,9 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
   
   if (camera->port==0) {
     sprintf(filename,"/dev/video1394");
-    if ( (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+    if ( stat (filename, &statbuf) == 0 &&
+            S_ISCHR (statbuf.st_mode) &&
+            (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
       _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
       _dc1394_num_using_fd[camera->port]++;
       return DC1394_SUCCESS;
@@ -181,6 +188,7 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   }
 
   if (_dc1394_open_dma_device(camera) != DC1394_SUCCESS) {
+    fprintf (stderr, "Could not open video1394 device file in /dev\n");
     return DC1394_INVALID_VIDEO1394_DEVICE;
   }
   
@@ -192,7 +200,8 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   
   /* tell the video1394 system that we want to listen to the given channel */
   if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_LISTEN_CHANNEL, &vmmap) < 0) {
-    printf("(%s) VIDEO1394_IOC_LISTEN_CHANNEL ioctl failed!\n", __FILE__);
+    printf("(%s) VIDEO1394_IOC_LISTEN_CHANNEL ioctl failed: %s\n", __FILE__,
+            strerror (errno));
     return DC1394_IOCTL_FAILURE;
   }
   // starting from here we use the ISO channel so we set the flag in the camera struct:

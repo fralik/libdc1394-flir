@@ -992,3 +992,4 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Mac OS compile fix suggested by Rudi Leitgeb.
     * Mac OS improved cleanup during capture_stop() suggested by Matt
       Robinson.
+    * Better Linux error checking when /dev/video1394 is not readable.
