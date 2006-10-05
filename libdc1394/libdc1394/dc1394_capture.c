@@ -29,6 +29,9 @@
 #include <sys/mman.h>
 #include <errno.h>
 
+#include <libraw1394/raw1394.h>
+#include <libraw1394/csr.h>
+
 #include "config.h"
 #include "dc1394_internal.h"
 #include "dc1394_control.h"
