@@ -668,16 +668,17 @@ dc1394_format7_get_packet_per_frame(dc1394camera_t *camera,
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_INVALID_VIDEO_MODE;
     
+  *ppf = 0;
   if (camera->iidc_version>=DC1394_IIDC_VERSION_1_30) {
 
     err= GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_PACKET_PER_FRAME_INQ, &value);
     DC1394_ERR_RTN(err, "Could not get the number of packets per frame");
-
     *ppf= (uint32_t) (value);
-    
-    return err;
   }
-  else {
+
+  /* Perform computation according to 4.9.7 in the IIDC spec for cameras that do
+   * not support PACKET_PER_FRAME_INQ */
+  if (*ppf == 0) {
     // return an estimate, NOT TAKING ANY PADDING INTO ACCOUNT
     err=dc1394_format7_get_byte_per_packet(camera, video_mode, &packet_bytes);
     DC1394_ERR_RTN(err, "Could not get BPP");
@@ -696,7 +697,8 @@ dc1394_format7_get_packet_per_frame(dc1394camera_t *camera,
     
     return err;
   }
-  
+
+  return DC1394_SUCCESS;
 }
 
 dc1394error_t

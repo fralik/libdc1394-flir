@@ -997,3 +997,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2006-10-05 David Moore <dcm@acm.org>
     * Fixed Linux compile error
+
+2006-10-07 David Moore <dcm@acm.org>
+    * Fixed computation of packets per frame for cameras that do not support
+      the PACKET_PER_FRAME register.
