@@ -1001,3 +1001,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-10-07 David Moore <dcm@acm.org>
     * Fixed computation of packets per frame for cameras that do not support
       the PACKET_PER_FRAME register.
+	
+2006-10-10 Damien <ddouxchamps@users.sf.net>
+    * fixed the value returned by dc1394_get_operation_mode (thanks to Georg
+      Glock for spotting the bug).

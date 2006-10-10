@@ -1081,7 +1081,10 @@ dc1394_video_get_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t  
   DC1394_ERR_RTN(err, "Could not get ISO data");
   
   if (camera->bmode_capable==DC1394_TRUE) {
-    *mode=((value & 0x00008000) >0);
+    if ((value & 0x00008000) >0)
+      *mode=DC1394_OPERATION_MODE_1394B;
+    else
+      *mode=DC1394_OPERATION_MODE_LEGACY;
   }
   else {
     *mode=DC1394_OPERATION_MODE_LEGACY;
