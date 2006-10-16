@@ -1005,3 +1005,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-10-10 Damien <ddouxchamps@users.sf.net>
     * fixed the value returned by dc1394_get_operation_mode (thanks to Georg
       Glock for spotting the bug).
+
+2006-10-16 David Moore <dcm@acm.org>
+    * Migrated from CVS to SVN
+    * Changed Version_2_0 to the default branch (HEAD)
+    * Modified directory structure (libdc1394 -> dc1394)

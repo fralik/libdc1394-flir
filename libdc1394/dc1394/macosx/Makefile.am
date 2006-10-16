@@ -2,7 +2,7 @@ noinst_LTLIBRARIES = libdc1394-macosx.la
 
 pkgmacosxincludedir = $(pkgincludedir)/macosx
 
-CFLAGS = -I..
+AM_CFLAGS = -I..
 libdc1394_macosx_la_SOURCES =  \
 	control.c \
 	capture.c \

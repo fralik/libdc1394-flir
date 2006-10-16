@@ -24,8 +24,8 @@
 #ifndef __DC1394_MACOSX_H__
 #define __DC1394_MACOSX_H__
 
-#include "dc1394_control.h"
-#include "dc1394_capture_macosx.h"
+#include "control.h"
+#include "macosx/capture.h"
 #include <IOKit/firewire/IOFireWireLib.h>
 
 #define DC1394_CAST_CAMERA_TO_MACOSX(camosx, camera) dc1394camera_macosx_t * camosx = (dc1394camera_macosx_t *) camera

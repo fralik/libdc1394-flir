@@ -2,7 +2,7 @@ noinst_LTLIBRARIES = libdc1394-linux.la
 
 pkglinuxincludedir = $(pkgincludedir)/linux
 
-CFLAGS = -I..
+AM_CFLAGS = -I..
 libdc1394_linux_la_SOURCES =  \
 	control.c \
 	capture.c \
