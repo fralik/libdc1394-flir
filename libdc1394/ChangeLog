@@ -1010,3 +1010,4 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Migrated from CVS to SVN
     * Changed Version_2_0 to the default branch (HEAD)
     * Modified directory structure (libdc1394 -> dc1394)
+    * Changed default tarball filename to libdc1394
