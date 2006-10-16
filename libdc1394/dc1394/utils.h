@@ -19,7 +19,7 @@
 #ifndef __DC1394_UTILS_H__
 #define __DC1394_UTILS_H__
 
-#include "dc1394_control.h"
+#include "control.h"
 
 #ifdef __cplusplus
 extern "C" {

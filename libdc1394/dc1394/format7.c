@@ -21,11 +21,11 @@
 #include <errno.h>
 #include <stdlib.h>
  
-#include "dc1394_control.h"
-#include "dc1394_internal.h"
-#include "dc1394_register.h"
-#include "dc1394_offsets.h"
-#include "dc1394_utils.h"
+#include "control.h"
+#include "internal.h"
+#include "register.h"
+#include "offsets.h"
+#include "utils.h"
 #include "config.h"
 
 /**********************/ 

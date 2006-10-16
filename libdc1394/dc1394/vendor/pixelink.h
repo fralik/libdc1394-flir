@@ -32,8 +32,8 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include <dc1394_control.h>
-#include <dc1394_register.h>
+#include <control.h>
+#include <register.h>
 
 /*
  * The following deal with the Pixelink specific extensions for cameras 

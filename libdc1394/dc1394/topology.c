@@ -20,7 +20,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "dc1394_topology.h"
+#include "topology.h"
 
 #define MAXTRIES 20
 

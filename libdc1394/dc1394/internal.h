@@ -19,8 +19,8 @@
 #ifndef __DC1394_INTERNAL_H__
 #define __DC1394_INTERNAL_H__
 
-#include "dc1394_control.h"
-#include "dc1394_offsets.h"
+#include "control.h"
+#include "offsets.h"
 
 /* Definitions which application developers shouldn't care about */
 #define CONFIG_ROM_BASE             0xFFFFF0000000ULL

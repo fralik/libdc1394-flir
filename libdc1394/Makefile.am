@@ -1,6 +1,6 @@
 # process this file with automake to create a Makefile.in
 
-SUBDIRS = libdc1394 examples
+SUBDIRS = dc1394 examples
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config.h.in \
 	stamp-h.in
 EXTRA_DIST = libdc1394.pc.in

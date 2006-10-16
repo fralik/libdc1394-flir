@@ -27,11 +27,11 @@
 #include <IOKit/IOKitLib.h>
 #include <IOKit/firewire/IOFireWireLib.h>
 #include "config.h"
-#include "dc1394_internal.h"
-#include "dc1394_register.h"
-#include "dc1394_offsets.h"
-#include "dc1394_macosx.h"
-#include "dc1394_utils.h"
+#include "internal.h"
+#include "register.h"
+#include "offsets.h"
+#include "macosx/macosx.h"
+#include "utils.h"
 
 dc1394camera_t*
 dc1394_new_camera_platform (uint32_t port, nodeid_t node)

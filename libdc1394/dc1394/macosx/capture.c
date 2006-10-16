@@ -33,11 +33,11 @@
 #include <IOKit/firewire/IOFireWireLibIsoch.h>
 
 #include "config.h"
-#include "dc1394_internal.h"
-#include "dc1394_control.h"
-#include "dc1394_utils.h"
-#include "dc1394_macosx.h"
-#include "dc1394_capture_macosx.h"
+#include "internal.h"
+#include "control.h"
+#include "utils.h"
+#include "macosx/macosx.h"
+#include "macosx/capture.h"
 
 /**********************/
 /* Internal functions */

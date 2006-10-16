@@ -23,8 +23,8 @@
 #ifndef __DC1394_VENDOR_AVT_H__
 #define __DC1394_VENDOR_AVT_H__
 
-#include "dc1394_control.h"
-#include "dc1394_register.h"
+#include "control.h"
+#include "register.h"
 
 typedef struct __dc1394_avt_adv_feature_info_struct 
 {

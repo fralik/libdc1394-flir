@@ -17,9 +17,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "dc1394_internal.h"
-#include "dc1394_utils.h"
-#include "dc1394_register.h"
+#include "internal.h"
+#include "utils.h"
+#include "register.h"
 
 const char *dc1394_feature_desc[DC1394_FEATURE_NUM] =
 {

@@ -12,8 +12,8 @@
 **************************************************************************/
 
 #include <stdio.h>
-#include "libdc1394/dc1394_utils.h"
-#include "libdc1394/dc1394_control.h"
+#include <dc1394/utils.h>
+#include <dc1394/control.h>
 #include <stdlib.h>
 
 #define IMAGE_FILE_NAME "image.ppm"

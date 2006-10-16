@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "dc1394_conversions.h"
+#include "conversions.h"
 
 // this should disappear...
 extern void swab();

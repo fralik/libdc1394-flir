@@ -14,9 +14,9 @@
 **************************************************************************/
 
 #include <stdio.h>
-#include "libdc1394/dc1394_utils.h"
-#include "libdc1394/dc1394_control.h"
-#include "libdc1394/dc1394_conversions.h"
+#include <dc1394/utils.h>
+#include <dc1394/control.h>
+#include <dc1394/conversions.h>
 #include <stdlib.h>
 
 

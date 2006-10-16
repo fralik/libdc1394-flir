@@ -17,10 +17,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "dc1394_control.h"
-#include "dc1394_internal.h"
-#include "dc1394_offsets.h"
-#include "dc1394_utils.h"
+#include "control.h"
+#include "internal.h"
+#include "offsets.h"
+#include "utils.h"
 #include "config.h"
 
 /* Note: debug modes can be very verbose. */

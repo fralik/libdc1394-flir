@@ -23,7 +23,7 @@
  */
 
 #include <limits.h>
-#include "dc1394_conversions.h"
+#include "conversions.h"
 
 #define CLIP(in, out)\
    in = in < 0 ? 0 : in;\

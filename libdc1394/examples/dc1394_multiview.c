@@ -33,7 +33,7 @@
 #include <getopt.h>
 
 #include <libraw1394/raw1394.h>
-#include "libdc1394/dc1394_control.h"
+#include <dc1394/control.h>
 
 
 /* uncomment the following to drop frames to prevent delays */

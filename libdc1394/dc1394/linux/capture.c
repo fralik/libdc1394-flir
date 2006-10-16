@@ -33,12 +33,12 @@
 #include <libraw1394/csr.h>
 
 #include "config.h"
-#include "dc1394_internal.h"
-#include "dc1394_control.h"
+#include "internal.h"
+#include "control.h"
 #include "kernel-video1394.h"
-#include "dc1394_utils.h"
-#include "dc1394_linux.h"
-#include "dc1394_capture_linux.h"
+#include "utils.h"
+#include "linux/linux.h"
+#include "linux/capture.h"
 
 #define MAX_NUM_PORTS 16
 

@@ -21,11 +21,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "dc1394_control.h"
+#include "control.h"
 #include "config.h"
-#include "dc1394_internal.h"
-#include "dc1394_register.h"
-#include "dc1394_offsets.h"
+#include "internal.h"
+#include "register.h"
+#include "offsets.h"
  
 
 dc1394error_t

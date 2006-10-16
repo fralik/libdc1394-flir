@@ -22,7 +22,7 @@
 #ifndef __DC1394_CONVERSIONS_H__
 #define __DC1394_CONVERSIONS_H__
 
-#include "dc1394_control.h"
+#include "control.h"
 #define restrict __restrict
 
 typedef enum {

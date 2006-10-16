@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "dc1394_vendor_avt.h"
+#include "vendor/avt.h"
 
 /********************************************************/
 /* Configuration Register Offsets for Advances features */

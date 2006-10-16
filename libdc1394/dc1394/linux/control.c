@@ -24,13 +24,13 @@
 #include <libraw1394/raw1394.h>
 #include <libraw1394/csr.h>
 #include "config.h"
-#include "dc1394_internal.h"
+#include "internal.h"
 #include "raw1394support.h"
-#include "dc1394_topology.h"
-#include "dc1394_register.h"
-#include "dc1394_offsets.h"
-#include "dc1394_linux.h"
-#include "dc1394_utils.h"
+#include "topology.h"
+#include "register.h"
+#include "offsets.h"
+#include "linux/linux.h"
+#include "utils.h"
 
 
 void

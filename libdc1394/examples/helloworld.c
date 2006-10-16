@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "libdc1394/dc1394_control.h"
+#include <dc1394/control.h>
 
 int main(int argc, char *argv[]) 
 {

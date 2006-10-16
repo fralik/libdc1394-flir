@@ -1,7 +1,7 @@
 # process this file with autoconf to get a configure script
 AC_PREREQ([2.6.0])
 AC_INIT([dc1394],[2.0.0-rc3],[libdc1394-devel@lists.sf.net])
-AC_CONFIG_SRCDIR([libdc1394/dc1394_control.c])
+AC_CONFIG_SRCDIR([dc1394/control.c])
 AM_INIT_AUTOMAKE([--warnings=all 1.9.6])
 AC_CONFIG_HEADERS([config.h])
 
@@ -18,15 +18,18 @@ case "$host" in
     AC_CHECK_LIB(raw1394, raw1394_channel_modify,
        [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) raw1394=true LIBS="$LIBS -lraw1394";break],
         AC_MSG_ERROR(libraw1394 not found or too old. Please upgrade to 1.2.0 or a more recent version.))
+    dc1394platform=linux
     ;;
   *-*-darwin*)
     AC_CHECK_LIB(IOKit, IOMasterPort,
        [AC_DEFINE(HAVE_IOKITLIB,[],[Defined if IOKitLib is present]) iokit=true],
        [AC_MSG_ERROR(IOKitLib not found.)])
+    dc1394platform=macosx
     ;;
 esac
 AM_CONDITIONAL(USE_LINUX, test x$raw1394 = xtrue)
 AM_CONDITIONAL(USE_MACOSX, test x$iokit = xtrue)
+AC_SUBST(dc1394platform)
 
 # check for Xv extensions (necessary for examples/dc1394_multiview)
 # imported from Coriander
@@ -68,5 +71,13 @@ AC_SUBST(lt_age)
 
 dnl AX_CFLAGS_WARN_ALL(CFLAGS)
 CFLAGS="$CFLAGS -Wall -Wunused"
-AC_CONFIG_FILES([ Makefile libdc1394.pc libdc1394/Makefile examples/Makefile ])
+AC_CONFIG_FILES([ \
+    Makefile \
+    libdc1394.pc \
+    dc1394/Makefile \
+    dc1394/linux/Makefile \
+    dc1394/macosx/Makefile \
+    dc1394/vendor/Makefile \
+    examples/Makefile \
+])
 AC_OUTPUT

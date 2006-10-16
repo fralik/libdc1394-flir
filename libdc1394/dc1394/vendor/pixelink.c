@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "dc1394_vendor_pixelink.h"
+#include "vendor/pixelink.h"
 
 /******************************************************************************
  * Function to convert float to quadlet (32 bit floating point representation)
