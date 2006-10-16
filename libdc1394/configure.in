@@ -1,22 +1,55 @@
 # process this file with autoconf to get a configure script
-AC_INIT(libdc1394/dc1394_control.c)
-
-AM_INIT_AUTOMAKE(libdc1394, 1.2.1)
-AM_CONFIG_HEADER(config.h)
+AC_PREREQ([2.6.0])
+AC_INIT([dc1394],[2.0.0-rc3],[libdc1394-devel@lists.sf.net])
+AC_CONFIG_SRCDIR([libdc1394/dc1394_control.c])
+AM_INIT_AUTOMAKE([--warnings=all 1.9.6])
+AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
-AM_PROG_LIBTOOL
 
-# Check for the new version of libraw1394 first since they might have both
-# installed and we want to use the newest version
-AC_CHECK_LIB(raw1394, raw1394_new_handle,
-             [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) LIBS="$LIBS -lraw1394";break],
-             AC_CHECK_LIB(raw1394, raw1394_get_handle,
-			  [AC_DEFINE(LIBRAW1394_OLD,[],[Defined if an old version of libraw1394 is present]) AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) LIBS="$LIBS -lraw1394"  ;break ],
-                          AC_MSG_ERROR(No version of libraw1394 found!)))
+# check if the 'restrict' prefix is supported
+AC_C_RESTRICT
 
-AC_HEADER_STDC 
+case "$host" in
+  *-*-linux*)
+    # Check for the new version of libraw1394 first since they might have both
+    # installed and we want to use the newest version
+    AC_CHECK_LIB(raw1394, raw1394_channel_modify,
+       [AC_DEFINE(HAVE_LIBRAW1394,[],[Defined if libraw1394 is present]) raw1394=true LIBS="$LIBS -lraw1394";break],
+        AC_MSG_ERROR(libraw1394 not found or too old. Please upgrade to 1.2.0 or a more recent version.))
+    ;;
+  *-*-darwin*)
+    AC_CHECK_LIB(IOKit, IOMasterPort,
+       [AC_DEFINE(HAVE_IOKITLIB,[],[Defined if IOKitLib is present]) iokit=true],
+       [AC_MSG_ERROR(IOKitLib not found.)])
+    ;;
+esac
+AM_CONDITIONAL(USE_LINUX, test x$raw1394 = xtrue)
+AM_CONDITIONAL(USE_MACOSX, test x$iokit = xtrue)
+
+# check for Xv extensions (necessary for examples/dc1394_multiview)
+# imported from Coriander
+AC_DEFUN([AC_CHECK_XV],[
+	AC_SUBST(XV_CFLAGS)
+	AC_SUBST(XV_LIBS)
+	AC_MSG_CHECKING(for Xv extensions)
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+	#include <X11/Xlib.h>
+ 	#include <X11/extensions/Xvlib.h>]], [[
+	int main(void) { (void) XvGetPortAttribute(0, 0, 0, 0); return 0; }
+	]])],[xv=yes],[xv=no]);
+	AC_MSG_RESULT($xv)
+ 	if test x$xv = xyes; then
+           XV_LIBS="-lXv -lXext"
+           XV_CFLAGS=""
+	   AC_DEFINE(HAVE_XV,1,[defined if XV video overlay is available])
+ 	fi
+        AM_CONDITIONAL(XVOK, test x$xv = xyes)
+])
+AC_CHECK_XV
+
+AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h sys/ioctl.h unistd.h)
 AC_PATH_XTRA
 
@@ -24,14 +57,16 @@ AC_TYPE_SIZE_T
 
 AC_FUNC_MMAP
 
-# set the libtool shared library version numbers
-lt_major=13
-lt_revision=1
-lt_age=1
+dnl set the libtool shared library version numbers
+lt_major=20
+lt_revision=0
+lt_age=0
 
 AC_SUBST(lt_major)
 AC_SUBST(lt_revision)
 AC_SUBST(lt_age)
 
+dnl AX_CFLAGS_WARN_ALL(CFLAGS)
 CFLAGS="$CFLAGS -Wall -Wunused"
-AC_OUTPUT([ Makefile libdc1394/Makefile examples/Makefile ])
+AC_CONFIG_FILES([ Makefile libdc1394.pc libdc1394/Makefile examples/Makefile ])
+AC_OUTPUT

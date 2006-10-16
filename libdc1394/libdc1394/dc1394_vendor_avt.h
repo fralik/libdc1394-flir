@@ -1,5 +1,6 @@
 /*
  * 1394-Based Digital Camera Control Library
+ * Allied Vision Technologies (AVT) specific extensions
  * Copyright (C) 2005 Inria Sophia-Antipolis
  *
  * Written by Pierre MOOS <pierre.moos@gmail.com> 
@@ -19,17 +20,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _DC1394_VENDOR_AVT_H
-#define _DC1394_VENDOR_AVT_H
+#ifndef __DC1394_VENDOR_AVT_H__
+#define __DC1394_VENDOR_AVT_H__
 
-#include <libraw1394/raw1394.h>
 #include "dc1394_control.h"
-#include "dc1394_internal.h"
-#include "config.h"
+#include "dc1394_register.h"
 
 typedef struct __dc1394_avt_adv_feature_info_struct 
 {
-  unsigned int feature_id;
+  uint32_t feature_id;
   dc1394bool_t features_requested;
   dc1394bool_t MaxResolution;
   dc1394bool_t TimeBase;
@@ -54,15 +53,17 @@ typedef struct __dc1394_avt_adv_feature_info_struct
 } dc1394_avt_adv_feature_info_t;
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /************************************************************************/
 /* Get Version  	(Read Only)					*/
 /*----------------------------------------------------------------------*/
 /* Retrieve the firmware version, FPGA version and the camera ID	*/	 
 /************************************************************************/
-int
-dc1394_avt_get_version(raw1394handle_t handle, nodeid_t node, 
-		       unsigned int *Version, unsigned int *Camera_ID,
-		       unsigned int *FPGA_Version);
+dc1394error_t dc1394_avt_get_version(dc1394camera_t *camera, 
+				     uint32_t *Version, uint32_t *Camera_ID,
+				     uint32_t *FPGA_Version);
 
 
 
@@ -71,9 +72,8 @@ dc1394_avt_get_version(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Retrieve the supported features					*/	 
 /************************************************************************/
-int
-dc1394_avt_get_advanced_feature_inquiry(raw1394handle_t handle, nodeid_t node,
-					dc1394_avt_adv_feature_info_t *adv_feature);
+dc1394error_t dc1394_avt_get_advanced_feature_inquiry(dc1394camera_t *camera,
+						      dc1394_avt_adv_feature_info_t *adv_feature);
 
 
 /************************************************************************/
@@ -81,8 +81,7 @@ dc1394_avt_get_advanced_feature_inquiry(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Print the supported features requested 				*/	 
 /************************************************************************/
-int
-dc1394_avt_print_advanced_feature(dc1394_avt_adv_feature_info_t *adv_feature);
+dc1394error_t dc1394_avt_print_advanced_feature(dc1394_avt_adv_feature_info_t *adv_feature);
 
 
 /************************************************************************/
@@ -91,8 +90,8 @@ dc1394_avt_print_advanced_feature(dc1394_avt_adv_feature_info_t *adv_feature);
 /* Retrieve if shading is on and the number of frames used to compute 	*/	 
 /* The shading reference frame						*/
 /************************************************************************/
-int dc1394_avt_get_shading(raw1394handle_t handle, nodeid_t node, 
-			   dc1394bool_t *on_off, unsigned int *frame_nb);
+int dc1394_avt_get_shading(dc1394camera_t *camera, 
+			   dc1394bool_t *on_off, uint32_t *frame_nb);
 
 
 /************************************************************************/
@@ -101,9 +100,9 @@ int dc1394_avt_get_shading(raw1394handle_t handle, nodeid_t node,
 /* Set the shading to on/off and the number of frames used to compute 	*/	 
 /* The shading reference frame						*/
 /************************************************************************/
-int dc1394_avt_set_shading(raw1394handle_t handle, nodeid_t node,
+int dc1394_avt_set_shading(dc1394camera_t *camera,
 			   dc1394bool_t on_off, dc1394bool_t compute,
-			   unsigned int frame_nb);
+			   uint32_t frame_nb);
 		
 
 		
@@ -112,10 +111,10 @@ int dc1394_avt_set_shading(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Retrieve write and read access mode of the shading reference frame	*/
 /************************************************************************/
-int
-dc1394_avt_get_shading_mem_ctrl(raw1394handle_t handle, nodeid_t node, 
-				dc1394bool_t *en_write, dc1394bool_t *en_read, 
-				unsigned int *addroffset);
+dc1394error_t dc1394_avt_get_shading_mem_ctrl(dc1394camera_t *camera, 
+					      dc1394bool_t *en_write,
+					      dc1394bool_t *en_read, 
+					      uint32_t *addroffset);
 
 
 /************************************************************************/
@@ -123,10 +122,10 @@ dc1394_avt_get_shading_mem_ctrl(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set write and read access mode of the shading reference frame	*/
 /************************************************************************/
-int
-dc1394_avt_set_shading_mem_ctrl(raw1394handle_t handle, nodeid_t node,
-				dc1394bool_t en_write, dc1394bool_t en_read, 
-				unsigned int addroffset);
+dc1394error_t dc1394_avt_set_shading_mem_ctrl(dc1394camera_t *camera,
+					      dc1394bool_t en_write, 
+					      dc1394bool_t en_read, 
+					      uint32_t addroffset);
 
 
 /************************************************************************/
@@ -134,9 +133,8 @@ dc1394_avt_set_shading_mem_ctrl(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Retrieve the max size of a shading image				*/
 /************************************************************************/
-int
-dc1394_avt_get_shading_info(raw1394handle_t handle, nodeid_t node, 
-			    unsigned int *MaxImageSize);
+dc1394error_t dc1394_avt_get_shading_info(dc1394camera_t *camera, 
+					  uint32_t *MaxImageSize);
 
 
 
@@ -146,11 +144,12 @@ dc1394_avt_get_shading_info(raw1394handle_t handle, nodeid_t node,
 /* Retrieve if on/off, the nb of kneepoints used and the 		*/
 /* kneepoints values							*/
 /************************************************************************/
-int
-dc1394_avt_get_multiple_slope(raw1394handle_t handle, nodeid_t node, 
-			      dc1394bool_t *on_off, unsigned int *points_nb, 
-			      unsigned int *kneepoint1, unsigned int *kneepoint2, 
-			      unsigned int *kneepoint3);
+dc1394error_t dc1394_avt_get_multiple_slope(dc1394camera_t *camera, 
+					    dc1394bool_t *on_off,
+					    uint32_t *points_nb, 
+					    uint32_t *kneepoint1,
+					    uint32_t *kneepoint2, 
+					    uint32_t *kneepoint3);
 
 
 /************************************************************************/
@@ -159,11 +158,12 @@ dc1394_avt_get_multiple_slope(raw1394handle_t handle, nodeid_t node,
 /* Set on/off, the nb of kneepoints to use and the 			*/
 /* kneepoints values							*/
 /************************************************************************/
-int
-dc1394_avt_set_multiple_slope(raw1394handle_t handle, nodeid_t node, 
-			      dc1394bool_t on_off, unsigned int points_nb, 
-			      unsigned int kneepoint1, unsigned int kneepoint2, 
-			      unsigned int kneepoint3);
+dc1394error_t dc1394_avt_set_multiple_slope(dc1394camera_t *camera, 
+					    dc1394bool_t on_off,
+					    uint32_t points_nb, 
+					    uint32_t kneepoint1,
+					    uint32_t kneepoint2, 
+					    uint32_t kneepoint3);
 
 
 
@@ -172,9 +172,8 @@ dc1394_avt_set_multiple_slope(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get the timebase value with an Id. See Manual for correspondance	*/
 /************************************************************************/
-int
-dc1394_avt_get_timebase(raw1394handle_t handle, nodeid_t node, 
-			unsigned int *timebase_id  );
+dc1394error_t dc1394_avt_get_timebase(dc1394camera_t *camera, 
+				      uint32_t *timebase_id);
 
 
 /************************************************************************/
@@ -182,9 +181,8 @@ dc1394_avt_get_timebase(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set the timebase value with an Id. See Manual for correspondance	*/
 /************************************************************************/
-int
-dc1394_avt_set_timebase(raw1394handle_t handle, nodeid_t node,
-			unsigned int timebase_id);
+dc1394error_t dc1394_avt_set_timebase(dc1394camera_t *camera,
+				      uint32_t timebase_id);
 
 
 
@@ -193,9 +191,8 @@ dc1394_avt_set_timebase(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get the extented shutter value in us					*/
 /************************************************************************/
-int
-dc1394_avt_get_extented_shutter(raw1394handle_t handle, nodeid_t node, 
-				unsigned int *timebase_id);
+dc1394error_t dc1394_avt_get_extented_shutter(dc1394camera_t *camera, 
+					      uint32_t *timebase_id);
 
 
 /************************************************************************/
@@ -203,9 +200,8 @@ dc1394_avt_get_extented_shutter(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set the extented shutter value in us					*/
 /************************************************************************/
-int
-dc1394_avt_set_extented_shutter(raw1394handle_t handle, nodeid_t node, 
-				unsigned int timebase_id);
+dc1394error_t dc1394_avt_set_extented_shutter(dc1394camera_t *camera, 
+					      uint32_t timebase_id);
 
 
 
@@ -214,9 +210,9 @@ dc1394_avt_set_extented_shutter(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get the Max reachable resolution 					*/
 /************************************************************************/
-int
-dc1394_avt_get_MaxResolution(raw1394handle_t handle, nodeid_t node, 
-			     unsigned int *MaxHeight, unsigned int *MaxWidth);
+dc1394error_t dc1394_avt_get_MaxResolution(dc1394camera_t *camera, 
+					   uint32_t *MaxHeight,
+					   uint32_t *MaxWidth);
 
 
 
@@ -225,9 +221,9 @@ dc1394_avt_get_MaxResolution(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get min and max shutter values for autoshutter			*/
 /************************************************************************/
-int
-dc1394_avt_get_auto_shutter(raw1394handle_t handle, nodeid_t node, 
-			    unsigned int *MinValue, unsigned int *MaxValue);
+dc1394error_t dc1394_avt_get_auto_shutter(dc1394camera_t *camera, 
+					  uint32_t *MinValue,
+					  uint32_t *MaxValue);
 
 
 /************************************************************************/
@@ -235,9 +231,9 @@ dc1394_avt_get_auto_shutter(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set min and max shutter values for autoshutter			*/
 /************************************************************************/
-int
-dc1394_avt_set_auto_shutter(raw1394handle_t handle, nodeid_t node,
-			    unsigned int MinValue, unsigned int MaxValue);
+dc1394error_t dc1394_avt_set_auto_shutter(dc1394camera_t *camera,
+					  uint32_t MinValue,
+					  uint32_t MaxValue);
 
 
 
@@ -246,9 +242,9 @@ dc1394_avt_set_auto_shutter(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get min and max gain values for autogain				*/
 /************************************************************************/
-int
-dc1394_avt_get_auto_gain(raw1394handle_t handle, nodeid_t node, 
-			 unsigned int *MinValue, unsigned int *MaxValue);
+dc1394error_t dc1394_avt_get_auto_gain(dc1394camera_t *camera, 
+				       uint32_t *MinValue,
+				       uint32_t *MaxValue);
 
 
 /************************************************************************/
@@ -256,9 +252,9 @@ dc1394_avt_get_auto_gain(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set min and max gain values for autogain				*/
 /************************************************************************/
-int
-dc1394_avt_set_auto_gain(raw1394handle_t handle, nodeid_t node,
-			 unsigned int MinValue, unsigned int MaxValue);
+dc1394error_t dc1394_avt_set_auto_gain(dc1394camera_t *camera,
+				       uint32_t MinValue,
+				       uint32_t MaxValue);
 
 
 
@@ -267,9 +263,9 @@ dc1394_avt_set_auto_gain(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get if trigger delay on and the trigger delay			*/
 /************************************************************************/
-int
-dc1394_avt_get_trigger_delay(raw1394handle_t handle, nodeid_t node, 
-			     dc1394bool_t *on_off, unsigned int *DelayTime);
+dc1394error_t dc1394_avt_get_trigger_delay(dc1394camera_t *camera, 
+					   dc1394bool_t *on_off,
+					   uint32_t *DelayTime);
 		
 
 /************************************************************************/
@@ -277,9 +273,9 @@ dc1394_avt_get_trigger_delay(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set trigger delay on/off  and the trigger delay value		*/
 /************************************************************************/
-int
-dc1394_avt_set_trigger_delay(raw1394handle_t handle, nodeid_t node,
-			     dc1394bool_t on_off, unsigned int DelayTime);
+dc1394error_t dc1394_avt_set_trigger_delay(dc1394camera_t *camera,
+					   dc1394bool_t on_off,
+					   uint32_t DelayTime);
 
 
 
@@ -288,9 +284,8 @@ dc1394_avt_set_trigger_delay(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get mirror mode							*/
 /************************************************************************/
-int
-dc1394_avt_get_mirror(raw1394handle_t handle, nodeid_t node, 
-		      dc1394bool_t *on_off);
+dc1394error_t dc1394_avt_get_mirror(dc1394camera_t *camera, 
+				    dc1394bool_t *on_off);
 
 
 /************************************************************************/
@@ -298,9 +293,8 @@ dc1394_avt_get_mirror(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set mirror mode							*/
 /************************************************************************/
-int
-dc1394_avt_set_mirror(raw1394handle_t handle, nodeid_t node,
-		      dc1394bool_t on_off);
+dc1394error_t dc1394_avt_set_mirror(dc1394camera_t *camera,
+				    dc1394bool_t on_off);
 
 
 
@@ -309,9 +303,9 @@ dc1394_avt_set_mirror(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get DSNU mode and num of frames used for computing  dsnu correction  */
 /************************************************************************/
-int
-dc1394_avt_get_dsnu(raw1394handle_t handle, nodeid_t node, 
-		    dc1394bool_t *on_off, unsigned int *frame_nb);
+dc1394error_t dc1394_avt_get_dsnu(dc1394camera_t *camera, 
+				  dc1394bool_t *on_off,
+				  uint32_t *frame_nb);
 
 
 /************************************************************************/
@@ -320,10 +314,9 @@ dc1394_avt_get_dsnu(raw1394handle_t handle, nodeid_t node,
 /* Set DSNU mode, number of frames used for computing 			*/
 /*  and launch the the computation of the dsnu frame			*/
 /************************************************************************/
-int
-dc1394_avt_set_dsnu(raw1394handle_t handle, nodeid_t node,
-		    dc1394bool_t on_off, dc1394bool_t compute,
-		    unsigned int frame_nb);
+dc1394error_t dc1394_avt_set_dsnu(dc1394camera_t *camera,
+				  dc1394bool_t on_off, dc1394bool_t compute,
+				  uint32_t frame_nb);
 
 		
 
@@ -332,9 +325,8 @@ dc1394_avt_set_dsnu(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get Blemish mode and num of frames used for computing the correction */
 /************************************************************************/
-int
-dc1394_avt_get_blemish(raw1394handle_t handle, nodeid_t node, 
-		       dc1394bool_t *on_off, unsigned int *frame_nb);
+dc1394error_t dc1394_avt_get_blemish(dc1394camera_t *camera, 
+				     dc1394bool_t *on_off, uint32_t *frame_nb);
 		
 		
 /************************************************************************/
@@ -343,10 +335,9 @@ dc1394_avt_get_blemish(raw1394handle_t handle, nodeid_t node,
 /* Set Blemish mode, num of frames used for computing 			*/
 /*  and launch the the computation of the blemish correction		*/
 /************************************************************************/
-int
-dc1394_avt_set_blemish(raw1394handle_t handle, nodeid_t node,
-		       dc1394bool_t on_off, dc1394bool_t compute,
-		       unsigned int frame_nb);
+dc1394error_t dc1394_avt_set_blemish(dc1394camera_t *camera,
+				     dc1394bool_t on_off, dc1394bool_t compute,
+				     uint32_t frame_nb);
 
 
 
@@ -355,9 +346,9 @@ dc1394_avt_set_blemish(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /*  Get the polarity, the mode, the state of the IO			*/
 /************************************************************************/
-int
-dc1394_avt_get_io(raw1394handle_t handle, nodeid_t node, unsigned int IO,
-		  dc1394bool_t *polarity, unsigned int *mode, dc1394bool_t *pinstate);
+dc1394error_t dc1394_avt_get_io(dc1394camera_t *camera, uint32_t IO,
+				dc1394bool_t *polarity, uint32_t *mode,
+				dc1394bool_t *pinstate);
 
 
 /************************************************************************/
@@ -365,9 +356,8 @@ dc1394_avt_get_io(raw1394handle_t handle, nodeid_t node, unsigned int IO,
 /*----------------------------------------------------------------------*/
 /*  Set the polarity and the mode of the IO				*/
 /************************************************************************/
-int
-dc1394_avt_set_io(raw1394handle_t handle, nodeid_t node,unsigned int IO,
-		  dc1394bool_t polarity, unsigned int mode);
+dc1394error_t dc1394_avt_set_io(dc1394camera_t *camera,uint32_t IO,
+				dc1394bool_t polarity, uint32_t mode);
 		
 
 
@@ -376,8 +366,7 @@ dc1394_avt_set_io(raw1394handle_t handle, nodeid_t node,unsigned int IO,
 /*----------------------------------------------------------------------*/
 /* Reset the bus and the fpga						*/
 /************************************************************************/
-int
-dc1394_avt_reset(raw1394handle_t handle, nodeid_t node);
+dc1394error_t dc1394_avt_reset(dc1394camera_t *camera);
 
 
 
@@ -386,9 +375,8 @@ dc1394_avt_reset(raw1394handle_t handle, nodeid_t node);
 /*----------------------------------------------------------------------*/
 /* Get on/off and the num of the current lut loaded			*/
 /************************************************************************/
-int
-dc1394_avt_get_lut(raw1394handle_t handle, nodeid_t node, 
-		   dc1394bool_t *on_off, unsigned int *lutnb  );
+dc1394error_t dc1394_avt_get_lut(dc1394camera_t *camera, 
+				 dc1394bool_t *on_off, uint32_t *lutnb  );
 		
 
 /************************************************************************/
@@ -396,9 +384,8 @@ dc1394_avt_get_lut(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set on/off and the num of the current lut to load			*/
 /************************************************************************/
-int
-dc1394_avt_set_lut(raw1394handle_t handle, nodeid_t node,
-		   dc1394bool_t on_off, unsigned int lutnb);
+dc1394error_t dc1394_avt_set_lut(dc1394camera_t *camera,
+				 dc1394bool_t on_off, uint32_t lutnb);
 
 
 /************************************************************************/
@@ -406,10 +393,10 @@ dc1394_avt_set_lut(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get access mode of a lut						*/
 /************************************************************************/
-int
-dc1394_avt_get_lut_mem_ctrl(raw1394handle_t handle, nodeid_t node, 
-			    dc1394bool_t *en_write, unsigned int * AccessLutNo,
-			    unsigned int *addroffset);
+dc1394error_t dc1394_avt_get_lut_mem_ctrl(dc1394camera_t *camera, 
+					  dc1394bool_t *en_write,
+					  uint32_t * AccessLutNo,
+					  uint32_t *addroffset);
 
 
 /************************************************************************/
@@ -418,10 +405,10 @@ dc1394_avt_get_lut_mem_ctrl(raw1394handle_t handle, nodeid_t node,
 /* Set access mode of a lut						*/
 /************************************************************************/
 
-int
-dc1394_avt_set_lut_mem_ctrl(raw1394handle_t handle, nodeid_t node,
-			    dc1394bool_t en_write, unsigned int AccessLutNo, 
-			    unsigned int addroffset);
+dc1394error_t dc1394_avt_set_lut_mem_ctrl(dc1394camera_t *camera,
+					  dc1394bool_t en_write,
+					  uint32_t AccessLutNo, 
+					  uint32_t addroffset);
 	
 		
 /************************************************************************/
@@ -429,9 +416,8 @@ dc1394_avt_set_lut_mem_ctrl(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get num of luts present and the max size				*/
 /************************************************************************/
-int
-dc1394_avt_get_lut_info(raw1394handle_t handle, nodeid_t node, 
-			unsigned int *NumOfLuts, unsigned int *MaxLutSize);
+dc1394error_t dc1394_avt_get_lut_info(dc1394camera_t *camera, 
+				      uint32_t *NumOfLuts, uint32_t *MaxLutSize);
 
 
 /************************************************************************/
@@ -440,19 +426,18 @@ dc1394_avt_get_lut_info(raw1394handle_t handle, nodeid_t node,
 /* Get on/off and area							*/
 /************************************************************************/
 
-int
-dc1394_avt_get_aoi(raw1394handle_t handle, nodeid_t node, 
-		   dc1394bool_t *on_off, int *left, int *top, 
-		   int *width, int *height);
+dc1394error_t dc1394_avt_get_aoi(dc1394camera_t *camera, 
+				 dc1394bool_t *on_off, int *left, int *top, 
+				 int *width, int *height);
 
 /************************************************************************/
 /* Set Automatic white balance with Area Of Interest AOI		*/
 /*----------------------------------------------------------------------*/
 /* Set on/off and area							*/
 /************************************************************************/
-int
-dc1394_avt_set_aoi(raw1394handle_t handle, nodeid_t node,
-		   dc1394bool_t on_off,int left, int top, int width, int height);
+dc1394error_t dc1394_avt_set_aoi(dc1394camera_t *camera,
+				 dc1394bool_t on_off,int left, int top,
+				 int width, int height);
 
 
 
@@ -461,9 +446,8 @@ dc1394_avt_set_aoi(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get current test image						*/
 /************************************************************************/
-int
-dc1394_avt_get_test_images(raw1394handle_t handle, nodeid_t node, 
-			   unsigned int *image_no);
+dc1394error_t dc1394_avt_get_test_images(dc1394camera_t *camera, 
+					 uint32_t *image_no);
 
 
 /************************************************************************/
@@ -471,9 +455,8 @@ dc1394_avt_get_test_images(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set num of test image						*/
 /************************************************************************/
-int
-dc1394_avt_set_test_images(raw1394handle_t handle, nodeid_t node, 
-			   unsigned int image_no);
+dc1394error_t dc1394_avt_set_test_images(dc1394camera_t *camera, 
+					 uint32_t image_no);
 
 
 
@@ -482,9 +465,8 @@ dc1394_avt_set_test_images(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get the number of captured frames					*/
 /************************************************************************/
-int
-dc1394_avt_get_frame_info(raw1394handle_t handle, nodeid_t node, 
-			  unsigned int *framecounter);
+dc1394error_t dc1394_avt_get_frame_info(dc1394camera_t *camera, 
+					uint32_t *framecounter);
 
 
 /************************************************************************/
@@ -492,8 +474,7 @@ dc1394_avt_get_frame_info(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Reset frame counter							*/
 /************************************************************************/
-int
-dc1394_avt_reset_frame_info(raw1394handle_t handle, nodeid_t node);
+dc1394error_t dc1394_avt_reset_frame_info(dc1394camera_t *camera);
 		
 
 
@@ -502,9 +483,8 @@ dc1394_avt_reset_frame_info(raw1394handle_t handle, nodeid_t node);
 /*----------------------------------------------------------------------*/
 /* Get the size of the buffer						*/
 /************************************************************************/
-int
-dc1394_avt_get_gpdata_info(raw1394handle_t handle, nodeid_t node, 
-			   unsigned int *BufferSize);		
+dc1394error_t dc1394_avt_get_gpdata_info(dc1394camera_t *camera, 
+					 uint32_t *BufferSize);		
 
 
 
@@ -513,10 +493,11 @@ dc1394_avt_get_gpdata_info(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Get the fifo control mode						*/
 /************************************************************************/
-int
-dc1394_avt_get_deferred_trans(raw1394handle_t handle, nodeid_t node, 
-			      dc1394bool_t *HoldImage,dc1394bool_t * FastCapture, 
-			      unsigned int *FifoSize, unsigned int *NumOfImages );
+dc1394error_t dc1394_avt_get_deferred_trans(dc1394camera_t *camera, 
+					    dc1394bool_t *HoldImage,
+					    dc1394bool_t * FastCapture, 
+					    uint32_t *FifoSize,
+					    uint32_t *NumOfImages );
 		
 		
 /************************************************************************/
@@ -524,11 +505,12 @@ dc1394_avt_get_deferred_trans(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* Set the fifo control mode						*/
 /************************************************************************/
-int
-dc1394_avt_set_deferred_trans(raw1394handle_t handle, nodeid_t node,
-			      dc1394bool_t HoldImage,dc1394bool_t  FastCapture, 
-			      unsigned int FifoSize, unsigned int NumOfImages, 
-			      dc1394bool_t SendImage );
+dc1394error_t dc1394_avt_set_deferred_trans(dc1394camera_t *camera,
+					    dc1394bool_t HoldImage,
+					    dc1394bool_t  FastCapture, 
+					    uint32_t FifoSize,
+					    uint32_t NumOfImages, 
+					    dc1394bool_t SendImage );
 
 
 
@@ -537,9 +519,8 @@ dc1394_avt_set_deferred_trans(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* will Get the  buffer	...						*/
 /************************************************************************/
-int
-dc1394_avt_get_pdata_buffer(raw1394handle_t handle, nodeid_t node, 
-			    unsigned int *buff);
+dc1394error_t dc1394_avt_get_pdata_buffer(dc1394camera_t *camera, 
+					  uint32_t *buff);
 
 
 /************************************************************************/
@@ -547,9 +528,12 @@ dc1394_avt_get_pdata_buffer(raw1394handle_t handle, nodeid_t node,
 /*----------------------------------------------------------------------*/
 /* will Set the  buffer	...						*/
 /************************************************************************/
-int
-dc1394_avt_set_pdata_buffer(raw1394handle_t handle, nodeid_t node, 
-			    unsigned long buff);
+dc1394error_t dc1394_avt_set_pdata_buffer(dc1394camera_t *camera, 
+					  uint32_t buff);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

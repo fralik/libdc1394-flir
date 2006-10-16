@@ -20,38 +20,6 @@
 **
 **-------------------------------------------------------------------------
 **
-**  $Log$
-**  Revision 1.12  2005/12/21 11:22:49  ddouxchamps
-**  Fixed compilation warning and a bug in camera detection
-**
-**  Revision 1.11  2004/08/10 07:57:22  ddouxchamps
-**  Removed extra buffering (Johann Schoonees)
-**
-**  Revision 1.10  2004/03/09 08:41:44  ddouxchamps
-**  patch from Johann Schoonees for extra buffering
-**
-**  Revision 1.9  2004/01/20 04:15:34  ddennedy
-**  workaround some potential V4L compilation error
-**
-**  Revision 1.8  2004/01/20 04:12:27  ddennedy
-**  added dc1394_free_camera_nodes and applied to examples
-**
-**  Revision 1.7  2004/01/14 22:20:43  ddennedy
-**  enhanced dc1394_vloopback
-**
-**  Revision 1.6  2004/01/04 21:27:56  ddennedy
-**  simplify video1394 includes and other minor corrections
-**
-**  Revision 1.5  2003/09/23 13:44:12  ddennedy
-**  fix camera location by guid for all ports, add camera guid option to vloopback, add root detection and reset to vloopback
-**
-**  Revision 1.4  2003/09/15 17:21:27  ddennedy
-**  add features to examples
-**
-**  Revision 1.1  2002/10/27 04:21:54  ddennedy
-**  added v4l utility using vloopback
-**
-**
 **************************************************************************/
 
 #define _GNU_SOURCE
@@ -71,14 +39,13 @@
 #include <linux/videodev.h>
 #include <getopt.h>
 
-#include <libraw1394/raw1394.h>
-#include <libdc1394/dc1394_control.h>
+#include "libdc1394/dc1394_control.h"
 #include "affine.h"
 
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
 /* uncomment the following to drop frames to prevent delays */
-#define DROP_FRAMES 1
+#define DROP_FRAMES DC1394_RING_BUFFER_LAST
 #define MAX_PORTS 4
 #define DC1394_BUFFERS 8
 #define DC1394_WIDTH 640
@@ -92,10 +59,9 @@
 #define MAX_RESETS 5
 
 /* declarations for libdc1394 */
-raw1394handle_t handle = NULL;
-dc1394_cameracapture camera;
 nodeid_t *camera_nodes;
-dc1394_feature_set features;
+dc1394featureset_t features;
+dc1394camera_t *camera;
 
 /* Video4Linux globals */
 int v4l_dev = -1;
@@ -385,6 +351,7 @@ int capture_mmap(int frame)
 	int bpp = 0;
 	int ppp = 1; /* pixels per pixel! */
 	affine_transform_cb transform = NULL;
+    dc1394video_frame_t * framebuf;
 	
 	switch (g_v4l_fmt) {
 		case VIDEO_PALETTE_RGB24:
@@ -406,28 +373,33 @@ int capture_mmap(int frame)
 	}
 	
 	if (g_v4l_fmt == VIDEO_PALETTE_YUV422P && out_pipe != NULL) {
-		if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
-			affine_scale( (unsigned char *) camera.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+        framebuf = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
+		if (framebuf) {
+			affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
 				ppp * bpp, transform);
-			dc1394_dma_done_with_buffer(&camera);
+            dc1394_capture_enqueue_dma (camera, framebuf);
 		}
 		yuy2_to_yv16( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
 	else if (g_v4l_fmt == VIDEO_PALETTE_YUV420P && out_pipe != NULL) {
-		if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
-			affine_scale( (unsigned char *) camera.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+        framebuf = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
+		if (framebuf) {
+			affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
 				ppp * bpp, transform);
-			dc1394_dma_done_with_buffer(&camera);
+            dc1394_capture_enqueue_dma (camera, framebuf);
 		}
 		yuy2_to_yv12( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
-	else if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
-		affine_scale( (unsigned char *) camera.capture_buffer, DC1394_WIDTH/ppp, DC1394_HEIGHT,
-			out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width/ppp, g_height,
-			ppp * bpp, transform);
-		dc1394_dma_done_with_buffer(&camera);
+	else {
+        framebuf = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
+        if (framebuf) {
+            affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
+                out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width/ppp, g_height,
+                ppp * bpp, transform);
+            dc1394_capture_enqueue_dma (camera, framebuf);
+        }
 	}
 
 	
@@ -438,130 +410,120 @@ int capture_mmap(int frame)
 
 int dc_init()
 {
-	struct raw1394_portinfo ports[MAX_PORTS];
-	int numPorts = MAX_PORTS;
-	int port, reset;
-	int camCount = 0;
-	int found = 0;
-
-	/* get the number of ports (cards) */
-	handle = raw1394_new_handle();
-    if (handle==NULL) {
-        perror("Unable to aquire a raw1394 handle\n");
-        perror("did you load the drivers?\n");
-        exit(-1);
+  int reset;
+  uint32_t camCount = 0;
+  int found = 0;
+  dc1394camera_t **cameras=NULL;
+  int err, i;
+  int cam=-1;
+  
+  for (reset=0;reset<MAX_RESETS;reset++) {
+    err=dc1394_find_cameras(&cameras, &camCount);
+    DC1394_ERR_RTN(err,"Could not find cameras");
+    if (camCount > 0) {
+      if (g_guid == 0) {
+	/* use the first camera found */
+	cam=0;
+	found = 1;
+      }
+      else {
+	/* attempt to locate camera by guid */
+	for (i = 0; i< camCount && found == 0; i++) {
+	  if (cameras[i]->euid_64 == g_guid) {
+	    cam=i;
+	    found = 1;
+	  }
+	}
+      }
     }
-	
-	numPorts = raw1394_get_port_info(handle, ports, numPorts);
-	raw1394_destroy_handle(handle);
-	handle = NULL;
+    if (found == 1) {
+      camera=cameras[cam];
+      for (i=0;i<camCount;i++) {
+	if (i!=cam)
+	  dc1394_free_camera(cameras[i]);
+      }
+      free(cameras);
+      cameras=NULL;
 
-	for (reset = 0; reset < MAX_RESETS && !found; reset++) {
-		/* get dc1394 handle to each port */
-		for (port = 0; port < numPorts && !found; port++) {
-			if (handle != NULL)
-				dc1394_destroy_handle(handle);
-			handle = dc1394_create_handle(port);
-			if (handle==NULL) {
-				perror("Unable to aquire a raw1394 handle\n");
-				perror("did you load the drivers?\n");
-				exit(-1);
-			}
-	
-			/* get the camera nodes and describe them as we find them */
-			camCount = 0;
-			camera_nodes = dc1394_get_camera_nodes(handle, &camCount, 0);
-			
-			if (camCount > 0) {
-				if (g_guid == 0) {
-					dc1394_camerainfo info;
-					/* use the first camera found */
-					camera.node = camera_nodes[0];
-					if (dc1394_get_camera_info(handle, camera_nodes[0], &info) == DC1394_SUCCESS)
-						dc1394_print_camera_info(&info);
-					found = 1;
-				}
-				else {
-					/* attempt to locate camera by guid */
-					int cam;
-					for (cam = 0; cam < camCount && found == 0; cam++) {
-						dc1394_camerainfo info;
-						if (dc1394_get_camera_info(handle, camera_nodes[cam], &info) == DC1394_SUCCESS)	{
-							if (info.euid_64 == g_guid)	{
-								dc1394_print_camera_info(&info);
-								camera.node = camera_nodes[cam];
-								found = 1;
-							}
-						}
-					}
-				}
-				if (found == 1)	{
-					/* camera can not be root--highest order node */
-					if (camera.node == raw1394_get_nodecount(handle)-1)	{
-						/* reset and retry if root */
-						raw1394_reset_bus(handle);
-						sleep(2);
-						found = 0;
-					}
-				}
-				dc1394_free_camera_nodes(camera_nodes);
-			} /* camCount > 0 */
-		} /* next port */
-	} /* next reset retry */
-	if (found) {
-		/*have the camera start sending us data*/
-		if (dc1394_start_iso_transmission(handle, camera.node) !=DC1394_SUCCESS) {
-			perror("unable to start camera iso transmission\n");
-			exit(-1);
-		}
-	}
-	if (found == 0 && g_guid != 0) {
-		fprintf( stderr, "Unable to locate camera node by guid\n");
-		exit(-1);
-	}
-	else if (camCount == 0) {
-		fprintf( stderr, "no cameras found :(\n");
-		exit(-1);
-	}
-	if (reset == MAX_RESETS) {
-		fprintf( stderr, "failed to not make camera root node :(\n");
-		exit(-1);
-	}
-	return found;
+      dc1394_print_camera_info(camera);
+    
+#if 0
+      /* camera can not be root--highest order node */
+      if (camera->node == raw1394_get_nodecount(camera->handle)-1) {
+	/* reset and retry if root */
+	//fprintf(stderr,"reset\n");
+	raw1394_reset_bus(camera->handle);
+	sleep(2);
+	found = 0;
+	dc1394_free_camera(camera);
+      }
+      else
+#endif
+	break;
+    }
+  } /* next reset retry */
+
+  if (found) {
+    /*have the camera start sending us data*/
+    if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS) {
+      perror("unable to start camera iso transmission\n");
+      exit(-1);
+    }
+  }
+  if (found == 0 && g_guid != 0) {
+    fprintf( stderr, "Unable to locate camera node by guid\n");
+    exit(-1);
+  }
+  else if (camCount == 0) {
+    fprintf( stderr, "no cameras found :(\n");
+    exit(-1);
+  }
+  if (reset == MAX_RESETS) {
+    fprintf( stderr, "failed to not make camera root node :(\n");
+    exit(-1);
+  }
+
+  //fprintf(stderr,"found\n");
+  return found;
 }
 
 int dc_start(int palette)
 {
-	unsigned int channel;
-	unsigned int speed;
-	int mode;
+	dc1394speed_t speed;
+	dc1394video_mode_t mode;
 
 	switch (palette) {
 		case VIDEO_PALETTE_RGB24:
-			mode = MODE_640x480_RGB;
+			mode = DC1394_VIDEO_MODE_640x480_RGB8;
 			break;
 			
 		case VIDEO_PALETTE_YUV422:
 		case VIDEO_PALETTE_YUV422P:
 		case VIDEO_PALETTE_YUV420P:
-			mode = MODE_640x480_YUV422;
+			mode = DC1394_VIDEO_MODE_640x480_YUV422;
 			break;
 
 		default:
 			return 0;
 	}
 	
-	if (dc1394_get_iso_channel_and_speed(handle, camera.node,
-								 &channel, &speed) !=DC1394_SUCCESS) 
+	if (dc1394_video_get_iso_speed(camera, &speed) !=DC1394_SUCCESS) 
 	{
-		printf("unable to get the iso channel number\n");
+		printf("unable to get the iso speed\n");
 		return 0;
 	}
 	 
-	if (dc1394_dma_setup_capture(handle, camera.node,  channel,
-							FORMAT_VGA_NONCOMPRESSED, mode,
-							speed, FRAMERATE_15, DC1394_BUFFERS, DROP_FRAMES,
-							dc_dev_name, &camera) != DC1394_SUCCESS) 
+	if (dc_dev_name!=NULL) {
+	  if (dc1394_capture_set_dma_device_filename(camera,dc_dev_name) != DC1394_SUCCESS) {
+	    fprintf(stderr,"unable to set dma device filename!\n");
+	    return 0;
+	  }
+	}
+
+	dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+	dc1394_video_set_mode(camera, mode);
+	dc1394_video_set_framerate(camera, DC1394_FRAMERATE_15);
+	if (dc1394_capture_setup_dma(camera, DC1394_BUFFERS) != DC1394_SUCCESS) 
 	{
 		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 			   __LINE__,__FILE__);
@@ -574,9 +536,9 @@ int dc_start(int palette)
 
 void dc_stop()
 {
-	if (handle && g_v4l_mode != V4L_MODE_NONE) {
-		dc1394_dma_unlisten( handle, &camera );
-		dc1394_dma_release_camera( handle, &camera);
+	if (g_v4l_mode != V4L_MODE_NONE) {
+	  dc1394_capture_stop(camera);
+	  dc1394_video_set_transmission(camera, DC1394_OFF);
 	}
 }
 		
@@ -947,13 +909,11 @@ void signal_handler( int sig) {
 void cleanup(void) {
 	if (v4l_dev)
 		close(v4l_dev);
-	if (handle) {
-		if (g_v4l_mode != V4L_MODE_NONE) {
-			dc1394_dma_unlisten( handle, &camera );
-			dc1394_dma_release_camera( handle, &camera);
-		}
-		dc1394_destroy_handle(handle);
-	}
+    if (g_v4l_mode != V4L_MODE_NONE) {
+        dc1394_capture_stop(camera);
+    }
+    dc1394_video_set_transmission(camera, DC1394_OFF);
+    dc1394_free_camera(camera);
 	if (out_pipe)
 		free(out_pipe);
 	if (out_mmap)
@@ -1007,9 +967,11 @@ int main(int argc,char *argv[])
 	
 	while (1) {
 		if (g_v4l_mode == V4L_MODE_PIPE) {
-			if (dc1394_dma_single_capture(&camera) == DC1394_SUCCESS) {
-				capture_pipe( v4l_dev, (unsigned char *) camera.capture_buffer );
-				dc1394_dma_done_with_buffer(&camera);
+            dc1394video_frame_t * framebuf;
+            framebuf = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
+			if (framebuf) {
+				capture_pipe( v4l_dev, framebuf->image);
+                dc1394_capture_enqueue_dma (camera, framebuf);
 			}
 		} else {
 			pause();

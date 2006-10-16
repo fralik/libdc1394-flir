@@ -4,7 +4,7 @@
  *
  * Written by Gord Peters <GordPeters@smarttech.com>
  * Additions by Chris Urmson <curmson@ri.cmu.edu>
- * Additions by Damien Douxchamps <douxchamps@ieee.org>
+ * Additions by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,1253 +20,880 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef _DC1394_CAMERA_CONTROL_H
-#define _DC1394_CAMERA_CONTROL_H
+#ifndef __DC1394_CAMERA_CONTROL_H__
+#define __DC1394_CAMERA_CONTROL_H__
 
-#include <stddef.h>
-#include <sys/types.h>
-#include <libraw1394/raw1394.h>
-#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
- 
-/* Enumeration of data speeds */
-enum
-{
-    SPEED_100= 0,
-    SPEED_200,
-    SPEED_400,
-    SPEED_800,
-    SPEED_1600,
-    SPEED_3200
-};
-#define SPEED_MIN                   SPEED_100
-#define SPEED_MAX                   SPEED_3200
-#define NUM_SPEEDS                  (SPEED_MAX - SPEED_MIN + 1)
+#include <netinet/in.h>
+#include <stdint.h>
 
-/* Enumeration of camera framerates */
-enum 
-{
-    FRAMERATE_1_875= 32,
-    FRAMERATE_3_75,
-    FRAMERATE_7_5,
-    FRAMERATE_15,
-    FRAMERATE_30,
-    FRAMERATE_60,
-    FRAMERATE_120,
-    FRAMERATE_240
-};
-#define FRAMERATE_MIN               FRAMERATE_1_875
-#define FRAMERATE_MAX               FRAMERATE_240
-#define NUM_FRAMERATES              (FRAMERATE_MAX - FRAMERATE_MIN + 1)
-
-/* Enumeration of camera modes for Format_0 */
-enum 
-{
-    MODE_160x120_YUV444= 64,
-    MODE_320x240_YUV422,
-    MODE_640x480_YUV411,
-    MODE_640x480_YUV422,
-    MODE_640x480_RGB,
-    MODE_640x480_MONO,
-    MODE_640x480_MONO16
-};
-#define MODE_FORMAT0_MIN	    MODE_160x120_YUV444
-#define MODE_FORMAT0_MAX	    MODE_640x480_MONO16
-#define NUM_FORMAT0_MODES	    (MODE_FORMAT0_MAX - MODE_FORMAT0_MIN + 1)
-
-/* Enumeration of camera modes for Format_1 */
-enum 
-{
-    MODE_800x600_YUV422= 96,
-    MODE_800x600_RGB,
-    MODE_800x600_MONO,
-    MODE_1024x768_YUV422,
-    MODE_1024x768_RGB,
-    MODE_1024x768_MONO,
-    MODE_800x600_MONO16,
-    MODE_1024x768_MONO16
-};
-#define MODE_FORMAT1_MIN	    MODE_800x600_YUV422
-#define MODE_FORMAT1_MAX	    MODE_1024x768_MONO16
-#define NUM_FORMAT1_MODES	    (MODE_FORMAT1_MAX - MODE_FORMAT1_MIN + 1)
+#ifndef octlet_t
+typedef uint64_t octlet_t;
+#endif
+#ifndef quadlet_t
+typedef uint32_t quadlet_t;
+#endif
+#ifndef nodeid_t
+typedef uint16_t nodeid_t;
+#endif
 
 
-/* Enumeration of camera modes for Format_2 */
-enum 
-{
-    MODE_1280x960_YUV422= 128,
-    MODE_1280x960_RGB,
-    MODE_1280x960_MONO,
-    MODE_1600x1200_YUV422,
-    MODE_1600x1200_RGB,
-    MODE_1600x1200_MONO,
-    MODE_1280x960_MONO16,
-    MODE_1600x1200_MONO16
-};
-#define MODE_FORMAT2_MIN	    MODE_1280x960_YUV422
-#define MODE_FORMAT2_MAX	    MODE_1600x1200_MONO16
-#define NUM_FORMAT2_MODES	    (MODE_FORMAT2_MAX - MODE_FORMAT2_MIN + 1)
+/* Note on the coding of libdc1394 versions:
+   - LIBDC1394_VERSION represent the release number of the library,
+     e.g. 2.0.0. It consists in 4 digits, 2 for each number in the version.
+     Version 2.1 will thus appear as 0201. The last version number is not
+     used because a ".1" increment (as opposed to ".0.1") is necessary if
+     the API had significant changes justifying the use of this number.
+   - LIBDC1394_VERSION_xxx are the version codes used by libtool and defined
+     in configure.in. _MAJOR is for API changes (compat break), _REVISION is
+     for backward compatible API changes (e.g. new functions) and _AGE is
+     when the API does not change (only code changes). At least that's my
+     wild guess.
+   These numbers can be used to adapt the function calls to the library
+   version installed on the machine. They appeared in 2.0 so that you
+   may need to check their existance if your code must work with 1.x.
+*/
+#define LIBDC1394_VERSION            0200
+#define LIBDC1394_VERSION_MAJOR        20
+#define LIBDC1394_VERSION_REVISION      0
+#define LIBDC1394_VERSION_AGE           0
 
-/* Enumeration of camera modes for Format_6 */
-enum 
-{
-    MODE_EXIF= 256
-};
-#define MODE_FORMAT6_MIN            MODE_EXIF
-#define MODE_FORMAT6_MAX            MODE_EXIF
-#define NUM_FORMAT6_MODES           (MODE_FORMAT6_MAX - MODE_FORMAT6_MIN + 1)
+/* Enumeration of iso data speeds */
+typedef enum {
+  DC1394_ISO_SPEED_100= 0,
+  DC1394_ISO_SPEED_200,
+  DC1394_ISO_SPEED_400,
+  DC1394_ISO_SPEED_800,
+  DC1394_ISO_SPEED_1600,
+  DC1394_ISO_SPEED_3200
+} dc1394speed_t;
+#define DC1394_ISO_SPEED_MIN                   DC1394_ISO_SPEED_100
+#define DC1394_ISO_SPEED_MAX                   DC1394_ISO_SPEED_3200
+#define DC1394_ISO_SPEED_NUM                  (DC1394_ISO_SPEED_MAX - DC1394_ISO_SPEED_MIN + 1)
 
-/* Enumeration of camera modes for Format_7 */
-enum {
-    MODE_FORMAT7_0= 288,
-    MODE_FORMAT7_1,
-    MODE_FORMAT7_2,
-    MODE_FORMAT7_3,
-    MODE_FORMAT7_4,
-    MODE_FORMAT7_5,
-    MODE_FORMAT7_6,
-    MODE_FORMAT7_7
-};
-#define MODE_FORMAT7_MIN            MODE_FORMAT7_0
-#define MODE_FORMAT7_MAX            MODE_FORMAT7_7
-#define NUM_MODE_FORMAT7            (MODE_FORMAT7_MAX - MODE_FORMAT7_MIN + 1)
+/* Enumeration of video framerates */
+typedef enum {
+  DC1394_FRAMERATE_1_875= 32,
+  DC1394_FRAMERATE_3_75,
+  DC1394_FRAMERATE_7_5,
+  DC1394_FRAMERATE_15,
+  DC1394_FRAMERATE_30,
+  DC1394_FRAMERATE_60,
+  DC1394_FRAMERATE_120,
+  DC1394_FRAMERATE_240
+} dc1394framerate_t;
+#define DC1394_FRAMERATE_MIN               DC1394_FRAMERATE_1_875
+#define DC1394_FRAMERATE_MAX               DC1394_FRAMERATE_240
+#define DC1394_FRAMERATE_NUM              (DC1394_FRAMERATE_MAX - DC1394_FRAMERATE_MIN + 1)
 
-/* Enumeration of Format_7 color modes */
-enum {
-    COLOR_FORMAT7_MONO8= 320,
-    COLOR_FORMAT7_YUV411,
-    COLOR_FORMAT7_YUV422,
-    COLOR_FORMAT7_YUV444,
-    COLOR_FORMAT7_RGB8,
-    COLOR_FORMAT7_MONO16,
-    COLOR_FORMAT7_RGB16,
-    COLOR_FORMAT7_MONO16S,
-    COLOR_FORMAT7_RGB16S,
-    COLOR_FORMAT7_RAW8,
-    COLOR_FORMAT7_RAW16
-};
-#define COLOR_FORMAT7_MIN           COLOR_FORMAT7_MONO8
-#define COLOR_FORMAT7_MAX           COLOR_FORMAT7_RAW16
-#define NUM_COLOR_FORMAT7           (COLOR_FORMAT7_MAX - COLOR_FORMAT7_MIN + 1)
+/* Enumeration of video modes */
+typedef enum {
+  DC1394_VIDEO_MODE_160x120_YUV444= 64,
+  DC1394_VIDEO_MODE_320x240_YUV422,
+  DC1394_VIDEO_MODE_640x480_YUV411,
+  DC1394_VIDEO_MODE_640x480_YUV422,
+  DC1394_VIDEO_MODE_640x480_RGB8,
+  DC1394_VIDEO_MODE_640x480_MONO8,
+  DC1394_VIDEO_MODE_640x480_MONO16,
+  DC1394_VIDEO_MODE_800x600_YUV422,
+  DC1394_VIDEO_MODE_800x600_RGB8,
+  DC1394_VIDEO_MODE_800x600_MONO8,
+  DC1394_VIDEO_MODE_1024x768_YUV422,
+  DC1394_VIDEO_MODE_1024x768_RGB8,
+  DC1394_VIDEO_MODE_1024x768_MONO8,
+  DC1394_VIDEO_MODE_800x600_MONO16,
+  DC1394_VIDEO_MODE_1024x768_MONO16,
+  DC1394_VIDEO_MODE_1280x960_YUV422,
+  DC1394_VIDEO_MODE_1280x960_RGB8,
+  DC1394_VIDEO_MODE_1280x960_MONO8,
+  DC1394_VIDEO_MODE_1600x1200_YUV422,
+  DC1394_VIDEO_MODE_1600x1200_RGB8,
+  DC1394_VIDEO_MODE_1600x1200_MONO8,
+  DC1394_VIDEO_MODE_1280x960_MONO16,
+  DC1394_VIDEO_MODE_1600x1200_MONO16,
+  DC1394_VIDEO_MODE_EXIF,
+  DC1394_VIDEO_MODE_FORMAT7_0,
+  DC1394_VIDEO_MODE_FORMAT7_1,
+  DC1394_VIDEO_MODE_FORMAT7_2,
+  DC1394_VIDEO_MODE_FORMAT7_3,
+  DC1394_VIDEO_MODE_FORMAT7_4,
+  DC1394_VIDEO_MODE_FORMAT7_5,
+  DC1394_VIDEO_MODE_FORMAT7_6,
+  DC1394_VIDEO_MODE_FORMAT7_7
+} dc1394video_mode_t;
+#define DC1394_VIDEO_MODE_MIN	    DC1394_VIDEO_MODE_160x120_YUV444
+#define DC1394_VIDEO_MODE_MAX       DC1394_VIDEO_MODE_FORMAT7_7
+#define DC1394_VIDEO_MODE_NUM      (DC1394_VIDEO_MODE_MAX - DC1394_VIDEO_MODE_MIN + 1)
+
+// Special min/max are defined for Format_7
+#define DC1394_VIDEO_MODE_FORMAT7_MIN       DC1394_VIDEO_MODE_FORMAT7_0
+#define DC1394_VIDEO_MODE_FORMAT7_MAX       DC1394_VIDEO_MODE_FORMAT7_7
+#define DC1394_VIDEO_MODE_FORMAT7_NUM      (DC1394_VIDEO_MODE_FORMAT7_MAX - DC1394_VIDEO_MODE_FORMAT7_MIN + 1)
+
+/* Enumeration of colour modings */
+typedef enum {
+  DC1394_COLOR_CODING_MONO8= 320,
+  DC1394_COLOR_CODING_YUV411,
+  DC1394_COLOR_CODING_YUV422,
+  DC1394_COLOR_CODING_YUV444,
+  DC1394_COLOR_CODING_RGB8,
+  DC1394_COLOR_CODING_MONO16,
+  DC1394_COLOR_CODING_RGB16,
+  DC1394_COLOR_CODING_MONO16S,
+  DC1394_COLOR_CODING_RGB16S,
+  DC1394_COLOR_CODING_RAW8,
+  DC1394_COLOR_CODING_RAW16
+} dc1394color_coding_t;
+#define DC1394_COLOR_CODING_MIN     DC1394_COLOR_CODING_MONO8
+#define DC1394_COLOR_CODING_MAX     DC1394_COLOR_CODING_RAW16
+#define DC1394_COLOR_CODING_NUM    (DC1394_COLOR_CODING_MAX - DC1394_COLOR_CODING_MIN + 1)
 
 /* Enumeration of trigger modes */
-enum {
-    TRIGGER_MODE_0= 352,
-    TRIGGER_MODE_1,
-    TRIGGER_MODE_2,
-    TRIGGER_MODE_3
-};
-#define TRIGGER_MODE_MIN            TRIGGER_MODE_0
-#define TRIGGER_MODE_MAX            TRIGGER_MODE_3
-#define NUM_TRIGGER_MODE            (TRIGGER_MODE_MAX - TRIGGER_MODE_MIN + 1)
-
-/* Enumeration of camera image formats */
-enum {
-    FORMAT_VGA_NONCOMPRESSED= 384,
-    FORMAT_SVGA_NONCOMPRESSED_1,
-    FORMAT_SVGA_NONCOMPRESSED_2,
-    /* 3 reserved formats */
-    FORMAT_STILL_IMAGE= 390,
-    FORMAT_SCALABLE_IMAGE_SIZE
-};
-#define FORMAT_MIN                  FORMAT_VGA_NONCOMPRESSED
-#define FORMAT_MAX                  FORMAT_SCALABLE_IMAGE_SIZE
-#define NUM_FORMATS                 (FORMAT_MAX - FORMAT_MIN + 1)
+typedef enum {
+  DC1394_TRIGGER_MODE_0= 352,
+  DC1394_TRIGGER_MODE_1,
+  DC1394_TRIGGER_MODE_2,
+  DC1394_TRIGGER_MODE_3,
+  DC1394_TRIGGER_MODE_4,
+  DC1394_TRIGGER_MODE_5,
+  DC1394_TRIGGER_MODE_14,
+  DC1394_TRIGGER_MODE_15
+} dc1394trigger_mode_t;
+#define DC1394_TRIGGER_MODE_MIN     DC1394_TRIGGER_MODE_0
+#define DC1394_TRIGGER_MODE_MAX     DC1394_TRIGGER_MODE_15
+#define DC1394_TRIGGER_MODE_NUM    (DC1394_TRIGGER_MODE_MAX - DC1394_TRIGGER_MODE_MIN + 1)
 
 /* Enumeration of camera features */
-enum 
-{
-    FEATURE_BRIGHTNESS= 416,
-    FEATURE_EXPOSURE,
-    FEATURE_SHARPNESS,
-    FEATURE_WHITE_BALANCE,
-    FEATURE_HUE,
-    FEATURE_SATURATION,
-    FEATURE_GAMMA,
-    FEATURE_SHUTTER,
-    FEATURE_GAIN,
-    FEATURE_IRIS,
-    FEATURE_FOCUS,
-    FEATURE_TEMPERATURE,
-    FEATURE_TRIGGER,
-    FEATURE_TRIGGER_DELAY,
-    FEATURE_WHITE_SHADING,
-    FEATURE_FRAME_RATE,
-    /* 16 reserved features */
-    FEATURE_ZOOM,
-    FEATURE_PAN,
-    FEATURE_TILT,
-    FEATURE_OPTICAL_FILTER,
-    /* 12 reserved features */
-    FEATURE_CAPTURE_SIZE,
-    FEATURE_CAPTURE_QUALITY
-    /* 14 reserved features */
-};
-#define FEATURE_MIN                 FEATURE_BRIGHTNESS
-#define FEATURE_MAX                 FEATURE_CAPTURE_QUALITY
-#define NUM_FEATURES                (FEATURE_MAX - FEATURE_MIN + 1)
+typedef enum {
+  DC1394_FEATURE_BRIGHTNESS= 416,
+  DC1394_FEATURE_EXPOSURE,
+  DC1394_FEATURE_SHARPNESS,
+  DC1394_FEATURE_WHITE_BALANCE,
+  DC1394_FEATURE_HUE,
+  DC1394_FEATURE_SATURATION,
+  DC1394_FEATURE_GAMMA,
+  DC1394_FEATURE_SHUTTER,
+  DC1394_FEATURE_GAIN,
+  DC1394_FEATURE_IRIS,
+  DC1394_FEATURE_FOCUS,
+  DC1394_FEATURE_TEMPERATURE,
+  DC1394_FEATURE_TRIGGER,
+  DC1394_FEATURE_TRIGGER_DELAY,
+  DC1394_FEATURE_WHITE_SHADING,
+  DC1394_FEATURE_FRAME_RATE,
+  /* 16 reserved features */
+  DC1394_FEATURE_ZOOM,
+  DC1394_FEATURE_PAN,
+  DC1394_FEATURE_TILT,
+  DC1394_FEATURE_OPTICAL_FILTER,
+  /* 12 reserved features */
+  DC1394_FEATURE_CAPTURE_SIZE,
+  DC1394_FEATURE_CAPTURE_QUALITY
+  /* 14 reserved features */
+} dc1394feature_t;
+#define DC1394_FEATURE_MIN           DC1394_FEATURE_BRIGHTNESS
+#define DC1394_FEATURE_MAX           DC1394_FEATURE_CAPTURE_QUALITY
+#define DC1394_FEATURE_NUM          (DC1394_FEATURE_MAX - DC1394_FEATURE_MIN + 1)
 
 /* Operation modes */
-enum 
-{
-  OPERATION_MODE_LEGACY = 480,
-  OPERATION_MODE_1394B
-};
+typedef enum {
+  DC1394_OPERATION_MODE_LEGACY = 480,
+  DC1394_OPERATION_MODE_1394B
+} dc1394operation_mode_t;
 
 /* Format 7 sensor layouts*/
-enum
-{
-  COLOR_FILTER_FORMAT7_RGGB = 512,
-  COLOR_FILTER_FORMAT7_GBRG,
-  COLOR_FILTER_FORMAT7_GRBG,
-  COLOR_FILTER_FORMAT7_BGGR
-};
-#define COLOR_FILTER_FORMAT7_MIN                 COLOR_FILTER_FORMAT7_RGGB
-#define COLOR_FILTER_FORMAT7_MAX                 COLOR_FILTER_FORMAT7_BGGR
-#define NUM_COLOR_FILTER_FORMAT7                (COLOR_FILTER_FORMAT7_MAX - COLOR_FILTER_FORMAT7_MIN + 1)
+typedef enum {
+  DC1394_COLOR_FILTER_RGGB = 512,
+  DC1394_COLOR_FILTER_GBRG,
+  DC1394_COLOR_FILTER_GRBG,
+  DC1394_COLOR_FILTER_BGGR
+} dc1394color_filter_t;
+#define DC1394_COLOR_FILTER_MIN        DC1394_COLOR_FILTER_RGGB
+#define DC1394_COLOR_FILTER_MAX        DC1394_COLOR_FILTER_BGGR
+#define DC1394_COLOR_FILTER_NUM       (DC1394_COLOR_FILTER_MAX - DC1394_COLOR_FILTER_MIN + 1)
 
 /* IIDC versions*/
-enum
-{
-  IIDC_VERSION_1_04 = 544,
-  IIDC_VERSION_1_20,
-  IIDC_VERSION_PTGREY,
-  IIDC_VERSION_1_30,
-  IIDC_VERSION_1_31,
-  IIDC_VERSION_1_32,
-  IIDC_VERSION_1_33,
-  IIDC_VERSION_1_34,
-  IIDC_VERSION_1_35,
-  IIDC_VERSION_1_36,
-  IIDC_VERSION_1_37,
-  IIDC_VERSION_1_38,
-  IIDC_VERSION_1_39
-};
-#define IIDC_VERSION_MIN                 IIDC_VERSION_1_04
-#define IIDC_VERSION_MAX                 IIDC_VERSION_1_39
-#define NUM_IIDC_VERSION                (IIDC_VERSION_MAX - IIDC_VERSION_MIN + 1)
+typedef enum {
+  DC1394_IIDC_VERSION_1_04 = 544,
+  DC1394_IIDC_VERSION_1_20,
+  DC1394_IIDC_VERSION_PTGREY,
+  DC1394_IIDC_VERSION_1_30,
+  DC1394_IIDC_VERSION_1_31,
+  DC1394_IIDC_VERSION_1_32,
+  DC1394_IIDC_VERSION_1_33,
+  DC1394_IIDC_VERSION_1_34,
+  DC1394_IIDC_VERSION_1_35,
+  DC1394_IIDC_VERSION_1_36,
+  DC1394_IIDC_VERSION_1_37,
+  DC1394_IIDC_VERSION_1_38,
+  DC1394_IIDC_VERSION_1_39
+} dc1394iidc_version_t;
+#define DC1394_IIDC_VERSION_MIN        DC1394_IIDC_VERSION_1_04
+#define DC1394_IIDC_VERSION_MAX        DC1394_IIDC_VERSION_1_39
+#define DC1394_IIDC_VERSION_NUM       (DC1394_IIDC_VERSION_MAX - DC1394_IIDC_VERSION_MIN + 1)
+
+/* Enumeration of trigger sources */
+typedef enum {
+  DC1394_TRIGGER_SOURCE_0= 576,
+  DC1394_TRIGGER_SOURCE_1,
+  DC1394_TRIGGER_SOURCE_2,
+  DC1394_TRIGGER_SOURCE_3,
+} dc1394trigger_source_t;
+#define DC1394_TRIGGER_SOURCE_MIN      DC1394_TRIGGER_SOURCE_0
+#define DC1394_TRIGGER_SOURCE_MAX      DC1394_TRIGGER_SOURCE_3
+#define DC1394_TRIGGER_SOURCE_NUM     (DC1394_TRIGGER_SOURCE_MAX - DC1394_TRIGGER_SOURCE_MIN + 1)
+
+/* Enumeration of power classes */
+typedef enum {
+  DC1394_POWER_CLASS_NONE=608,
+  DC1394_POWER_CLASS_PROV_MIN_15W,
+  DC1394_POWER_CLASS_PROV_MIN_30W,
+  DC1394_POWER_CLASS_PROV_MIN_45W,
+  DC1394_POWER_CLASS_USES_MAX_1W,
+  DC1394_POWER_CLASS_USES_MAX_3W,
+  DC1394_POWER_CLASS_USES_MAX_6W,
+  DC1394_POWER_CLASS_USES_MAX_10W
+} dc1394power_class_t;
+#define DC1394_POWER_CLASS_MIN         DC1394_POWER_CLASS_NONE
+#define DC1394_POWER_CLASS_MAX         DC1394_POWER_CLASS_USES_MAX_10W
+#define DC1394_POWER_CLASS_NUM        (DC1394_POWER_CLASS_MAX - DC1394_POWER_CLASS_MIN + 1)
+
+/* Enumeration of PHY delays */
+typedef enum {
+  DC1394_PHY_DELAY_MAX_144_NS=640,
+  DC1394_PHY_DELAY_UNKNOWN_0,
+  DC1394_PHY_DELAY_UNKNOWN_1,
+  DC1394_PHY_DELAY_UNKNOWN_2
+} dc1394phy_delay_t;
+#define DC1394_PHY_DELAY_MIN           DC1394_PHY_DELAY_MAX_144_NS
+#define DC1394_PHY_DELAY_MAX           DC1394_PHY_DELAY_UNKNOWN_0
+#define DC1394_PHY_DELAY_NUM          (DC1394_PHY_DELAY_MAX - DC1394_PHY_DELAY_MIN + 1)
 
 /* Maximum number of characters in vendor and model strings */
-#define MAX_CHARS                   32
+#define MAX_CHARS                      256
 
 /* Return values for visible functions*/
-#define DC1394_SUCCESS               1
-#define DC1394_FAILURE              -1
-#define DC1394_NO_FRAME             -2
-#define DC1394_NO_CAMERA            0xffff
+typedef enum {
+  DC1394_SUCCESS = 0,   /* Success is zero */
+  DC1394_FAILURE,       /* Errors are positive numbers */
+  DC1394_NO_FRAME = -2, /* Warnings or info are negative numbers */
+  DC1394_NO_CAMERA = 3,
+  DC1394_NOT_A_CAMERA,
+  DC1394_FUNCTION_NOT_SUPPORTED,
+  DC1394_CAMERA_NOT_INITIALIZED,
+  DC1394_INVALID_FEATURE,
+  DC1394_INVALID_VIDEO_FORMAT,
+  DC1394_INVALID_VIDEO_MODE,
+  DC1394_INVALID_FRAMERATE,
+  DC1394_INVALID_TRIGGER_MODE,
+  DC1394_INVALID_TRIGGER_SOURCE,
+  DC1394_INVALID_ISO_SPEED,
+  DC1394_INVALID_IIDC_VERSION,
+  DC1394_INVALID_COLOR_CODING,
+  DC1394_INVALID_COLOR_FILTER,
+  DC1394_INVALID_CAPTURE_MODE,
+  DC1394_REQ_VALUE_OUTSIDE_RANGE,
+  DC1394_INVALID_ERROR_CODE,
+  DC1394_MEMORY_ALLOCATION_FAILURE,
+  DC1394_TAGGED_REGISTER_NOT_FOUND,
+  DC1394_FORMAT7_ERROR_FLAG_1,
+  DC1394_FORMAT7_ERROR_FLAG_2,
+  DC1394_INVALID_BAYER_METHOD,
+  DC1394_INVALID_ARGUMENT_VALUE,
+  DC1394_INVALID_VIDEO1394_DEVICE,
+  DC1394_NO_ISO_CHANNEL,
+  DC1394_NO_BANDWIDTH,
+  DC1394_IOCTL_FAILURE,
+  DC1394_CAPTURE_IS_NOT_SET = -30,
+  DC1394_RAW1394_CAPTURE_FAILURE = 31,
+  DC1394_CAPTURE_IS_RUNNING,
+  DC1394_RAW1394_FAILURE
+} dc1394error_t;
+#define DC1394_ERROR_NUM DC1394_RAW1394_FAILURE+1
 
 /* Parameter flags for dc1394_setup_format7_capture() */
-#define QUERY_FROM_CAMERA -1
-#define USE_MAX_AVAIL     -2
-#define USE_RECOMMENDED   -3
+#define DC1394_QUERY_FROM_CAMERA -1
+#define DC1394_USE_MAX_AVAIL     -2
+#define DC1394_USE_RECOMMENDED   -3
 
 /* The video1394 policy: blocking (wait for a frame forever)
-   or polling (returns if no frames in buffer */
-typedef enum
-{ 
-  VIDEO1394_WAIT=0,
-  VIDEO1394_POLL
-} dc1394videopolicy_t;
+   or polling (returns if no frames in buffer) */
+typedef enum { 
+  DC1394_VIDEO1394_WAIT=0,
+  DC1394_VIDEO1394_POLL
+} dc1394video_policy_t;
+
+/* Using this policy you can choose between two ring buffer behaviour:
+  1. FIFO: the function returns the next frame received
+  2. LIFO: the buffer always returns the last frame
+  The first one is good if you don't want to drop frames, the second
+  one is better if you want to limit latency.
+*/
+
+typedef enum { 
+  DC1394_RING_BUFFER_NEXT=0,
+  DC1394_RING_BUFFER_LAST
+} dc1394ring_buffer_policy_t;
 
 /* Yet another boolean data type */
-typedef enum
-{
-    DC1394_FALSE= 0,
-    DC1394_TRUE
+typedef enum {
+  DC1394_FALSE= 0,
+  DC1394_TRUE
 } dc1394bool_t;
 
+/* Yet another boolean data type */
+typedef enum {
+  DC1394_OFF= 0,
+  DC1394_ON
+} dc1394switch_t;
+
+typedef enum {
+  DC1394_TRIGGER_ACTIVE_LOW= 0,
+  DC1394_TRIGGER_ACTIVE_HIGH
+} dc1394trigger_polarity_t;
+
+typedef enum {
+  DC1394_FEATURE_MODE_MANUAL= 0,
+  DC1394_FEATURE_MODE_AUTO,
+  DC1394_FEATURE_MODE_ONE_PUSH_AUTO
+} dc1394feature_mode_t;
+
+
+/* Camera capture structure. Do not access directly from your application.
+   Use dc1394_video_get_buffer and dc1394_video_get_fill_time instead. */
+
+typedef struct
+{
+  uint32_t                num;
+  dc1394color_coding_t    codings[DC1394_COLOR_CODING_NUM];
+} dc1394color_codings_t;
+
+typedef struct
+{
+  uint32_t                num;
+  dc1394video_mode_t      modes[DC1394_VIDEO_MODE_NUM];
+} dc1394video_modes_t;
+
+typedef struct
+{
+  uint32_t                num;
+  dc1394framerate_t       framerates[DC1394_FRAMERATE_NUM];
+} dc1394framerates_t;
+
+typedef struct
+{
+  uint32_t                num;
+  dc1394trigger_mode_t    modes[DC1394_TRIGGER_MODE_NUM];
+} dc1394trigger_modes_t;
+
+typedef struct
+{
+  uint32_t                  num;
+  dc1394trigger_source_t    sources[DC1394_TRIGGER_SOURCE_NUM];
+} dc1394trigger_sources_t;
+
 /* Camera structure */
-typedef struct __dc1394_camerainfo
+typedef struct __dc1394_camera
 {
-    raw1394handle_t handle;
-    nodeid_t id;
-    octlet_t ccr_offset;
-    u_int64_t euid_64;
-    char vendor[MAX_CHARS + 1];
-    char model[MAX_CHARS + 1];
-} dc1394_camerainfo;
+  // system/firmware information
+  int                  port;
+  nodeid_t             node;
+  uint64_t             euid_64;
+  quadlet_t            ud_reg_tag_12;
+  quadlet_t            ud_reg_tag_13;
+  octlet_t             command_registers_base;
+  octlet_t             unit_directory;
+  octlet_t             unit_dependent_directory;
+  octlet_t             advanced_features_csr;
+  octlet_t             absolute_control_csr;
+  octlet_t             PIO_control_csr; // future use
+  octlet_t             SIO_control_csr; // future use
+  octlet_t             strobe_control_csr; // future use
+  octlet_t             format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
+  dc1394iidc_version_t iidc_version;
+  char                 vendor[MAX_CHARS + 1];
+  char                 model[MAX_CHARS + 1];
+  quadlet_t            vendor_id;
+  quadlet_t            model_id;
+  dc1394bool_t         bmode_capable;
+  dc1394bool_t         one_shot_capable;
+  dc1394bool_t         multi_shot_capable;
+  dc1394bool_t         adv_features_capable;
+  dc1394bool_t         can_switch_on_off;
 
-typedef struct __dc1394_cam_cap_struct 
+  // some current values
+  dc1394video_mode_t   video_mode;
+  dc1394framerate_t    framerate;
+  dc1394switch_t       is_iso_on;
+  int                  iso_channel; // this variable contains the iso channel requests or the current iso channel
+  int                  iso_channel_is_set; // >0 if the iso_channel above has been allocated within libraw1394
+  uint32_t             iso_bandwidth;
+  dc1394speed_t        iso_speed;
+  uint32_t             mem_channel_number;
+  uint32_t             save_channel;
+  uint32_t             load_channel;
+
+  int                  capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
+
+  // for broadcast:
+  dc1394bool_t         broadcast;
+  nodeid_t             node_id_backup;
+
+  // 1394 PHY interface data:
+  dc1394speed_t        phy_speed;
+  dc1394power_class_t  power_class;
+  dc1394phy_delay_t    phy_delay;
+
+} dc1394camera_t;
+
+typedef struct __dc1394feature_info_t_struct 
 {
-    nodeid_t node;
-    int channel;
-    int frame_rate;
-    int frame_width, frame_height;
-    int * capture_buffer;
-    int quadlets_per_frame;
-    int quadlets_per_packet;
-    /* components needed for the DMA based video capture */
-    const unsigned char * dma_ring_buffer;
-    int dma_buffer_size;
-    int dma_frame_size;
-    int num_dma_buffers;
-    int dma_last_buffer;
-    int num_dma_buffers_behind;
-    const char * dma_device_file;
-    int dma_fd;
-    int port;
-    struct timeval filltime;
-    int drop_frames;
-} dc1394_cameracapture ;
+  dc1394feature_t    id;
+  dc1394bool_t       available;
+  dc1394bool_t       one_push;
+  dc1394bool_t       absolute_capable;
+  dc1394bool_t       readout_capable;
+  dc1394bool_t       on_off_capable;
+  dc1394bool_t       auto_capable;
+  dc1394bool_t       manual_capable;
+  dc1394bool_t       polarity_capable;
+  dc1394switch_t     one_push_active;
+  dc1394switch_t     is_on;
+  dc1394bool_t       auto_active;
+  dc1394trigger_modes_t    trigger_modes;
+  dc1394trigger_mode_t     trigger_mode;
+  dc1394trigger_polarity_t trigger_polarity;
+  dc1394trigger_sources_t  trigger_sources;
+  dc1394trigger_source_t   trigger_source;
+  uint32_t           min;
+  uint32_t           max;
+  uint32_t           value;
+  uint32_t           BU_value;
+  uint32_t           RV_value;
+  uint32_t           B_value;
+  uint32_t           R_value;
+  uint32_t           G_value;
+  uint32_t           target_value;
+  
+  dc1394switch_t     abs_control;
+  float              abs_value;
+  float              abs_max;
+  float              abs_min;
+  
+} dc1394feature_info_t;
 
-typedef struct __dc1394_misc_info
+typedef struct __dc1394featureset_t
 {
-  unsigned int format;
-  unsigned int mode;
-  unsigned int framerate;
+  dc1394feature_info_t    feature[DC1394_FEATURE_NUM];
+} dc1394featureset_t;
 
-  dc1394bool_t is_iso_on;
-  unsigned int iso_channel;
-  unsigned int iso_speed;
-
-  unsigned int mem_channel_number;
-  unsigned int save_channel;
-  unsigned int load_channel;
-
-  dc1394bool_t bmode_capable;
-  dc1394bool_t one_shot_capable;
-  dc1394bool_t multi_shot_capable;
-
-} dc1394_miscinfo;
-
-typedef struct __dc1394_feature_info_struct 
+typedef struct __dc1394format7mode_t
 {
-    unsigned int feature_id;
-    dc1394bool_t available;
-    dc1394bool_t one_push;
-    dc1394bool_t absolute_capable;
-    dc1394bool_t readout_capable;
-    dc1394bool_t on_off_capable;
-    dc1394bool_t auto_capable;
-    dc1394bool_t manual_capable;
-    dc1394bool_t polarity_capable;
-    dc1394bool_t one_push_active;
-    dc1394bool_t is_on;
-    dc1394bool_t auto_active;
-    char trigger_mode_capable_mask;
-    int trigger_mode;
-    dc1394bool_t trigger_polarity;
-    int min;
-    int max;
-    int value;
-    int BU_value;
-    int RV_value;
-    int B_value;
-    int R_value;
-    int G_value;
-    int target_value;
+  dc1394bool_t present;
 
-    dc1394bool_t abs_control;
-    float abs_value;
-    float abs_max;
-    float abs_min;
+  uint32_t size_x;
+  uint32_t size_y;
+  uint32_t max_size_x;
+  uint32_t max_size_y;
 
-} dc1394_feature_info;
+  uint32_t pos_x;
+  uint32_t pos_y;
 
-typedef struct __dc1394_feature_set_struct 
+  uint32_t unit_size_x;
+  uint32_t unit_size_y;
+  uint32_t unit_pos_x;
+  uint32_t unit_pos_y;
+
+  dc1394color_codings_t color_codings;
+  dc1394color_coding_t color_coding;
+
+  uint32_t pixnum;
+
+  uint32_t bpp; // bpp is byte_per_packet, not bit per pixel.
+  uint32_t min_bpp;
+  uint32_t max_bpp;
+
+  uint64_t total_bytes;
+
+  dc1394color_filter_t color_filter;
+
+} dc1394format7mode_t;
+
+typedef struct __dc1394format7modeset_t
 {
-  dc1394_feature_info feature[NUM_FEATURES];
-} dc1394_feature_set;
+  dc1394format7mode_t mode[DC1394_VIDEO_MODE_FORMAT7_NUM];
+} dc1394format7modeset_t;
+
+/* video frame structure */
+typedef struct __dc1394_video_frame
+{
+  unsigned char          * image;              
+        /* the image. May contain padding data too (vendor specific) */
+  uint32_t                 size[2];               
+        /* the image size [width, height] */
+  uint32_t                 position[2];      
+        /* the WOI/ROI position [horizontal, vertical] == [0,0] for full
+         * frame */
+  dc1394color_coding_t     color_coding;        
+        /* the color coding used. This field is valid for all video modes. */
+  dc1394color_filter_t     color_filter;        
+        /* the color filter used. This field is valid only for RAW modes
+         * on recent cameras */
+  uint32_t                 yuv_byte_order;
+        /* the order of the fields for 422 formats: YUYV or UYVY */
+  uint32_t                 bit_depth;           
+        /* the number of bits per pixel. The number of grayscale levels is
+         * 2^(this_number) */
+  uint32_t                 stride;
+        /* the number of bytes per image line */
+  dc1394video_mode_t       video_mode;          
+        /* the video mode used for capturing this frame */
+  uint64_t                 total_bytes;         
+        /* the total size of the frame buffer in bytes. May include packet-
+         * multiple padding and intentional padding (vendor specific) */
+  uint32_t                 image_bytes;         
+        /* the number of bytes used for the image (image data only, no
+         * padding) */
+  uint32_t                 padding_bytes;       
+        /* the number of extra bytes, i.e. total_bytes-image_bytes.  */
+  uint32_t                 bytes_per_packet;    
+        /* the number of bytes per packet. (IIDC data) */
+  uint32_t                 packets_per_frame;    
+        /* the number of packets per frame. (IIDC data) */
+  uint64_t                 timestamp;           
+        /* the unix time [microseconds] at which the frame was captured in
+         * the video1394 ringbuffer */
+  uint32_t                 frames_behind;
+        /* the number of frames in the ring buffer that are yet to be
+         * accessed by the user */
+  dc1394camera_t           *camera;
+        /* the parent camera of this frame */
+  uint32_t                 id;
+        /* the frame position in the ring buffer */
+} dc1394video_frame_t;
+
+enum {
+  DC1394_BYTE_ORDER_UYVY=0,
+  DC1394_BYTE_ORDER_YUYV
+};
 
 /* Feature descriptions */
-extern const char *dc1394_feature_desc[NUM_FEATURES];
+extern const char *dc1394_feature_desc[DC1394_FEATURE_NUM];
+extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
+
+/* Error checking function. displays an error string on stderr and exit current function
+   if error is positive. Neg errors are messages and are thus ignored */
+
+#define DC1394_WRN(err, err_string...)                       \
+    {                                                        \
+    if ((err<0)||(err>DC1394_ERROR_NUM))                     \
+      err=DC1394_INVALID_ERROR_CODE;                         \
+                                                             \
+    if (err>DC1394_SUCCESS) {                                \
+      fprintf(stderr,"Libdc1394 warning (%s:%s:%d): %s : ",  \
+	      __FILE__, __FUNCTION__, __LINE__,              \
+	      dc1394_error_strings[err]);                    \
+      fprintf(stderr, err_string);                           \
+      fprintf(stderr,"\n");                                  \
+    }                                                        \
+    }
+
+#define DC1394_ERR(err, err_string...)                       \
+    {                                                        \
+    if ((err<0)||(err>DC1394_ERROR_NUM))                     \
+      err=DC1394_INVALID_ERROR_CODE;                         \
+                                                             \
+    if (err>DC1394_SUCCESS) {                                \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
+	      __FILE__, __FUNCTION__, __LINE__,              \
+	      dc1394_error_strings[err]);                    \
+      fprintf(stderr, err_string);                           \
+      fprintf(stderr,"\n");                                  \
+      return;                                                \
+    }                                                        \
+    }
+
+#define DC1394_ERR_RTN(err, err_string...)                   \
+    {                                                        \
+    if ((err<0)||(err>DC1394_ERROR_NUM))                     \
+      err=DC1394_INVALID_ERROR_CODE;                         \
+                                                             \
+    if (err>DC1394_SUCCESS) {                                \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
+	      __FILE__, __FUNCTION__, __LINE__,              \
+	      dc1394_error_strings[err]);                    \
+      fprintf(stderr, err_string);                           \
+      fprintf(stderr,"\n");                                  \
+      return err;                                            \
+    }                                                        \
+    }
+
+#define DC1394_ERR_CLN(err, cleanup, err_string...)                  \
+    {                                                                \
+    if ((err<0)||(err>DC1394_ERROR_NUM))                             \
+      err=DC1394_INVALID_ERROR_CODE;                                 \
+                                                                     \
+    if (err>DC1394_SUCCESS) {                                        \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
+	      __FILE__, __FUNCTION__, __LINE__,                      \
+	      dc1394_error_strings[err]);                            \
+      fprintf(stderr, err_string);                                   \
+      fprintf(stderr,"\n");                                          \
+      cleanup;                                                       \
+      return;                                                \
+    }                                                                \
+    }
+
+#define DC1394_ERR_CLN_RTN(err, cleanup, err_string...)              \
+    {                                                                \
+    if ((err<0)||(err>DC1394_ERROR_NUM))                             \
+      err=DC1394_INVALID_ERROR_CODE;                                 \
+                                                                     \
+    if (err>DC1394_SUCCESS) {                                        \
+      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
+	      __FILE__, __FUNCTION__, __LINE__,                      \
+	      dc1394_error_strings[err]);                            \
+      fprintf(stderr, err_string);                                   \
+      fprintf(stderr,"\n");                                          \
+      cleanup;                                                       \
+      return err;                                                    \
+    }                                                                \
+    }
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*****************************************************
- Direct register manipulation functions.
- Use with caution, this might wreak your camera.
- *****************************************************/
-int
-SetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
-                         octlet_t offset, quadlet_t value);
-
-int
-GetCameraControlRegister(raw1394handle_t handle, nodeid_t node,
-                         octlet_t offset, quadlet_t *value);
-
-/*****************************************************
- dc1394_get_camera_feature_set
-
- Collects the available features for the camera
- described by node and stores them in features.
-*****************************************************/  
-int 
-dc1394_get_camera_feature_set(raw1394handle_t handle, nodeid_t node,
-                              dc1394_feature_set *features);
-
-/*****************************************************
- dc1394_get_camera_feature
-
- Stores the bounds and options associated with the
- feature described by feature->feature_id
-*****************************************************/
-int 
-dc1394_get_camera_feature(raw1394handle_t handle, nodeid_t node,
-                          dc1394_feature_info *feature);
-
-
-/*****************************************************
- dc1394_get_camera_misc_info
-
- Collects other camera info registers
-*****************************************************/
-int 
-dc1394_get_camera_misc_info(raw1394handle_t handle, nodeid_t node,
-                            dc1394_miscinfo *info);
-
-
-/*****************************************************
- dc1394_print_feature
-
- Displays the bounds and options of the given feature
-*****************************************************/
-void 
-dc1394_print_feature(dc1394_feature_info *feature);
-
-/*****************************************************
- dc1394_print_feature_set
-
- Displays the entire feature set stored in features
-*****************************************************/
-void 
-dc1394_print_feature_set(dc1394_feature_set *features);
-	
-
-/*****************************************************
- dc1394_create_handle
-
- This creates a raw1394_handle.  Port should be 0
- unless you have multiple firewire cards in your
- system
-
- If a handle can't be created, it returns NULL
-
- IMPORTANT: you should NOT use raw1394_new_handle()
- to create a new handle, even if you use
- raw1394_set_port after. dc1394_create_handle has to
- setup other things and failing to use it will result
- in crashes.
-
-*****************************************************/
-raw1394handle_t 
-dc1394_create_handle(int port);
-
-/***************************************************
- dc1394_destroy_handle
-
- Destroy the handle, including the userdata 
-***************************************************/
-int
-dc1394_destroy_handle(raw1394handle_t handle);
-
-
-/*****************************************************
- dc1394_get_camera_nodes
-
- This returns the available cameras on the bus.
-
- If showCameras is set to 1, a description of the
- found cameras is printed.
-
- Returns -1 in numCameras and NULL from the call if
- there is a problem, otherwise the number of cameras
- and the nodeid_t array from the call
-*****************************************************/
-nodeid_t* 
-dc1394_get_camera_nodes(raw1394handle_t handle, int *numCameras,
-                        int showCameras);
-
-#define dc1394_free_camera_nodes free
-
-/*****************************************************
- dc1394_get_sorted_camera_nodes
-
- This returns the available cameras on the bus.
-
- It returns the node id's in the same index as the id
- specified the ids array contains a list of the low
- quadlet of the unique camera ids.
-
- If showCameras is set to 1, a description of the
- found cameras is printed.
-
- Returns -1 in numCameras and NULL from the call if
- there is a problem, otherwise the number of cameras
- and the nodeid_t array from the call
-*****************************************************/
-nodeid_t* 
-dc1394_get_sorted_camera_nodes(raw1394handle_t handle,int numids, 
-                               int *ids,int * numCameras,
-                               int showCameras);
-
-
-/* Initialize camera to factory default settings */
-int
-dc1394_init_camera(raw1394handle_t handle, nodeid_t node);
-
-
-/* Determine if the given node is a camera */
-int
-dc1394_is_camera(raw1394handle_t handle, nodeid_t node, dc1394bool_t *value);
-
-/* Determine the IIDC Specification version */
-int
-dc1394_get_sw_version(raw1394handle_t handle, nodeid_t node, int *version);
-
-/* Get the camera information and print that structure*/
-void 
-dc1394_print_camera_info(dc1394_camerainfo *info); 
-
-int
-dc1394_get_camera_info(raw1394handle_t handle, nodeid_t node,
-                       dc1394_camerainfo *info);
-
-
-/* Functions for querying camera attributes */
-int
-dc1394_query_supported_formats(raw1394handle_t handle, nodeid_t node,
-                               quadlet_t *value);
-int
-dc1394_query_supported_modes(raw1394handle_t handle, nodeid_t node,
-                             unsigned int format, quadlet_t *value);
-int
-dc1394_query_supported_framerates(raw1394handle_t handle, nodeid_t node,
-                                  unsigned int format, unsigned int mode,
-                                  quadlet_t *value);
-int
-dc1394_query_revision(raw1394handle_t handle, nodeid_t node, int mode,
-                      quadlet_t *value);
-int
-dc1394_query_basic_functionality(raw1394handle_t handle, nodeid_t node,
-                                 quadlet_t *value);
-/*
-int
-dc1394_query_feature_control(raw1394handle_t handle, nodeid_t node,
-                             unsigned int feature, unsigned int *availability);
-*/
-int
-dc1394_query_advanced_feature_offset(raw1394handle_t handle, nodeid_t node,
-                                     quadlet_t *value);
-int
-dc1394_query_feature_characteristics(raw1394handle_t handle, nodeid_t node,
-                                     unsigned int feature, quadlet_t *value);
-
-
-/* Get/Set the framerate, mode, format, iso channel/speed for the video */
-int
-dc1394_get_video_framerate(raw1394handle_t handle, nodeid_t node,
-                           unsigned int *framerate);
-int
-dc1394_set_video_framerate(raw1394handle_t handle, nodeid_t node,
-                           unsigned int framerate);
-int
-dc1394_get_video_mode(raw1394handle_t handle, nodeid_t node,
-                      unsigned int *mode);
-int
-dc1394_set_video_mode(raw1394handle_t handle, nodeid_t node,
-                      unsigned int mode);
-int
-dc1394_get_video_format(raw1394handle_t handle, nodeid_t node,
-                        unsigned int *format);
-int
-dc1394_set_video_format(raw1394handle_t handle, nodeid_t node,
-                        unsigned int format);
-int
-dc1394_get_operation_mode(raw1394handle_t handle, nodeid_t node,
-			  unsigned int *mode);
-int
-dc1394_set_operation_mode(raw1394handle_t handle, nodeid_t node,
-			  unsigned int mode);
-int
-dc1394_get_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
-                                 unsigned int *channel, unsigned int *speed);
-int
-dc1394_set_iso_channel_and_speed(raw1394handle_t handle, nodeid_t node,
-                                 unsigned int channel, unsigned int speed);
-
-/* Turn camera on or off */
-int
-dc1394_camera_on(raw1394handle_t handle, nodeid_t node);
-int
-dc1394_camera_off(raw1394handle_t handle, nodeid_t node);
-
-
-/* Start/stop isochronous data transmission */
-int
-dc1394_start_iso_transmission(raw1394handle_t handle, nodeid_t node);
-int
-dc1394_stop_iso_transmission(raw1394handle_t handle, nodeid_t node);
-int
-dc1394_get_iso_status(raw1394handle_t handle, nodeid_t node,
-                      dc1394bool_t *is_on);
-
-
-/* Turn one shot mode on or off */
-int
-dc1394_set_one_shot(raw1394handle_t handle, nodeid_t node);
-int
-dc1394_unset_one_shot(raw1394handle_t handle, nodeid_t node);
-
-
-/* Turn multishot mode on or off */
-int
-dc1394_set_multi_shot(raw1394handle_t handle, nodeid_t node,
-                      unsigned int numFrames);
-int
-dc1394_unset_multi_shot(raw1394handle_t handle, nodeid_t node);
-
-
-int
-dc1394_get_one_shot(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on);
-
-int
-dc1394_get_multi_shot(raw1394handle_t handle, nodeid_t node, dc1394bool_t *is_on,
-		      unsigned int *numFrames);
-
-/* Get/Set the values of the various features on the camera */
-int
-dc1394_get_brightness(raw1394handle_t handle, nodeid_t node,
-                      unsigned int *brightness);
-int
-dc1394_set_brightness(raw1394handle_t handle, nodeid_t node,
-                      unsigned int brightness);
-int
-dc1394_get_exposure(raw1394handle_t handle, nodeid_t node,
-                    unsigned int *exposure);
-int
-dc1394_set_exposure(raw1394handle_t handle, nodeid_t node,
-                    unsigned int exposure);
-int
-dc1394_get_sharpness(raw1394handle_t handle, nodeid_t node,
-                     unsigned int *sharpness);
-int
-dc1394_set_sharpness(raw1394handle_t handle, nodeid_t node,
-                     unsigned int sharpness);
-int
-dc1394_get_white_balance(raw1394handle_t handle, nodeid_t node,
-                         unsigned int *u_b_value, unsigned int *v_r_value);
-int
-dc1394_set_white_balance(raw1394handle_t handle, nodeid_t node,
-                         unsigned int u_b_value, unsigned int v_r_value);
-
-int
-dc1394_get_hue(raw1394handle_t handle, nodeid_t node,
-               unsigned int *hue);
-int
-dc1394_set_hue(raw1394handle_t handle, nodeid_t node,
-               unsigned int hue);
-int
-dc1394_get_saturation(raw1394handle_t handle, nodeid_t node,
-                      unsigned int *saturation);
-int
-dc1394_set_saturation(raw1394handle_t handle, nodeid_t node,
-                      unsigned int saturation);
-int
-dc1394_get_gamma(raw1394handle_t handle, nodeid_t node,
-                 unsigned int *gamma);
-int
-dc1394_set_gamma(raw1394handle_t handle, nodeid_t node,
-                 unsigned int gamma);
-int
-dc1394_get_shutter(raw1394handle_t handle, nodeid_t node,
-                   unsigned int *shutter);
-int
-dc1394_set_shutter(raw1394handle_t handle, nodeid_t node,
-                   unsigned int shutter);
-int
-dc1394_get_gain(raw1394handle_t handle, nodeid_t node,
-                unsigned int *gain);
-int
-dc1394_set_gain(raw1394handle_t handle, nodeid_t node,
-                unsigned int gain);
-int
-dc1394_get_iris(raw1394handle_t handle, nodeid_t node,
-                unsigned int *iris);
-int
-dc1394_set_iris(raw1394handle_t handle, nodeid_t node,
-                unsigned int iris);
-int
-dc1394_get_focus(raw1394handle_t handle, nodeid_t node,
-                 unsigned int *focus);
-int
-dc1394_set_focus(raw1394handle_t handle, nodeid_t node,
-                 unsigned int focus);
-int
-dc1394_get_temperature(raw1394handle_t handle, nodeid_t node,
-                       unsigned int *target_temperature,
-		       unsigned int *temperature);
-int
-dc1394_set_temperature(raw1394handle_t handle, nodeid_t node,
-                       unsigned int target_temperature);
-int
-dc1394_get_white_shading(raw1394handle_t handle, nodeid_t node,
-                         unsigned int *r_value, unsigned int *g_value,
-			 unsigned int *b_value);
-int
-dc1394_set_white_shading(raw1394handle_t handle, nodeid_t node,
-			 unsigned int r_value, unsigned int g_value,
-			 unsigned int b_value);
-int
-dc1394_get_trigger_delay(raw1394handle_t handle, nodeid_t node,
-			 unsigned int *trigger_delay);
-int
-dc1394_set_trigger_delay(raw1394handle_t handle, nodeid_t node,
-			 unsigned int trigger_delay);
-int
-dc1394_get_frame_rate(raw1394handle_t handle, nodeid_t node,
-		      unsigned int *frame_rate);
-int
-dc1394_set_frame_rate(raw1394handle_t handle, nodeid_t node,
-		      unsigned int frame_rate);
-int
-dc1394_get_trigger_mode(raw1394handle_t handle, nodeid_t node,
-                        unsigned int *mode);
-int
-dc1394_set_trigger_mode(raw1394handle_t handle, nodeid_t node,
-                        unsigned int mode);
-int
-dc1394_get_zoom(raw1394handle_t handle, nodeid_t node,
-                unsigned int *zoom);
-int
-dc1394_set_zoom(raw1394handle_t handle, nodeid_t node,
-                unsigned int zoom);
-int
-dc1394_get_pan(raw1394handle_t handle, nodeid_t node,
-               unsigned int *pan);
-int
-dc1394_set_pan(raw1394handle_t handle, nodeid_t node,
-               unsigned int pan);
-int
-dc1394_get_tilt(raw1394handle_t handle, nodeid_t node,
-                unsigned int *tilt);
-int
-dc1394_set_tilt(raw1394handle_t handle, nodeid_t node,
-                unsigned int tilt);
-int
-dc1394_get_optical_filter(raw1394handle_t handle, nodeid_t node,
-                          unsigned int *optical_filter);
-int
-dc1394_set_optical_filter(raw1394handle_t handle, nodeid_t node,
-                          unsigned int optical_filter);
-int
-dc1394_get_capture_size(raw1394handle_t handle, nodeid_t node,
-                        unsigned int *capture_size);
-int
-dc1394_set_capture_size(raw1394handle_t handle, nodeid_t node,
-                        unsigned int capture_size);
-int
-dc1394_get_capture_quality(raw1394handle_t handle, nodeid_t node,
-                           unsigned int *capture_quality);
-int
-dc1394_set_capture_quality(raw1394handle_t handle, nodeid_t node,
-                           unsigned int capture_quality);
-
-
-/* Convenience functions to query/set based on a variable camera feature */
-/* (can't be used for white balance) */
-int
-dc1394_get_feature_value(raw1394handle_t handle, nodeid_t node,
-                         unsigned int feature, unsigned int *value);
-
-int
-dc1394_set_feature_value(raw1394handle_t handle, nodeid_t node,
-                         unsigned int feature, unsigned int value);
-
-
-/* Query/set specific feature characteristics */
-int
-dc1394_is_feature_present(raw1394handle_t handle, nodeid_t node,
-                          unsigned int feature, dc1394bool_t *value);
-int
-dc1394_has_one_push_auto(raw1394handle_t handle, nodeid_t node,
-                         unsigned int feature, dc1394bool_t *value);
-int
-dc1394_is_one_push_in_operation(raw1394handle_t handle, nodeid_t node,
-                                unsigned int feature, dc1394bool_t *value);
-int
-dc1394_start_one_push_operation(raw1394handle_t handle, nodeid_t node,
-                                unsigned int feature);
-int
-dc1394_can_read_out(raw1394handle_t handle, nodeid_t node,
-                    unsigned int feature, dc1394bool_t *value);
-int
-dc1394_can_turn_on_off(raw1394handle_t handle, nodeid_t node,
-                       unsigned int feature, dc1394bool_t *value);
-int
-dc1394_is_feature_on(raw1394handle_t handle, nodeid_t node,
-                     unsigned int feature, dc1394bool_t *value);
-int
-dc1394_feature_on_off(raw1394handle_t handle, nodeid_t node,
-                      unsigned int feature, unsigned int value);
-                                          /* 0=off, nonzero=on */
-int
-dc1394_has_auto_mode(raw1394handle_t handle, nodeid_t node,
-                     unsigned int feature, dc1394bool_t *value);
-int
-dc1394_has_manual_mode(raw1394handle_t handle, nodeid_t node,
-                       unsigned int feature, dc1394bool_t *value);
-int
-dc1394_is_feature_auto(raw1394handle_t handle, nodeid_t node,
-                       unsigned int feature, dc1394bool_t *value);
-int
-dc1394_auto_on_off(raw1394handle_t handle, nodeid_t node,
-                   unsigned int feature, unsigned int value);
-                                          /* 0=off, nonzero=on */
-int
-dc1394_get_min_value(raw1394handle_t handle, nodeid_t node,
-                     unsigned int feature, unsigned int *value);
-int
-dc1394_get_max_value(raw1394handle_t handle, nodeid_t node,
-                     unsigned int feature, unsigned int *value);
-
-
-/**********************************
- DMA Capture Functions 
-
- These routines will be much faster
- than the above capture routines.
-***********************************/
-
-/*****************************************************
- dc1394_dma_setup_capture
-
- This sets up the given camera to capture images using 
- the dma engine.  Should be much faster than the above
- routines
-******************************************************/
-int
-dc1394_dma_setup_capture(raw1394handle_t handle, nodeid_t node,
-                         unsigned int channel, unsigned int format, unsigned int mode,
-                         unsigned int speed, unsigned int frame_rate, 
-                         int num_dma_buffers,
-                         int drop_frames,
-                         const char *dma_device_file,
-                         dc1394_cameracapture *camera);
-
-/*****************************************************
- dc1394_dma_release_camera
-
- This releases memory that was mapped by
- dc1394_dma_setup_camera
-*****************************************************/
-int 
-dc1394_dma_release_camera(raw1394handle_t handle, 
-                          dc1394_cameracapture *camera);
-
-/*****************************************************
- dc1394_dma_unlisten
-
- This tells video1394 to halt iso reception.
-*****************************************************/
-int 
-dc1394_dma_unlisten(raw1394handle_t handle,
-                          dc1394_cameracapture *camera);
-
-/****************************************************
- dc1394_dma_single_capture
-
- This captures a frame from the given camera. Two
- policies are available: wait for a frame or return
- if no frame is available (POLL)
-*****************************************************/
-int 
-dc1394_dma_single_capture(dc1394_cameracapture *camera);
-
-int
-dc1394_dma_single_capture_poll(dc1394_cameracapture *camera);
-
-/****************************************************
- dc1394_dma_multi_capture
-
- This captures a frame from the given camera. Two
- policies are available: wait for a frame or return
- if no frame is available (POLL)
-*****************************************************/
-int 
-dc1394_dma_multi_capture(dc1394_cameracapture *camera, int num);
-
-int
-dc1394_dma_multi_capture_poll(dc1394_cameracapture *camera, int num);
-/*****************************************************
- dc1394_dma_done_with_buffer
-
- This allows the driver to use the buffer previously handed
- to the user by dc1394_dma_*_capture
-*****************************************************/
-int 
-dc1394_dma_done_with_buffer(dc1394_cameracapture * camera);
-
-
-/********************************
- Non DMA Capture Functions 
-
- These functions use libraw
- to grab frames from the cameras,
- the dma routines are faster, and 
- should be used instead.
-*********************************/
-
-/***********************************************************
- dc1394_setup_capture
-
- Sets up both the camera and the cameracapture structure
- to be used other places.
-
- Returns DC1394_SUCCESS on success, DC1394_FAILURE otherwise
-
- NOTE: it is important to call dc1394_release_camera 
-       to free memory allocated by this routine- if you
-       don't, your application WILL leak memory
-************************************************************/
-int 
-dc1394_setup_capture(raw1394handle_t handle, nodeid_t node, 
-                     unsigned int channel, unsigned int format, unsigned int mode, 
-                     unsigned int speed, unsigned int frame_rate, 
-                     dc1394_cameracapture * camera);
-
-/***********************************************************
- dc1394_release_camera
-
- Frees buffer space contained in the cameracapture structure
-************************************************************/
-int 
-dc1394_release_camera(raw1394handle_t handle,
-                      dc1394_cameracapture *camera);
-
-/*****************************************************
- dc1394_single_capture
-
- Captures a frame of video from the camera specified
-*****************************************************/
-int 
-dc1394_single_capture(raw1394handle_t handle,
-                      dc1394_cameracapture *camera);
-
-/********************************************************
- dc1394_multi_capture
-
- This routine captures a frame from each camera specified
- in the cams array.  Cameras must be set up first using
- dc1394_setup_camera
-
- Returns DC1394_FAILURE if it fails, DC1394_SUCCESS if it
- succeeds
-*********************************************************/
-int 
-dc1394_multi_capture(raw1394handle_t handle, dc1394_cameracapture *cams,
-                     int num);
-
-
-/**************************************************
- Functions to read and write camera setups on/in
- memory channels
-***************************************************/
-
-int 
-dc1394_get_memory_load_ch(raw1394handle_t handle, nodeid_t node,
-                          unsigned int *channel);
-
-int 
-dc1394_get_memory_save_ch(raw1394handle_t handle, nodeid_t node,
-                          unsigned int *channel);
-
-int 
-dc1394_is_memory_save_in_operation(raw1394handle_t handle, nodeid_t node,
-                                   dc1394bool_t *value);
-
-int 
-dc1394_set_memory_save_ch(raw1394handle_t handle, nodeid_t node,
-                          unsigned int channel);
-
-int
-dc1394_memory_save(raw1394handle_t handle, nodeid_t node);
-
-int
-dc1394_memory_load(raw1394handle_t handle, nodeid_t node,
-                   unsigned int channel);
-
-
-/*************************************************
- Functions to control the trigger feature.
-**************************************************/
-
-int
-dc1394_set_trigger_polarity(raw1394handle_t handle, nodeid_t node,
-                            dc1394bool_t polarity);
-
-int
-dc1394_get_trigger_polarity(raw1394handle_t handle, nodeid_t node,
-                            dc1394bool_t *polarity);
-
-int
-dc1394_trigger_has_polarity(raw1394handle_t handle, nodeid_t node,
-                            dc1394bool_t *polarity);
-
-int
-dc1394_set_trigger_on_off(raw1394handle_t handle, nodeid_t node,
-                          dc1394bool_t on_off);
-
-int
-dc1394_get_trigger_on_off(raw1394handle_t handle, nodeid_t node,
-                          dc1394bool_t *on_off);
+/***************************************************************************
+     General system functions
+ ***************************************************************************/
+
+/* create / free camera structure */
+void dc1394_free_camera(dc1394camera_t *camera);
+
+/* locate and initialise the cameras */
+dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint32_t* numCameras);
+
+/* print the camera information */
+dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
+
+/* Sets and resets the broadcast flag of a camera. If the broadcast flag is set,
+   all devices on the bus will execute the command. Useful to sync ISO start
+   commands or setting a bunch of cameras at the same time. Broadcast only works
+   with identical devices (brand/model). If the devices are not identical your
+   mileage may vary. Some cameras may not answer broadcast commands at all. Also,
+   this only works with cameras on the SAME bus (IOW, the same port).*/
+dc1394error_t dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr);
+
+/***************************************************************************
+     Other functionalities
+ ***************************************************************************/
+
+/* reset camera to factory default settings */
+dc1394error_t dc1394_reset_camera(dc1394camera_t *camera);
+
+/* turn camera on or off */
+dc1394error_t dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr);
+
+/* functions to read and write camera setups in memory channels */
+dc1394error_t dc1394_memory_get_load_ch(dc1394camera_t *camera, uint32_t *channel);
+dc1394error_t dc1394_memory_get_save_ch(dc1394camera_t *camera, uint32_t *channel);
+dc1394error_t dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value);
+dc1394error_t dc1394_memory_save(dc1394camera_t *camera, uint32_t channel);
+dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint32_t channel);
+
+/***************************************************************************
+     Trigger
+ ***************************************************************************/
+
+/* external trigger feature functions */
+dc1394error_t dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity);
+dc1394error_t dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity);
+dc1394error_t dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polarity_capable);
+dc1394error_t dc1394_external_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_external_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr);
+dc1394error_t dc1394_external_trigger_set_mode(dc1394camera_t *camera, dc1394trigger_mode_t mode);
+dc1394error_t dc1394_external_trigger_get_mode(dc1394camera_t *camera, dc1394trigger_mode_t *mode);
+dc1394error_t dc1394_external_trigger_set_source(dc1394camera_t *camera, dc1394trigger_source_t source);
+dc1394error_t dc1394_external_trigger_get_source(dc1394camera_t *camera, dc1394trigger_source_t *source);
+dc1394error_t dc1394_external_trigger_get_supported_sources(dc1394camera_t *camera, dc1394trigger_sources_t *sources);
 
 /* Turn one software trigger on or off and get state */
-int
-dc1394_set_soft_trigger(raw1394handle_t handle, nodeid_t node);
+dc1394error_t dc1394_software_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr);
 
-int
-dc1394_unset_soft_trigger(raw1394handle_t handle, nodeid_t node);
+/***************************************************************************
+     Features
+ ***************************************************************************/
 
-int
-dc1394_get_soft_trigger(raw1394handle_t handle, nodeid_t node,
-			dc1394bool_t *is_on);
+/* Collects the available features for the camera described by node and stores them in features. */
+dc1394error_t dc1394_get_camera_feature_set(dc1394camera_t *camera, dc1394featureset_t *features);
 
+/* Stores the bounds and options associated with the feature described by feature->feature_id */
+dc1394error_t dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature);
+
+/* Displays the bounds and options of the given feature or of the entire feature set */
+dc1394error_t dc1394_print_feature(dc1394feature_info_t *feature);
+dc1394error_t dc1394_print_feature_set(dc1394featureset_t *features);
+
+/* get/set the values of multiple-value features on the camera */
+dc1394error_t dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint32_t *u_b_value, uint32_t *v_r_value);
+dc1394error_t dc1394_feature_whitebalance_set_value(dc1394camera_t *camera, uint32_t u_b_value, uint32_t v_r_value);
+dc1394error_t dc1394_feature_temperature_get_value(dc1394camera_t *camera, uint32_t *target_temperature, uint32_t *temperature);
+dc1394error_t dc1394_feature_temperature_set_value(dc1394camera_t *camera, uint32_t target_temperature);
+dc1394error_t dc1394_feature_whiteshading_get_value(dc1394camera_t *camera, uint32_t *r_value, uint32_t *g_value, uint32_t *b_value);
+dc1394error_t dc1394_feature_whiteshading_set_value(dc1394camera_t *camera, uint32_t r_value, uint32_t g_value, uint32_t b_value);
+
+/* get/set the values of single-value features on the camera */
+dc1394error_t dc1394_feature_get_value(dc1394camera_t *camera, dc1394feature_t feature, uint32_t *value);
+dc1394error_t dc1394_feature_set_value(dc1394camera_t *camera, dc1394feature_t feature, uint32_t value);
+
+/* query/set specific feature characteristics */
+dc1394error_t dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_is_readable(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, uint32_t *min, uint32_t *max);
+dc1394error_t dc1394_feature_is_switchable(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t *pwr);
+dc1394error_t dc1394_feature_set_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t pwr);
+dc1394error_t dc1394_feature_has_auto_mode(dc1394camera_t *camera,  dc1394feature_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_has_manual_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_has_one_push_auto(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_mode_t *mode);
+dc1394error_t dc1394_feature_set_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_mode_t mode);
+
+/* absolute settings */
+dc1394error_t dc1394_feature_has_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, dc1394feature_t feature, float *min, float *max);
+dc1394error_t dc1394_feature_get_absolute_value(dc1394camera_t *camera, dc1394feature_t feature, float *value);
+dc1394error_t dc1394_feature_set_absolute_value(dc1394camera_t *camera, dc1394feature_t feature, float value);
+dc1394error_t dc1394_feature_get_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t *pwr);
+dc1394error_t dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t pwr);
+
+/***************************************************************************
+     Video functions: formats, framerates,...
+ ***************************************************************************/
+
+/* functions for querying camera attributes */
+dc1394error_t dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *video_modes);
+dc1394error_t dc1394_video_get_supported_framerates(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394framerates_t *framerates);
+
+/* get/set the framerate, mode, format, iso speed for the video */
+dc1394error_t dc1394_video_get_framerate(dc1394camera_t *camera, dc1394framerate_t *framerate);
+dc1394error_t dc1394_video_set_framerate(dc1394camera_t *camera, dc1394framerate_t framerate);
+dc1394error_t dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *video_mode);
+dc1394error_t dc1394_video_set_mode(dc1394camera_t *camera, dc1394video_mode_t video_mode);
+dc1394error_t dc1394_video_get_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t *mode);
+dc1394error_t dc1394_video_set_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t mode);
+dc1394error_t dc1394_video_get_iso_speed(dc1394camera_t *camera, dc1394speed_t *speed);
+dc1394error_t dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed);
+dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth);
  
-/*************************************************
-  FORMAT_7 access functions
-**************************************************/
+/* start/stop isochronous data transmission */
+dc1394error_t dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch_t *pwr);
+/* The following function is not necessary in general. You should only use it if you
+   want a specific ISO channel. Usage: Call it before setting up capture and transmission */
+dc1394error_t dc1394_video_specify_iso_channel(dc1394camera_t *camera, int iso_channel);
 
-/*======================================================================*/
-/*! 
- *   setup capture for format7 (FORMAT_SCALABLE_IMAGE_SIZE) mode. For
- *   some parameters you may pass QUERY_FROM_CAMERA (which means query
- *   this value from the camera and maybe adjust it to the new
- *   conditions) or USE_MAX_AVAIL (which means query the maximum
- *   availible value for this parameter from camera and use this)
- *
- *   \param handle   handle for raw1394 port
- *   \param node     node of the camera
- *   \param channel  iso channel for data transmission (0 ... 15)
- *   \param mode     mode for camera operation 
- *                   (MODE_FORMAT7_0 ... MODE_FORMAT7_7)
- *   \param speed    transmission speed (SPEED_100 ... SPEED_400)
- *   \param bytes_per_packet number of bytes per packet can be used to
- *                   control the framerate or QUERY_FROM_CAMERA or
- *                   USE_MAX_AVAIL
- *   \param left     area of interest start column or QUERY_FROM_CAMERA
- *   \param top      area of interest start row or QUERY_FROM_CAMERA
- *   \param width    area of interest width or QUERY_FROM_CAMERA
- *                   or USE_MAX_AVAIL
- *   \param height   area of interest height or QUERY_FROM_CAMERA
- *                   or USE_MAX_AVAIL
- *   \param camera   (out) structure containing the returned parameters
- *                   from the camera. Memory for this struct must be
- *                   allocated by the calling  function
- *
- *   \return DC1394_SUCCESS or DC1394_FAILURE
- */
-/*======================================================================*/
-int
-dc1394_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
-                             unsigned int channel, unsigned int mode, unsigned int speed,
-                             unsigned int bytes_per_packet,
-                             unsigned int left, unsigned int top,
-                             unsigned int width, unsigned int height, 
-                             dc1394_cameracapture * camera);
-  
+/* turn one shot mode on or off */
+dc1394error_t dc1394_video_set_one_shot(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_video_get_one_shot(dc1394camera_t *camera, dc1394bool_t *is_on);
 
-/*======================================================================*/
-/*!
- *   setup capture for format7 (FORMAT_SCALABLE_IMAGE_SIZE) mode using
- *   the dma engine.  Should be much faster than the above
- *   routines. For some parameters you may pass QUERY_FROM_CAMERA
- *   (which means query this value from the camera and maybe adjust it
- *   to the new conditions) or USE_MAX_AVAIL (which means query the
- *   maximum availible value for this parameter from camera and use
- *   this)
- *
- *   \param handle   handle for raw1394 port
- *   \param node     node of the camera
- *   \param channel  iso channel for data transmission (0 ... 15)
- *   \param mode     mode for camera operation 
- *                   (MODE_FORMAT7_0 ... MODE_FORMAT7_7)
- *   \param speed    transmission speed (SPEED_100 ... SPEED_400)
- *   \param bytes_per_packet number of bytes per packet can be used to
- *                   control the framerate or QUERY_FROM_CAMERA or
- *                   USE_MAX_AVAIL
- *   \param left     area of interest start column or QUERY_FROM_CAMERA
- *   \param top      area of interest start row or QUERY_FROM_CAMERA
- *   \param width    area of interest width or QUERY_FROM_CAMERA
- *                   or USE_MAX_AVAIL
- *   \param height   area of interest height or QUERY_FROM_CAMERA
- *                   or USE_MAX_AVAIL
- *   \param num_dma_buffers number of buffers for the dma ring buffer
- *   \param camera   (out) structure containing the returned parameters
- *                   from the camera. Memory for this struct must be
- *                   allocated by the calling  function
- *
- *   \return DC1394_SUCCESS or DC1394_FAILURE
- */
-/*======================================================================*/
-int
-dc1394_dma_setup_format7_capture(raw1394handle_t handle, nodeid_t node,
-                                 unsigned int channel, unsigned int mode, unsigned int speed,
-                                 unsigned int bytes_per_packet,
-                                 unsigned int left, unsigned int top,
-                                 unsigned int width, unsigned int height,
-                                 int num_dma_buffers,
-				 int drop_frames,
-				 const char *dma_device_file,
-                                 dc1394_cameracapture *camera);
-  
+/* turn multishot mode on or off */
+dc1394error_t dc1394_video_set_multi_shot(dc1394camera_t *camera, uint32_t numFrames, dc1394switch_t pwr);
+dc1394error_t dc1394_video_get_multi_shot(dc1394camera_t *camera, dc1394bool_t *is_on, uint32_t *numFrames);
 
-int
-dc1394_query_format7_max_image_size(raw1394handle_t handle, nodeid_t node,
-				    unsigned int mode,
-                                    unsigned int *horizontal_size,
-				    unsigned int *vertical_size);
+/* Utility function */
+dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t *bandwidth);
 
-int
-dc1394_query_format7_unit_size(raw1394handle_t handle, nodeid_t node,
-			       unsigned int mode,
-                               unsigned int *horizontal_unit,
-			       unsigned int *vertical_unit);
+/***************************************************************************
+     Capture Functions
+ ***************************************************************************/
 
-int
-dc1394_query_format7_image_position(raw1394handle_t handle, nodeid_t node,
-				    unsigned int mode,
-                                    unsigned int *left_position,
-				    unsigned int *top_position);
+/* setup the capture (DMA or RAW1394)*/
+dc1394error_t dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers);
+dc1394error_t dc1394_capture_setup(dc1394camera_t *camera);
 
-int
-dc1394_query_format7_image_size(raw1394handle_t handle, nodeid_t node,
-				unsigned int mode, unsigned int *width,
-				unsigned int *height);
+/* capture video frames (DMA or RAW1394)*/
+dc1394error_t dc1394_capture(dc1394camera_t **camera, uint32_t num);
+dc1394video_frame_t *
+dc1394_capture_dequeue_dma (dc1394camera_t * camera, dc1394video_policy_t policy);
+dc1394error_t
+dc1394_capture_enqueue_dma (dc1394camera_t * camera, dc1394video_frame_t * frame);
 
-int
-dc1394_query_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
-				     unsigned int mode, unsigned int *color_id);
+/* Functions for accessing the buffer content: */
+uint8_t*        dc1394_capture_get_buffer(dc1394camera_t *camera);
 
-int
-dc1394_query_format7_color_coding(raw1394handle_t handle, nodeid_t node,
-				  unsigned int mode, quadlet_t *value);
+/* releases memory, channels, bandwidth,... */
+dc1394error_t dc1394_capture_stop(dc1394camera_t *camera);
 
-int
-dc1394_query_format7_pixel_number(raw1394handle_t handle, nodeid_t node,
-				  unsigned int mode, unsigned int *pixnum);
+/* DMA specific functions*/
 
-int
-dc1394_query_format7_total_bytes(raw1394handle_t handle, nodeid_t node,
-				 unsigned int mode, unsigned long long int *total_bytes);
+/* Set the DMA device filename manually. In most cases this is not necessary because the capture
+   functions probe common filenames such as /dev/video1394/x or /dev/video1394. */
+dc1394error_t dc1394_capture_set_dma_device_filename(dc1394camera_t* camera, char *filename);
 
-int
-dc1394_query_format7_packet_para(raw1394handle_t handle, nodeid_t node,
-				 unsigned int mode, unsigned int *min_bytes,
-				 unsigned int *max_bytes);
+/***************************************************************************
+     Format_7 (scalable image format)
+ ***************************************************************************/
 
-int
-dc1394_query_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
-				     unsigned int mode,
-                                     unsigned int *packet_bytes);
+/* image size */
+dc1394error_t dc1394_format7_get_max_image_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *h_size,uint32_t *v_size);
+dc1394error_t dc1394_format7_get_unit_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *h_unit, uint32_t *v_unit);
+dc1394error_t dc1394_format7_get_image_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *width, uint32_t *height);
+dc1394error_t dc1394_format7_set_image_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t width, uint32_t height);
 
-int
-dc1394_set_format7_image_position(raw1394handle_t handle, nodeid_t node,
-				  unsigned int mode, unsigned int left,
-				  unsigned int top);
+/* image position */
+dc1394error_t dc1394_format7_get_image_position(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *left, uint32_t *top);
+dc1394error_t dc1394_format7_set_image_position(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t left, uint32_t top);
+dc1394error_t dc1394_format7_get_unit_position(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *h_unit_pos, uint32_t *v_unit_pos);
 
-int
-dc1394_set_format7_image_size(raw1394handle_t handle, nodeid_t node,
-			      unsigned int mode, unsigned int width,
-			      unsigned int height);
+/* color coding */
+dc1394error_t dc1394_format7_get_color_coding(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding);
+dc1394error_t dc1394_format7_get_color_codings(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_codings_t *codings);
+dc1394error_t dc1394_format7_set_color_coding(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t color_coding);
+dc1394error_t dc1394_format7_set_color_filter(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_filter_t color_filter);
+dc1394error_t dc1394_format7_get_color_filter(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_filter_t *color_filter);
 
-int
-dc1394_set_format7_color_coding_id(raw1394handle_t handle, nodeid_t node,
-				   unsigned int mode, unsigned int color_id);
+/* packet */
+dc1394error_t dc1394_format7_get_packet_para(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *min_bytes, uint32_t *max_bytes);
+dc1394error_t dc1394_format7_get_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *packet_bytes);
+dc1394error_t dc1394_format7_set_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t packet_bytes);
+dc1394error_t dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *bpp);
+dc1394error_t dc1394_format7_get_packet_per_frame(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *ppf);
 
-int
-dc1394_set_format7_byte_per_packet(raw1394handle_t handle, nodeid_t node,
-				   unsigned int mode,
-                                   unsigned int packet_bytes);
+/* other */
+dc1394error_t dc1394_format7_get_data_depth(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *data_depth);
+dc1394error_t dc1394_format7_get_frame_interval(dc1394camera_t *camera, dc1394video_mode_t video_mode, float *interval);
+dc1394error_t dc1394_format7_get_pixel_number(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *pixnum);
+dc1394error_t dc1394_format7_get_total_bytes(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint64_t *total_bytes);
 
-int
-dc1394_query_format7_value_setting(raw1394handle_t handle, nodeid_t node,
-				   unsigned int mode,
-				   unsigned int *present,
-				   unsigned int *setting1,
-				   unsigned int *err_flag1,
-				   unsigned int *err_flag2);
-int
-dc1394_set_format7_value_setting(raw1394handle_t handle, nodeid_t node,
-				 unsigned int mode);
+/* These functions get the properties of (one or all) format7 mode(s) */
+dc1394error_t dc1394_format7_get_modeset(dc1394camera_t *camera, dc1394format7modeset_t *info);
+dc1394error_t dc1394_format7_get_mode_info(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394format7mode_t *f7_mode);
 
-int
-dc1394_query_format7_recommended_byte_per_packet(raw1394handle_t handle, nodeid_t node,
-						  unsigned int mode,
-						  unsigned int *bpp);
-
-int
-dc1394_query_format7_packet_per_frame(raw1394handle_t handle, nodeid_t node,
-				      unsigned int mode,
-				      unsigned int *ppf);
-
-int
-dc1394_query_format7_unit_position(raw1394handle_t handle, nodeid_t node,
-				   unsigned int mode,
-				   unsigned int *horizontal_pos,
-				   unsigned int *vertical_pos);
-int
-dc1394_query_format7_data_depth(raw1394handle_t handle, nodeid_t node,
-				unsigned int mode,
-				unsigned int *data_depth);
-
-int
-dc1394_query_format7_frame_interval(raw1394handle_t handle, nodeid_t node,
-				    unsigned int mode,
-				    float *interval);
-
-int
-dc1394_set_format7_color_filter_id(raw1394handle_t handle, nodeid_t node,
-				   unsigned int mode,
-				   unsigned int color_id);
-
-int
-dc1394_query_format7_color_filter_id(raw1394handle_t handle, nodeid_t node,
-				     unsigned int mode,
-				     unsigned int *color_id);
-
-/**********************************
- *   ABSOLUTE SETTING FUNCTIONS   *		     
- **********************************/
+/* Joint function that fully sets a certain ROI taking all parameters into account
+   Note that this function does not SWITCH to the video mode passed as argument, it mearly sets it */
+dc1394error_t dc1394_format7_set_roi(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t color_coding,
+				     int bytes_per_packet, int left, int top, int width, int height);
 
 
-int
-dc1394_query_absolute_feature_min_max(raw1394handle_t handle, nodeid_t node,
-				      unsigned int feature,
-				      float *min, float *max);
-
-int
-dc1394_query_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
-				    int feature, float *value);
-
-int
-dc1394_set_absolute_feature_value(raw1394handle_t handle, nodeid_t node,
-				  int feature, float value);
-
-int
-dc1394_query_absolute_control(raw1394handle_t handle, nodeid_t node,
-			    unsigned int feature, dc1394bool_t *value);
-
-int
-dc1394_absolute_setting_on_off(raw1394handle_t handle, nodeid_t node,
-			       unsigned int feature, unsigned int value);
-
-int
-dc1394_has_absolute_control(raw1394handle_t handle, nodeid_t node,
-			    unsigned int feature, dc1394bool_t *value);
-
-
-int
-dc1394_get_bandwidth_usage(raw1394handle_t handle, nodeid_t node, unsigned int *bandwidth);
-
-int
-dc1394_get_camera_port(raw1394handle_t handle);
+/* This will have to be fixed or removed: it's ugly...*/
+dc1394error_t dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _DC1394_CAMERA_CONTROL_H */
+#endif /* __DC1394_CAMERA_CONTROL_H__ */

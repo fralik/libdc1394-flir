@@ -5,7 +5,7 @@
 
 This library provides functionality to control any camera that conforms to the
 1394-Based Digital Camera Specification (which can be found at
-http://www.1394ta.org/Download/Technology/Specifications/Camera120.pdf).  It
+http://damien.douxchamps.net/ieee1394/libdc1394/iidc_specifications.php).  It
 utilizes the lowlevel functionality provided by libraw1394 to communicate with
 the camera.
 
@@ -19,18 +19,20 @@ stated at the top of the individual files.
 
 3. API documentation
 
-There is currently no external document describing the library functions,
-but you can find documentation for all functions in the header file
-dc1394_control.h. There are sample programs in the examples directory,
-which are helpful for learning. For a more comprehensive demonstration of the
-features of libdc1394, review the Coriander application source code, 
-available at http://sf.net/projects/coriander/.
+A basic description of each function can be found on libdc1394 website:
+http://damien.douxchamps.net/ieee1394/libdc1394/ You can also find information
+for all functions in the header file dc1394_control.h. There are sample
+programs in the examples directory, which are helpful for learning. For a more
+comprehensive demonstration of the features of libdc1394, review the Coriander
+application source code, available at http://sf.net/projects/coriander/.
 
 4. Maintainer
 
 The maintainer of the 1394-Based Digital Camera Control Library is currently
-Gord Peters.  Send suggestions, bug reports and fixes to
-GordPeters@smarttech.com.  See the file AUTHORS for a complete list of
-contributors.
+Damien Douxchamps. Send suggestions, bug reports and fixes to
+ddouxchamps@users.sf.net or better, to the mailing list
+libdc1394devel@lists.sf.net (subscription required)  See the file AUTHORS for
+a complete list of contributors.
 
 2000-01-13  Gord Peters
+2006-08-17  Damien Douxchamps
