@@ -49,11 +49,11 @@ esac
 
 aclocal $ACLOCAL_FLAGS
 
+libtoolize --force --copy
 # optionally feature autoheader
 (autoheader --version)  < /dev/null > /dev/null 2>&1 && autoheader
 
 automake -a $am_opt
 autoconf
 cd $ORIGDIR
-libtoolize --force --copy
 $srcdir/configure --enable-maintainer-mode "$@"
