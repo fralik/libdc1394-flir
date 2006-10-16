@@ -25,7 +25,7 @@
 
 #include <libraw1394/raw1394.h>
 #include <libraw1394/csr.h>
-#include "raw1394support.h"
+#include "linux/raw1394support.h"
 #include "control.h"
 
 #define DC1394_CAST_CAMERA_TO_LINUX(camlinux, camera) dc1394camera_linux_t * camlinux = (dc1394camera_linux_t *) camera

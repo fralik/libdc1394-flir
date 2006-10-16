@@ -20,9 +20,6 @@ libdc1394_la_SOURCES =  \
 	conversions.c    \
 	conversions.h    \
 	bayer.c          \
-	topology.h \
-	topology.c \
-	raw1394support.h \
 	kernel-video1394.h
 
 libdc1394_la_LIBADD = $(dc1394platform)/libdc1394-$(dc1394platform).la

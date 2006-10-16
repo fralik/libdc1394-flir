@@ -25,8 +25,8 @@
 #include <libraw1394/csr.h>
 #include "config.h"
 #include "internal.h"
-#include "raw1394support.h"
-#include "topology.h"
+#include "linux/raw1394support.h"
+#include "linux/topology.h"
 #include "register.h"
 #include "offsets.h"
 #include "linux/linux.h"
