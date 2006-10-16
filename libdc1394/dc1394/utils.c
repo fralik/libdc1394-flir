@@ -146,6 +146,30 @@ dc1394_is_color(dc1394color_coding_t color_coding, dc1394bool_t *is_color)
 }
 
 dc1394error_t
+dc1394_get_color_coding_depth(dc1394color_coding_t color_coding,
+    uint32_t * bits)
+{
+  switch(color_coding) {
+  case DC1394_COLOR_CODING_MONO8:
+  case DC1394_COLOR_CODING_YUV411:
+  case DC1394_COLOR_CODING_YUV422:
+  case DC1394_COLOR_CODING_YUV444:
+  case DC1394_COLOR_CODING_RGB8:
+  case DC1394_COLOR_CODING_RAW8:
+    *bits = 8;
+    return DC1394_SUCCESS;
+  case DC1394_COLOR_CODING_MONO16:
+  case DC1394_COLOR_CODING_RGB16:
+  case DC1394_COLOR_CODING_MONO16S:
+  case DC1394_COLOR_CODING_RGB16S:
+  case DC1394_COLOR_CODING_RAW16:
+    *bits = 16;
+    return DC1394_SUCCESS;
+  }
+  return DC1394_INVALID_COLOR_CODING;
+}
+
+dc1394error_t
 dc1394_get_bytes_per_pixel(dc1394color_coding_t color_coding, float* bpp)
 {
   switch(color_coding) {

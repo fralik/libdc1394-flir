@@ -753,16 +753,33 @@ dc1394_format7_get_data_depth(dc1394camera_t *camera,
 {   
   dc1394error_t err;
   quadlet_t value;
-  
+  dc1394color_coding_t coding;
+
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_INVALID_VIDEO_MODE;
   
-  err=GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_DATA_DEPTH_INQ, &value);
-  DC1394_ERR_RTN(err, "Could not get data depth");
+  *data_depth = 0;
+  if (camera->iidc_version >= DC1394_IIDC_VERSION_1_31) {
+    err=GetCameraFormat7Register(camera, video_mode,
+        REG_CAMERA_FORMAT7_DATA_DEPTH_INQ, &value);
+    printf ("format7 raw depth %08x\n", value);
+    DC1394_ERR_RTN(err, "Could not get format7 data depth");
+    *data_depth=value >> 24;
+  }
 
-  *data_depth=value >> 24;
+  /* For cameras that do not have the DATA_DEPTH_INQ register, perform a
+   * sane default. */
+  if (*data_depth == 0) {
+    err = dc1394_get_color_coding_from_video_mode (camera, video_mode, &coding);
+    DC1394_ERR_RTN(err, "Could not get color coding");
+    
+    err = dc1394_get_color_coding_depth (coding, data_depth);
+    DC1394_ERR_RTN(err, "Could not get data depth from color coding");
 
-  return err;
+    return err;
+  }
+
+  return DC1394_SUCCESS;
 }   
     
 dc1394error_t

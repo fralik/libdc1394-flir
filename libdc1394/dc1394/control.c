@@ -26,6 +26,7 @@
 #include "internal.h"
 #include "register.h"
 #include "offsets.h"
+#include "utils.h"
  
 
 dc1394error_t
@@ -1926,15 +1927,39 @@ dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr)
 }
 
 dc1394error_t
-dc1394_video_get_data_depth(dc1394camera_t *camera, unsigned int *depth)
+dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth)
 {
+  dc1394error_t err;
   quadlet_t value;
-  dc1394error_t err = GetCameraControlRegister(camera, REG_CAMERA_DATA_DEPTH, &value);
-  DC1394_ERR_RTN(err, "Could not get video data depth");
-  
-  *depth = value & 0xFFUL;
+  dc1394video_mode_t mode;
+  dc1394color_coding_t coding;
 
-  return err;
+  *depth = 0;
+  if (camera->iidc_version >= DC1394_IIDC_VERSION_1_31) {
+    err= GetCameraControlRegister(camera, REG_CAMERA_DATA_DEPTH, &value);
+    DC1394_ERR_RTN(err, "Could not get video data depth");
+    *depth = value >> 24;
+  }
+
+  /* For cameras that do not have the DATA_DEPTH register, perform a
+   * sane default. */
+  if (*depth == 0) {
+    err = dc1394_video_get_mode(camera, &mode);
+    DC1394_ERR_RTN(err, "Could not get video mode");
+
+    if (dc1394_is_video_mode_scalable (mode))
+      return dc1394_format7_get_data_depth (camera, mode, depth);
+
+    err = dc1394_get_color_coding_from_video_mode (camera, mode, &coding);
+    DC1394_ERR_RTN(err, "Could not get color coding");
+    
+    err = dc1394_get_color_coding_depth (coding, depth);
+    DC1394_ERR_RTN(err, "Could not get data depth from color coding");
+
+    return err;
+  }
+
+  return DC1394_SUCCESS;
 }
 
 dc1394error_t
