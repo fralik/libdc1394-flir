@@ -22,7 +22,9 @@ libdc1394_la_SOURCES =  \
 	bayer.c          \
 	kernel-video1394.h
 
-libdc1394_la_LIBADD = $(dc1394platform)/libdc1394-$(dc1394platform).la
+libdc1394_la_LIBADD = \
+	$(dc1394platform)/libdc1394-$(dc1394platform).la \
+	vendor/libdc1394-vendor.la
 
 # headers to be installed
 pkginclude_HEADERS = \
