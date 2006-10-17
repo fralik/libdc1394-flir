@@ -1011,3 +1011,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Changed Version_2_0 to the default branch (HEAD)
     * Modified directory structure (libdc1394 -> dc1394)
     * Changed default tarball filename to libdc1394
+    * Changed the get_data_depth() functions to compute a guess when the
+      register is not available (thanks to AgBr and Daniel Westhoff for
+      finding this one).
