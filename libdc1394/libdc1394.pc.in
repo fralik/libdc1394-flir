@@ -7,5 +7,5 @@ Name: libdc1394
 Description: 1394-based DC Control Library
 Version: @VERSION@
 Libs: -L${libdir} -ldc1394
-Cflags: -I${includedir}/dc1394
+Cflags: -I${includedir}
 
