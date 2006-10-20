@@ -80,7 +80,7 @@ GrabSelfIds(dc1394camera_t **cams, int ncams)
 }
 
 dc1394camera_t*
-dc1394_new_camera_platform (uint32_t port, nodeid_t node)
+dc1394_new_camera_platform (uint32_t port, uint16_t node)
 {
   dc1394camera_linux_t *cam;
 
@@ -133,7 +133,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
   uint32_t allocated_size;
   dc1394camera_t **cameras;
   uint32_t numCam, err=DC1394_SUCCESS, i, numNodes;
-  nodeid_t node;
+  uint16_t node;
 
   //dc1394bool_t isCamera;
   dc1394camera_t *tmpcam=NULL;
@@ -308,7 +308,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 }
 
 dc1394error_t
-GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
+GetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   int retval=1, retry= DC1394_MAX_RETRIES;
@@ -340,7 +340,7 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 }
 
 dc1394error_t
-SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
+SetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   int retval=1, retry= DC1394_MAX_RETRIES;

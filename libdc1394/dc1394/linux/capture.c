@@ -68,7 +68,7 @@ int *_dc1394_num_using_fd = NULL;
  is used in the non DMA capture routines.
 ***************************************************************/
 dc1394error_t
-_dc1394_video_iso_handler(raw1394handle_t handle, int channel, size_t length, quadlet_t *data) 
+_dc1394_video_iso_handler(raw1394handle_t handle, int channel, size_t length, uint32_t *data) 
 {
 
     /* the first packet of a frame has a 1 in the lsb of the header */

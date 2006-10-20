@@ -59,7 +59,7 @@
 #define MAX_RESETS 5
 
 /* declarations for libdc1394 */
-nodeid_t *camera_nodes;
+uint16_t *camera_nodes;
 dc1394featureset_t features;
 dc1394camera_t *camera;
 

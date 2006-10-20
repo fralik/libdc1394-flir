@@ -38,16 +38,6 @@
 #include <netinet/in.h>
 #include <stdint.h>
 
-#ifndef octlet_t
-typedef uint64_t octlet_t;
-#endif
-#ifndef quadlet_t
-typedef uint32_t quadlet_t;
-#endif
-#ifndef nodeid_t
-typedef uint16_t nodeid_t;
-#endif
-
 
 /* Note on the coding of libdc1394 versions:
    - LIBDC1394_VERSION represent the release number of the library,
@@ -408,24 +398,24 @@ typedef struct __dc1394_camera
 {
   // system/firmware information
   int                  port;
-  nodeid_t             node;
+  uint16_t             node;
   uint64_t             euid_64;
-  quadlet_t            ud_reg_tag_12;
-  quadlet_t            ud_reg_tag_13;
-  octlet_t             command_registers_base;
-  octlet_t             unit_directory;
-  octlet_t             unit_dependent_directory;
-  octlet_t             advanced_features_csr;
-  octlet_t             absolute_control_csr;
-  octlet_t             PIO_control_csr; // future use
-  octlet_t             SIO_control_csr; // future use
-  octlet_t             strobe_control_csr; // future use
-  octlet_t             format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
+  uint32_t            ud_reg_tag_12;
+  uint32_t            ud_reg_tag_13;
+  uint64_t             command_registers_base;
+  uint64_t             unit_directory;
+  uint64_t             unit_dependent_directory;
+  uint64_t             advanced_features_csr;
+  uint64_t             absolute_control_csr;
+  uint64_t             PIO_control_csr; // future use
+  uint64_t             SIO_control_csr; // future use
+  uint64_t             strobe_control_csr; // future use
+  uint64_t             format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
   dc1394iidc_version_t iidc_version;
   char                 vendor[MAX_CHARS + 1];
   char                 model[MAX_CHARS + 1];
-  quadlet_t            vendor_id;
-  quadlet_t            model_id;
+  uint32_t            vendor_id;
+  uint32_t            model_id;
   dc1394bool_t         bmode_capable;
   dc1394bool_t         one_shot_capable;
   dc1394bool_t         multi_shot_capable;
@@ -448,7 +438,7 @@ typedef struct __dc1394_camera
 
   // for broadcast:
   dc1394bool_t         broadcast;
-  nodeid_t             node_id_backup;
+  uint16_t             node_id_backup;
 
   // 1394 PHY interface data:
   dc1394speed_t        phy_speed;

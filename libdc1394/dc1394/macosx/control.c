@@ -34,7 +34,7 @@
 #include "utils.h"
 
 dc1394camera_t*
-dc1394_new_camera_platform (uint32_t port, nodeid_t node)
+dc1394_new_camera_platform (uint32_t port, uint16_t node)
 {
   dc1394camera_macosx_t *cam;
 
@@ -197,7 +197,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 }
 
 dc1394error_t
-GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
+GetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   IOFireWireLibDeviceRef d = craw->iface;
@@ -221,7 +221,7 @@ GetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t *value)
 }
 
 dc1394error_t
-SetCameraROMValue(dc1394camera_t *camera, octlet_t offset, quadlet_t value)
+SetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   IOFireWireLibDeviceRef d = craw->iface;

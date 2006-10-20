@@ -28,13 +28,13 @@
  * Function to convert float to quadlet (32 bit floating point representation)
  */
 dc1394error_t 
-dc1394_pxl_convert_float32_to_quadlet(double d, quadlet_t *i) {
+dc1394_pxl_convert_float32_to_quadlet(double d, uint32_t *i) {
   dc1394error_t retval;
 
   float32_t f = d;
-  memcpy((void *)i, (void *)&f, sizeof(quadlet_t));
+  memcpy((void *)i, (void *)&f, sizeof(uint32_t));
 
-  if (sizeof(quadlet_t) == sizeof(float32_t)) {
+  if (sizeof(uint32_t) == sizeof(float32_t)) {
     retval = DC1394_SUCCESS;
   }
   else {
@@ -45,17 +45,17 @@ dc1394_pxl_convert_float32_to_quadlet(double d, quadlet_t *i) {
 }
 
 /******************************************************************************
- * Function to convert quadlet_t (32 bit float representation) to float
+ * Function to convert uint32_t (32 bit float representation) to float
  */
 dc1394error_t
-dc1394_pxl_convert_quadlet_to_float32(quadlet_t i, double *d) {
+dc1394_pxl_convert_uint32_to_float32(uint32_t i, double *d) {
   dc1394error_t retval;
   
   float32_t f;
   memcpy((void *)&f, (void *)&i, sizeof(float32_t));
 
   *d = (double) f;
-  if (sizeof(quadlet_t) == sizeof(float32_t)) {
+  if (sizeof(uint32_t) == sizeof(float32_t)) {
     retval = DC1394_SUCCESS;
   }
   else {
@@ -70,15 +70,15 @@ dc1394_pxl_convert_quadlet_to_float32(quadlet_t i, double *d) {
  * Internal function.
  */
 dc1394error_t
-dc1394_pxl_read_n_bytes(dc1394camera_t *camera, quadlet_t offset, char *str, uint32_t n) {
+dc1394_pxl_read_n_bytes(dc1394camera_t *camera, uint32_t offset, char *str, uint32_t n) {
   if (camera == NULL)
 	return DC1394_FAILURE;
 
-  quadlet_t quadlet;
-  quadlet_t i;
+  uint32_t quadlet;
+  uint32_t i;
 
   for (i = 0; i < n; i+=4) {
-	GetCameraROMValue(camera, (octlet_t)offset*4+i, &quadlet);
+	GetCameraROMValue(camera, (uint64_t)offset*4+i, &quadlet);
 	quadlet = ntohl(quadlet);
 	memcpy((void *)(str+i), (void *)&quadlet, sizeof(quadlet));
   }
@@ -96,7 +96,7 @@ dc1394_pxl_get_camera_serial_number(dc1394camera_t *camera, uint32_t *serial_num
   if (camera == NULL)
 	return DC1394_FAILURE;
 
-  quadlet_t serial_num_offset, serial_num_length;
+  uint32_t serial_num_offset, serial_num_length;
   GetCameraAdvControlRegister(camera, PxL_ACR_SERIAL_NUM_OFFSET, 
 	  &serial_num_offset);
   GetCameraAdvControlRegister(camera, PxL_ACR_SERIAL_NUM_LENGTH, 
@@ -120,7 +120,7 @@ dc1394_pxl_get_camera_info(dc1394camera_t *camera, dc1394_pxl_camera_info_t
   if (camera == NULL)
 	return DC1394_FAILURE;
 
-  quadlet_t serial_num_offset, serial_num_length,
+  uint32_t serial_num_offset, serial_num_length,
 			camera_desc_offset, camera_desc_length;
 
   GetCameraAdvControlRegister(camera, PxL_ACR_FPGA_VERSION, 
@@ -167,7 +167,7 @@ dc1394_pxl_get_adv_feature_info(dc1394camera_t *camera, dc1394_pxl_adv_feature_i
   if (camera == NULL)
 	return DC1394_FAILURE;
 
-  quadlet_t name_inquiry, name_offset, name_length;
+  uint32_t name_inquiry, name_offset, name_length;
 
   GetCameraAdvControlRegister(camera, PxL_ACR_NAME_INQUIRY, &name_inquiry);
   GetCameraAdvControlRegister(camera, PxL_ACR_NAME_OFFSET, &name_offset);
@@ -197,18 +197,18 @@ dc1394_pxl_get_adv_feature_info(dc1394camera_t *camera, dc1394_pxl_adv_feature_i
  */
 dc1394error_t
 dc1394_pxl_get_gpio_inq(dc1394camera_t *camera, dc1394_pxl_gpio_info_t *gpio_info) {
-  quadlet_t gpio_inq;
+  uint32_t gpio_inq;
 
   if (camera == NULL)
 	return DC1394_FAILURE;
 
-  quadlet_t address = PxL_ACR_GPIO_INQ;
+  uint32_t address = PxL_ACR_GPIO_INQ;
   GetCameraAdvControlRegister(camera, address, &gpio_inq);
 #ifdef PIXELINK_DEBUG_DISPLAY
   printf("  0x%08x : r 0x%08x < GPIO_INQ\n", address, gpio_inq);
 #endif
 
-  quadlet_t bit = 0x1UL << 31;
+  uint32_t bit = 0x1UL << 31;
   gpio_info->number      = (gpio_inq>>24) & 0x0FUL;
 
   gpio_info->presence    = gpio_inq & (bit>> 0)? DC1394_TRUE: DC1394_FALSE;
@@ -256,7 +256,7 @@ dc1394_pxl_get_gpio_inq(dc1394camera_t *camera, dc1394_pxl_gpio_info_t *gpio_inf
  */
 dc1394error_t
 dc1394_pxl_get_gpo_param(dc1394camera_t *camera, uint32_t gpio_id, 
-	quadlet_t *p1_val, quadlet_t *p2_val, quadlet_t *p3_val) {
+	uint32_t *p1_val, uint32_t *p2_val, uint32_t *p3_val) {
   dc1394error_t err;
   dc1394_pxl_gpio_info_t gpio_info;
 
@@ -269,21 +269,21 @@ dc1394_pxl_get_gpo_param(dc1394camera_t *camera, uint32_t gpio_id,
 	return DC1394_FAILURE;
   }
 
-  quadlet_t gpio_parm1_abs, gpio_parm2_abs, gpio_parm3_abs;
+  uint32_t gpio_parm1_abs, gpio_parm2_abs, gpio_parm3_abs;
 
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM1_ABS, &gpio_parm1_abs);
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM2_ABS, &gpio_parm2_abs);
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM3_ABS, &gpio_parm3_abs);
 
-  quadlet_t gpio_parm1_add, gpio_parm2_add, gpio_parm3_add;
+  uint32_t gpio_parm1_add, gpio_parm2_add, gpio_parm3_add;
 
   gpio_parm1_add = 4*gpio_parm1_abs + gpio_id*0x0c + 0x08;
   gpio_parm2_add = 4*gpio_parm2_abs + gpio_id*0x0c + 0x08;
   gpio_parm3_add = 4*gpio_parm3_abs + gpio_id*0x0c + 0x08;
 
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm1_add), p1_val);
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm2_add), p2_val);
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm3_add), p3_val);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm1_add), p1_val);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm2_add), p2_val);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm3_add), p3_val);
 
 #ifdef PIXELINK_DEBUG_DISPLAY
   printf("  0x%08x : r 0x%08x < GPIO_PARM1_VALUE\n", gpio_parm1_add, *p1_val);
@@ -300,9 +300,9 @@ dc1394_pxl_get_gpo_param(dc1394camera_t *camera, uint32_t gpio_id,
  */
 dc1394error_t
 dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *camera, uint32_t gpio_id,
-	quadlet_t *p1_val, quadlet_t *p2_val, quadlet_t *p3_val,
-	quadlet_t *p1_min, quadlet_t *p2_min, quadlet_t *p3_min,
-	quadlet_t *p1_max, quadlet_t *p2_max, quadlet_t *p3_max) {
+	uint32_t *p1_val, uint32_t *p2_val, uint32_t *p3_val,
+	uint32_t *p1_min, uint32_t *p2_min, uint32_t *p3_min,
+	uint32_t *p1_max, uint32_t *p2_max, uint32_t *p3_max) {
   dc1394error_t err;
   dc1394_pxl_gpio_info_t gpio_info;
 
@@ -315,21 +315,21 @@ dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *camera, uint32_t gpio_id,
 	return DC1394_FAILURE;
   }
 
-  quadlet_t gpio_parm1_abs, gpio_parm2_abs, gpio_parm3_abs;
+  uint32_t gpio_parm1_abs, gpio_parm2_abs, gpio_parm3_abs;
 
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM1_ABS, &gpio_parm1_abs);
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM2_ABS, &gpio_parm2_abs);
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM3_ABS, &gpio_parm3_abs);
 
-  quadlet_t gpio_parm1_add, gpio_parm2_add, gpio_parm3_add;
+  uint32_t gpio_parm1_add, gpio_parm2_add, gpio_parm3_add;
 
   gpio_parm1_add = 4*gpio_parm1_abs + gpio_id*0x0c + 0x08;
   gpio_parm2_add = 4*gpio_parm2_abs + gpio_id*0x0c + 0x08;
   gpio_parm3_add = 4*gpio_parm3_abs + gpio_id*0x0c + 0x08;
 
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm1_add), p1_val);
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm2_add), p2_val);
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm3_add), p3_val);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm1_add), p1_val);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm2_add), p2_val);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm3_add), p3_val);
 
 #ifdef PIXELINK_DEBUG_DISPLAY
   printf("  0x%08x : r 0x%08x < GPIO_PARM1_VALUE\n", gpio_parm1_add, *p1_val);
@@ -341,9 +341,9 @@ dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *camera, uint32_t gpio_id,
   gpio_parm2_add = 4*gpio_parm2_abs+ gpio_id*0x0c + 0x00;
   gpio_parm3_add = 4*gpio_parm3_abs+ gpio_id*0x0c + 0x00;
 
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm1_add), p1_min);
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm2_add), p2_min);
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm3_add), p3_min);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm1_add), p1_min);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm2_add), p2_min);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm3_add), p3_min);
 
 #ifdef PIXELINK_DEBUG_DISPLAY
   printf("  0x%08x : r 0x%08x < GPIO_PARM1_MIN\n", gpio_parm1_add, *p1_min);
@@ -355,9 +355,9 @@ dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *camera, uint32_t gpio_id,
   gpio_parm2_add = 4*gpio_parm2_abs+ gpio_id*0x0c + 0x04;
   gpio_parm3_add = 4*gpio_parm3_abs+ gpio_id*0x0c + 0x04;
 
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm1_add), p1_max);
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm2_add), p2_max);
-  GetCameraROMValue(camera, (octlet_t)(gpio_parm3_add), p3_max);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm1_add), p1_max);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm2_add), p2_max);
+  GetCameraROMValue(camera, (uint64_t)(gpio_parm3_add), p3_max);
 
 #ifdef PIXELINK_DEBUG_DISPLAY
   printf("  0x%08x : r 0x%08x < GPIO_PARM1_MAX\n", gpio_parm1_add, *p1_max);
@@ -375,7 +375,7 @@ dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *camera, uint32_t gpio_id,
  */
 dc1394error_t
 dc1394_pxl_set_gpo_param(dc1394camera_t *camera, uint32_t gpio_id, 
-	quadlet_t p1_val, quadlet_t p2_val, quadlet_t p3_val) {
+	uint32_t p1_val, uint32_t p2_val, uint32_t p3_val) {
 
   dc1394error_t err;
   dc1394_pxl_gpio_info_t gpio_info;
@@ -385,20 +385,20 @@ dc1394_pxl_set_gpo_param(dc1394camera_t *camera, uint32_t gpio_id,
 	return DC1394_FAILURE;
   }
 
-  quadlet_t gpio_parm1_abs, gpio_parm2_abs, gpio_parm3_abs;
+  uint32_t gpio_parm1_abs, gpio_parm2_abs, gpio_parm3_abs;
 
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM1_ABS, &gpio_parm1_abs);
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM2_ABS, &gpio_parm2_abs);
   GetCameraAdvControlRegister(camera, PxL_ACR_GPIO_PARM3_ABS, &gpio_parm3_abs);
 
-  quadlet_t gpio_parm1_add, gpio_parm2_add, gpio_parm3_add;
+  uint32_t gpio_parm1_add, gpio_parm2_add, gpio_parm3_add;
   gpio_parm1_add = 4*gpio_parm1_abs+ gpio_id*0x0c + 0x08;
   gpio_parm2_add = 4*gpio_parm2_abs+ gpio_id*0x0c + 0x08;
   gpio_parm3_add = 4*gpio_parm3_abs+ gpio_id*0x0c + 0x08;
 
-  SetCameraROMValue(camera, (octlet_t)(gpio_parm1_add), p1_val);
-  SetCameraROMValue(camera, (octlet_t)(gpio_parm2_add), p2_val);
-  SetCameraROMValue(camera, (octlet_t)(gpio_parm3_add), p3_val);
+  SetCameraROMValue(camera, (uint64_t)(gpio_parm1_add), p1_val);
+  SetCameraROMValue(camera, (uint64_t)(gpio_parm2_add), p2_val);
+  SetCameraROMValue(camera, (uint64_t)(gpio_parm3_add), p3_val);
 
 #ifdef PIXELINK_DEBUG_DISPLAY
   printf("  0x%08x : w 0x%08x < GPIO_PARM1_VALUE\n", gpio_parm1_add, p1_val);
@@ -414,13 +414,13 @@ dc1394_pxl_set_gpo_param(dc1394camera_t *camera, uint32_t gpio_id,
  */
 dc1394error_t
 dc1394_pxl_get_gpo_config(dc1394camera_t *camera, uint32_t gpio_id, 
-		quadlet_t *gpio_cfg) {
+		uint32_t *gpio_cfg) {
   dc1394error_t err;
   if (camera == NULL)
 	return DC1394_FAILURE;
 
-  quadlet_t gpio_cfg_add = PxL_ACR_GPIO_0_CFG + gpio_id*4;
-  err = GetCameraAdvControlRegister(camera, (octlet_t) gpio_cfg_add, gpio_cfg);
+  uint32_t gpio_cfg_add = PxL_ACR_GPIO_0_CFG + gpio_id*4;
+  err = GetCameraAdvControlRegister(camera, (uint64_t) gpio_cfg_add, gpio_cfg);
 
 #ifdef PIXELINK_DEBUG_DISPLAY 
   printf("  0x%08x : r 0x%08x < GPO_0_CFG\n", gpio_cfg_add, *gpio_cfg);
@@ -433,14 +433,14 @@ dc1394_pxl_get_gpo_config(dc1394camera_t *camera, uint32_t gpio_id,
  * Function to set GPIO config. Internal function?
  */
 dc1394error_t
-dc1394_pxl_set_gpo_config(dc1394camera_t *camera, uint32_t gpio_id, quadlet_t gpio_cfg) {
+dc1394_pxl_set_gpo_config(dc1394camera_t *camera, uint32_t gpio_id, uint32_t gpio_cfg) {
   
   dc1394error_t err;
   if (camera == NULL)
 	return DC1394_FAILURE;
 
-  quadlet_t gpio_cfg_add = PxL_ACR_GPIO_0_CFG + gpio_id*4;
-  err = SetCameraAdvControlRegister(camera, (octlet_t) gpio_cfg_add, gpio_cfg);
+  uint32_t gpio_cfg_add = PxL_ACR_GPIO_0_CFG + gpio_id*4;
+  err = SetCameraAdvControlRegister(camera, (uint64_t) gpio_cfg_add, gpio_cfg);
 
 #ifdef PIXELINK_DEBUG_DISPLAY
   printf("  0x%08x : w 0x%08x < GPO_0_CFG\n", gpio_cfg_add, gpio_cfg);
@@ -495,7 +495,7 @@ dc1394_pxl_set_gpio_mode_param(dc1394camera_t *camera, uint32_t gpio_id,
   }
 
   /* compose the cfg_register value */
-  quadlet_t gpio_cfg = PxL_GPO_CFG_ENABLE;
+  uint32_t gpio_cfg = PxL_GPO_CFG_ENABLE;
 
   /* check if mode is valid */
   switch (gpio_mode) {
@@ -560,19 +560,19 @@ dc1394_pxl_set_gpio_mode_param(dc1394camera_t *camera, uint32_t gpio_id,
   dc1394_pxl_set_gpo_config(camera, gpio_id, gpio_cfg);
 
   /* Check the minimum and maximum values */
-  quadlet_t p1_val, p2_val, p3_val;
-  quadlet_t p1_min, p2_min, p3_min, p1_max, p2_max, p3_max; 
+  uint32_t p1_val, p2_val, p3_val;
+  uint32_t p1_min, p2_min, p3_min, p1_max, p2_max, p3_max; 
 
   double f1_min, f2_min, f3_min, f1_max, f2_max, f3_max; 
 
   dc1394_pxl_get_gpo_param_min_max(camera, gpio_id, &p1_val, &p2_val, &p3_val, 
 	  &p1_min, &p2_min, &p3_min, &p1_max, &p2_max, &p3_max);
-  dc1394_pxl_convert_quadlet_to_float32(p1_min, &f1_min);
-  dc1394_pxl_convert_quadlet_to_float32(p2_min, &f2_min);
-  dc1394_pxl_convert_quadlet_to_float32(p3_min, &f3_min);
-  dc1394_pxl_convert_quadlet_to_float32(p1_max, &f1_max);
-  dc1394_pxl_convert_quadlet_to_float32(p2_max, &f2_max);
-  dc1394_pxl_convert_quadlet_to_float32(p3_max, &f3_max);
+  dc1394_pxl_convert_uint32_to_float32(p1_min, &f1_min);
+  dc1394_pxl_convert_uint32_to_float32(p2_min, &f2_min);
+  dc1394_pxl_convert_uint32_to_float32(p3_min, &f3_min);
+  dc1394_pxl_convert_uint32_to_float32(p1_max, &f1_max);
+  dc1394_pxl_convert_uint32_to_float32(p2_max, &f2_max);
+  dc1394_pxl_convert_uint32_to_float32(p3_max, &f3_max);
   
   if ((f1_val < f1_min)| (f1_val > f1_max)) {
 	fprintf(stderr, "\nWARNING: parameter1 out of bounds! corrected.\n");

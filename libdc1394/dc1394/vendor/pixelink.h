@@ -120,8 +120,8 @@ typedef struct __dc1394_pxl_gpio_info_struct {
 
 /* Camera information */
 typedef struct __dc1394_pxl_camera_info_struct {
-  quadlet_t fpga_version;
-  quadlet_t fw_version;
+  uint32_t fpga_version;
+  uint32_t fw_version;
   char serial_number[PxL_MAX_STRING_LENGTH];
   char description[PxL_MAX_STRING_LENGTH];
 } dc1394_pxl_camera_info_t;
@@ -129,7 +129,7 @@ typedef struct __dc1394_pxl_camera_info_struct {
 /* Advanced feature inquiry */
 typedef struct __dc1394_pxl_adv_feature_info_struct {
   dc1394bool_t name_presence;
-  quadlet_t name_offset;
+  uint32_t name_offset;
   char name[PxL_MAX_STRING_LENGTH];
 } dc1394_pxl_adv_feature_info_t;
 
@@ -139,10 +139,10 @@ extern "C" {
 
 /* List of functions */
 dc1394error_t
-dc1394_pxl_convert_float32_to_quadlet(double , quadlet_t *);
+dc1394_pxl_convert_float32_to_quadlet(double , uint32_t *);
 
 dc1394error_t
-dc1394_pxl_convert_quadlet_to_float32(quadlet_t , double *);
+dc1394_pxl_convert_uint32_to_float32(uint32_t , double *);
 
 dc1394error_t
 dc1394_pxl_get_camera_name(dc1394camera_t *, char *, uint32_t);
@@ -154,18 +154,18 @@ dc1394error_t
 dc1394_pxl_get_camera_serial_number(dc1394camera_t *, uint32_t *);
 
 dc1394error_t
-dc1394_pxl_get_gpo_param(dc1394camera_t *, uint32_t, quadlet_t *, quadlet_t *, quadlet_t *);
+dc1394_pxl_get_gpo_param(dc1394camera_t *, uint32_t, uint32_t *, uint32_t *, uint32_t *);
 
 dc1394error_t
-dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *, uint32_t, quadlet_t *, 
-		quadlet_t *, quadlet_t *, quadlet_t *, quadlet_t *, quadlet_t *, 
-		quadlet_t *, quadlet_t *, quadlet_t *);
+dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *, uint32_t, uint32_t *, 
+		uint32_t *, uint32_t *, uint32_t *, uint32_t *, uint32_t *, 
+		uint32_t *, uint32_t *, uint32_t *);
 
 dc1394error_t
-dc1394_pxl_get_gpo_config(dc1394camera_t *, uint32_t, quadlet_t *);
+dc1394_pxl_get_gpo_config(dc1394camera_t *, uint32_t, uint32_t *);
 
 dc1394error_t
-dc1394_pxl_set_gpo_config(dc1394camera_t *, uint32_t, quadlet_t);
+dc1394_pxl_set_gpo_config(dc1394camera_t *, uint32_t, uint32_t);
 
 dc1394error_t
 dc1394_pxl_set_gpio_mode_param(dc1394camera_t *, uint32_t , 

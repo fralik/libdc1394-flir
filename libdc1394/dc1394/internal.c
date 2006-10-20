@@ -126,7 +126,7 @@ const int quadlets_per_packet_format_2[64] =
 };
 
 dc1394camera_t*
-dc1394_new_camera(uint32_t port, nodeid_t node)
+dc1394_new_camera(uint32_t port, uint16_t node)
 {
   dc1394camera_t *cam;
  
@@ -246,7 +246,7 @@ _dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mo
 }
 
 dc1394bool_t
-IsFeatureBitSet(quadlet_t value, dc1394feature_t feature)
+IsFeatureBitSet(uint32_t value, dc1394feature_t feature)
 {
 
   if (feature >= DC1394_FEATURE_ZOOM) {
@@ -300,7 +300,7 @@ dc1394error_t
 dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
 {
   dc1394error_t err;
-  quadlet_t value_inq, value;
+  uint32_t value_inq, value;
   int speed;
 
   err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
@@ -315,7 +315,7 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
     DC1394_ERR_RTN(err, "oops");
     speed=value & 0x7UL;
     err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
-				 (quadlet_t) ( ((channel & 0x3FUL) << 8) |
+				 (uint32_t) ( ((channel & 0x3FUL) << 8) |
 					       (speed & 0x7UL) |
 					       (0x1 << 15) ));
     DC1394_ERR_RTN(err, "oops");
@@ -331,7 +331,7 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
       return DC1394_FAILURE;
     }
     err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
-				 (quadlet_t) (((channel & 0xFUL) << 28) |
+				 (uint32_t) (((channel & 0xFUL) << 28) |
 					      ((speed & 0x3UL) << 24) ));
     DC1394_ERR_RTN(err, "Could not set ISO data register");
   }
