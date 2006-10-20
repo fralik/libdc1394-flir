@@ -1017,3 +1017,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2006-10-10 Damien <ddouxchamps@users.sf.net>
     * added new conversion functions that work on dc1394video_frame_t.
+
+2006-10-20 David Moore <dcm@acm.org>
+    * added new example program grab_partial_image_dma

@@ -2,7 +2,7 @@ MAINTAINERCLEANFILES = Makefile.in
 AM_CPPFLAGS = -I $(top_srcdir)
 
 A = grab_gray_image grab_gray_image_dma grab_partial_image grab_color_image \
-	grab_color_image2 helloworld
+	grab_color_image2 helloworld grab_partial_image_dma
 
 if USE_LINUX
 bin_PROGRAMS = dc1394_vloopback
@@ -21,6 +21,9 @@ if USE_MACOSX
 AM_LDFLAGS = -framework CoreFoundation
 LDADD += -lIOKit
 endif
+
+grab_partial_image_dma_SOURCES = grab_partial_image_dma.c
+grab_partial_image_dma_LDADD = $(LDADD) ../dc1394/libdc1394.la
 
 helloworld_SOURCES = helloworld.c
 helloworld_LDADD = $(LDADD) ../dc1394/libdc1394.la
