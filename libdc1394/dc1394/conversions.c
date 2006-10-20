@@ -27,7 +27,7 @@ extern void swab();
 
 /**********************************************************************
  *
- *  CONVERSION FUNCTIONS TO UYVY 
+ *  CONVERSION FUNCTIONS TO YUV422 
  *
  **********************************************************************/
 
@@ -554,7 +554,7 @@ dc1394_deinterlace_stereo(uint8_t *restrict src, uint8_t *restrict dest, uint32_
 }
 
 dc1394error_t
-dc1394_convert_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order,
+dc1394_convert_to_YUV422(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
 			 dc1394color_coding_t source_coding, uint32_t bits)
 {
   switch(source_coding) {
@@ -586,6 +586,7 @@ dc1394_convert_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t
   }
 
   return DC1394_SUCCESS;
+
 }
 
 dc1394error_t
@@ -640,4 +641,263 @@ dc1394_convert_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
   }
 
   return DC1394_SUCCESS;
+}
+
+void
+Adapt_buffer_convert(dc1394video_frame_t *in, dc1394video_frame_t *out)
+{
+  float fbpp;
+
+  // conversions don't change the size of buffers or its position
+  out->size[0]=in->size[0];
+  out->size[1]=in->size[1];
+  out->position[0]=in->position[0];
+  out->position[1]=in->position[1];
+
+  // color coding has already been set before conversion: don't touch it.
+
+  // keep the color filter value in all cases. if the format is not raw it will not be further used anyway
+  out->color_filter=in->color_filter;
+
+  // the output YUV byte order must be already set if the buffer is YUV422 at the output
+  // if the output is not YUV we don't care about this field.
+  // Hence nothing to do.
+
+  // we always convert to 8bits (at this point) we can safely set this value to 8.
+  out->bit_depth=8;
+
+  // don't know what to do with stride... >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
+  // out->stride=??
+  
+  // the video mode should not change. Color coding and other stuff can be accessed in specific fields of this struct
+  out->video_mode = in->video_mode;
+
+  // padding is kept:
+  out->padding_bytes = in->padding_bytes;
+
+  // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
+  dc1394_get_bytes_per_pixel(out->color_coding, &fbpp);
+  out->image_bytes=(int)(out->size[0]*out->size[1]*fbpp);
+
+  // total is image_bytes + padding_bytes
+  out->total_bytes = out->image_bytes + out->padding_bytes;
+
+  // bytes-per-packet and packets_per_frame are internal data that can be kept as is.
+  out->bytes_per_packet  = in->bytes_per_packet;
+  out->packets_per_frame = in->packets_per_frame;
+
+  // timestamp, frame_behind, id and camera are copied too:
+  out->timestamp = in->timestamp;
+  out->frames_behind = in->frames_behind;
+  out->camera = in->camera;
+  out->id = in->id;
+  
+  // verify memory allocation:
+  if (out->total_bytes>out->allocated_image_bytes) {
+    free(out->image);
+    out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
+  }
+
+  // Copy padding bytes:
+  memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
+
+}
+
+dc1394error_t
+dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
+{
+
+  switch(out->color_coding) {
+  case DC1394_COLOR_CODING_YUV422:
+    switch(in->color_coding) {
+    case DC1394_COLOR_CODING_YUV422:
+      Adapt_buffer_convert(in,out);
+      dc1394_YUV422_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+      break;
+    case DC1394_COLOR_CODING_YUV411:
+      Adapt_buffer_convert(in,out);
+      dc1394_YUV411_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+      break;
+    case DC1394_COLOR_CODING_YUV444:
+      Adapt_buffer_convert(in,out);
+      dc1394_YUV444_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+      break;
+    case DC1394_COLOR_CODING_RGB8:
+      Adapt_buffer_convert(in,out);
+      dc1394_RGB8_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+      break;
+    case DC1394_COLOR_CODING_MONO8:
+    case DC1394_COLOR_CODING_RAW8:
+      Adapt_buffer_convert(in,out);
+      dc1394_MONO8_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+      break;
+    case DC1394_COLOR_CODING_MONO16:
+      Adapt_buffer_convert(in,out);
+      dc1394_MONO16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->bit_depth);
+      break;
+    case DC1394_COLOR_CODING_RGB16:
+      Adapt_buffer_convert(in,out);
+      dc1394_RGB16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->bit_depth);
+    break;
+    default:
+      fprintf(stderr,"Conversion to YUV422 from this color coding is not supported\n");
+      return DC1394_FAILURE;
+    }
+    break;
+  case DC1394_COLOR_CODING_MONO8:
+    switch(in->color_coding) {
+    case DC1394_COLOR_CODING_MONO16:
+      Adapt_buffer_convert(in,out);
+      dc1394_MONO16_to_MONO8(in->image, out->image, in->size[0], in->size[1], in->bit_depth);
+      break;
+    case DC1394_COLOR_CODING_MONO8:
+      Adapt_buffer_convert(in,out);
+      memcpy(out->image, in->image, in->size[0]*in->size[1]);
+      break;
+    default:
+      fprintf(stderr,"Conversion to MONO8 from this color coding is not supported\n");
+      return DC1394_FAILURE;
+    }
+    break;
+  case DC1394_COLOR_CODING_RGB8:
+    switch(in->color_coding) {
+    case DC1394_COLOR_CODING_RGB16:
+      Adapt_buffer_convert(in,out);
+      dc1394_RGB16_to_RGB8 (in->image, out->image, in->size[0], in->size[1], in->bit_depth);
+      break;
+    case DC1394_COLOR_CODING_YUV444:
+      Adapt_buffer_convert(in,out);
+      dc1394_YUV444_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
+      break;
+    case DC1394_COLOR_CODING_YUV422:
+      Adapt_buffer_convert(in,out);
+      dc1394_YUV422_to_RGB8 (in->image, out->image, in->size[0], in->size[1], in->yuv_byte_order);
+      break;
+    case DC1394_COLOR_CODING_YUV411:
+      Adapt_buffer_convert(in,out);
+      dc1394_YUV411_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
+      break;
+    case DC1394_COLOR_CODING_MONO8:
+    case DC1394_COLOR_CODING_RAW8:
+      Adapt_buffer_convert(in,out);
+      dc1394_MONO8_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
+      break;
+    case DC1394_COLOR_CODING_MONO16:
+      Adapt_buffer_convert(in,out);
+      dc1394_MONO16_to_RGB8 (in->image, out->image, in->size[0], in->size[1],in->bit_depth);
+      break;
+    case DC1394_COLOR_CODING_RGB8:
+      Adapt_buffer_convert(in,out);
+      memcpy(out->image, in->image, in->size[0]*in->size[1]*3);
+      break;
+    default:
+      fprintf(stderr,"Conversion to RGB8 from this color coding is not supported\n");
+      return DC1394_FAILURE;
+    }
+    break;
+  default:
+    fprintf(stderr,"Conversion to between these two formats is not supported (yet)\n");
+    return DC1394_FAILURE;
+  }
+ 
+  return DC1394_SUCCESS;
+}
+
+dc1394error_t
+Adapt_buffer_stereo(dc1394video_frame_t *in, dc1394video_frame_t *out)
+{
+  float fbpp;
+  
+  // buffer position is not changed. Size is boubled in Y
+  out->size[0]=in->size[0];
+  out->size[1]=in->size[1]*2;
+  out->position[0]=in->position[0];
+  out->position[1]=in->position[1];
+
+  // color coding is set to mono8 or raw8.
+  switch (in->color_coding) {
+  case DC1394_COLOR_CODING_RAW16:
+    out->color_coding=DC1394_COLOR_CODING_RAW8;
+    break;
+  case DC1394_COLOR_CODING_MONO16:
+  case DC1394_COLOR_CODING_YUV422:
+    out->color_coding=DC1394_COLOR_CODING_MONO8;
+    break;
+  default:
+    return DC1394_INVALID_COLOR_CODING;
+  }
+
+  // keep the color filter value in all cases. if the format is not raw it will not be further used anyway
+  out->color_filter=in->color_filter;
+
+  // the output YUV byte order must be already set if the buffer is YUV422 at the output
+  // if the output is not YUV we don't care about this field.
+  // Hence nothing to do.
+
+  // we always convert to 8bits (at this point) we can safely set this value to 8.
+  out->bit_depth=8;
+
+  // don't know what to do with stride... >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
+  // out->stride=??
+  
+  // the video mode should not change. Color coding and other stuff can be accessed in specific fields of this struct
+  out->video_mode = in->video_mode;
+
+  // padding is kept:
+  out->padding_bytes = in->padding_bytes;
+
+  // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
+  dc1394_get_bytes_per_pixel(out->color_coding, &fbpp);
+  out->image_bytes=(int)(out->size[0]*out->size[1]*fbpp);
+
+  // total is image_bytes + padding_bytes
+  out->total_bytes = out->image_bytes + out->padding_bytes;
+
+  // bytes-per-packet and packets_per_frame are internal data that can be kept as is.
+  out->bytes_per_packet  = in->bytes_per_packet;
+  out->packets_per_frame = in->packets_per_frame;
+
+  // timestamp, frame_behind, id and camera are copied too:
+  out->timestamp = in->timestamp;
+  out->frames_behind = in->frames_behind;
+  out->camera = in->camera;
+  out->id = in->id;
+  
+  // verify memory allocation:
+  if (out->total_bytes>out->allocated_image_bytes) {
+    free(out->image);
+    out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
+  }
+
+  // Copy padding bytes:
+  memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
+
+  return DC1394_SUCCESS;
+
+}
+
+dc1394error_t
+dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394stereo_method_t method)
+{
+  dc1394error_t err;
+
+  if ((in->color_coding==DC1394_COLOR_CODING_RAW16)||
+      (in->color_coding==DC1394_COLOR_CODING_MONO16)||
+      (in->color_coding==DC1394_COLOR_CODING_YUV422)) {
+    switch (method) {
+    case DC1394_STEREO_METHOD_INTERLACED:
+      err=Adapt_buffer_stereo(in,out);
+      DC1394_ERR_RTN(err, "This input color coding cannot stereo-decoded");
+      dc1394_deinterlace_stereo(in->image, out->image, in->size[0], in->size[1]);
+      break;
+    case DC1394_STEREO_METHOD_FIELD:
+      err=Adapt_buffer_stereo(in,out);
+      DC1394_ERR_RTN(err, "This input color coding cannot stereo-decoded");
+      memcpy(out->image,in->image,out->image_bytes);
+      break;
+    }
+    return DC1394_SUCCESS;
+  }
+  else
+    return DC1394_FAILURE;
 }

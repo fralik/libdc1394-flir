@@ -581,6 +581,8 @@ typedef struct __dc1394_video_frame
         /* the parent camera of this frame */
   uint32_t                 id;
         /* the frame position in the ring buffer */
+  uint64_t                 allocated_image_bytes;
+        /* amount of memory allocated in for the *image field */
 } dc1394video_frame_t;
 
 enum {
@@ -651,7 +653,7 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
       fprintf(stderr, err_string);                                   \
       fprintf(stderr,"\n");                                          \
       cleanup;                                                       \
-      return;                                                \
+      return;                                                        \
     }                                                                \
     }
 

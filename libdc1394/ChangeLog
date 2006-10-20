@@ -1014,3 +1014,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * Changed the get_data_depth() functions to compute a guess when the
       register is not available (thanks to AgBr and Daniel Westhoff for
       finding this one).
+	
+2006-10-10 Damien <ddouxchamps@users.sf.net>
+    * added new conversion functions that work on dc1394video_frame_t.

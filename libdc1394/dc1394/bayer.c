@@ -2157,3 +2157,158 @@ dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict r
 
   return DC1394_INVALID_BAYER_METHOD;
 }
+
+void
+Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method)
+{
+  float fbpp;
+
+  // conversions will halve the buffer size if the method is DOWNSAMPLE:
+  out->size[0]=in->size[0];
+  out->size[1]=in->size[1];
+  if (method == DC1394_BAYER_METHOD_DOWNSAMPLE) {
+    out->size[0]/=2; // ODD SIZE CASES NOT TAKEN INTO ACCOUNT
+    out->size[1]/=2;
+  }
+  
+  // as a convention we divide the image position by two in the case of a DOWNSAMPLE:
+  out->position[0]=in->position[0];
+  out->position[1]=in->position[1];
+  if (method == DC1394_BAYER_METHOD_DOWNSAMPLE) {
+    out->position[0]/=2;
+    out->position[1]/=2;
+  }
+
+  // the destination color coding is ALWAYS RGB. Set this.
+  if (in->color_coding==DC1394_COLOR_CODING_RAW16)
+    out->color_coding=DC1394_COLOR_CODING_RGB16;
+  else
+    out->color_coding=DC1394_COLOR_CODING_RGB8;
+
+  // keep the color filter value in all cases. If the format is not raw it will not be further used anyway
+  out->color_filter=in->color_filter;
+
+  // The output is never YUV, hence nothing to do about YUV byte order
+
+  // bit depth is conserved for 16 bit and set to 8bit for 8bit:
+  if (in->color_coding==DC1394_COLOR_CODING_RAW16)
+    out->bit_depth=in->bit_depth;
+  else
+    out->bit_depth=8;
+
+  // don't know what to do with stride... >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
+  // out->stride=??
+  
+  // the video mode should not change. Color coding and other stuff can be accessed in specific fields of this struct
+  out->video_mode = in->video_mode;
+
+  // padding is kept:
+  out->padding_bytes = in->padding_bytes;
+
+  // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
+  dc1394_get_bytes_per_pixel(out->color_coding, &fbpp);
+  out->image_bytes=(int)(out->size[0]*out->size[1]*fbpp);
+
+  // total is image_bytes + padding_bytes
+  out->total_bytes = out->image_bytes + out->padding_bytes;
+
+  // bytes-per-packet and packets_per_frame are internal data that can be kept as is.
+  out->bytes_per_packet  = in->bytes_per_packet;
+  out->packets_per_frame = in->packets_per_frame;
+
+  // timestamp, frame_behind, id and camera are copied too:
+  out->timestamp = in->timestamp;
+  out->frames_behind = in->frames_behind;
+  out->camera = in->camera;
+  out->id = in->id;
+  
+  // verify memory allocation:
+  if (out->total_bytes>out->allocated_image_bytes) {
+    free(out->image);
+    out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
+  }
+
+  // Copy padding bytes:
+  memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
+
+}
+dc1394error_t
+dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method)
+{
+
+  switch (in->color_coding) {
+  case DC1394_COLOR_CODING_RAW8:
+    switch (method) {
+    case DC1394_BAYER_METHOD_NEAREST:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_NearestNeighbor(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_SIMPLE:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_Simple(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_BILINEAR:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_Bilinear(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_HQLINEAR:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_HQLinear(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_DOWNSAMPLE:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_Downsample(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_EDGESENSE:
+      Adapt_buffer_bayer(in,out,method);
+     dc1394_bayer_EdgeSense(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+     return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_VNG:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_VNG(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+      return DC1394_SUCCESS;
+    default:
+      return DC1394_INVALID_BAYER_METHOD;
+    }
+    break;
+  case DC1394_COLOR_CODING_RAW16:
+    switch (method) {
+    case DC1394_BAYER_METHOD_NEAREST:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_NearestNeighbor_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_SIMPLE:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_Simple_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_BILINEAR:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_Bilinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_HQLINEAR:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_HQLinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_DOWNSAMPLE:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_Downsample_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_EDGESENSE:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_EdgeSense_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_VNG:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_VNG_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return DC1394_SUCCESS;
+    default:
+      return DC1394_INVALID_BAYER_METHOD;
+    }
+    break;
+  default:
+    fprintf(stderr,"Conversion to between these two formats is not supported (yet)\n");
+    return DC1394_FAILURE;
+  }
+
+  return DC1394_SUCCESS;
+}

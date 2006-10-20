@@ -23,6 +23,7 @@
 #define __DC1394_CONVERSIONS_H__
 
 #include "control.h"
+#include "utils.h"
 #define restrict __restrict
 
 typedef enum {
@@ -37,6 +38,15 @@ typedef enum {
 #define DC1394_BAYER_METHOD_MIN      DC1394_BAYER_METHOD_NEAREST
 #define DC1394_BAYER_METHOD_MAX      DC1394_BAYER_METHOD_EDGESENSE
 #define DC1394_BAYER_METHOD_NUM     (DC1394_BAYER_METHOD_MAX-DC1394_BAYER_METHOD_MIN+1)
+
+typedef enum {
+  DC1394_STEREO_METHOD_INTERLACED=0,
+  DC1394_STEREO_METHOD_FIELD
+} dc1394stereo_method_t;
+#define DC1394_STEREO_METHOD_MIN     DC1394_STEREO_METHOD_INTERLACE
+#define DC1394_STEREO_METHOD_MAX     DC1394_STEREO_METHOD_FIELD
+#define DC1394_STEREO_METHOD_NUM    (DC1394_STEREO_METHOD_MAX-DC1394_STEREO_METHOD_MIN+1)
+
 
 // color conversion functions from Bart Nabbe.
 // corrected by Damien: bad coeficients in YUV2RGB
@@ -123,6 +133,20 @@ dc1394error_t dc1394_bayer_decoding_8bit(const uint8_t *bayer, uint8_t *rgb,
 dc1394error_t dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
 					  uint32_t width, uint32_t height, dc1394color_filter_t tile,
 					  dc1394bayer_method_t, uint32_t bits);
+
+
+/**********************************************************************************
+ *  Frame based conversions
+ **********************************************************************************/
+
+dc1394error_t
+dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out);
+
+dc1394error_t
+dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method);
+
+dc1394error_t
+dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394stereo_method_t method);
 
 #ifdef __cplusplus
 }
