@@ -538,7 +538,8 @@ dc1394_capture_dequeue_dma (dc1394camera_t * camera, dc1394video_policy_t policy
   capture->dma_last_buffer = cb;
 
   frame->frames_behind = vwait.buffer;
-  frame->timestamp = vwait.filltime.tv_sec * 1000000 + vwait.filltime.tv_usec;
+  frame->timestamp = (uint64_t) vwait.filltime.tv_sec * 1000000 +
+    vwait.filltime.tv_usec;
 
   return frame;
 }

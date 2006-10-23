@@ -1021,3 +1021,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-10-20 David Moore <dcm@acm.org>
     * added new example program grab_partial_image_dma
     * converted octlet_t/quadlet_t/nodeid_t to uint64_t/uint32_t/uint16_t
+
+2006-10-23 David Moore <dcm@acm.org>
+    * fixed math error in computing timestamps during capture

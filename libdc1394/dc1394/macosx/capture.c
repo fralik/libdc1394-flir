@@ -82,7 +82,7 @@ callback (buffer_info * buffer, NuDCLRef dcl)
 {
   dc1394camera_macosx_t * craw;
   dc1394capture_t * capture;
-  UInt32 bus, cycle, dma_time, dma_sec, dma_cycle;
+  UInt32 bus, dma_time, sec, cycle, bus_time;
   int usec;
   int i;
 
@@ -107,26 +107,28 @@ callback (buffer_info * buffer, NuDCLRef dcl)
 
   buffer->status = BUFFER_FILLED;
 
-  (*craw->iface)->GetBusCycleTime (craw->iface, &bus, &cycle);
+  (*craw->iface)->GetBusCycleTime (craw->iface, &bus, &bus_time);
   gettimeofday (&buffer->filltime, NULL);
 
   /* Get the bus timestamp of when the packet was received */
-  //dma_time = *(UInt32 *)(capture->databuf.address + buffer->i *
-  //    DATA_SIZE + 4);
-  //printf ("status %08lx\n", dma_time);
   dma_time = *(UInt32 *)(capture->databuf.address + buffer->i *
       DATA_SIZE + 8);
-  //printf ("%08lx\n", dma_time);
-  dma_sec = (dma_time & 0xe000000) >> 25;
-  dma_cycle = (dma_time & 0x1fff000) >> 12;
+  sec = (dma_time & 0xe000000) >> 25;
+  cycle = (dma_time & 0x1fff000) >> 12;
+
+  /* convert to microseconds */
+  dma_time = sec * 1000000 + cycle * 125;
+
+  /* Get the bus timestamp right now */
+  sec = (bus_time & 0xe000000) >> 25;
+  cycle = (bus_time & 0x1fff000) >> 12;
+
+  /* convert to microseconds */
+  bus_time = sec * 1000000 + cycle * 125 + (bus_time & 0xfff) * 125 / 3072;
 
   /* Compute how many usec ago the packet was received by comparing
    * the current bus time to the timestamp of the first ISO packet */
-  usec = ((((cycle & 0xe000000) >> 25) + 8 - dma_sec) % 8) * 1000000 +
-    ((((cycle & 0x1fff000) >> 12) + 8000 - dma_cycle) % 8000) * 125 +
-    (cycle & 0xfff) * 125 / 3072;
-  //printf ("now %u.%06u\n", buffer->filltime.tv_sec, buffer->filltime.tv_usec);
-  //printf ("dma_sec %lx dma_cycle %lx usec %d cycle %lx\n", dma_sec, dma_cycle, usec, cycle);
+  usec = (bus_time + 8000000 - dma_time) % 8000000;
 
   /* Subtract usec from the current clock time */
   usec = buffer->filltime.tv_usec - usec;
@@ -135,8 +137,6 @@ callback (buffer_info * buffer, NuDCLRef dcl)
     usec += 1000000;
   }
   buffer->filltime.tv_usec = usec;
-
-  //printf ("then %u.%06u\n", buffer->filltime.tv_sec, buffer->filltime.tv_usec);
 
   if (capture->callback) {
     capture->callback (buffer->camera, capture->callback_user_data);
@@ -455,7 +455,7 @@ dc1394_capture_dequeue_dma (dc1394camera_t * camera,
       break;
   }
   frame->frames_behind = i;
-  frame->timestamp = buffer->filltime.tv_sec * 1000000 +
+  frame->timestamp = (uint64_t) buffer->filltime.tv_sec * 1000000 +
     buffer->filltime.tv_usec;
 
   return frame;
