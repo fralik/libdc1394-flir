@@ -191,7 +191,8 @@ dc1394_avt_print_advanced_feature(dc1394_avt_adv_feature_info_t *adv_feature)
 /************************************************************************/
 dc1394error_t
 dc1394_avt_get_shading(dc1394camera_t *camera, 
-		       dc1394bool_t *on_off, uint32_t *frame_nb)
+		       dc1394bool_t *on_off, dc1394bool_t *compute,
+		       dc1394bool_t *show, uint32_t *frame_nb)
 {
   dc1394error_t err;
   uint32_t value;
@@ -201,10 +202,20 @@ dc1394_avt_get_shading(dc1394camera_t *camera,
   DC1394_ERR_RTN(err,"Could not get AVT shading control reg");
 
   /* Shading ON / OFF : Bit 6 */
-  *on_off = (uint32_t)((value & 0x2000000UL) >> 25); 
-  
+  if (on_off)
+    *on_off = (uint32_t)((value & 0x2000000UL) >> 25);
+
+  /* Compute : Bit 5 */
+  if (compute)
+    *compute = (uint32_t)((value & 0x4000000UL) >> 26);
+
+  /* Show image : Bit 4 */
+  if (show)
+    *show = (uint32_t)((value & 0x8000000UL) >> 27);
+
   /* Number of images for auto computing of the shading reference: Bits 24..31 */
-  *frame_nb =(uint32_t)((value & 0xFFUL));      
+  if (frame_nb)
+    *frame_nb =(uint32_t)((value & 0xFFUL));
 
   return DC1394_SUCCESS;
   
@@ -216,7 +227,8 @@ dc1394_avt_get_shading(dc1394camera_t *camera,
 /************************************************************************/
 dc1394error_t
 dc1394_avt_set_shading(dc1394camera_t *camera,
-		       dc1394bool_t on_off,dc1394bool_t compute, uint32_t frame_nb)
+		       dc1394bool_t on_off, dc1394bool_t compute,
+		       dc1394bool_t show, uint32_t frame_nb)
 {
   dc1394error_t err;
   uint32_t curval;
@@ -230,7 +242,10 @@ dc1394_avt_set_shading(dc1394camera_t *camera,
   
   /* Compute : Bit 5 */
   curval = (curval & 0xFBFFFFFFUL) | ((compute ) << 26); 
-  
+
+  /* Show Image : Bit 4 */
+  curval = (curval & 0xF7FFFFFFUL) | ((show ) << 27);
+
   /* Number of images : Bits 24..31 */
   curval = (curval & 0xFFFFFF00UL) | ((frame_nb & 0xFFUL ));   
   
@@ -258,13 +273,16 @@ dc1394_avt_get_shading_mem_ctrl(dc1394camera_t *camera, dc1394bool_t *en_write,
   DC1394_ERR_RTN(err,"Could not get AVT shading memory control");
   
   /* Enable write access : Bit 5 */
-  *en_write = (uint32_t)((value & 0x4000000UL) >> 26); 
+  if (en_write)
+    *en_write = (uint32_t)((value & 0x4000000UL) >> 26);
   
   /* Enable read access : Bit 6 */
-  *en_read = (uint32_t)((value & 0x2000000UL) >> 25); 
+  if (en_read)
+    *en_read = (uint32_t)((value & 0x2000000UL) >> 25);
   
   /* addroffset in byte : Bits 8..31 */
-  *addroffset =(uint32_t)((value & 0xFFFFFFUL));
+  if (addroffset)
+    *addroffset =(uint32_t)((value & 0xFFFFFFUL));
   
   return DC1394_SUCCESS;
 }
@@ -294,7 +312,7 @@ dc1394_avt_set_shading_mem_ctrl(dc1394camera_t *camera,
   curval = (curval & 0xFF000000UL) | ((addroffset & 0xFFFFFFUL ));   
   
   /* Set new parameters */ 
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_LUT_MEM_CTRL, curval);
+  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SHDG_MEM_CTRL, curval);
   DC1394_ERR_RTN(err,"Could not get AVT LUT memory control");
   
   return DC1394_SUCCESS;
@@ -1234,22 +1252,198 @@ dc1394_avt_get_gpdata_info(dc1394camera_t *camera, uint32_t *BufferSize)
 
 
 /************************************************************************/
-/* Get pdata_buffer : experimental, does not work			*/
+/* Common code for GPData register access computation			*/
 /************************************************************************/
-dc1394error_t
-dc1394_avt_get_pdata_buffer(dc1394camera_t *camera, uint32_t *buff)
+static void gpdata_io_common(uint32_t *buf_local, uint32_t gpdata_numquads,
+			     uint32_t *nextIndex, uint32_t index, uint32_t size,
+			     uint32_t *newBufferSize, uint32_t *nQuadWriteSize,
+			     dc1394bool_t *finish)
 {
-  return DC1394_FAILURE ;       
+  /* clear buffer */
+  memset(buf_local, 0, gpdata_numquads * sizeof(uint32_t));
+
+  /* calculate the index after writing the next block */
+  *nextIndex = index + (gpdata_numquads * 4);
+  /* if the next index lies behind the allocated memory -> align */
+  if (size < *nextIndex) {
+    *newBufferSize = (gpdata_numquads * 4) - (*nextIndex - size);
+    /* if the reduced write-buffer size (buffer-size - 'overhang') is dividable by 4 */
+    *nQuadWriteSize = *newBufferSize / 4;
+    if ((*newBufferSize % 4) != 0)
+      *nQuadWriteSize = *nQuadWriteSize + 1;
+
+    *finish = DC1394_TRUE; /* ...because it's the last block */
+  }
+  else
+    *nQuadWriteSize = gpdata_numquads;
+
+  if (*nextIndex == size)
+    *finish = DC1394_TRUE;
 }
 
 
 /************************************************************************/
-/* Set pdata_buffer	experimental, does not work			*/
+/* Read size number of bytes from GPData buffer				*/
 /************************************************************************/
 dc1394error_t
-dc1394_avt_set_pdata_buffer(dc1394camera_t *camera, uint32_t buff)
+dc1394_avt_read_gpdata(dc1394camera_t *camera, unsigned char *buf, uint32_t size)
 {
-  return DC1394_FAILURE;
+  uint32_t gpdata_numquads, gpdata_bufsize;
+  uint32_t nQuadReadSize, newBufferSize;
+  uint32_t i, index = 0, nextIndex;
+  uint32_t *buf_local;
+  dc1394bool_t finish = DC1394_FALSE;
+  dc1394error_t err;
+
+  /* determine gpdata_bufsize (as read-block-size) */
+  err = dc1394_avt_get_gpdata_info(camera, &gpdata_bufsize);
+  DC1394_ERR_RTN(err,"Could not get AVT GPData info");
+
+  /* calculate the number of quadlets in the gpdata buffer */
+  gpdata_numquads = gpdata_bufsize / 4;
+  if ((gpdata_bufsize % 4) != 0)
+    gpdata_numquads++;
+
+  /* allocate memory for the 'read-buffer' */
+  buf_local = malloc(gpdata_numquads * sizeof(uint32_t));
+  if (buf_local == NULL)
+    return DC1394_FAILURE;
+
+  do {
+    gpdata_io_common(buf_local, gpdata_numquads, &nextIndex, index, size, &newBufferSize, &nQuadReadSize, &finish);
+
+    /* read block */
+    err = GetCameraAdvControlRegisters(camera, REG_CAMERA_AVT_GPDATA_BUFFER,
+		     buf_local, nQuadReadSize);
+    if (err != DC1394_SUCCESS) {
+  	  free(buf_local);
+      return DC1394_FAILURE;
+    }
+
+    /* copy block-contents to user buf */
+    for (i = 0; i < nQuadReadSize; i++)
+      memcpy(buf + index + (i * 4), &buf_local[i], sizeof(uint32_t));
+
+    index += (nQuadReadSize * 4);
+
+    /* loop until all bytes are read */
+  } while (!finish);
+
+  free(buf_local);
+  return DC1394_SUCCESS;
 }
 
+
+/************************************************************************/
+/* Write size number of bytes to GPData buffer				*/
+/************************************************************************/
+dc1394error_t
+dc1394_avt_write_gpdata(dc1394camera_t *camera, unsigned char *buf, uint32_t size)
+{
+  uint32_t gpdata_bufsize, gpdata_numquads;
+  uint32_t nQuadWriteSize, newBufferSize;
+  uint32_t i, index = 0, nextIndex;
+  uint32_t *buf_local;
+  dc1394bool_t finish = DC1394_FALSE;
+  dc1394error_t err;
+
+  /* determine gpdata_bufsize */
+  err = dc1394_avt_get_gpdata_info(camera, &gpdata_bufsize);
+  DC1394_ERR_RTN(err,"Could not get AVT GPData info");
+
+  /* calculate the number of quadlets in the gpdata buffer */
+  gpdata_numquads = gpdata_bufsize / 4;
+  if ((gpdata_bufsize % 4) != 0)
+    gpdata_numquads++;
+
+  /* allocate memory for the write buffer */
+  buf_local = malloc(gpdata_numquads * sizeof(uint32_t));
+  if (buf_local == NULL)
+    return DC1394_FAILURE;
+
+  do {
+    gpdata_io_common(buf_local, gpdata_numquads, &nextIndex, index, size, &newBufferSize, &nQuadWriteSize, &finish);
+
+    /* copy block-contents to buf_local */
+    for (i = 0; i < nQuadWriteSize; i++)
+      memcpy(&buf_local[i], buf + index + (i * 4), sizeof(uint32_t));
+
+    /* write block */
+    err = SetCameraAdvControlRegisters(camera, REG_CAMERA_AVT_GPDATA_BUFFER,
+                                       buf_local, nQuadWriteSize);
+    if (err != DC1394_SUCCESS) {
+      free(buf_local);
+      return DC1394_FAILURE;
+    }
+
+    index += (nQuadWriteSize * 4);
+
+    /* loop until all bytes are read */
+  } while (!finish);
+
+  free(buf_local);
+  return DC1394_SUCCESS;
+}
+
+
+/************************************************************************/
+/* Read shading image from camera into buffer       			*/
+/************************************************************************/
+dc1394error_t
+dc1394_avt_read_shading_img(dc1394camera_t *camera, unsigned char *buf,
+			    uint32_t size)
+{
+  dc1394error_t err;
+  dc1394bool_t en_write;
+  uint32_t addr;
+
+  /* Enable read at address 0 */
+  err = dc1394_avt_get_shading_mem_ctrl(camera, &en_write, NULL, NULL);
+  DC1394_ERR_RTN(err,"Could not read AVT shading mem ctrl");
+  err = dc1394_avt_set_shading_mem_ctrl(camera, en_write, DC1394_TRUE, 0);
+  DC1394_ERR_RTN(err,"Could not write AVT shading mem ctrl");
+
+  /* Read data */
+  err = dc1394_avt_read_gpdata(camera, buf, size);
+  DC1394_ERR_RTN(err,"Could not read AVT gpdata");
+
+  /* Disable read */
+  err = dc1394_avt_get_shading_mem_ctrl(camera, &en_write, NULL, &addr);
+  DC1394_ERR_RTN(err,"Could not read AVT shading mem ctrl");
+  err = dc1394_avt_set_shading_mem_ctrl(camera, en_write, DC1394_FALSE, addr);
+  DC1394_ERR_RTN(err,"Could not write AVT shading mem ctrl");
+
+  return DC1394_SUCCESS;
+}
+
+
+/************************************************************************/
+/* Write shading image from buffer to camera				*/
+/************************************************************************/
+dc1394error_t
+dc1394_avt_write_shading_img(dc1394camera_t *camera, unsigned char *buf,
+			     uint32_t size)
+{
+  dc1394error_t err;
+  dc1394bool_t en_read;
+  uint32_t addr;
+
+  /* Enable write at address 0 */
+  err = dc1394_avt_get_shading_mem_ctrl(camera, NULL, &en_read, NULL);
+  DC1394_ERR_RTN(err,"Could not read AVT shading mem ctrl");
+  err = dc1394_avt_set_shading_mem_ctrl(camera, DC1394_TRUE, en_read, 0);
+  DC1394_ERR_RTN(err,"Could not write AVT shading mem ctrl");
+
+  /* Write data */
+  err = dc1394_avt_write_gpdata(camera, buf, size);
+  DC1394_ERR_RTN(err,"Could not write AVT gpdata");
+
+  /* Disable write */
+  err = dc1394_avt_get_shading_mem_ctrl(camera, NULL, &en_read, &addr);
+  DC1394_ERR_RTN(err,"Could not read AVT shading mem ctrl");
+  err = dc1394_avt_set_shading_mem_ctrl(camera, DC1394_FALSE, en_read, addr);
+  DC1394_ERR_RTN(err,"Could not write AVT shading mem ctrl");
+
+  return DC1394_SUCCESS;
+}
 

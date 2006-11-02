@@ -90,8 +90,10 @@ dc1394error_t dc1394_avt_print_advanced_feature(dc1394_avt_adv_feature_info_t *a
 /* Retrieve if shading is on and the number of frames used to compute 	*/	 
 /* The shading reference frame						*/
 /************************************************************************/
-int dc1394_avt_get_shading(dc1394camera_t *camera, 
-			   dc1394bool_t *on_off, uint32_t *frame_nb);
+dc1394error_t dc1394_avt_get_shading(dc1394camera_t *camera,
+				     dc1394bool_t *on_off,
+				     dc1394bool_t *compute,
+				     dc1394bool_t *show, uint32_t *frame_nb);
 
 
 /************************************************************************/
@@ -100,9 +102,9 @@ int dc1394_avt_get_shading(dc1394camera_t *camera,
 /* Set the shading to on/off and the number of frames used to compute 	*/	 
 /* The shading reference frame						*/
 /************************************************************************/
-int dc1394_avt_set_shading(dc1394camera_t *camera,
-			   dc1394bool_t on_off, dc1394bool_t compute,
-			   uint32_t frame_nb);
+dc1394error_t dc1394_avt_set_shading(dc1394camera_t *camera,
+				     dc1394bool_t on_off, dc1394bool_t compute,
+				     dc1394bool_t show, uint32_t frame_nb);
 		
 
 		
@@ -513,23 +515,32 @@ dc1394error_t dc1394_avt_set_deferred_trans(dc1394camera_t *camera,
 					    dc1394bool_t SendImage );
 
 
-
 /************************************************************************/
-/* Get pdata_buffer : DOESNT WORK					*/
-/*----------------------------------------------------------------------*/
-/* will Get the  buffer	...						*/
+/* Read size number of bytes from GPData buffer				*/
 /************************************************************************/
-dc1394error_t dc1394_avt_get_pdata_buffer(dc1394camera_t *camera, 
-					  uint32_t *buff);
+dc1394error_t dc1394_avt_read_gpdata(dc1394camera_t *camera, unsigned char *buf,
+				     uint32_t size);
 
 
 /************************************************************************/
-/* Set pdata_buffer : DOESNT WORK					*/
-/*----------------------------------------------------------------------*/
-/* will Set the  buffer	...						*/
+/* Write size number of bytes to GPData buffer				*/
 /************************************************************************/
-dc1394error_t dc1394_avt_set_pdata_buffer(dc1394camera_t *camera, 
-					  uint32_t buff);
+dc1394error_t dc1394_avt_write_gpdata(dc1394camera_t *camera,
+				      unsigned char *buf, uint32_t size);
+
+
+/************************************************************************/
+/* Read shading image from camera into buffer       			*/
+/************************************************************************/
+dc1394error_t dc1394_avt_read_shading_img(dc1394camera_t *camera,
+					  unsigned char *buf, uint32_t size);
+
+
+/************************************************************************/
+/* Write shading image from buffer to camera				*/
+/************************************************************************/
+dc1394error_t dc1394_avt_write_shading_img(dc1394camera_t *camera,
+					   unsigned char *buf, uint32_t size);
 
 
 #ifdef __cplusplus

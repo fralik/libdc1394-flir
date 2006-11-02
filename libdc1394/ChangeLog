@@ -1024,3 +1024,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2006-10-23 David Moore <dcm@acm.org>
     * fixed math error in computing timestamps during capture
+
+2006-11-02 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * applied 3 patches from Daniel Drake for AVT functions:
+       1. new functions that write/read more than one register at a time
+       2. correct shading control and fully implement it
+       3. read/write shading images

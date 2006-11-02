@@ -20,6 +20,7 @@
 #include "control.h"
 #include "internal.h"
 #include "offsets.h"
+#include "register.h"
 #include "utils.h"
 #include "config.h"
 
@@ -60,7 +61,7 @@
 /* Get/Set Command Registers                                                    */
 /********************************************************************************/
 dc1394error_t
-GetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+GetCameraControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs)
 {
   int retval;
 
@@ -74,7 +75,7 @@ GetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *valu
   }
   */
   //fprintf(stderr,"trying to get 0x%llx",camera->command_registers_base+offset);
-  retval = GetCameraROMValue(camera, camera->command_registers_base+offset, value);
+  retval = GetCameraROMValues(camera, camera->command_registers_base+offset, value, num_regs);
 
   //fprintf(stderr,"retval = %d",retval);
 
@@ -82,7 +83,7 @@ GetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *valu
 }
 
 dc1394error_t
-SetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+SetCameraControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs)
 {
   int retval;
 
@@ -95,7 +96,7 @@ SetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value
   }
   */
   //fprintf(stderr,"trying to set 0x%llx\n",camera->command_registers_base+offset);
-  retval= SetCameraROMValue(camera, camera->command_registers_base+offset, value);
+  retval= SetCameraROMValues(camera, camera->command_registers_base+offset, value, num_regs);
 
   return retval;
 }
@@ -104,7 +105,7 @@ SetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value
 /* Get/Set Advanced Features Registers                                          */
 /********************************************************************************/
 dc1394error_t
-GetCameraAdvControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+GetCameraAdvControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs)
 {
   if (camera == NULL)
     return DC1394_FAILURE;
@@ -114,11 +115,11 @@ GetCameraAdvControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *v
       return DC1394_FAILURE;
   }
   */
-  return GetCameraROMValue(camera, camera->advanced_features_csr+offset, value);
+  return GetCameraROMValues(camera, camera->advanced_features_csr+offset, value, num_regs);
 }
 
 dc1394error_t
-SetCameraAdvControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+SetCameraAdvControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs)
 {
   if (camera == NULL)
     return DC1394_FAILURE;
@@ -128,7 +129,7 @@ SetCameraAdvControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t va
       return DC1394_FAILURE;
   }
   */
-  return SetCameraROMValue(camera, camera->advanced_features_csr+offset, value);
+  return SetCameraROMValues(camera, camera->advanced_features_csr+offset, value, num_regs);
 }
 
 /********************************************************************************/

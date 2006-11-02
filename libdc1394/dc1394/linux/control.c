@@ -308,52 +308,54 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 }
 
 dc1394error_t
-GetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
-  int retval=1, retry= DC1394_MAX_RETRIES;
+  int i, retval=1, retry= DC1394_MAX_RETRIES;
 
   /* retry a few times if necessary (addition by PDJ) */
   while(retry--)  {
 #ifdef DC1394_DEBUG_LOWEST_LEVEL
-    fprintf(stderr,"get reg at 0x%llx : ", offset + CONFIG_ROM_BASE);
+    fprintf(stderr,"get %d regs at 0x%llx : ", num_quads, offset + CONFIG_ROM_BASE);
 #endif
-    retval= raw1394_read(craw->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, value);
+    retval= raw1394_read(craw->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4 * num_quads, value);
 #ifdef DC1394_DEBUG_LOWEST_LEVEL
-    fprintf(stderr,"0x%lx\n",*value);
+    fprintf(stderr,"0x%lx [...]\n", value[0]);
 #endif
     usleep(DC1394_SLOW_DOWN);
 
     if (!retval) {
-      /* conditionally byte swap the value */
-      *value= ntohl(*value);
-      return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
+      goto out;
     }
     else if (errno != EAGAIN) {
       return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
     }
     
   }
-  
-  *value= ntohl(*value);
+
+out:
+  /* conditionally byte swap the value */
+  for (i = 0; i < num_quads; i++)
+    value[i] = ntohl(value[i]);
   return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
 }
 
 dc1394error_t
-SetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+SetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
-  int retval=1, retry= DC1394_MAX_RETRIES;
+  int i, retval=1, retry= DC1394_MAX_RETRIES;
 
   /* conditionally byte swap the value (addition by PDJ) */
-  value= htonl(value);
+  for (i = 0; i < num_quads; i++)
+    value[i] = htonl(value[i]);
   
   /* retry a few times if necessary */
   while(retry--) {
 #ifdef DC1394_DEBUG_LOWEST_LEVEL
-    fprintf(stderr,"set reg at 0x%llx to value 0x%lx\n", offset + CONFIG_ROM_BASE, value);
+    fprintf(stderr,"set %d regs at 0x%llx to value 0x%lx [...]\n", num_quads, offset + CONFIG_ROM_BASE, value);
 #endif
-    retval= raw1394_write(craw->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4, &value);
+    retval= raw1394_write(craw->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4 * num_quads, value);
 
     usleep(DC1394_SLOW_DOWN);
 

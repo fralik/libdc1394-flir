@@ -150,10 +150,6 @@ dc1394error_t
 dc1394_print_camera_info_platform (dc1394camera_t *camera);
 dc1394error_t
 dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras);
-dc1394error_t
-GetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t *value);
-dc1394error_t
-SetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t value);
 dc1394error_t _dc1394_capture_basic_setup (dc1394camera_t * camera,
     dc1394video_frame_t * frame);
 

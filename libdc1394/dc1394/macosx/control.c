@@ -197,43 +197,45 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 }
 
 dc1394error_t
-GetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   IOFireWireLibDeviceRef d = craw->iface;
   FWAddress full_addr;
-  int retval;
+  int i, retval;
   UInt32 length;
   UInt64 addr = CONFIG_ROM_BASE + offset;
 
   full_addr.addressHi = addr >> 32;
   full_addr.addressLo = addr & 0xffffffff;
 
-  length = 4;
+  length = 4 * num_quads;
   retval = (*d)->Read (d, (*d)->GetDevice (d), &full_addr, value, &length,
       true, craw->generation);
   if (retval != 0) {
     fprintf (stderr, "Error reading (%x)...\n", retval);
     return DC1394_FAILURE;
   }
-  *value = ntohl (*value);
+  for (i = 0; i < num_quads; i++)
+  	value[i] = ntohl (value[i]);
   return DC1394_SUCCESS;
 }
 
 dc1394error_t
-SetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+SetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   IOFireWireLibDeviceRef d = craw->iface;
   FWAddress full_addr;
-  int retval;
+  int i, retval;
   UInt32 length;
   UInt64 addr = CONFIG_ROM_BASE + offset;
 
   full_addr.addressHi = addr >> 32;
   full_addr.addressLo = addr & 0xffffffff;
 
-  value = htonl (value);
+  for (i = 0; i < num_quads; i++)
+  	value[i] = htonl (value[i]);
 
   length = 4;
   retval = (*d)->Write (d, (*d)->GetDevice (d), &full_addr, &value, &length,
