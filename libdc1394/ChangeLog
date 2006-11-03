@@ -1037,3 +1037,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-11-03 Damien Douxchamps<ddouxchamps@users.sf.net>
     * Create more handles to avoid conflicts in the grabselfid function
       (thanks to Irv Elshoff)
+    * Added the function dc1394_format7_get_roi()
+

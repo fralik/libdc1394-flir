@@ -317,6 +317,32 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
 }
 
 
+dc1394error_t
+dc1394_format7_get_roi(dc1394camera_t *camera,
+		       dc1394video_mode_t video_mode,
+		       dc1394color_coding_t *color_coding,
+		       uint32_t *bytes_per_packet,
+		       uint32_t *left,  uint32_t *top,
+		       uint32_t *width, uint32_t *height)
+{
+  dc1394error_t err;
+
+  err=dc1394_format7_get_color_coding(camera, video_mode, color_coding);
+  DC1394_ERR_RTN(err, "Unable to get color_coding %d", (int)color_coding);
+
+  err=dc1394_format7_get_byte_per_packet(camera, video_mode, bytes_per_packet);
+  DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", (int)video_mode);
+
+  err=dc1394_format7_get_image_position(camera, video_mode, left, top);
+  DC1394_ERR_RTN(err, "Unable to get image position");
+
+  err=dc1394_format7_get_image_size(camera, video_mode, width, height);
+  DC1394_ERR_RTN(err, "Unable to get image size");
+
+  return err;
+}
+
+
 /**********************/
 /* External functions */
 /**********************/
