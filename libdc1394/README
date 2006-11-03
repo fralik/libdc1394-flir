@@ -4,10 +4,16 @@
 1. About the 1394-Based Digital Camera Control Library
 
 This library provides functionality to control any camera that conforms to the
-1394-Based Digital Camera Specification (which can be found at
-http://damien.douxchamps.net/ieee1394/libdc1394/iidc_specifications.php).  It
-utilizes the lowlevel functionality provided by libraw1394 to communicate with
-the camera.
+1394-Based Digital Camera Specification written by the 1394 Trade Association
+(http://www.1394ta.com). The specs can be downloaded for free here:
+http://damien.douxchamps.net/ieee1394/libdc1394/iidc_specifications.php.
+Libdc1394 utilizes the lowlevel functionality provided by libraw1394 to
+communicate with the camera. Libdc1394 also uses the video1394 kernel module
+for the DMA capture of the video flow.
+
+The library is originally designed to work on Linux and was ported to OSX by
+David Moore in 2006. We hope that one day we'll have a version for Windows
+too. 
 
 2. Copyleft
 
@@ -22,17 +28,17 @@ stated at the top of the individual files.
 A basic description of each function can be found on libdc1394 website:
 http://damien.douxchamps.net/ieee1394/libdc1394/ You can also find information
 for all functions in the header file dc1394_control.h. There are sample
-programs in the examples directory, which are helpful for learning. For a more
+programs in the examples/ directory, which are helpful for learning. For a more
 comprehensive demonstration of the features of libdc1394, review the Coriander
-application source code, available at http://sf.net/projects/coriander/.
+application source code, available at
+http://damien.douxchamps.net/ieee1394/coriander/.
 
 4. Maintainer
 
 The maintainer of the 1394-Based Digital Camera Control Library is currently
-Damien Douxchamps. Send suggestions, bug reports and fixes to
-ddouxchamps@users.sf.net or better, to the mailing list
-libdc1394devel@lists.sf.net (subscription required)  See the file AUTHORS for
-a complete list of contributors.
+Damien Douxchamps. Send suggestions, bug reports and fixes to to the mailing
+list libdc1394devel@lists.sf.net (subscription required). See the file AUTHORS
+for a complete list of contributors.
 
 2000-01-13  Gord Peters
-2006-08-17  Damien Douxchamps
+2006-11-03  Damien Douxchamps
