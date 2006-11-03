@@ -36,21 +36,21 @@
 void
 GrabSelfIds(dc1394camera_t **cams, int ncams)
 {
-  // TODO TODO TODO **************************************************************
   RAW1394topologyMap *topomap;
   SelfIdPacket_t packet;
   unsigned int* pselfid_int;
   int i, port,k;
   dc1394camera_linux_t* camera_ptr;
-  raw1394handle_t handle;
+  raw1394handle_t main_handle, port_handle;
   
-  handle=raw1394_new_handle();
-  int port_num=raw1394_get_port_info(handle, NULL, 0);
+  main_handle=raw1394_new_handle();
+  int port_num=raw1394_get_port_info(main_handle, NULL, 0);
   
   for (port=0;port<port_num;port++) {
-    raw1394_set_port(handle,port);
+    port_handle=raw1394_new_handle();
+    raw1394_set_port(port_handle,port);
     // get and decode SelfIds.
-    topomap=raw1394GetTopologyMap(handle);
+    topomap=raw1394GetTopologyMap(port_handle);
       
     for (i=0;i<topomap->selfIdCount;i++) {
       pselfid_int = (unsigned int *) &topomap->selfIdPacket[i];
@@ -65,9 +65,10 @@ GrabSelfIds(dc1394camera_t **cams, int ncams)
 	}
       }
     }
+    raw1394_destroy_handle(port_handle);
   }
   
-  raw1394_destroy_handle(handle);
+  raw1394_destroy_handle(main_handle);
 
   // interpret data:
   for (k=0;k<ncams;k++) {
