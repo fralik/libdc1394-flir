@@ -237,8 +237,8 @@ SetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uin
   for (i = 0; i < num_quads; i++)
   	value[i] = htonl (value[i]);
 
-  length = 4;
-  retval = (*d)->Write (d, (*d)->GetDevice (d), &full_addr, &value, &length,
+  length = 4 * num_quads;
+  retval = (*d)->Write (d, (*d)->GetDevice (d), &full_addr, value, &length,
       true, craw->generation);
   if (retval != 0) {
     fprintf (stderr, "Error writing (%x)...\n", retval);

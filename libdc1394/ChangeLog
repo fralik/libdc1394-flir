@@ -1039,3 +1039,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       (thanks to Irv Elshoff)
     * Added the function dc1394_format7_get_roi()
 
+2006-11-08 David Moore <dcm@acm.org>
+    * Fixed Mac OS X regression caused by 2006-11-02 patches
