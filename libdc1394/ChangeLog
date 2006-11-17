@@ -1041,3 +1041,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2006-11-08 David Moore <dcm@acm.org>
     * Fixed Mac OS X regression caused by 2006-11-02 patches
+	
+2006-11-17 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * Fixed the number of memory channels detected (Thanks to Georg Glock)

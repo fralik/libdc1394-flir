@@ -377,7 +377,7 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value[0]);
   DC1394_ERR_RTN(err, "Could not get basic functionalities");
 
-  camera->mem_channel_number = (value[0] & 0x0000000F) != 0;
+  camera->mem_channel_number = (value[0] & 0x0000000F);
   camera->bmode_capable      = (value[0] & 0x00800000) != 0;
   camera->one_shot_capable   = (value[0] & 0x00000800) != 0;
   camera->multi_shot_capable = (value[0] & 0x00001000) != 0;
