@@ -1044,3 +1044,11 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2006-11-17 Damien Douxchamps<ddouxchamps@users.sf.net>
     * Fixed the number of memory channels detected (Thanks to Georg Glock)
+
+2006-11-23 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * Removed legacy raw1394 code
+    * Removed references to DMA since all capture functions are now DMA
+    * Renamed DC1394_VIDEO1394_* to DC1394_CAPTURE_POLICY_*
+    * Enqueue and Dequeue functions now both return an error code
+    * Adapted the examples
+    * Removed the two DMA examples

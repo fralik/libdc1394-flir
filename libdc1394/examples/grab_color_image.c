@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
   dc1394camera_t *camera, **cameras=NULL;
   uint32_t numCameras, i;
   unsigned int width, height;
+  dc1394video_frame_t *frame=NULL;
   //dc1394featureset_t features;
 
   /* Find cameras */
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
   DC1394_ERR_RTN(err,"Could not set video mode 640x480xRGB8");
   dc1394_video_set_framerate(camera,DC1394_FRAMERATE_7_5);
   DC1394_ERR_RTN(err,"Could not set framerate to 7.5fps");
-  if (dc1394_capture_setup(camera)!=DC1394_SUCCESS) {
+  if (dc1394_capture_setup(camera, 4)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode,framerate and format are\n"
@@ -123,7 +124,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  capture one frame
    *-----------------------------------------------------------------------*/
-  if (dc1394_capture(&camera,1)!=DC1394_SUCCESS) {
+  if (dc1394_capture_dequeue(camera,DC1394_CAPTURE_POLICY_WAIT, frame)!=DC1394_SUCCESS) {
     fprintf( stderr, "unable to capture a frame\n");
     cleanup_and_exit(camera);
   }
@@ -148,8 +149,7 @@ int main(int argc, char *argv[])
   dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_640x480_RGB8,
           &width, &height);
   fprintf(imagefile,"P6\n%u %u\n255\n", width, height);
-  fwrite((const char *)dc1394_capture_get_buffer (camera), 1,
-         height*width*3, imagefile);
+  fwrite(frame->image, 1, height*width*3, imagefile);
   fclose(imagefile);
   printf("wrote: " IMAGE_FILE_NAME " (%d image bytes)\n",height*width*3);
 

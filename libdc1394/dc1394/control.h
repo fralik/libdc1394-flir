@@ -320,9 +320,9 @@ typedef enum {
 /* The video1394 policy: blocking (wait for a frame forever)
    or polling (returns if no frames in buffer) */
 typedef enum { 
-  DC1394_VIDEO1394_WAIT=0,
-  DC1394_VIDEO1394_POLL
-} dc1394video_policy_t;
+  DC1394_CAPTURE_POLICY_WAIT=0,
+  DC1394_CAPTURE_POLICY_POLL
+} dc1394capture_policy_t;
 
 /* Using this policy you can choose between two ring buffer behaviour:
   1. FIFO: the function returns the next frame received
@@ -813,28 +813,17 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t 
      Capture Functions
  ***************************************************************************/
 
-/* setup the capture (DMA or RAW1394)*/
-dc1394error_t dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers);
-dc1394error_t dc1394_capture_setup(dc1394camera_t *camera);
-
-/* capture video frames (DMA or RAW1394)*/
-dc1394error_t dc1394_capture(dc1394camera_t **camera, uint32_t num);
-dc1394video_frame_t *
-dc1394_capture_dequeue_dma (dc1394camera_t * camera, dc1394video_policy_t policy);
-dc1394error_t
-dc1394_capture_enqueue_dma (dc1394camera_t * camera, dc1394video_frame_t * frame);
-
-/* Functions for accessing the buffer content: */
-uint8_t*        dc1394_capture_get_buffer(dc1394camera_t *camera);
-
-/* releases memory, channels, bandwidth,... */
+/* setup/stop the capture */
+dc1394error_t dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers);
 dc1394error_t dc1394_capture_stop(dc1394camera_t *camera);
 
-/* DMA specific functions*/
+/* capture video frames */
+dc1394error_t dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, dc1394video_frame_t * frame);
+dc1394error_t dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame);
 
 /* Set the DMA device filename manually. In most cases this is not necessary because the capture
    functions probe common filenames such as /dev/video1394/x or /dev/video1394. */
-dc1394error_t dc1394_capture_set_dma_device_filename(dc1394camera_t* camera, char *filename);
+dc1394error_t dc1394_capture_set_device_filename(dc1394camera_t* camera, char *filename);
 
 /***************************************************************************
      Format_7 (scalable image format)

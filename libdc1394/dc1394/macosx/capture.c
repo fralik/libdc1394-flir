@@ -220,7 +220,7 @@ CreateDCLProgram (dc1394camera_t * camera)
  CAPTURE SETUP
 **************************************************************/
 dc1394error_t 
-dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers)
+dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
@@ -338,11 +338,6 @@ dc1394_capture_setup_dma(dc1394camera_t *camera, uint32_t num_dma_buffers)
   return DC1394_SUCCESS;
 }
 
-dc1394error_t
-dc1394_capture_setup(dc1394camera_t *camera) 
-{
-  return dc1394_capture_setup_dma (camera, 10);
-}
 
 /*****************************************************
  CAPTURE_STOP
@@ -407,15 +402,15 @@ dc1394_capture_stop(dc1394camera_t *camera)
 #define NEXT_BUFFER(c,i) (((i) == -1) ? 0 : ((i)+1)%(c)->num_frames)
 #define PREV_BUFFER(c,i) (((i) == 0) ? (c)->num_frames-1 : ((i)-1))
 
-dc1394video_frame_t *
-dc1394_capture_dequeue_dma (dc1394camera_t * camera,
-    dc1394video_policy_t policy)
+dc1394error_t
+dc1394_capture_dequeue (dc1394camera_t * camera,
+    dc1394capture_policy_t policy, dc1394video_frame_t *frame)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   int next = NEXT_BUFFER (capture, capture->current);
   buffer_info * buffer = capture->buffers + next;
-  dc1394video_frame_t * frame = capture->frames + next;
+  dc1394video_frame_t * frame_tmp = capture->frames + next;
   int i;
 
   while (buffer->status != BUFFER_FILLED) {
@@ -423,14 +418,14 @@ dc1394_capture_dequeue_dma (dc1394camera_t * camera,
     dc1394capture_callback_t callback;
     if (capture->run_loop != CFRunLoopGetCurrent ()) {
       fprintf (stderr, "Error: capturing from wrong thread\n");
-      return NULL;
+      return DC1394_FAILURE;
     }
 
     /* We don't want the user's callback called recursively, so temporarily
      * remove it. */
     callback = capture->callback;
     capture->callback = NULL;
-    if (policy == DC1394_VIDEO1394_POLL)
+    if (policy == DC1394_CAPTURE_POLICY_POLL)
       code = CFRunLoopRunInMode (capture->run_loop_mode, 0, true);
     else
       code = CFRunLoopRunInMode (capture->run_loop_mode, 5, true);
@@ -441,9 +436,9 @@ dc1394_capture_dequeue_dma (dc1394camera_t * camera,
 
     capture->callback = callback;
     //printf ("capture runloop: %ld\n", code);
-    if (policy == DC1394_VIDEO1394_POLL &&
+    if (policy == DC1394_CAPTURE_POLICY_POLL &&
         code != kCFRunLoopRunHandledSource)
-      return NULL;
+      return DC1394_NO_FRAME;
   }
 
   capture->current = next;
@@ -454,31 +449,18 @@ dc1394_capture_dequeue_dma (dc1394camera_t * camera,
     if (future_buf->status != BUFFER_FILLED)
       break;
   }
-  frame->frames_behind = i;
-  frame->timestamp = (uint64_t) buffer->filltime.tv_sec * 1000000 +
+  frame_tmp->frames_behind = i;
+  frame_tmp->timestamp = (uint64_t) buffer->filltime.tv_sec * 1000000 +
     buffer->filltime.tv_usec;
 
-  return frame;
+  frame=frame_tmp;
+
+  return DC1394_SUCCESS;
 }
 
-dc1394error_t 
-dc1394_capture(dc1394camera_t **cams, uint32_t num) 
-{
-  int i;
-  dc1394error_t res = DC1394_SUCCESS;
-  for (i = 0; i < num; i++) {
-    DC1394_CAST_CAMERA_TO_MACOSX(craw, cams[i]);
-    dc1394capture_t * capture = &(craw->capture);
-    if (capture->current >= 0)
-      dc1394_capture_enqueue_dma (cams[i], capture->frames + capture->current);
-    if (!dc1394_capture_dequeue_dma (cams[i], DC1394_VIDEO1394_WAIT))
-      res = DC1394_FAILURE;
-  }
-  return res;
-}
 
 dc1394error_t
-dc1394_capture_enqueue_dma (dc1394camera_t * camera,
+dc1394_capture_enqueue (dc1394camera_t * camera,
     dc1394video_frame_t * frame)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
@@ -507,21 +489,6 @@ dc1394_capture_enqueue_dma (dc1394camera_t * camera,
   (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list, 1);
   (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list+1, 1);
   return DC1394_SUCCESS;
-}
-
-/* functions to access the capture data */
-
-uint8_t*
-dc1394_capture_get_buffer(dc1394camera_t *camera)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  dc1394capture_t * capture = &(craw->capture);
-  buffer_info * buffer = capture->buffers + capture->current;
-
-  if (capture->current == -1 || buffer->status != BUFFER_FILLED)
-    return NULL;
-
-  return capture->frames[capture->current].image;
 }
 
 int

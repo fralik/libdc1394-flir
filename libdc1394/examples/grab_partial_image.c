@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
   unsigned int actual_bytes;
   unsigned long long int total_bytes = 0;
   unsigned int width, height;
+  dc1394video_frame_t *frame=NULL;
 
   int err=dc1394_find_cameras(&cameras, &numCameras);
 
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
 			 1280, 1024);  // width, height
   DC1394_ERR_RTN(err,"Unable to set Format7 mode 0.\nEdit the example file manually to fit your camera capabilities\n");
 
-  err=dc1394_capture_setup(camera);
+  err=dc1394_capture_setup(camera, 4);
   DC1394_ERR_CLN_RTN(err, dc1394_free_camera(camera), "Error capturing\n");
 
   //fprintf(stderr,"handle: 0x%x\n",capture.handle);
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
     /*-----------------------------------------------------------------------
      *  capture one frame
      *-----------------------------------------------------------------------*/
-    if (dc1394_capture(&camera,1)!=DC1394_SUCCESS) {
+    if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, frame)!=DC1394_SUCCESS) {
       //fprintf(stderr,"Error 1\n");
       //fprintf(stderr,"handle: 0x%x\n",capture.handle);
       dc1394_capture_stop(camera);
@@ -172,11 +173,9 @@ int main(int argc, char *argv[])
    *-----------------------------------------------------------------------*/
   imagefile=fopen("Part.pgm","w");
     
-  dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_FORMAT7_1,
-          &width, &height);
+  dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_FORMAT7_1, &width, &height);
   fprintf(imagefile,"P5\n%u %u\n255\n", width, height);
-  fwrite((const char *)dc1394_capture_get_buffer (camera), 1,
-         height * width, imagefile);
+  fwrite(frame->image, 1, height * width, imagefile);
   fclose(imagefile);
   printf("wrote: Part.pgm\n");
   

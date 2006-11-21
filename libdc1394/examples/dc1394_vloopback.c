@@ -348,10 +348,11 @@ int capture_pipe(int dev, const unsigned char *image_in)
 
 int capture_mmap(int frame)
 {
+  int err;
 	int bpp = 0;
 	int ppp = 1; /* pixels per pixel! */
 	affine_transform_cb transform = NULL;
-    dc1394video_frame_t * framebuf;
+    dc1394video_frame_t * framebuf=NULL;
 	
 	switch (g_v4l_fmt) {
 		case VIDEO_PALETTE_RGB24:
@@ -373,32 +374,32 @@ int capture_mmap(int frame)
 	}
 	
 	if (g_v4l_fmt == VIDEO_PALETTE_YUV422P && out_pipe != NULL) {
-        framebuf = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
-		if (framebuf) {
+        err=dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, framebuf);
+		if (err==DC1394_SUCCESS) {
 			affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
 				ppp * bpp, transform);
-            dc1394_capture_enqueue_dma (camera, framebuf);
+            dc1394_capture_enqueue (camera, framebuf);
 		}
 		yuy2_to_yv16( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
 	else if (g_v4l_fmt == VIDEO_PALETTE_YUV420P && out_pipe != NULL) {
-        framebuf = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
-		if (framebuf) {
+        err = dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, framebuf);
+		if (err==DC1394_SUCCESS) {
 			affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
 				ppp * bpp, transform);
-            dc1394_capture_enqueue_dma (camera, framebuf);
+            dc1394_capture_enqueue (camera, framebuf);
 		}
 		yuy2_to_yv12( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
 	else {
-        framebuf = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
-        if (framebuf) {
+        err = dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, framebuf);
+        if (err==DC1394_SUCCESS) {
             affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
                 out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width/ppp, g_height,
                 ppp * bpp, transform);
-            dc1394_capture_enqueue_dma (camera, framebuf);
+            dc1394_capture_enqueue (camera, framebuf);
         }
 	}
 
@@ -514,7 +515,7 @@ int dc_start(int palette)
 	}
 	 
 	if (dc_dev_name!=NULL) {
-	  if (dc1394_capture_set_dma_device_filename(camera,dc_dev_name) != DC1394_SUCCESS) {
+	  if (dc1394_capture_set_device_filename(camera,dc_dev_name) != DC1394_SUCCESS) {
 	    fprintf(stderr,"unable to set dma device filename!\n");
 	    return 0;
 	  }
@@ -523,7 +524,7 @@ int dc_start(int palette)
 	dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
 	dc1394_video_set_mode(camera, mode);
 	dc1394_video_set_framerate(camera, DC1394_FRAMERATE_15);
-	if (dc1394_capture_setup_dma(camera, DC1394_BUFFERS) != DC1394_SUCCESS) 
+	if (dc1394_capture_setup(camera, DC1394_BUFFERS) != DC1394_SUCCESS) 
 	{
 		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 			   __LINE__,__FILE__);
@@ -966,16 +967,15 @@ int main(int argc,char *argv[])
 	signal(SIGIO, v4l_sighandler);
 	
 	while (1) {
-		if (g_v4l_mode == V4L_MODE_PIPE) {
-            dc1394video_frame_t * framebuf;
-            framebuf = dc1394_capture_dequeue_dma (camera, DC1394_VIDEO1394_WAIT);
-			if (framebuf) {
-				capture_pipe( v4l_dev, framebuf->image);
-                dc1394_capture_enqueue_dma (camera, framebuf);
-			}
-		} else {
-			pause();
-		}
+	  if (g_v4l_mode == V4L_MODE_PIPE) {
+            dc1394video_frame_t * framebuf=NULL;
+	    if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, framebuf)!=DC1394_SUCCESS) {
+	      capture_pipe( v4l_dev, framebuf->image);
+	      dc1394_capture_enqueue(camera, framebuf);
+	    }
+	  } else {
+	    pause();
+	  }
 	}
 	exit(0);
 }

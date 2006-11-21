@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
   dc1394video_mode_t video_mode;
   dc1394color_coding_t coding;
   unsigned int width, height;
+  dc1394video_frame_t *frame;
 
   /* Find cameras */
   int err=dc1394_find_cameras(&cameras, &numCameras);
@@ -112,7 +113,7 @@ int main(int argc, char *argv[])
   dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
   dc1394_video_set_mode(camera, video_mode);
   dc1394_video_set_framerate(camera, framerate);
-  if (dc1394_capture_setup(camera)!=DC1394_SUCCESS) {
+  if (dc1394_capture_setup(camera,4)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode and framerate are\n"
@@ -165,7 +166,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  capture one frame
    *-----------------------------------------------------------------------*/
-  if (dc1394_capture(&camera,1)!=DC1394_SUCCESS) {
+  if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT,frame)!=DC1394_SUCCESS) {
     fprintf(stderr, "unable to capture a frame\n");
     cleanup_and_exit(camera);
   }
@@ -188,11 +189,9 @@ int main(int argc, char *argv[])
     cleanup_and_exit(camera);
   }
   
-  dc1394_get_image_size_from_video_mode(camera, video_mode,
-          &width, &height);
+  dc1394_get_image_size_from_video_mode(camera, video_mode, &width, &height);
   fprintf(imagefile,"P5\n%u %u 255\n", width, height);
-  fwrite((const char *)dc1394_capture_get_buffer (camera), 1,
-         height*width, imagefile);
+  fwrite(frame->image, 1, height*width, imagefile);
   fclose(imagefile);
   printf("wrote: " IMAGE_FILE_NAME "\n");
 

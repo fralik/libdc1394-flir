@@ -33,7 +33,7 @@
 #include <getopt.h>
 
 #include <libraw1394/raw1394.h>
-#include <dc1394/control.h>
+#include "dc1394/control.h"
 
 
 /* uncomment the following to drop frames to prevent delays */
@@ -380,7 +380,7 @@ int main(int argc,char *argv[])
     }
     
     if (device_name!=NULL) {
-      if (dc1394_capture_set_dma_device_filename(cameras[i],device_name) != DC1394_SUCCESS) {
+      if (dc1394_capture_set_device_filename(cameras[i],device_name) != DC1394_SUCCESS) {
 	fprintf(stderr,"unable to set dma device filename!\n");
 	return 0;
       }
@@ -389,7 +389,7 @@ int main(int argc,char *argv[])
     dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_400);
     dc1394_video_set_mode(cameras[i],res);
     dc1394_video_set_framerate(cameras[i],fps);
-    if (dc1394_capture_setup_dma(cameras[i], NUM_BUFFERS) != DC1394_SUCCESS) {
+    if (dc1394_capture_setup(cameras[i], NUM_BUFFERS) != DC1394_SUCCESS) {
       fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 	      __LINE__,__FILE__);
       perror("that the video mode,framerate and format are supported\n");
@@ -464,8 +464,7 @@ int main(int argc,char *argv[])
 
     //fprintf(stderr,"capturing...\n");
     for (i = 0; i < numCameras; i++) {
-      frames[i] = dc1394_capture_dequeue_dma (cameras[i], DC1394_VIDEO1394_WAIT);
-      if (!frames[i])
+      if (dc1394_capture_dequeue(cameras[i], DC1394_CAPTURE_POLICY_WAIT, frames[i])!=DC1394_SUCCESS)
         fprintf (stderr, "Error: Failed to capture from camera %d\n", i);
     }
 		
@@ -537,7 +536,7 @@ int main(int argc,char *argv[])
     
     for (i = 0; i < numCameras; i++) {
       if (frames[i])
-        dc1394_capture_enqueue_dma (cameras[i], frames[i]);
+        dc1394_capture_enqueue (cameras[i], frames[i]);
     }
     
   } /* while not interrupted */
