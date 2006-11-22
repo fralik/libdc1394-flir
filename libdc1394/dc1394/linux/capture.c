@@ -319,7 +319,7 @@ dc1394_capture_stop(dc1394camera_t *camera)
 
 
 dc1394error_t
-dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, dc1394video_frame_t *frame)
+dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, dc1394video_frame_t **frame)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
@@ -356,10 +356,9 @@ dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, d
   capture->dma_last_buffer = cb;
 
   frame_tmp->frames_behind = vwait.buffer;
-  frame_tmp->timestamp = (uint64_t) vwait.filltime.tv_sec * 1000000 +
-    vwait.filltime.tv_usec;
+  frame_tmp->timestamp = (uint64_t) vwait.filltime.tv_sec * 1000000 + vwait.filltime.tv_usec;
 
-  frame=frame_tmp;
+  *frame=frame_tmp;
 
   return DC1394_SUCCESS;
 }

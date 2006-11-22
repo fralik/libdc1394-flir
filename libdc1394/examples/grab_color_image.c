@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  capture one frame
    *-----------------------------------------------------------------------*/
-  if (dc1394_capture_dequeue(camera,DC1394_CAPTURE_POLICY_WAIT, frame)!=DC1394_SUCCESS) {
+  if (dc1394_capture_dequeue(camera,DC1394_CAPTURE_POLICY_WAIT, &frame)!=DC1394_SUCCESS) {
     fprintf( stderr, "unable to capture a frame\n");
     cleanup_and_exit(camera);
   }

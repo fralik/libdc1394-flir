@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
   DC1394_ERR_RTN(err,"Problem starting transmission");
 
   /* Capture */
-  err=dc1394_capture_dequeue(cameras[0], DC1394_CAPTURE_POLICY_WAIT, frame);
+  err=dc1394_capture_dequeue(cameras[0], DC1394_CAPTURE_POLICY_WAIT, &frame);
   if (err!=DC1394_SUCCESS) {
     fprintf (stderr, "Problem getting an image");
     return 1;

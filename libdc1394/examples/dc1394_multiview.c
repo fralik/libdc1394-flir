@@ -464,7 +464,7 @@ int main(int argc,char *argv[])
 
     //fprintf(stderr,"capturing...\n");
     for (i = 0; i < numCameras; i++) {
-      if (dc1394_capture_dequeue(cameras[i], DC1394_CAPTURE_POLICY_WAIT, frames[i])!=DC1394_SUCCESS)
+      if (dc1394_capture_dequeue(cameras[i], DC1394_CAPTURE_POLICY_WAIT, &frames[i])!=DC1394_SUCCESS)
         fprintf (stderr, "Error: Failed to capture from camera %d\n", i);
     }
 		

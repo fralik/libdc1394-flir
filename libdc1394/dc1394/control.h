@@ -818,7 +818,7 @@ dc1394error_t dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buff
 dc1394error_t dc1394_capture_stop(dc1394camera_t *camera);
 
 /* capture video frames */
-dc1394error_t dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, dc1394video_frame_t * frame);
+dc1394error_t dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, dc1394video_frame_t **frame);
 dc1394error_t dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame);
 
 /* Set the DMA device filename manually. In most cases this is not necessary because the capture

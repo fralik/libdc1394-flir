@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
     /*-----------------------------------------------------------------------
      *  capture one frame
      *-----------------------------------------------------------------------*/
-    if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, frame)!=DC1394_SUCCESS) {
+    if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &frame)!=DC1394_SUCCESS) {
       //fprintf(stderr,"Error 1\n");
       //fprintf(stderr,"handle: 0x%x\n",capture.handle);
       dc1394_capture_stop(camera);

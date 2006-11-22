@@ -374,7 +374,7 @@ int capture_mmap(int frame)
 	}
 	
 	if (g_v4l_fmt == VIDEO_PALETTE_YUV422P && out_pipe != NULL) {
-        err=dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, framebuf);
+        err=dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, &framebuf);
 		if (err==DC1394_SUCCESS) {
 			affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
@@ -384,7 +384,7 @@ int capture_mmap(int frame)
 		yuy2_to_yv16( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
 	else if (g_v4l_fmt == VIDEO_PALETTE_YUV420P && out_pipe != NULL) {
-        err = dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, framebuf);
+        err = dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, &framebuf);
 		if (err==DC1394_SUCCESS) {
 			affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
 				out_pipe, g_width/ppp, g_height,
@@ -394,7 +394,7 @@ int capture_mmap(int frame)
 		yuy2_to_yv12( out_pipe, out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width, g_height);
 	}
 	else {
-        err = dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, framebuf);
+        err = dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, &framebuf);
         if (err==DC1394_SUCCESS) {
             affine_scale( framebuf->image, DC1394_WIDTH/ppp, DC1394_HEIGHT,
                 out_mmap + (MAX_WIDTH * MAX_HEIGHT * 3 * frame), g_width/ppp, g_height,
@@ -969,7 +969,7 @@ int main(int argc,char *argv[])
 	while (1) {
 	  if (g_v4l_mode == V4L_MODE_PIPE) {
             dc1394video_frame_t * framebuf=NULL;
-	    if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, framebuf)!=DC1394_SUCCESS) {
+	    if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &framebuf)!=DC1394_SUCCESS) {
 	      capture_pipe( v4l_dev, framebuf->image);
 	      dc1394_capture_enqueue(camera, framebuf);
 	    }
