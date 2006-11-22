@@ -1055,4 +1055,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2006-11-22 Damien Douxchamps<ddouxchamps@users.sf.net>
     * fixed the bad prototype of dc1394_capture_dequeue: we need a
-      frame** and not a frame*, of course.
+      frame** and not a frame*, of course. (SVN328)
+    * ... don't forget to do this for OSX too. (SVN329)
