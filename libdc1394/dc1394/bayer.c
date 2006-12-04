@@ -2099,7 +2099,7 @@ dc1394_bayer_VNG_uint16(const uint16_t *restrict bayer,
 }
 
 dc1394error_t
-dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb, uint32_t sx, uint32_t sy, uint32_t tile, uint32_t method)
+dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb, uint32_t sx, uint32_t sy, dc1394color_filter_t tile, dc1394bayer_method_t method)
 {
   switch (method) {
   case DC1394_BAYER_METHOD_NEAREST:
@@ -2129,7 +2129,7 @@ dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb,
 }
 
 dc1394error_t
-dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint32_t sx, uint32_t sy, uint32_t tile, uint32_t bits, uint32_t method)
+dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint32_t sx, uint32_t sy, dc1394color_filter_t tile, dc1394bayer_method_t method, uint32_t bits)
 {
   switch (method) {
   case DC1394_BAYER_METHOD_NEAREST:

@@ -1057,3 +1057,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * fixed the bad prototype of dc1394_capture_dequeue: we need a
       frame** and not a frame*, of course. (SVN328)
     * ... don't forget to do this for OSX too. (SVN329)
+	
+2006-12-04 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * fixed inconsistancy in bayer decoding functions (Georg Glock)
