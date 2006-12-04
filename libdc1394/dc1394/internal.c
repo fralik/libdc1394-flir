@@ -80,7 +80,6 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Could not allocate bandwidth",
   "IOCTL failure",
   "Capture is not set",
-  "RAW1394 capture failure",
   "Capture is running",
   "RAW1394 failure"
 };
