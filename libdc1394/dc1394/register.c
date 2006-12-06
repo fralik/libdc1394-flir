@@ -204,53 +204,52 @@ SetCameraFormat7Register(dc1394camera_t *camera, dc1394video_mode_t mode, uint64
 /********************************************************************************/
 
 dc1394error_t
-QueryAbsoluteCSROffset(dc1394camera_t *camera, dc1394feature_t feature)
+QueryAbsoluteCSROffset(dc1394camera_t *camera, dc1394feature_t feature, uint64_t *offset)
 {
-  int offset, retval;
+  int absoffset, retval;
   uint32_t quadlet=0;
   
   if (camera == NULL) {
     return DC1394_FAILURE;
   }
 
-  if (camera->absolute_control_csr==0) {
-
-    FEATURE_TO_ABS_VALUE_OFFSET(feature, offset);
-    
-    retval=GetCameraControlRegister(camera, offset, &quadlet);
+  FEATURE_TO_ABS_VALUE_OFFSET(feature, absoffset);
   
-    camera->absolute_control_csr=quadlet * 0x04;
+  retval=GetCameraControlRegister(camera, absoffset, &quadlet);
+  
+  *offset=quadlet * 0x04;
 
-    return retval;
-  }
-  else {
-    return DC1394_SUCCESS;
-  }
+  return retval;
+
 }
 
 dc1394error_t
 GetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, uint64_t offset, uint32_t *value)
 {
+  uint64_t absoffset;
+
   if (camera == NULL) {
     return DC1394_FAILURE;
   }
 
-  QueryAbsoluteCSROffset(camera, feature);
+  QueryAbsoluteCSROffset(camera, feature, &absoffset);
 
-  return GetCameraROMValue(camera, camera->absolute_control_csr+offset, value);
+  return GetCameraROMValue(camera, absoffset+offset, value);
 
 }
 
 dc1394error_t
 SetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, uint64_t offset, uint32_t value)
 {
+  uint64_t absoffset;
+
   if (camera == NULL) {
     return DC1394_FAILURE;
   }
 
-  QueryAbsoluteCSROffset(camera, feature);
+  QueryAbsoluteCSROffset(camera, feature, &absoffset);
 
-  return SetCameraROMValue(camera, camera->absolute_control_csr+offset, value);
+  return SetCameraROMValue(camera, absoffset+offset, value);
 
 }
 

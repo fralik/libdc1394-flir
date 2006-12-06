@@ -141,7 +141,6 @@ dc1394_new_camera(uint32_t port, uint16_t node)
    cam->iso_bandwidth=0;
    cam->capture_is_set=0;
    cam->broadcast=DC1394_FALSE;
-   cam->absolute_control_csr=0;
    // default values for PHY stuff:
    cam->phy_speed=-1;
    cam->power_class=DC1394_POWER_CLASS_NONE;

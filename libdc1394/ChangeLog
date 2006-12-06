@@ -1063,3 +1063,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * removed the error code related to raw1394 capture (SVN 331)
     * fixed error check in dc1394_set_roi (Mikael Olenfalk)
     * removed extra error string definition for raw1394 failure (SVN 332)
+
+2006-12-06 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * SVN 333: fixed a bug in absolute settings. The caching of offsets has
+      been removed (Don Murray)

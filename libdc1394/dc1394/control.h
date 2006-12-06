@@ -405,7 +405,7 @@ typedef struct __dc1394_camera
   uint64_t             unit_directory;
   uint64_t             unit_dependent_directory;
   uint64_t             advanced_features_csr;
-  uint64_t             absolute_control_csr;
+  //uint64_t             absolute_control_csr;
   uint64_t             PIO_control_csr; // future use
   uint64_t             SIO_control_csr; // future use
   uint64_t             strobe_control_csr; // future use
