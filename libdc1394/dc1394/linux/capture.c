@@ -144,6 +144,11 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
 
   if (_dc1394_open_dma_device(camera) != DC1394_SUCCESS) {
     fprintf (stderr, "Could not open video1394 device file in /dev\n");
+    // free allocated memory:
+    free(_dc1394_num_using_fd);
+    _dc1394_num_using_fd=NULL;
+    free(_dc1394_dma_fd);
+    _dc1394_dma_fd=NULL;
     return DC1394_INVALID_VIDEO1394_DEVICE;
   }
   
@@ -157,6 +162,11 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_LISTEN_CHANNEL, &vmmap) < 0) {
     printf("(%s) VIDEO1394_IOC_LISTEN_CHANNEL ioctl failed: %s\n", __FILE__,
             strerror (errno));
+    // free allocated memory:
+    free(_dc1394_num_using_fd);
+    _dc1394_num_using_fd=NULL;
+    free(_dc1394_dma_fd);
+    _dc1394_dma_fd=NULL;
     return DC1394_IOCTL_FAILURE;
   }
   // starting from here we use the ISO channel so we set the flag in the camera struct:
@@ -177,6 +187,11 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
       printf("(%s) VIDEO1394_IOC_LISTEN_QUEUE_BUFFER ioctl failed!\n", __FILE__);
       ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(vwait.channel));
       camera->capture_is_set=0;
+      // free allocated memory:
+      free(_dc1394_num_using_fd);
+      _dc1394_num_using_fd=NULL;
+      free(_dc1394_dma_fd);
+      _dc1394_dma_fd=NULL;
       return DC1394_IOCTL_FAILURE;
     }
     
@@ -190,6 +205,11 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
     printf("(%s) mmap failed!\n", __FILE__);
     ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
     camera->capture_is_set=0;
+    // free allocated memory:
+    free(_dc1394_num_using_fd);
+    _dc1394_num_using_fd=NULL;
+    free(_dc1394_dma_fd);
+    _dc1394_dma_fd=NULL;
     return DC1394_IOCTL_FAILURE;
   }
   
@@ -309,6 +329,12 @@ dc1394_capture_stop(dc1394camera_t *camera)
     
     // free the additional capture handle
     raw1394_destroy_handle(craw->capture.handle);
+
+    // free allocated memory:
+    free(_dc1394_num_using_fd);
+    _dc1394_num_using_fd=NULL;
+    free(_dc1394_dma_fd);
+    _dc1394_dma_fd=NULL;
   }
   else {
     return DC1394_CAPTURE_IS_NOT_SET;
