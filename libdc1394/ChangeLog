@@ -1070,3 +1070,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2006-12-07 Damien Douxchamps<ddouxchamps@users.sf.net>
     * SVN 334: Fixed memory leak in Linux capture code (Fabien Spindler)
+	
+2006-12-08 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * SVN 335: Fix the badly fixed memory leak. Thanks to Daniel Drake.
