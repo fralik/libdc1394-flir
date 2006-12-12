@@ -5,7 +5,7 @@
  * 
  * Written by Damien Douxchamps and Frederic Devernay
  *
- * The original VNG Bayer decoding is from Dave Coffin's DCRAW.
+ * The original VNG and AHD Bayer decoding are from Dave Coffin's DCRAW.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
  */
 
 #include <limits.h>
+#include <math.h>
 #include "conversions.h"
 
 #define CLIP(in, out)\
@@ -1804,7 +1805,14 @@ dc1394_bayer_Simple_uint16(const uint16_t *restrict bayer, uint16_t *restrict rg
 /* Variable Number of Gradients, from dcraw <http://www.cybercom.net/~dcoffin/dcraw/> */
 /* Ported to libdc1394 by Frederic Devernay */
 
+#define FORC3 for (c=0; c < 3; c++)
+
+#define SQR(x) ((x)*(x))
 #define ABS(x) (((int)(x) ^ ((int)(x) >> 31)) - ((int)(x) >> 31))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define LIM(x,min,max) MAX(min,MIN(x,max))
+#define ULIM(x,y,z) ((y) < (z) ? LIM(x,y,z) : LIM(x,z,y))
 /*
    In order to inline this calculation, I make the risky
    assumption that all filter patterns can be described
@@ -2098,6 +2106,398 @@ dc1394_bayer_VNG_uint16(const uint16_t *restrict bayer,
   free (brow[4]);
 }
 
+
+
+/* AHD interpolation ported from dcraw to libdc1394 by Samuel Audet */
+static dc1394bool_t ahd_inited = DC1394_FALSE; /* WARNING: not multi-processor safe */
+
+#define CLIPOUT(x)        LIM(x,0,255)
+#define CLIPOUT16(x,bits) LIM(x,0,((1<<bits)-1))
+
+static const double xyz_rgb[3][3] = {			/* XYZ from RGB */
+  { 0.412453, 0.357580, 0.180423 },
+  { 0.212671, 0.715160, 0.072169 },
+  { 0.019334, 0.119193, 0.950227 } };
+static const float d65_white[3] = { 0.950456, 1, 1.088754 };
+
+static void cam_to_cielab (uint16_t cam[3], float lab[3]) /* [SA] */
+{
+  int c, i, j;
+  float r, xyz[3];
+  static float cbrt[0x10000], xyz_cam[3][4];
+
+  if (cam == NULL) {
+    for (i=0; i < 0x10000; i++) {
+      r = i / 65535.0;
+      cbrt[i] = r > 0.008856 ? pow(r,1/3.0) : 7.787*r + 16/116.0;
+    }
+    for (i=0; i < 3; i++)
+      for (j=0; j < 3; j++)                           /* [SA] */
+        xyz_cam[i][j] = xyz_rgb[i][j] / d65_white[i]; /* [SA] */
+  } else {
+    xyz[0] = xyz[1] = xyz[2] = 0.5;
+    FORC3 { /* [SA] */
+      xyz[0] += xyz_cam[0][c] * cam[c];
+      xyz[1] += xyz_cam[1][c] * cam[c];
+      xyz[2] += xyz_cam[2][c] * cam[c];
+    }
+    xyz[0] = cbrt[CLIPOUT16((int) xyz[0],16)];        /* [SA] */
+    xyz[1] = cbrt[CLIPOUT16((int) xyz[1],16)];        /* [SA] */
+    xyz[2] = cbrt[CLIPOUT16((int) xyz[2],16)];        /* [SA] */
+    lab[0] = 116 * xyz[1] - 16;
+    lab[1] = 500 * (xyz[0] - xyz[1]);
+    lab[2] = 200 * (xyz[1] - xyz[2]);
+  }
+}
+
+/*
+   Adaptive Homogeneity-Directed interpolation is based on
+   the work of Keigo Hirakawa, Thomas Parks, and Paul Lee.
+ */
+#define TS 256		/* Tile Size */
+
+static void
+dc1394_bayer_AHD(const uint8_t *restrict bayer,
+		 uint8_t *restrict dst, int sx, int sy,
+		 dc1394color_filter_t pattern)
+{
+  int i, j, top, left, row, col, tr, tc, fc, c, d, val, hm[2];
+  /* the following has the same type as the image */
+  uint8_t (*pix)[3], (*rix)[3];      /* [SA] */
+  uint16_t rix16[3];                 /* [SA] */
+  static const int dir[4] = { -1, 1, -TS, TS };
+  unsigned ldiff[2][4], abdiff[2][4], leps, abeps;
+  float flab[3];                     /* [SA] */
+  uint8_t (*rgb)[TS][TS][3];
+   short (*lab)[TS][TS][3];
+   char (*homo)[TS][TS], *buffer;
+
+  /* start - new code for libdc1394 */
+  uint32_t filters;
+  const int height = sy, width = sx;
+  int x, y;
+
+  if (ahd_inited==DC1394_FALSE) {
+      /* WARNING: this might not be multi-processor safe */
+      cam_to_cielab (NULL,NULL);
+      ahd_inited = DC1394_TRUE; 
+  }
+
+  switch(pattern) {
+      case DC1394_COLOR_FILTER_BGGR:
+          filters = 0x16161616;
+          break;
+      case DC1394_COLOR_FILTER_GRBG:
+          filters = 0x61616161;
+          break;
+      case DC1394_COLOR_FILTER_RGGB:
+          filters = 0x94949494;
+          break;
+      case DC1394_COLOR_FILTER_GBRG:
+          filters = 0x49494949;
+          break;
+      default:
+          return;
+  }
+
+  /* fill-in destination with known exact values */
+  for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+          int channel = FC(y,x);
+          dst[(y*width+x)*3 + channel] = bayer[y*width+x];
+      }
+  }
+  /* end - new code for libdc1394 */
+
+  /* start - code from border_interpolate (int border) */
+  {
+  int border = 3;
+  unsigned row, col, y, x, f, c, sum[8];
+
+  for (row=0; row < height; row++)
+    for (col=0; col < width; col++) {
+      if (col==border && row >= border && row < height-border)
+	col = width-border;
+      memset (sum, 0, sizeof sum);
+      for (y=row-1; y != row+2; y++)
+	for (x=col-1; x != col+2; x++)
+	  if (y < height && x < width) {
+	    f = FC(y,x);
+	    sum[f] += dst[(y*width+x)*3 + f];           /* [SA] */
+	    sum[f+4]++;
+	  }
+      f = FC(row,col);
+      FORC3 if (c != f && sum[c+4])                     /* [SA] */
+	dst[(row*width+col)*3 + c] = sum[c] / sum[c+4]; /* [SA] */
+    }
+  }
+  /* end - code from border_interpolate (int border) */
+
+
+  buffer = (char *) malloc (26*TS*TS);		/* 1664 kB */
+  /* merror (buffer, "ahd_interpolate()"); */
+  rgb  = (uint8_t(*)[TS][TS][3]) buffer;                /* [SA] */
+  lab  = (short (*)[TS][TS][3])(buffer + 12*TS*TS);
+  homo = (char  (*)[TS][TS])   (buffer + 24*TS*TS);
+
+  for (top=0; top < height; top += TS-6)
+    for (left=0; left < width; left += TS-6) {
+      memset (rgb, 0, 12*TS*TS);
+
+/*  Interpolate green horizontally and vertically:		*/
+      for (row = top < 2 ? 2:top; row < top+TS && row < height-2; row++) {
+	col = left + (FC(row,left) == 1);
+	if (col < 2) col += 2;
+	for (fc = FC(row,col); col < left+TS && col < width-2; col+=2) {
+	  pix = (uint8_t (*)[3])dst + (row*width+col);          /* [SA] */
+	  val = ((pix[-1][1] + pix[0][fc] + pix[1][1]) * 2
+		- pix[-2][fc] - pix[2][fc]) >> 2;
+	  rgb[0][row-top][col-left][1] = ULIM(val,pix[-1][1],pix[1][1]);
+	  val = ((pix[-width][1] + pix[0][fc] + pix[width][1]) * 2
+		- pix[-2*width][fc] - pix[2*width][fc]) >> 2;
+	  rgb[1][row-top][col-left][1] = ULIM(val,pix[-width][1],pix[width][1]);
+	}
+      }
+/*  Interpolate red and blue, and convert to CIELab:		*/
+      for (d=0; d < 2; d++)
+	for (row=top+1; row < top+TS-1 && row < height-1; row++)
+	  for (col=left+1; col < left+TS-1 && col < width-1; col++) {
+	    pix = (uint8_t (*)[3])dst + (row*width+col);        /* [SA] */
+	    rix = &rgb[d][row-top][col-left];
+	    if ((c = 2 - FC(row,col)) == 1) {
+	      c = FC(row+1,col);
+	      val = pix[0][1] + (( pix[-1][2-c] + pix[1][2-c]
+				 - rix[-1][1] - rix[1][1] ) >> 1);
+	      rix[0][2-c] = CLIPOUT(val);         /* [SA] */
+	      val = pix[0][1] + (( pix[-width][c] + pix[width][c]
+				 - rix[-TS][1] - rix[TS][1] ) >> 1);
+	    } else
+	      val = rix[0][1] + (( pix[-width-1][c] + pix[-width+1][c]
+				 + pix[+width-1][c] + pix[+width+1][c]
+				 - rix[-TS-1][1] - rix[-TS+1][1]
+				 - rix[+TS-1][1] - rix[+TS+1][1] + 1) >> 2);
+	    rix[0][c] = CLIPOUT(val);             /* [SA] */
+	    c = FC(row,col);
+	    rix[0][c] = pix[0][c];
+	    rix16[0] = rix[0][0];                 /* [SA] */
+	    rix16[1] = rix[0][1];                 /* [SA] */
+	    rix16[2] = rix[0][2];                 /* [SA] */
+	    cam_to_cielab (rix16, flab);          /* [SA] */
+	    FORC3 lab[d][row-top][col-left][c] = 64*flab[c];
+	  }
+/*  Build homogeneity maps from the CIELab images:		*/
+      memset (homo, 0, 2*TS*TS);
+      for (row=top+2; row < top+TS-2 && row < height; row++) {
+	tr = row-top;
+	for (col=left+2; col < left+TS-2 && col < width; col++) {
+	  tc = col-left;
+	  for (d=0; d < 2; d++)
+	    for (i=0; i < 4; i++)
+	      ldiff[d][i] = ABS(lab[d][tr][tc][0]-lab[d][tr][tc+dir[i]][0]);
+	  leps = MIN(MAX(ldiff[0][0],ldiff[0][1]),
+		     MAX(ldiff[1][2],ldiff[1][3]));
+	  for (d=0; d < 2; d++)
+	    for (i=0; i < 4; i++)
+	      if (i >> 1 == d || ldiff[d][i] <= leps)
+		abdiff[d][i] = SQR(lab[d][tr][tc][1]-lab[d][tr][tc+dir[i]][1])
+			     + SQR(lab[d][tr][tc][2]-lab[d][tr][tc+dir[i]][2]);
+	  abeps = MIN(MAX(abdiff[0][0],abdiff[0][1]),
+		      MAX(abdiff[1][2],abdiff[1][3]));
+	  for (d=0; d < 2; d++)
+	    for (i=0; i < 4; i++)
+	      if (ldiff[d][i] <= leps && abdiff[d][i] <= abeps)
+		homo[d][tr][tc]++;
+	}
+      }
+/*  Combine the most homogenous pixels for the final result:	*/
+      for (row=top+3; row < top+TS-3 && row < height-3; row++) {
+	tr = row-top;
+	for (col=left+3; col < left+TS-3 && col < width-3; col++) {
+	  tc = col-left;
+	  for (d=0; d < 2; d++)
+	    for (hm[d]=0, i=tr-1; i <= tr+1; i++)
+	      for (j=tc-1; j <= tc+1; j++)
+		hm[d] += homo[d][i][j];
+	  if (hm[0] != hm[1])
+	    FORC3 dst[(row*width+col)*3 + c] = CLIPOUT(rgb[hm[1] > hm[0]][tr][tc][c]); /* [SA] */
+	  else
+	    FORC3 dst[(row*width+col)*3 + c] = 
+                CLIPOUT((rgb[0][tr][tc][c] + rgb[1][tr][tc][c]) >> 1);      /* [SA] */
+	}
+      }
+    }
+  free (buffer);
+}
+
+static void
+dc1394_bayer_AHD_uint16(const uint16_t *restrict bayer,
+			uint16_t *restrict dst, int sx, int sy,
+			dc1394color_filter_t pattern, int bits)
+{
+  int i, j, top, left, row, col, tr, tc, fc, c, d, val, hm[2];
+  /* the following has the same type as the image */
+  uint16_t (*pix)[3], (*rix)[3];      /* [SA] */
+  static const int dir[4] = { -1, 1, -TS, TS };
+  unsigned ldiff[2][4], abdiff[2][4], leps, abeps;
+  float flab[3];
+  uint16_t (*rgb)[TS][TS][3];         /* [SA] */
+   short (*lab)[TS][TS][3];
+   char (*homo)[TS][TS], *buffer;
+
+  /* start - new code for libdc1394 */
+  uint32_t filters;
+  const int height = sy, width = sx;
+  int x, y;
+
+  if (ahd_inited==DC1394_FALSE) {
+      /* WARNING: this might not be multi-processor safe */
+      cam_to_cielab (NULL,NULL);
+      ahd_inited = DC1394_TRUE; 
+  }
+
+  switch(pattern) {
+      case DC1394_COLOR_FILTER_BGGR:
+          filters = 0x16161616;
+          break;
+      case DC1394_COLOR_FILTER_GRBG:
+          filters = 0x61616161;
+          break;
+      case DC1394_COLOR_FILTER_RGGB:
+          filters = 0x94949494;
+          break;
+      case DC1394_COLOR_FILTER_GBRG:
+          filters = 0x49494949;
+          break;
+      default:
+          return;
+  }
+
+  /* fill-in destination with known exact values */
+  for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+          int channel = FC(y,x);
+	  dst[(y*width+x)*3 + channel] = bayer[y*width+x];
+      }
+  }
+  /* end - new code for libdc1394 */
+
+  /* start - code from border_interpolate(int border) */
+  {
+  int border = 3;
+  unsigned row, col, y, x, f, c, sum[8];
+
+  for (row=0; row < height; row++)
+    for (col=0; col < width; col++) {
+      if (col==border && row >= border && row < height-border)
+	col = width-border;
+      memset (sum, 0, sizeof sum);
+      for (y=row-1; y != row+2; y++)
+	for (x=col-1; x != col+2; x++)
+	  if (y < height && x < width) {
+	    f = FC(y,x);
+	    sum[f] += dst[(y*width+x)*3 + f];           /* [SA] */
+	    sum[f+4]++;
+	  }
+      f = FC(row,col);
+      FORC3 if (c != f && sum[c+4])                     /* [SA] */
+	dst[(row*width+col)*3 + c] = sum[c] / sum[c+4]; /* [SA] */
+    }
+  }
+  /* end - code from border_interpolate(int border) */
+
+
+  buffer = (char *) malloc (26*TS*TS);		/* 1664 kB */
+  /* merror (buffer, "ahd_interpolate()"); */
+  rgb  = (uint16_t(*)[TS][TS][3]) buffer;               /* [SA] */
+  lab  = (short (*)[TS][TS][3])(buffer + 12*TS*TS);
+  homo = (char  (*)[TS][TS])   (buffer + 24*TS*TS);
+
+  for (top=0; top < height; top += TS-6)
+    for (left=0; left < width; left += TS-6) {
+      memset (rgb, 0, 12*TS*TS);
+
+/*  Interpolate green horizontally and vertically:		*/
+      for (row = top < 2 ? 2:top; row < top+TS && row < height-2; row++) {
+	col = left + (FC(row,left) == 1);
+	if (col < 2) col += 2;
+	for (fc = FC(row,col); col < left+TS && col < width-2; col+=2) {
+	  pix = (uint16_t (*)[3])dst + (row*width+col);          /* [SA] */
+	  val = ((pix[-1][1] + pix[0][fc] + pix[1][1]) * 2
+		- pix[-2][fc] - pix[2][fc]) >> 2;
+	  rgb[0][row-top][col-left][1] = ULIM(val,pix[-1][1],pix[1][1]);
+	  val = ((pix[-width][1] + pix[0][fc] + pix[width][1]) * 2
+		- pix[-2*width][fc] - pix[2*width][fc]) >> 2;
+	  rgb[1][row-top][col-left][1] = ULIM(val,pix[-width][1],pix[width][1]);
+	}
+      }
+/*  Interpolate red and blue, and convert to CIELab:		*/
+      for (d=0; d < 2; d++)
+	for (row=top+1; row < top+TS-1 && row < height-1; row++)
+	  for (col=left+1; col < left+TS-1 && col < width-1; col++) {
+	    pix = (uint16_t (*)[3])dst + (row*width+col);        /* [SA] */
+	    rix = &rgb[d][row-top][col-left];
+	    if ((c = 2 - FC(row,col)) == 1) {
+	      c = FC(row+1,col);
+	      val = pix[0][1] + (( pix[-1][2-c] + pix[1][2-c]
+				 - rix[-1][1] - rix[1][1] ) >> 1);
+	      rix[0][2-c] = CLIPOUT16(val, bits); /* [SA] */
+	      val = pix[0][1] + (( pix[-width][c] + pix[width][c]
+				 - rix[-TS][1] - rix[TS][1] ) >> 1);
+	    } else
+	      val = rix[0][1] + (( pix[-width-1][c] + pix[-width+1][c]
+				 + pix[+width-1][c] + pix[+width+1][c]
+				 - rix[-TS-1][1] - rix[-TS+1][1]
+				 - rix[+TS-1][1] - rix[+TS+1][1] + 1) >> 2);
+	    rix[0][c] = CLIPOUT16(val, bits);     /* [SA] */
+	    c = FC(row,col);
+	    rix[0][c] = pix[0][c];
+	    cam_to_cielab (rix[0], flab);
+	    FORC3 lab[d][row-top][col-left][c] = 64*flab[c];
+	  }
+/*  Build homogeneity maps from the CIELab images:		*/
+      memset (homo, 0, 2*TS*TS);
+      for (row=top+2; row < top+TS-2 && row < height; row++) {
+	tr = row-top;
+	for (col=left+2; col < left+TS-2 && col < width; col++) {
+	  tc = col-left;
+	  for (d=0; d < 2; d++)
+	    for (i=0; i < 4; i++)
+	      ldiff[d][i] = ABS(lab[d][tr][tc][0]-lab[d][tr][tc+dir[i]][0]);
+	  leps = MIN(MAX(ldiff[0][0],ldiff[0][1]),
+		     MAX(ldiff[1][2],ldiff[1][3]));
+	  for (d=0; d < 2; d++)
+	    for (i=0; i < 4; i++)
+	      if (i >> 1 == d || ldiff[d][i] <= leps)
+		abdiff[d][i] = SQR(lab[d][tr][tc][1]-lab[d][tr][tc+dir[i]][1])
+			     + SQR(lab[d][tr][tc][2]-lab[d][tr][tc+dir[i]][2]);
+	  abeps = MIN(MAX(abdiff[0][0],abdiff[0][1]),
+		      MAX(abdiff[1][2],abdiff[1][3]));
+	  for (d=0; d < 2; d++)
+	    for (i=0; i < 4; i++)
+	      if (ldiff[d][i] <= leps && abdiff[d][i] <= abeps)
+		homo[d][tr][tc]++;
+	}
+      }
+/*  Combine the most homogenous pixels for the final result:	*/
+      for (row=top+3; row < top+TS-3 && row < height-3; row++) {
+	tr = row-top;
+	for (col=left+3; col < left+TS-3 && col < width-3; col++) {
+	  tc = col-left;
+	  for (d=0; d < 2; d++)
+	    for (hm[d]=0, i=tr-1; i <= tr+1; i++)
+	      for (j=tc-1; j <= tc+1; j++)
+		hm[d] += homo[d][i][j];
+	  if (hm[0] != hm[1])
+	    FORC3 dst[(row*width+col)*3 + c] = CLIPOUT16(rgb[hm[1] > hm[0]][tr][tc][c], bits); /* [SA] */
+	  else
+	    FORC3 dst[(row*width+col)*3 + c] = 
+                CLIPOUT16((rgb[0][tr][tc][c] + rgb[1][tr][tc][c]) >> 1, bits); /* [SA] */
+	}
+      }
+    }
+  free (buffer);
+}
+
 dc1394error_t
 dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb, uint32_t sx, uint32_t sy, dc1394color_filter_t tile, dc1394bayer_method_t method)
 {
@@ -2122,6 +2522,9 @@ dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb,
     return DC1394_SUCCESS;
   case DC1394_BAYER_METHOD_VNG:
     dc1394_bayer_VNG(bayer, rgb, sx, sy, tile);
+    return DC1394_SUCCESS;
+  case DC1394_BAYER_METHOD_AHD:
+    dc1394_bayer_AHD(bayer, rgb, sx, sy, tile);
     return DC1394_SUCCESS;
   }
 
@@ -2152,6 +2555,9 @@ dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict r
     return DC1394_SUCCESS;
   case DC1394_BAYER_METHOD_VNG:
     dc1394_bayer_VNG_uint16(bayer, rgb, sx, sy, tile, bits);
+    return DC1394_SUCCESS;
+  case DC1394_BAYER_METHOD_AHD:
+    dc1394_bayer_AHD_uint16(bayer, rgb, sx, sy, tile, bits);
     return DC1394_SUCCESS;
   }
 
@@ -2232,6 +2638,7 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
   memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
 
 }
+
 dc1394error_t
 dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method)
 {
@@ -2267,6 +2674,10 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
       Adapt_buffer_bayer(in,out,method);
       dc1394_bayer_VNG(in->image, out->image, in->size[0], in->size[1], in->color_filter);
       return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_AHD:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_AHD(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+      return DC1394_SUCCESS;
     default:
       return DC1394_INVALID_BAYER_METHOD;
     }
@@ -2300,6 +2711,10 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
     case DC1394_BAYER_METHOD_VNG:
       Adapt_buffer_bayer(in,out,method);
       dc1394_bayer_VNG_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return DC1394_SUCCESS;
+    case DC1394_BAYER_METHOD_AHD:
+      Adapt_buffer_bayer(in,out,method);
+      dc1394_bayer_AHD_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
       return DC1394_SUCCESS;
     default:
       return DC1394_INVALID_BAYER_METHOD;

@@ -11,6 +11,8 @@ AC_PROG_LIBTOOL
 # check if the 'restrict' prefix is supported
 AC_C_RESTRICT
 
+AC_CHECK_LIB(m, pow, [ LIBS="-lm $LIBS" ], [])
+
 case "$host" in
   *-*-linux*)
     # Check for the new version of libraw1394 first since they might have both

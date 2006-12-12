@@ -1076,4 +1076,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 
 2006-12-12 Damien Douxchamps<ddouxchamps@users.sf.net>
     * SVN 336: Try to fix a pointer problem in the topology acquisition
+    * SVN 337: New AHD Bayer interpolation (imported from DCRAW by Samuel
+      Audet). There may be issues with mulitiple processor systems.
+
 
