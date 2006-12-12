@@ -88,6 +88,7 @@ void decode_selfid_zero(SelfIdPacket_t *p, unsigned int i);
 
 void decode_selfid_more(SelfIdPacket_t *p, unsigned int i);
 
+// the topo map returns an allocated variable. Don't forget to free it!
 RAW1394topologyMap *raw1394GetTopologyMap(raw1394handle_t handle);
 
 int cooked1394_read(raw1394handle_t handle, nodeid_t node, nodeaddr_t addr,

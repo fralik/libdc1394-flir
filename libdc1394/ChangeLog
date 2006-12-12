@@ -1073,3 +1073,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 	
 2006-12-08 Damien Douxchamps<ddouxchamps@users.sf.net>
     * SVN 335: Fix the badly fixed memory leak. Thanks to Daniel Drake.
+
+2006-12-12 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * SVN 336: Try to fix a pointer problem in the topology acquisition
+

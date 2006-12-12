@@ -42,30 +42,35 @@ GrabSelfIds(dc1394camera_t **cams, int ncams)
   int i, port,k;
   dc1394camera_linux_t* camera_ptr;
   raw1394handle_t main_handle, port_handle;
-  
+
+  // get the number of adapters:
   main_handle=raw1394_new_handle();
   int port_num=raw1394_get_port_info(main_handle, NULL, 0);
   
+  // for each adapter:
   for (port=0;port<port_num;port++) {
     port_handle=raw1394_new_handle();
     raw1394_set_port(port_handle,port);
     // get and decode SelfIds.
     topomap=raw1394GetTopologyMap(port_handle);
-      
-    for (i=0;i<topomap->selfIdCount;i++) {
-      pselfid_int = (unsigned int *) &topomap->selfIdPacket[i];
-      decode_selfid(&packet,pselfid_int);
-      // find the camera related to this packet:
+
+    if (topomap!=NULL) {
+      for (i=0;i<topomap->selfIdCount;i++) {
+	pselfid_int = (unsigned int *) &topomap->selfIdPacket[i];
+	decode_selfid(&packet,pselfid_int);
+	// find the camera related to this packet:
 	
-      for (k=0;k<ncams;k++) {
-	camera_ptr = (dc1394camera_linux_t *) cams[k];
-	if ((cams[k]->node==packet.packetZero.phyID) &&
-	    (cams[k]->port==port)) { // added a check for the port too!!
-	  camera_ptr->selfid_packet=packet;
+	for (k=0;k<ncams;k++) {
+	  camera_ptr = (dc1394camera_linux_t *) cams[k];
+	  if ((cams[k]->node==packet.packetZero.phyID) &&
+	      (cams[k]->port==port)) { // added a check for the port too!!
+	    camera_ptr->selfid_packet=packet;
+	  }
 	}
       }
+      raw1394_destroy_handle(port_handle);
+      free(topomap);
     }
-    raw1394_destroy_handle(port_handle);
   }
   
   raw1394_destroy_handle(main_handle);

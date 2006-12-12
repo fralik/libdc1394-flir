@@ -96,37 +96,53 @@ int decode_selfid(SelfIdPacket_t *selfid, unsigned int *selfid_raw)
 
 RAW1394topologyMap *raw1394GetTopologyMap(raw1394handle_t handle)
 {
-  static RAW1394topologyMap topoMap;
+  RAW1394topologyMap *topoMap;
   int ret,p;
   quadlet_t buf;
   
+  topoMap=(RAW1394topologyMap*)malloc(sizeof(RAW1394topologyMap));
+
   if ((ret = cooked1394_read(handle, 0xffc0 | raw1394_get_local_id(handle),
 			     CSR_REGISTER_BASE + CSR_TOPOLOGY_MAP, 4,
-			     (quadlet_t *) &buf)) < 0) return NULL;
+			     (quadlet_t *) &buf)) < 0) {
+    free(topoMap);
+    return NULL;
+  }
+
   buf = htonl(buf);
-  topoMap.length = (u_int16_t) (buf>>16);
-  topoMap.crc = (u_int16_t) buf;
+  topoMap->length = (u_int16_t) (buf>>16);
+  topoMap->crc = (u_int16_t) buf;
   if ((ret = cooked1394_read(handle, 0xffc0 | raw1394_get_local_id(handle),
 			     CSR_REGISTER_BASE + CSR_TOPOLOGY_MAP + 4, 4,
-			     (quadlet_t *) &topoMap.generationNumber)) < 0) return NULL;
+			     (quadlet_t *) &topoMap->generationNumber)) < 0) {
+    free(topoMap);
+    return NULL;
+  } 
   
-  topoMap.generationNumber = htonl(topoMap.generationNumber);
+  topoMap->generationNumber = htonl(topoMap->generationNumber);
   
   if ((ret = cooked1394_read(handle, 0xffc0 | raw1394_get_local_id(handle),
 			     CSR_REGISTER_BASE + CSR_TOPOLOGY_MAP + 8, 4,
-			     (quadlet_t *) &buf)) < 0) return NULL;
+			     (quadlet_t *) &buf)) < 0) {
+    free(topoMap);
+    return NULL;
+  } 
+
   buf = htonl(buf);
-  topoMap.nodeCount = (u_int16_t) (buf>>16);
-  topoMap.selfIdCount = (u_int16_t) buf;
+  topoMap->nodeCount = (u_int16_t) (buf>>16);
+  topoMap->selfIdCount = (u_int16_t) buf;
   if (cooked1394_read(handle, 0xffc0 | raw1394_get_local_id(handle),
 		      CSR_REGISTER_BASE + CSR_TOPOLOGY_MAP + 3*4,
-		      (topoMap.length-2)*4, ((quadlet_t *)&topoMap)+3) < 0)
+		      (topoMap->length-2)*4, ((quadlet_t *)topoMap)+3) < 0){
+    free(topoMap);
     return NULL;
-  for ( p=0 ; p < topoMap.length-2 ; p++) {
-    *( ((quadlet_t *)&topoMap) +3+p) = 
-      htonl( *( ( (quadlet_t *)&topoMap ) +3+p )   ); 
+  } 
+
+  for ( p=0 ; p < topoMap->length-2 ; p++) {
+    *( ((quadlet_t *)topoMap) +3+p) = 
+      htonl( *( ( (quadlet_t *)topoMap ) +3+p )   ); 
   }
-  return &topoMap;
+  return topoMap;
 }
 
 int cooked1394_read(raw1394handle_t handle, nodeid_t node, nodeaddr_t addr, size_t length, quadlet_t *buffer)
