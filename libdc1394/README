@@ -31,7 +31,8 @@ for all functions in the header file dc1394_control.h. There are sample
 programs in the examples/ directory, which are helpful for learning. For a more
 comprehensive demonstration of the features of libdc1394, review the Coriander
 application source code, available at
-http://damien.douxchamps.net/ieee1394/coriander/.
+http://damien.douxchamps.net/ieee1394/coriander/ or read the IIDC
+specifications.
 
 4. Maintainer
 
@@ -40,5 +41,28 @@ Damien Douxchamps. Send suggestions, bug reports and fixes to to the mailing
 list libdc1394devel@lists.sf.net (subscription required). See the file AUTHORS
 for a complete list of contributors.
 
+5. Quick installation guide
+
+To compile and install libdc1394 from a release tarball simply do the
+following:
+
+./configure
+make
+make install
+
+To compile and install libdc1394 from an SVN source tree do the following:
+
+autoreconf -i -s
+./configure
+make
+make install
+
+Details on getting a source tree from the SVN repository is beyond the scope of
+this small readme but the following command should give you the latest trunk:
+
+svn co https://svn.sourceforge.net/svnroot/libdc1394/trunk/libdc1394/
+
+
+--
 2000-01-13  Gord Peters
-2006-11-03  Damien Douxchamps
+2006-12-13  Damien Douxchamps
