@@ -1985,7 +1985,7 @@ dc1394_feature_get_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
 }
 
 dc1394error_t
-dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, uint32_t value)
+dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t pwr)
 {
   dc1394error_t err;
   uint64_t offset;
@@ -1996,12 +1996,12 @@ dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   err=GetCameraControlRegister(camera, offset, &curval);
   DC1394_ERR_RTN(err, "Could not get abs setting status for feature %d",feature);
   
-  if (value && !(curval & 0x40000000UL)) {
+  if (pwr && !(curval & 0x40000000UL)) {
     curval|= 0x40000000UL;
     err=SetCameraControlRegister(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not set absolute control for feature %d",feature);
   }
-  else if (!value && (curval & 0x40000000UL)) {
+  else if (!pwr && (curval & 0x40000000UL)) {
     curval&= 0xBFFFFFFFUL;
     err=SetCameraControlRegister(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not set absolute control for feature %d",feature);
