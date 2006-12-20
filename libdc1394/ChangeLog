@@ -1090,3 +1090,4 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-12-14 Damien Douxchamps<ddouxchamps@users.sf.net>
     * SVN 340: fixed missing update of allocated_image_bytes in the frame
       conversion functions.
+    * SVN 341: remove debug statements

@@ -815,7 +815,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   if (camera->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
   
-  fprintf(stderr,"Setting ROI\n");
+  //fprintf(stderr,"Setting ROI\n");
 
   if (color_coding==DC1394_QUERY_FROM_CAMERA) {
     err=dc1394_format7_get_color_coding(camera, video_mode, &color_coding);
@@ -956,7 +956,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   // IIDC v1.30 handshaking:
   err=_dc1394_v130_handshake(camera, video_mode);
   DC1394_ERR_RTN(err, "F7 handshake failure");
-  
+  /*
   err=dc1394_format7_get_color_coding(camera, video_mode, &color_coding);
   DC1394_ERR_RTN(err, "====\nUnable to set color_coding %d", color_coding);
   fprintf(stderr,"Color coding: %d\n",color_coding);
@@ -971,7 +971,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   fprintf(stderr,"Image size: %d %d\n",camera_width, camera_height);
   
   fprintf(stderr,"Finished setting ROI, err code %d\n",err);
-
+  */
   return err;
 }
 
