@@ -571,7 +571,9 @@ typedef struct __dc1394_video_frame
   uint32_t                 id;
         /* the frame position in the ring buffer */
   uint64_t                 allocated_image_bytes;
-        /* amount of memory allocated in for the *image field */
+        /* amount of memory allocated in for the *image field. -1 for output
+	   of libdc1394? (this would avoid confusion between 'no allocated
+	   memory' and 'don't touch this buffer' -> signed int?? */ 
 } dc1394video_frame_t;
 
 enum {

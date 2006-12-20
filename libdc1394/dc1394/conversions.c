@@ -696,6 +696,7 @@ Adapt_buffer_convert(dc1394video_frame_t *in, dc1394video_frame_t *out)
   if (out->total_bytes>out->allocated_image_bytes) {
     free(out->image);
     out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
+    out->allocated_image_bytes=out->total_bytes;
   }
 
   // Copy padding bytes:
@@ -867,6 +868,7 @@ Adapt_buffer_stereo(dc1394video_frame_t *in, dc1394video_frame_t *out)
   if (out->total_bytes>out->allocated_image_bytes) {
     free(out->image);
     out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
+    out->allocated_image_bytes=out->total_bytes;
   }
 
   // Copy padding bytes:
