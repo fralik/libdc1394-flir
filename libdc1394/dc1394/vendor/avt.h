@@ -542,6 +542,17 @@ dc1394error_t dc1394_avt_read_shading_img(dc1394camera_t *camera,
 dc1394error_t dc1394_avt_write_shading_img(dc1394camera_t *camera,
 					   unsigned char *buf, uint32_t size);
 
+/************************************************************************/
+/* Read channel adjust (AVT Pike)										*/
+/************************************************************************/
+dc1394error_t dc1394_avt_get_channel_adjust(dc1394camera_t *camera, 
+						int16_t *channel_adjust);
+
+/************************************************************************/
+/* Write channel adjust (AVT Pike)										*/
+/************************************************************************/
+dc1394error_t dc1394_avt_set_channel_adjust(dc1394camera_t *camera, 
+						int16_t channel_adjust);
 
 #ifdef __cplusplus
 }

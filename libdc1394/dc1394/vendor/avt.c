@@ -28,53 +28,55 @@
 /********************************************************/
 /* See the Marlin Technical Manuel for definitions of these */
 
-#define REG_CAMERA_AVT_VERSION_INFO1  	0x010U  
-#define REG_CAMERA_AVT_VERSION_INFO3  	0x018U  
-#define REG_CAMERA_AVT_ADV_INQ_1  	0x040U  
-#define REG_CAMERA_AVT_ADV_INQ_2  	0x044U  
-#define REG_CAMERA_AVT_ADV_INQ_3  	0x048U  
-#define REG_CAMERA_AVT_ADV_INQ_4  	0x04CU  
-#define REG_CAMERA_AVT_MAX_RESOLUTION  	0x200U  
-#define REG_CAMERA_AVT_TIMEBASE        	0x208U  
-#define REG_CAMERA_AVT_EXTD_SHUTTER  	0x20CU  
-#define REG_CAMERA_AVT_TEST_IMAGE      	0x210U  
-#define REG_CAMERA_AVT_SEQUENCE_CTRL  	0x220U  /* except MF131x */
-#define REG_CAMERA_AVT_SEQUENCE_PARAM  	0x224U  /* except MF131x */
-#define REG_CAMERA_AVT_LUT_CTRL        	0x240U  
-#define REG_CAMERA_AVT_LUT_MEM_CTRL  	0x244U  
-#define REG_CAMERA_AVT_LUT_INFO        	0x248U  
-#define REG_CAMERA_AVT_SHDG_CTRL       	0x250U  
-#define REG_CAMERA_AVT_SHDG_MEM_CTRL  	0x254U  
-#define REG_CAMERA_AVT_SHDG_INFO       	0x258U  
-#define REG_CAMERA_AVT_DEFERRED_TRANS  	0x260U  
-#define REG_CAMERA_AVT_FRAMEINFO       	0x270U  
-#define REG_CAMERA_AVT_FRAMECOUNTER  	0x274U  
-#define REG_CAMERA_AVT_HDR_CONTROL     	0x280U  /* MF131x only */
-#define REG_CAMERA_AVT_KNEEPOINT_1  	0x284U  /* MF131x only */
-#define REG_CAMERA_AVT_KNEEPOINT_2  	0x288U  /* MF131x only */
-#define REG_CAMERA_AVT_KNEEPOINT_3  	0x28CU  /* MF131x only */
-#define REG_CAMERA_AVT_DSNU_CONTROL  	0x290U  /* MF131B only; Firmware 2.02 */
-#define REG_CAMERA_AVT_BLEMISH_CONTROL 	0x294U  /* MF131x only; Firmware 2.02 */
-#define REG_CAMERA_AVT_IO_INP_CTRL1  	0x300U  
-#define REG_CAMERA_AVT_IO_INP_CTRL2  	0x304U  
-#define REG_CAMERA_AVT_IO_INP_CTRL3  	0x308U  /* Dolphin series only */
-#define REG_CAMERA_AVT_IO_OUTP_CTRL1  	0x320U  
-#define REG_CAMERA_AVT_IO_OUTP_CTRL2	0x324U  
-#define REG_CAMERA_AVT_IO_OUTP_CTRL3  	0x328U  /* Dolphin series only */
-#define REG_CAMERA_AVT_IO_INTENA_DELAY 	0x340U  
-#define REG_CAMERA_AVT_AUTOSHUTTER_CTRL	0x360U  /* Marlin series only */
-#define REG_CAMERA_AVT_AUTOSHUTTER_LO  	0x364U  /* Marlin series only */
-#define REG_CAMERA_AVT_AUTOSHUTTER_HI 	0x368U  /* Marlin series only */
-#define REG_CAMERA_AVT_AUTOGAIN_CTRL  	0x370U  /* Marlin series only */
-#define REG_CAMERA_AVT_AUTOFNC_AOI  	0x390U  /* Marlin series only */
-#define REG_CAMERA_AVT_AF_AREA_POSITION	0x394U  /* Marlin series only */
-#define REG_CAMERA_AVT_AF_AREA_SIZE  	0x398U  /* Marlin series only */
-#define REG_CAMERA_AVT_COLOR_CORR      	0x3A0U  /* Marlin C-type cameras only */
-#define REG_CAMERA_AVT_TRIGGER_DELAY  	0x400U  
-#define REG_CAMERA_AVT_MIRROR_IMAGE  	0x410U  /* Marlin series only */
-#define REG_CAMERA_AVT_SOFT_RESET      	0x510U  
-#define REG_CAMERA_AVT_GPDATA_INFO  	0xFFCU  
-#define REG_CAMERA_AVT_GPDATA_BUFFER	0x1000U
+#define REG_CAMERA_AVT_VERSION_INFO1			        0x010U  
+#define REG_CAMERA_AVT_VERSION_INFO3				0x018U  
+#define REG_CAMERA_AVT_ADV_INQ_1				0x040U  
+#define REG_CAMERA_AVT_ADV_INQ_2				0x044U  
+#define REG_CAMERA_AVT_ADV_INQ_3				0x048U  
+#define REG_CAMERA_AVT_ADV_INQ_4				0x04CU  
+#define REG_CAMERA_AVT_MAX_RESOLUTION				0x200U  
+#define REG_CAMERA_AVT_TIMEBASE					0x208U  
+#define REG_CAMERA_AVT_EXTD_SHUTTER				0x20CU  
+#define REG_CAMERA_AVT_TEST_IMAGE				0x210U  
+#define REG_CAMERA_AVT_SEQUENCE_CTRL				0x220U  /* except MF131x */
+#define REG_CAMERA_AVT_SEQUENCE_PARAM				0x224U  /* except MF131x */
+#define REG_CAMERA_AVT_LUT_CTRL					0x240U  
+#define REG_CAMERA_AVT_LUT_MEM_CTRL				0x244U  
+#define REG_CAMERA_AVT_LUT_INFO					0x248U  
+#define REG_CAMERA_AVT_SHDG_CTRL				0x250U  
+#define REG_CAMERA_AVT_SHDG_MEM_CTRL				0x254U  
+#define REG_CAMERA_AVT_SHDG_INFO				0x258U  
+#define REG_CAMERA_AVT_DEFERRED_TRANS				0x260U  
+#define REG_CAMERA_AVT_FRAMEINFO				0x270U  
+#define REG_CAMERA_AVT_FRAMECOUNTER				0x274U  
+#define REG_CAMERA_AVT_HDR_CONTROL				0x280U  /* MF131x only */
+#define REG_CAMERA_AVT_KNEEPOINT_1				0x284U  /* MF131x only */
+#define REG_CAMERA_AVT_KNEEPOINT_2				0x288U  /* MF131x only */
+#define REG_CAMERA_AVT_KNEEPOINT_3				0x28CU  /* MF131x only */
+#define REG_CAMERA_AVT_DSNU_CONTROL				0x290U  /* MF131B only; Firmware 2.02 */
+#define REG_CAMERA_AVT_BLEMISH_CONTROL				0x294U  /* MF131x only; Firmware 2.02 */
+#define REG_CAMERA_AVT_IO_INP_CTRL1				0x300U  
+#define REG_CAMERA_AVT_IO_INP_CTRL2				0x304U  
+#define REG_CAMERA_AVT_IO_INP_CTRL3				0x308U  /* Dolphin series only */
+#define REG_CAMERA_AVT_IO_OUTP_CTRL1				0x320U  
+#define REG_CAMERA_AVT_IO_OUTP_CTRL2				0x324U  
+#define REG_CAMERA_AVT_IO_OUTP_CTRL3				0x328U  /* Dolphin series only */
+#define REG_CAMERA_AVT_IO_INTENA_DELAY				0x340U  
+#define REG_CAMERA_AVT_AUTOSHUTTER_CTRL				0x360U  /* Marlin series only */
+#define REG_CAMERA_AVT_AUTOSHUTTER_LO				0x364U  /* Marlin series only */
+#define REG_CAMERA_AVT_AUTOSHUTTER_HI				0x368U  /* Marlin series only */
+#define REG_CAMERA_AVT_AUTOGAIN_CTRL				0x370U  /* Marlin series only */
+#define REG_CAMERA_AVT_AUTOFNC_AOI				0x390U  /* Marlin series only */
+#define REG_CAMERA_AVT_AF_AREA_POSITION				0x394U  /* Marlin series only */
+#define REG_CAMERA_AVT_AF_AREA_SIZE				0x398U  /* Marlin series only */
+#define REG_CAMERA_AVT_COLOR_CORR				0x3A0U  /* Marlin C-type cameras only */
+#define REG_CAMERA_AVT_TRIGGER_DELAY				0x400U  
+#define REG_CAMERA_AVT_MIRROR_IMAGE				0x410U  /* Marlin series only */
+#define REG_CAMERA_AVT_CHANNEL_ADJUST_CTRL          	        0x420U  /* Pike series only ? */
+#define REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE        	        0x424U  /* Pike series only ? */
+#define REG_CAMERA_AVT_SOFT_RESET				0x510U  
+#define REG_CAMERA_AVT_GPDATA_INFO				0xFFCU  
+#define REG_CAMERA_AVT_GPDATA_BUFFER				0x1000U
 
 /************************************************************************/
 /* Get Version  	(Read Only)					*/
@@ -1447,3 +1449,34 @@ dc1394_avt_write_shading_img(dc1394camera_t *camera, unsigned char *buf,
   return DC1394_SUCCESS;
 }
 
+/************************************************************************/
+/* Read channel adjust (AVT Pike)				   	*/
+/************************************************************************/
+dc1394error_t dc1394_avt_get_channel_adjust(dc1394camera_t *camera, int16_t *channel_adjust)
+{
+  dc1394error_t err;
+  uint32_t value;
+
+  /* Retrieve current channel adjust */    
+  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE, &value);
+  DC1394_ERR_RTN(err,"Could not get AVT channel adjust");
+ 
+  /* channel adjust: Bits 16..31 */
+  *channel_adjust = (int16_t)value;
+       
+  return DC1394_SUCCESS;
+}
+
+/************************************************************************/
+/* Write channel adjust (AVT Pike)			   		*/
+/************************************************************************/
+dc1394error_t dc1394_avt_set_channel_adjust(dc1394camera_t *camera, int16_t channel_adjust)
+{
+  dc1394error_t err;
+   
+  /* Set new channel adjust */
+  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE, (uint32_t)channel_adjust);
+  DC1394_ERR_RTN(err,"Could not set AVT channel adjust");
+
+  return DC1394_SUCCESS;
+}

@@ -1092,3 +1092,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       conversion functions.
     * SVN 341: remove debug statements
     * SVN 342: correct changelog date (as you can see I need some sleep...)
+
+2006-12-20 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * SVN 343: "channel adjust" functions for AVT Pike cameras (patch from
+      Mark Munte)
