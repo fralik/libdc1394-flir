@@ -1101,3 +1101,4 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * SVN 344: Updated Mac OS X support to allow the select() call by using
       dc1394_capture_get_fileno ().  It does this by using a separate thread
       for capture.
+    * SVN 345: Added support for 800 Mb speeds to Mac OS X (Thanks Mark Munte)

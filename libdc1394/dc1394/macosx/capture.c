@@ -48,8 +48,29 @@ static IOReturn
 supported_channels (IOFireWireLibIsochPortRef rem_port, IOFWSpeed * maxSpeed,
   UInt64 * chanSupported)
 {
-  /* TODO: support other speeds */
-  *maxSpeed = kFWSpeed400MBit;
+  dc1394camera_t * camera = (*rem_port)->GetRefCon (rem_port);
+  dc1394speed_t iso_speed;
+
+  if (dc1394_video_get_iso_speed (camera, &iso_speed) == DC1394_SUCCESS) {
+      switch (iso_speed) {
+          case DC1394_ISO_SPEED_100:
+              *maxSpeed = kFWSpeed100MBit;
+              break;
+          case DC1394_ISO_SPEED_200:
+              *maxSpeed = kFWSpeed200MBit;
+              break;
+          case DC1394_ISO_SPEED_400:
+              *maxSpeed = kFWSpeed400MBit;
+              break;
+          default:
+              *maxSpeed = kFWSpeed800MBit;
+              break;
+      }
+  }
+  else {
+      fprintf (stderr, "Warning: Could not get ISO speed, using 400 Mb\n");
+      *maxSpeed = kFWSpeed400MBit;
+  }
 
   /* Only the first 16 channels are allowed */
   *chanSupported = 0xFFFFULL << 48;
@@ -297,7 +318,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
 
   (*d)->GetSpeedToNode (d, craw->generation, &speed);
   chan = (*d)->CreateIsochChannel (d, true,
-      capture->frames[0].bytes_per_packet, kFWSpeed400MBit,
+      capture->frames[0].bytes_per_packet, speed,
       CFUUIDGetUUIDBytes (kIOFireWireIsochChannelInterfaceID));
   if (!chan) {
     dc1394_capture_stop (camera);
