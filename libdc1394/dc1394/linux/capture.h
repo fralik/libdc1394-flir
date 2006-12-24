@@ -25,7 +25,4 @@
 #ifndef __DC1394_CAPTURE_LINUX_H__
 #define __DC1394_CAPTURE_LINUX_H__
 
-int
-dc1394_capture_get_dma_fd (dc1394camera_t * camera);
-
 #endif

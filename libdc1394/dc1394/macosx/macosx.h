@@ -27,6 +27,7 @@
 #include "control.h"
 #include "macosx/capture.h"
 #include <IOKit/firewire/IOFireWireLib.h>
+#include <CoreServices/CoreServices.h>
 
 #define DC1394_CAST_CAMERA_TO_MACOSX(camosx, camera) dc1394camera_macosx_t * camosx = (dc1394camera_macosx_t *) camera
 
@@ -60,7 +61,14 @@ typedef struct __dc1394_capture
   CFStringRef              run_loop_mode;
   dc1394capture_callback_t callback;
   void *                   callback_user_data;
-  uint8_t                  finalize_called;
+  int                      notify_pipe[2];
+  uint8_t                  frames_ready;
+  MPCriticalRegionID       mutex;
+  MPQueueID                termination_queue;
+  MPTaskID                 task;
+  CFRunLoopSourceRef       socket_source;
+  uint8_t                  iso_is_allocated;
+  uint8_t                  iso_is_started;
 
   dc1394video_frame_t     *frames;
 } dc1394capture_t;

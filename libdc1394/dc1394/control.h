@@ -818,6 +818,10 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t 
 dc1394error_t dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers);
 dc1394error_t dc1394_capture_stop(dc1394camera_t *camera);
 
+/* Get a file descriptor to be used for select().  Must be called after
+ * capture_setup(). */
+int dc1394_capture_get_fileno (dc1394camera_t * camera);
+
 /* capture video frames */
 dc1394error_t dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, dc1394video_frame_t **frame);
 dc1394error_t dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame);

@@ -410,7 +410,7 @@ dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame)
 }
 
 int
-dc1394_capture_get_dma_fd (dc1394camera_t * camera)
+dc1394_capture_get_fileno (dc1394camera_t * camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   return craw->capture.dma_fd;

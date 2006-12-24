@@ -1096,3 +1096,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-12-20 Damien Douxchamps<ddouxchamps@users.sf.net>
     * SVN 343: "channel adjust" functions for AVT Pike cameras (patch from
       Mark Munte)
+
+2006-12-24 David Moore <dcm@acm.org>
+    * SVN 344: Updated Mac OS X support to allow the select() call by using
+      dc1394_capture_get_fileno ().  It does this by using a separate thread
+      for capture.

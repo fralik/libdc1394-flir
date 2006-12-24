@@ -31,6 +31,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/firewire/IOFireWireLib.h>
 #include <IOKit/firewire/IOFireWireLibIsoch.h>
+#include <CoreServices/CoreServices.h>
 
 #include "config.h"
 #include "internal.h"
@@ -70,7 +71,7 @@ allocate_port (IOFireWireLibIsochPortRef rem_port,
 static IOReturn
 finalize_callback (dc1394capture_t * capture)
 {
-  capture->finalize_called = 1;
+  CFRunLoopStop (CFRunLoopGetCurrent ());
   return kIOReturnSuccess;
 }
 
@@ -105,8 +106,6 @@ callback (buffer_info * buffer, NuDCLRef dcl)
                                   MIN (buffer->num_dcls - i, 30));
   }
 
-  buffer->status = BUFFER_FILLED;
-
   (*craw->iface)->GetBusCycleTime (craw->iface, &bus, &bus_time);
   gettimeofday (&buffer->filltime, NULL);
 
@@ -138,8 +137,23 @@ callback (buffer_info * buffer, NuDCLRef dcl)
   }
   buffer->filltime.tv_usec = usec;
 
+  MPEnterCriticalRegion (capture->mutex, kDurationForever);
+  buffer->status = BUFFER_FILLED;
+  capture->frames_ready++;
+  MPExitCriticalRegion (capture->mutex);
+
+  write (capture->notify_pipe[1], "+", 1);
+}
+
+static void
+socket_callback (CFSocketRef s, CFSocketCallBackType type,
+        CFDataRef address, const void * data, void * info)
+{
+  dc1394camera_t * camera = (dc1394camera_t *) info;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  dc1394capture_t * capture = &(craw->capture);
   if (capture->callback) {
-    capture->callback (buffer->camera, capture->callback_user_data);
+    capture->callback (camera, capture->callback_user_data);
   }
 }
 
@@ -216,6 +230,23 @@ CreateDCLProgram (dc1394camera_t * camera)
   return (*dcl_pool)->GetProgram (dcl_pool);
 }
 
+OSStatus
+servicing_thread (void * cam_ptr)
+{
+  dc1394camera_t * camera = (dc1394camera_t *) cam_ptr;
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  IOFireWireLibDeviceRef d = craw->iface;
+
+  (*d)->AddCallbackDispatcherToRunLoopForMode (d, CFRunLoopGetCurrent (),
+                                               kCFRunLoopDefaultMode);
+  (*d)->AddIsochCallbackDispatcherToRunLoopForMode (d, CFRunLoopGetCurrent (),
+                                                    kCFRunLoopDefaultMode);
+
+  CFRunLoopRun ();
+
+  return 0;
+}
+
 /*************************************************************
  CAPTURE SETUP
 **************************************************************/
@@ -234,7 +265,9 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   DCLCommand * dcl_program;
   int frame_size;
   int numdcls;
-
+  CFSocketContext socket_context = { 0, camera, NULL, NULL, NULL };
+  CFSocketRef socket;
+  
   capture->frames = malloc (num_dma_buffers * sizeof (dc1394video_frame_t));
   err = _dc1394_capture_basic_setup(camera, capture->frames);
   if (err != DC1394_SUCCESS)
@@ -242,21 +275,24 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   DC1394_ERR_RTN (err,"Could not setup capture");
 
   capture->num_frames = num_dma_buffers;
-  capture->chan = NULL;
-  capture->rem_port = NULL;
-  capture->loc_port = NULL;
-  capture->dcl_pool = NULL;
-  capture->databuf.address = (vm_address_t) NULL;
+  pipe (capture->notify_pipe);
 
-  if (!capture->run_loop) {
+  socket = CFSocketCreateWithNative (NULL, capture->notify_pipe[0],
+      kCFSocketReadCallBack, socket_callback, &socket_context);
+  capture->socket_source = CFSocketCreateRunLoopSource (NULL, socket, 0);
+  CFRelease (socket);
+  if (!capture->run_loop)
     dc1394_capture_schedule_with_runloop (camera,
-        CFRunLoopGetCurrent (), CFSTR ("dc1394mode"));
-  }
+        CFRunLoopGetCurrent (), kCFRunLoopDefaultMode);
+  CFRunLoopAddSource (capture->run_loop, capture->socket_source,
+          capture->run_loop_mode);
 
-  (*d)->AddCallbackDispatcherToRunLoopForMode (d,
-                                               capture->run_loop, capture->run_loop_mode);
-  (*d)->AddIsochCallbackDispatcherToRunLoopForMode (d,
-                                                    capture->run_loop, capture->run_loop_mode);
+  MPCreateCriticalRegion (&capture->mutex);
+
+  MPCreateQueue (&capture->termination_queue);
+  MPCreateTask (&servicing_thread, camera, 0, capture->termination_queue,
+          NULL, NULL, 0, &capture->task);
+  /* TODO: wait for thread to start */
   (*d)->TurnOnNotification (d);
 
   (*d)->GetSpeedToNode (d, craw->generation, &speed);
@@ -327,11 +363,14 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
     fprintf (stderr, "Could not allocate channel\n");
     return DC1394_FAILURE;
   }
+  capture->iso_is_allocated = 1;
+
   if ((*chan)->Start (chan) != kIOReturnSuccess) {
     dc1394_capture_stop (camera);
     fprintf (stderr, "Could not start channel\n");
     return DC1394_FAILURE;
   }
+  capture->iso_is_started = 1;
 
   camera->capture_is_set=1;
 
@@ -350,28 +389,43 @@ dc1394_capture_stop(dc1394camera_t *camera)
   dc1394capture_t * capture = &(craw->capture);
   IOVirtualRange * databuf = &(capture->databuf);
 
-  if (capture->chan) {
+  if (capture->iso_is_started) {
     IOReturn res;
-    capture->finalize_called = 0;
     res = (*capture->chan)->Stop (capture->chan);
-    (*capture->chan)->ReleaseChannel (capture->chan);
 
-    /* Wait for the finalize callback before releasing the channel */
-    while (res == kIOReturnSuccess && capture->finalize_called == 0)
-      CFRunLoopRunInMode (capture->run_loop_mode, 5, true);
-
-    (*capture->chan)->Release (capture->chan);
+    /* Wait for thread termination */
+    MPWaitOnQueue (capture->termination_queue, NULL, NULL, NULL,
+            kDurationForever);
   }
+  else if (capture->task) {
+    fprintf (stderr, "Forcefully killing servicing task...\n");
+    MPTerminateTask (capture->task, 0);
+    MPWaitOnQueue (capture->termination_queue, NULL, NULL, NULL,
+            kDurationForever);
+  }
+  capture->task = NULL;
+  capture->iso_is_started = 0;
 
+  if (capture->iso_is_allocated)
+    (*capture->chan)->ReleaseChannel (capture->chan);
+  capture->iso_is_allocated = 0;
+
+  if (capture->chan)
+    (*capture->chan)->Release (capture->chan);
   if (capture->loc_port)
     (*capture->loc_port)->Release (capture->loc_port);
   if (capture->rem_port)
     (*capture->rem_port)->Release (capture->rem_port);
   if (capture->dcl_pool)
     (*capture->dcl_pool)->Release (capture->dcl_pool);
+  capture->chan = NULL;
+  capture->loc_port = NULL;
+  capture->rem_port = NULL;
+  capture->dcl_pool = NULL;
 
   if (databuf->address)
     munmap ((void *) databuf->address, databuf->length);
+  databuf->address = 0;
 
   if (capture->buffers) {
     int i;
@@ -379,17 +433,31 @@ dc1394_capture_stop(dc1394camera_t *camera)
       free (capture->buffers[i].dcl_list);
     free (capture->buffers);
   }
+  capture->buffers = NULL;
+
+  if (capture->termination_queue)
+    MPDeleteQueue (capture->termination_queue);
+  capture->termination_queue = NULL;
+
+  if (capture->socket_source) {
+    CFRunLoopRemoveSource (capture->run_loop, capture->socket_source,
+            capture->run_loop_mode);
+    CFRelease (capture->socket_source);
+  }
+  capture->socket_source = NULL;
+  
+  if (capture->mutex)
+    MPDeleteCriticalRegion (capture->mutex);
+  capture->mutex = NULL;
+
+  if (capture->notify_pipe[0] != 0 || capture->notify_pipe[1] != 0) {
+    close (capture->notify_pipe[0]);
+    close (capture->notify_pipe[1]);
+  }
+  capture->notify_pipe[0] = capture->notify_pipe[1] = 0;
 
   if (capture->frames)
     free (capture->frames);
-
-  capture->chan = NULL;
-  capture->rem_port = NULL;
-  capture->loc_port = NULL;
-  capture->dcl_pool = NULL;
-  capture->databuf.address = (vm_address_t) NULL;
-  capture->buffers = NULL;
-  capture->run_loop = NULL;
   capture->frames = NULL;
 
   camera->capture_is_set=0;
@@ -411,45 +479,31 @@ dc1394_capture_dequeue (dc1394camera_t * camera,
   int next = NEXT_BUFFER (capture, capture->current);
   buffer_info * buffer = capture->buffers + next;
   dc1394video_frame_t * frame_tmp = capture->frames + next;
-  int i;
+  char ch;
 
-  while (buffer->status != BUFFER_FILLED) {
-    SInt32 code;
-    dc1394capture_callback_t callback;
-    if (capture->run_loop != CFRunLoopGetCurrent ()) {
-      fprintf (stderr, "Error: capturing from wrong thread\n");
-      return DC1394_FAILURE;
-    }
-
-    /* We don't want the user's callback called recursively, so temporarily
-     * remove it. */
-    callback = capture->callback;
-    capture->callback = NULL;
-    if (policy == DC1394_CAPTURE_POLICY_POLL)
-      code = CFRunLoopRunInMode (capture->run_loop_mode, 0, true);
-    else
-      code = CFRunLoopRunInMode (capture->run_loop_mode, 5, true);
-
-    /* Flush any callbacks that are pending. */
-    while (code == kCFRunLoopRunHandledSource)
-      code = CFRunLoopRunInMode (capture->run_loop_mode, 0, true);
-
-    capture->callback = callback;
-    //printf ("capture runloop: %ld\n", code);
-    if (policy == DC1394_CAPTURE_POLICY_POLL &&
-        code != kCFRunLoopRunHandledSource)
+  if (policy == DC1394_CAPTURE_POLICY_POLL) {
+    int status;
+    MPEnterCriticalRegion (capture->mutex, kDurationForever);
+    status = buffer->status;
+    MPExitCriticalRegion (capture->mutex);
+    if (status != BUFFER_FILLED)
       return DC1394_NO_FRAME;
   }
 
+  read (capture->notify_pipe[0], &ch, 1);
+
+  MPEnterCriticalRegion (capture->mutex, kDurationForever);
+  if (buffer->status != BUFFER_FILLED) {
+    fprintf (stderr, "Error: expected filled buffer\n");
+    MPExitCriticalRegion (capture->mutex);
+    return DC1394_NO_FRAME;
+  }
+  capture->frames_ready--;
+  frame_tmp->frames_behind = capture->frames_ready;
+  MPExitCriticalRegion (capture->mutex);
+
   capture->current = next;
 
-  for (i = 0; i < capture->num_frames; i++) {
-    buffer_info * future_buf = capture->buffers +
-      (next + i + 1) % capture->num_frames;
-    if (future_buf->status != BUFFER_FILLED)
-      break;
-  }
-  frame_tmp->frames_behind = i;
   frame_tmp->timestamp = (uint64_t) buffer->filltime.tv_sec * 1000000 +
     buffer->filltime.tv_usec;
 
@@ -499,7 +553,7 @@ dc1394_capture_schedule_with_runloop (dc1394camera_t * camera,
   dc1394capture_t * capture = &(craw->capture);
 
   if (camera->capture_is_set) {
-    fprintf (stderr, "Warning: schedule_with_runloop must be called before setup_dma\n");
+    fprintf (stderr, "Warning: schedule_with_runloop must be called before capture_setup\n");
     return -1;
   }
 
@@ -517,5 +571,17 @@ dc1394_capture_set_callback (dc1394camera_t * camera,
 
   capture->callback = callback;
   capture->callback_user_data = user_data;
+}
+
+int
+dc1394_capture_get_fileno (dc1394camera_t * camera)
+{
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  dc1394capture_t * capture = &(craw->capture);
+
+  if (capture->notify_pipe[0] == 0 && capture->notify_pipe[1] == 0)
+      return -1;
+
+  return capture->notify_pipe[0];
 }
 

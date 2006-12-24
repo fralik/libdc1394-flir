@@ -18,7 +18,7 @@ if USE_LINUX
 LDADD += -lraw1394
 endif
 if USE_MACOSX
-AM_LDFLAGS = -framework CoreFoundation
+AM_LDFLAGS = -framework CoreFoundation -framework Carbon
 LDADD += -lIOKit
 endif
 
