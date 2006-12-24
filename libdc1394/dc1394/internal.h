@@ -133,9 +133,6 @@ dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera);
 
 dc1394error_t
 dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera);
-
-dc1394error_t
-dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel);
 /*
 dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);

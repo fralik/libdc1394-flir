@@ -1104,3 +1104,4 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * SVN 345: Added support for 800 Mb speeds to Mac OS X (Thanks Mark Munte)
     * SVN 346: Added new function dc1394_reset_bus() and a command-line
       utility called dc1394_reset_bus that will..... reset the bus.
+    * SVN 347: Make dc1394_video_set_iso_channel() a public function.

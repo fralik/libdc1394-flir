@@ -293,49 +293,6 @@ _dc1394_get_format_from_mode(dc1394video_mode_t mode, uint32_t *format)
   return err;
 }
 
- 
-dc1394error_t
-dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
-{
-  dc1394error_t err;
-  uint32_t value_inq, value;
-  int speed;
-
-  err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
-  DC1394_ERR_RTN(err, "Could not get basic function register");
-
-  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
-  DC1394_ERR_RTN(err, "Could not get ISO data");
-
-  // check if 1394b is available and if we are now using 1394b
-  if ((value_inq & 0x00800000)&&(value & 0x00008000)) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
-    DC1394_ERR_RTN(err, "oops");
-    speed=value & 0x7UL;
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
-				 (uint32_t) ( ((channel & 0x3FUL) << 8) |
-					       (speed & 0x7UL) |
-					       (0x1 << 15) ));
-    DC1394_ERR_RTN(err, "oops");
-  }
-  else { // fallback to legacy
-    err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
-    DC1394_ERR_RTN(err, "oops");
-    speed=(value >> 24) & 0x3UL;
-    if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
-      fprintf(stderr,"(%s) line %d: an ISO speed >400Mbps was requested while the camera is in LEGACY mode\n",__FILE__,__LINE__);
-      fprintf(stderr,"              Please set the operation mode to OPERATION_MODE_1394B before asking for\n");
-      fprintf(stderr,"              1394b ISO speeds\n");
-      return DC1394_FAILURE;
-    }
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
-				 (uint32_t) (((channel & 0xFUL) << 28) |
-					      ((speed & 0x3UL) << 24) ));
-    DC1394_ERR_RTN(err, "Could not set ISO data register");
-  }
-  
-  return err;
-}
 
 // not used yet. example of thing we need to do for checking IIDC versions.
 // problem: what about Point Grey cameras ??
