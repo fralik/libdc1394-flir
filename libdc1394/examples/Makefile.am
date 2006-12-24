@@ -3,15 +3,17 @@ AM_CPPFLAGS = -I $(top_srcdir)
 
 A = grab_gray_image grab_partial_image grab_color_image \
 	grab_color_image2 helloworld
+B = dc1394_reset_bus
 
 if USE_LINUX
-bin_PROGRAMS = dc1394_vloopback
+B += dc1394_vloopback
 if XVOK
 A += dc1394_multiview
 endif
 endif
 
 noinst_PROGRAMS = $(A)
+bin_PROGRAMS = $(B)
 
 LDADD =
 if USE_LINUX
@@ -39,6 +41,9 @@ grab_partial_image_LDADD = $(LDADD) ../dc1394/libdc1394.la
 
 dc1394_vloopback_SOURCES = dc1394_vloopback.c affine.c affine.h
 dc1394_vloopback_LDADD = $(LDADD) -lm ../dc1394/libdc1394.la
+
+dc1394_reset_bus_SOURCES = dc1394_reset_bus.c
+dc1394_reset_bus_LDADD = $(LDADD) ../dc1394/libdc1394.la
 
 if XVOK
 dc1394_multiview_CFLAGS = $(X_CFLAGS) $(XV_CFLAGS)

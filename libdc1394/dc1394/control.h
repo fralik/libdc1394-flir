@@ -689,6 +689,14 @@ dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
    this only works with cameras on the SAME bus (IOW, the same port).*/
 dc1394error_t dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr);
 
+/* Resets the IEEE1394 bus which camera is attached to.  Calling this function is
+   "rude" to other devices because it causes them to re-enumerate on the bus and
+   may cause a temporary disruption in their current activities.  Thus, use it
+   sparingly.  Its primary use is if a program shuts down uncleanly and needs to
+   free leftover ISO channels or bandwidth.  A bus reset will free those things
+   as a side effect. */
+dc1394error_t dc1394_reset_bus(dc1394camera_t *camera);
+
 /***************************************************************************
      Other functionalities
  ***************************************************************************/

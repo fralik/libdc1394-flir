@@ -186,6 +186,12 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
 }
 
 dc1394error_t
+dc1394_reset_bus (dc1394camera_t * camera)
+{
+  return dc1394_reset_bus_platform (camera);
+}
+
+dc1394error_t
 dc1394_update_camera_info(dc1394camera_t *camera)
 {
   dc1394error_t err;

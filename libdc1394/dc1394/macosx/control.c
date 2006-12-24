@@ -197,6 +197,18 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 }
 
 dc1394error_t
+dc1394_reset_bus_platform (dc1394camera_t *camera)
+{
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  IOFireWireLibDeviceRef d = craw->iface;
+
+  if ((*d)->BusReset (d) == 0)
+    return DC1394_SUCCESS;
+  else
+    return DC1394_FAILURE;
+}
+
+dc1394error_t
 GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
