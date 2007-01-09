@@ -1105,3 +1105,8 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * SVN 346: Added new function dc1394_reset_bus() and a command-line
       utility called dc1394_reset_bus that will..... reset the bus.
     * SVN 347: Make dc1394_video_set_iso_channel() a public function.
+
+2007-01-09 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * SVN 348: print a smart error message when vmalloc fails due to
+      VMALLOC_RESERVED that is too low. Ideally, this limit should be probed
+      dynamically as it can change from machine to machine.

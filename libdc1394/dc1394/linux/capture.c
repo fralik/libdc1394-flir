@@ -210,6 +210,18 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
     ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
     camera->capture_is_set=0;
     _dc1394_capture_cleanup_alloc(); // free allocated memory if necessary
+
+    // VMALLOC_RESERVED not sufficient (default is 128MiB in recent kernels)
+    //if (vmmap.nb_buffers * vmmap.buf_size > 128 * ((uint32_t)0x1<<20)) {
+    // 'if' statement removed as older kernels may use 64MB or another crazy size.
+    printf("Unable to allocate DMA buffer. The requested size (0x%x)\n");
+    printf("may be larger than the usual default VMALLOC_RESERVED limit of 128MiB.\n");
+    printf("To verify this, look for the following line in dmesg:\n");
+    printf("'allocation failed: out of vmalloc space'\n");
+    printf("If you see this, reboot with the following kernel boot parameter:\n");
+    printf("'vmalloc=k'\n");
+    printf("where k (in bytes) is larger than your requested DMA ring buffer size.");
+    //}
     return DC1394_IOCTL_FAILURE;
   }
   
