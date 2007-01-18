@@ -211,17 +211,29 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
     camera->capture_is_set=0;
     _dc1394_capture_cleanup_alloc(); // free allocated memory if necessary
 
-    // VMALLOC_RESERVED not sufficient (default is 128MiB in recent kernels)
-    //if (vmmap.nb_buffers * vmmap.buf_size > 128 * ((uint32_t)0x1<<20)) {
-    // 'if' statement removed as older kernels may use 64MB or another crazy size.
-    printf("Unable to allocate DMA buffer. The requested size (0x%x)\n");
-    printf("may be larger than the usual default VMALLOC_RESERVED limit of 128MiB.\n");
-    printf("To verify this, look for the following line in dmesg:\n");
-    printf("'allocation failed: out of vmalloc space'\n");
-    printf("If you see this, reboot with the following kernel boot parameter:\n");
-    printf("'vmalloc=k'\n");
-    printf("where k (in bytes) is larger than your requested DMA ring buffer size.");
-    //}
+    // This should be display if the user has low memory
+    if (vmmap.nb_buffers * vmmap.buf_size > sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES)) {
+      printf("Unable to allocate DMA buffer. The requested size (0x%ux or %ud MiB,\n",
+             vmmap.nb_buffers * vmmap.buf_size,
+             vmmap.nb_buffers * vmmap.buf_size/1048576);
+      printf("is bigger than the available memory (0x%lux or %lud MiB)!\n",
+             sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES),
+             sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES)/1048576);
+      printf("Please free some memory before allocating the buffers.\n");
+    } else {
+      // if it's not low memory, then it's the vmalloc limit.
+      // VMALLOC_RESERVED not sufficient (default is 128MiB in recent kernels)
+      printf("Unable to allocate DMA buffer. The requested size (0x%x)\n",vmmap.nb_buffers * vmmap.buf_size);
+      printf("may be larger than the usual default VMALLOC_RESERVED limit of 128MiB.\n");
+      printf("To verify this, look for the following line in dmesg:\n");
+      printf("'allocation failed: out of vmalloc space'\n");
+      printf("If you see this, reboot with the kernel boot parameter:\n");
+      printf("'vmalloc=k'\n");
+      printf("where k (in bytes) is larger than your requested DMA ring buffer size.\n");
+      printf("Note that other processes share the vmalloc space so you may need a\n");
+      printf("large amount of vmalloc memory.\n");
+      //}
+    }
     return DC1394_IOCTL_FAILURE;
   }
   

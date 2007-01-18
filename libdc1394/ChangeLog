@@ -1110,3 +1110,7 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * SVN 348: print a smart error message when vmalloc fails due to
       VMALLOC_RESERVED that is too low. Ideally, this limit should be probed
       dynamically as it can change from machine to machine.
+	
+2007-01-18 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * SVN 349: update the error message in case we hit the the vmalloc limit.
+      (Thanks to Peter Antoniac)
