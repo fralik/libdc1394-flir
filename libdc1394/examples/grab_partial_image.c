@@ -159,6 +159,9 @@ int main(int argc, char *argv[])
     elapsed_time = (float)(times(&tms_buf) - start_time) / CLOCKS_PER_SEC;
     printf( "got frame %d. elapsed time: %g sec ==> %g frames/second\n",
             i, elapsed_time, (float)i / elapsed_time);
+
+    // release buffer
+    dc1394_capture_enqueue(camera,frame);
   }
   
   /*-----------------------------------------------------------------------

@@ -1114,3 +1114,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2007-01-18 Damien Douxchamps<ddouxchamps@users.sf.net>
     * SVN 349: update the error message in case we hit the the vmalloc limit.
       (Thanks to Peter Antoniac)
+    * SVN 350: fixed missing dc1394_capture_enqueue() in grab_partial_image.c
+      (Thanks to Damien Delannay)
