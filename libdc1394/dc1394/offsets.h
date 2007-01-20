@@ -33,65 +33,69 @@
 
 /* Absolute feature */
 
-#define REG_CAMERA_FEATURE_ABS_HI_BASE 0x700U
-#define REG_CAMERA_FEATURE_ABS_LO_BASE 0x780U
+#define REG_CAMERA_FEATURE_ABS_HI_BASE      0x700U
+#define REG_CAMERA_FEATURE_ABS_LO_BASE      0x780U
 
-#define REG_CAMERA_ABS_MIN             0x000U
-#define REG_CAMERA_ABS_MAX             0x004U
-#define REG_CAMERA_ABS_VALUE           0x008U
+#define REG_CAMERA_ABS_MIN                  0x000U
+#define REG_CAMERA_ABS_MAX                  0x004U
+#define REG_CAMERA_ABS_VALUE                0x008U
 
 /* Command registers offsets */
 
-#define REG_CAMERA_INITIALIZE          0x000U
-#define REG_CAMERA_V_FORMAT_INQ        0x100U
-#define REG_CAMERA_V_MODE_INQ_BASE     0x180U
-#define REG_CAMERA_V_RATE_INQ_BASE     0x200U
-#define REG_CAMERA_V_REV_INQ_BASE      0x2C0U
-#define REG_CAMERA_V_CSR_INQ_BASE      0x2E0U
-#define REG_CAMERA_BASIC_FUNC_INQ      0x400U
-#define REG_CAMERA_FEATURE_HI_INQ      0x404U
-#define REG_CAMERA_FEATURE_LO_INQ      0x408U
-#define REG_CAMERA_ADV_FEATURE_INQ     0x480U
-#define REG_CAMERA_FEATURE_HI_BASE_INQ 0x500U
-#define REG_CAMERA_FEATURE_LO_BASE_INQ 0x580U
-#define REG_CAMERA_FRAME_RATE          0x600U
-#define REG_CAMERA_VIDEO_MODE          0x604U
-#define REG_CAMERA_VIDEO_FORMAT        0x608U
-#define REG_CAMERA_ISO_DATA            0x60CU
-#define REG_CAMERA_POWER               0x610U
-#define REG_CAMERA_ISO_EN              0x614U
-#define REG_CAMERA_MEMORY_SAVE         0x618U
-#define REG_CAMERA_ONE_SHOT            0x61CU
-#define REG_CAMERA_MEM_SAVE_CH         0x620U
-#define REG_CAMERA_CUR_MEM_CH          0x624U
-#define REG_CAMERA_SOFT_TRIGGER        0x62CU
-#define REG_CAMERA_DATA_DEPTH          0x630U
+#define REG_CAMERA_INITIALIZE               0x000U
+#define REG_CAMERA_V_FORMAT_INQ             0x100U
+#define REG_CAMERA_V_MODE_INQ_BASE          0x180U
+#define REG_CAMERA_V_RATE_INQ_BASE          0x200U
+#define REG_CAMERA_V_REV_INQ_BASE           0x2C0U
+#define REG_CAMERA_V_CSR_INQ_BASE           0x2E0U
+#define REG_CAMERA_BASIC_FUNC_INQ           0x400U
+#define REG_CAMERA_FEATURE_HI_INQ           0x404U
+#define REG_CAMERA_FEATURE_LO_INQ           0x408U
+#define REG_CAMERA_OPT_FUNC_INQ             0x40CU
+#define REG_CAMERA_ADV_FEATURE_INQ          0x480U
+#define REG_CAMERA_PIO_CONTROL_CSR_INQ      0x484U
+#define REG_CAMERA_SIO_CONTROL_CSR_INQ      0x488U
+#define REG_CAMERA_STROBE_CONTROL_CSR_INQ   0x488U
+#define REG_CAMERA_FEATURE_HI_BASE_INQ      0x500U
+#define REG_CAMERA_FEATURE_LO_BASE_INQ      0x580U
+#define REG_CAMERA_FRAME_RATE               0x600U
+#define REG_CAMERA_VIDEO_MODE               0x604U
+#define REG_CAMERA_VIDEO_FORMAT             0x608U
+#define REG_CAMERA_ISO_DATA                 0x60CU
+#define REG_CAMERA_POWER                    0x610U
+#define REG_CAMERA_ISO_EN                   0x614U
+#define REG_CAMERA_MEMORY_SAVE              0x618U
+#define REG_CAMERA_ONE_SHOT                 0x61CU
+#define REG_CAMERA_MEM_SAVE_CH              0x620U
+#define REG_CAMERA_CUR_MEM_CH               0x624U
+#define REG_CAMERA_SOFT_TRIGGER             0x62CU
+#define REG_CAMERA_DATA_DEPTH               0x630U
 
-#define REG_CAMERA_FEATURE_HI_BASE     0x800U
-#define REG_CAMERA_FEATURE_LO_BASE     0x880U
+#define REG_CAMERA_FEATURE_HI_BASE          0x800U
+#define REG_CAMERA_FEATURE_LO_BASE          0x880U
 
-#define REG_CAMERA_BRIGHTNESS          0x800U
-#define REG_CAMERA_EXPOSURE            0x804U
-#define REG_CAMERA_SHARPNESS           0x808U
-#define REG_CAMERA_WHITE_BALANCE       0x80CU
-#define REG_CAMERA_HUE                 0x810U
-#define REG_CAMERA_SATURATION          0x814U
-#define REG_CAMERA_GAMMA               0x818U
-#define REG_CAMERA_SHUTTER             0x81CU
-#define REG_CAMERA_GAIN                0x820U
-#define REG_CAMERA_IRIS                0x824U
-#define REG_CAMERA_FOCUS               0x828U
-#define REG_CAMERA_TEMPERATURE         0x82CU
-#define REG_CAMERA_TRIGGER_MODE        0x830U
-#define REG_CAMERA_TRIGGER_DELAY       0x834U
-#define REG_CAMERA_WHITE_SHADING       0x838U
-#define REG_CAMERA_FRAME_RATE_FEATURE  0x83CU
-#define REG_CAMERA_ZOOM                0x880U
-#define REG_CAMERA_PAN                 0x884U
-#define REG_CAMERA_TILT                0x888U
-#define REG_CAMERA_OPTICAL_FILTER      0x88CU
-#define REG_CAMERA_CAPTURE_SIZE        0x8C0U
-#define REG_CAMERA_CAPTURE_QUALITY     0x8C4U 
+#define REG_CAMERA_BRIGHTNESS               0x800U
+#define REG_CAMERA_EXPOSURE                 0x804U
+#define REG_CAMERA_SHARPNESS                0x808U
+#define REG_CAMERA_WHITE_BALANCE            0x80CU
+#define REG_CAMERA_HUE                      0x810U
+#define REG_CAMERA_SATURATION               0x814U
+#define REG_CAMERA_GAMMA                    0x818U
+#define REG_CAMERA_SHUTTER                  0x81CU
+#define REG_CAMERA_GAIN                     0x820U
+#define REG_CAMERA_IRIS                     0x824U
+#define REG_CAMERA_FOCUS                    0x828U
+#define REG_CAMERA_TEMPERATURE              0x82CU
+#define REG_CAMERA_TRIGGER_MODE             0x830U
+#define REG_CAMERA_TRIGGER_DELAY            0x834U
+#define REG_CAMERA_WHITE_SHADING            0x838U
+#define REG_CAMERA_FRAME_RATE_FEATURE       0x83CU
+#define REG_CAMERA_ZOOM                     0x880U
+#define REG_CAMERA_PAN                      0x884U
+#define REG_CAMERA_TILT                     0x888U
+#define REG_CAMERA_OPTICAL_FILTER           0x88CU
+#define REG_CAMERA_CAPTURE_SIZE             0x8C0U
+#define REG_CAMERA_CAPTURE_QUALITY          0x8C4U 
 
 /* Format_7 offsets */
 
@@ -112,5 +116,10 @@
 #define REG_CAMERA_FORMAT7_DATA_DEPTH_INQ                0x054U
 #define REG_CAMERA_FORMAT7_COLOR_FILTER_ID               0x058U
 #define REG_CAMERA_FORMAT7_VALUE_SETTING                 0x07CU
+
+/* PIO offsets */
+
+#define REG_CAMERA_PIO_IN                                0x000U
+#define REG_CAMERA_PIO_OUT                               0x004U
 
 #endif /* __DC1394_OFFSETS_H__ */

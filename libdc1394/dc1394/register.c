@@ -254,6 +254,69 @@ SetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, uint6
 }
 
 /********************************************************************************/
+/* Get/Set PIO Feature Registers                                                */
+/********************************************************************************/
+dc1394error_t
+GetCameraPIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+{
+  if (camera == NULL)
+    return DC1394_FAILURE;
+
+  return GetCameraROMValue(camera, camera->PIO_control_csr+offset, value);
+}
+
+dc1394error_t
+SetCameraPIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+{
+  if (camera == NULL)
+    return DC1394_FAILURE;
+
+  return SetCameraROMValue(camera, camera->PIO_control_csr+offset, value);
+}
+
+/********************************************************************************/
+/* Get/Set SIO Feature Registers                                                */
+/********************************************************************************/
+dc1394error_t
+GetCameraSIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+{
+  if (camera == NULL)
+    return DC1394_FAILURE;
+
+  return GetCameraROMValue(camera, camera->SIO_control_csr+offset, value);
+}
+
+dc1394error_t
+SetCameraSIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+{
+  if (camera == NULL)
+    return DC1394_FAILURE;
+
+  return SetCameraROMValue(camera, camera->SIO_control_csr+offset, value);
+}
+
+/********************************************************************************/
+/* Get/Set Strobe Feature Registers                                                */
+/********************************************************************************/
+dc1394error_t
+GetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+{
+  if (camera == NULL)
+    return DC1394_FAILURE;
+
+  return GetCameraROMValue(camera, camera->strobe_control_csr+offset, value);
+}
+
+dc1394error_t
+SetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+{
+  if (camera == NULL)
+    return DC1394_FAILURE;
+
+  return SetCameraROMValue(camera, camera->strobe_control_csr+offset, value);
+}
+
+/********************************************************************************/
 /* Find a register with a specific tag                                          */
 /********************************************************************************/
 

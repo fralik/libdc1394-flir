@@ -204,6 +204,10 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   camera->unit_directory=0;
   camera->unit_dependent_directory=0;
   camera->advanced_features_csr=0;
+  camera->PIO_control_csr=0;
+  camera->SIO_control_csr=0;
+  camera->strobe_control_csr=0;
+
   for (i=0;i<DC1394_VIDEO_MODE_FORMAT7_NUM;i++)
     camera->format7_csr[i]=0;
 
@@ -212,14 +216,12 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   /* get the unit_directory offset */
   offset= ROM_ROOT_DIRECTORY;
   err=GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval);
-  //fprintf(stderr,"Err: %d\n",err);
   if (err!=DC1394_SUCCESS) return err;
   camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
 
   /* get the vendor_id*/
   offset= ROM_ROOT_DIRECTORY;
   err=GetConfigROMTaggedRegister(camera, 0x03, &offset, &quadval);
-  //fprintf(stderr,"Err: %d\n",err);
   if (err==DC1394_SUCCESS) {
     camera->vendor_id=quadval & 0xFFFFFFUL;
   }
@@ -236,14 +238,12 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   err=GetConfigROMTaggedRegister(camera, 0x12, &offset, &quadval);
   if (err!=DC1394_SUCCESS) return err;
   camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
-  //fprintf(stderr,"12: 0x%x\n",camera->ud_reg_tag_12);
 
   /* get the iidc revision */
   offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x13, &offset, &quadval);
   if (err!=DC1394_SUCCESS) return err;
   camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
-  //fprintf(stderr,"13: 0x%x\n",camera->ud_reg_tag_13);
 
   /* verify the version/revision and find the IIDC_REVISION value from that */
   /* Note: this requires the UDD to be set in order to verify IIDC 1.31 compliance. */
@@ -255,7 +255,6 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   /* get the model_id*/
   offset= camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x17, &offset, &quadval);
-  //fprintf(stderr,"Err: %d\n",err);
   if (err==DC1394_SUCCESS) {
     camera->model_id=quadval & 0xFFFFFFUL;
   }
@@ -275,7 +274,7 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   
   // at this point we know it's a camera so we start returning errors if registers
   // are not found
-  //fprintf(stderr,"got a camera\n");
+
   /* now get the EUID-64 */
   err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
   if (err!=DC1394_SUCCESS) return err;
@@ -332,8 +331,6 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   camera->model[0] = '\0';
   err=GetConfigROMTaggedRegister(camera, 0x82, &offset, &quadval);
 
-  //fprintf(stderr,"ERR CODE = %d\n",err);
-
   if (err==DC1394_SUCCESS) {
     offset=(quadval & 0xFFFFFFUL)*4+offset;
     
@@ -387,29 +384,40 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   camera->bmode_capable      = (value[0] & 0x00800000) != 0;
   camera->one_shot_capable   = (value[0] & 0x00000800) != 0;
   camera->multi_shot_capable = (value[0] & 0x00001000) != 0;
-  camera->adv_features_capable = (value[0] & 0x80000000) != 0;
+  int adv_features_capable = (value[0] & 0x80000000) != 0;
   camera->can_switch_on_off  = (value[0] & (0x1<<16)) != 0;
 
-  if (camera->adv_features_capable>0) {
+  if (camera->iidc_version>=DC1394_IIDC_VERSION_1_30) {
+    err=GetCameraControlRegister(camera, REG_CAMERA_OPT_FUNC_INQ, &value[0]);
+    DC1394_ERR_RTN(err, "Could not get opt functionalities");
+    
+    if (value[0] & 0x40000000) {
+      // get PIO CSR
+      err=GetCameraControlRegister(camera,REG_CAMERA_PIO_CONTROL_CSR_INQ, &quadval);
+      DC1394_ERR_RTN(err, "Could not get PIO control CSR");
+      camera->PIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
+    }
+    if (value[0] & 0x20000000) {
+      // get PIO CSR
+      err=GetCameraControlRegister(camera,REG_CAMERA_SIO_CONTROL_CSR_INQ, &quadval);
+      DC1394_ERR_RTN(err, "Could not get SIO control CSR");
+      camera->SIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
+    }
+    if (value[0] & 0x10000000) {
+      // get PIO CSR
+      err=GetCameraControlRegister(camera,REG_CAMERA_STROBE_CONTROL_CSR_INQ, &quadval);
+      DC1394_ERR_RTN(err, "Could not get strobe control CSR");
+      camera->strobe_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
+    }
+  }
+
+  if (adv_features_capable>0) {
     // get advanced features CSR
     err=GetCameraControlRegister(camera,REG_CAMERA_ADV_FEATURE_INQ, &quadval);
     DC1394_ERR_RTN(err, "Could not get advanced features CSR");
     camera->advanced_features_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
   }
 
-  /*
-  if (camera->mem_channel_number>0) {
-    err=dc1394_memory_get_load_ch(camera, &camera->load_channel);
-    DC1394_ERR_RTN(err, "Could not get current load memory channel");
-    
-    err=dc1394_memory_get_save_ch(camera, &camera->save_channel);
-    DC1394_ERR_RTN(err, "Could not get current save memory channel");
-  }
-  else {
-    camera->load_channel=0;
-    camera->save_channel=0;
-  }
-  */
   return err;
 }
 
@@ -440,7 +448,7 @@ dc1394_print_camera_info(dc1394camera_t *camera)
   printf("Unit dependent directory offset   :     0x%llx\n", (uint64_t)camera->unit_dependent_directory);
   printf("Commands registers base           :     0x%llx\n", (uint64_t)camera->command_registers_base);
   printf("Unique ID                         :     0x%08x%08x\n", value[1], value[0]);
-  if (camera->adv_features_capable)
+  if (camera->advanced_features_csr>0)
     printf("Advanced features found at offset :     0x%llx\n", (uint64_t)camera->advanced_features_csr);
   printf("1394b mode capable (>=800Mbit/s)  :     ");
   if (camera->bmode_capable==DC1394_TRUE)
@@ -1830,28 +1838,6 @@ dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, u
 /*
  * Memory load/save functions
  */
-/*
-dc1394error_t
-dc1394_memory_get_save_ch(dc1394camera_t *camera, uint32_t *channel)
-{
-  uint32_t value;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_MEM_SAVE_CH, &value);
-  DC1394_ERR_RTN(err, "Could not get memory save channel");
-  *channel= (uint32_t)((value >> 28) & 0xFUL);
-  return err;
-}
-
-
-dc1394error_t
-dc1394_memory_get_load_ch(dc1394camera_t *camera, uint32_t *channel)
-{
-  uint32_t value;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_CUR_MEM_CH, &value);
-  DC1394_ERR_RTN(err, "Could not get memory load channel");
-  *channel= (uint32_t)((value >> 28) & 0xFUL);
-  return err;
-}
-*/
 
 dc1394error_t
 dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value)
@@ -2200,3 +2186,26 @@ dc1394_feature_set_absolute_value(dc1394camera_t *camera, dc1394feature_t featur
   return err;
 }
  
+
+dc1394error_t
+dc1394_pio_set(dc1394camera_t *camera, uint32_t value)
+{
+  dc1394error_t err=DC1394_SUCCESS;
+
+  err=SetCameraPIOControlRegister(camera, REG_CAMERA_PIO_OUT, value);
+  DC1394_ERR_RTN(err,"Could not set PIO value");
+
+  return err;
+}
+
+
+dc1394error_t
+dc1394_pio_get(dc1394camera_t *camera, uint32_t *value)
+{
+  dc1394error_t err=DC1394_SUCCESS;
+
+  err=GetCameraPIOControlRegister(camera, REG_CAMERA_PIO_IN, value);
+  DC1394_ERR_RTN(err,"Could not get PIO value");
+
+  return err;
+}

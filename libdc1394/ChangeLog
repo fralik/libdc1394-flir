@@ -1126,3 +1126,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * SVN 353: Remove the check of err_flag_2 for now: it seems not to work
       proprely.
       (Thanks to Damien Delannay)
+    * SVN 354: Added Parallel Input/Output (PIO) functions. Prepared some
+      support functions for SIO and strobe control. Misc cleqnups.

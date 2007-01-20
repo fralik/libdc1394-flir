@@ -405,8 +405,7 @@ typedef struct __dc1394_camera
   uint64_t             unit_directory;
   uint64_t             unit_dependent_directory;
   uint64_t             advanced_features_csr;
-  //uint64_t             absolute_control_csr;
-  uint64_t             PIO_control_csr; // future use
+  uint64_t             PIO_control_csr;
   uint64_t             SIO_control_csr; // future use
   uint64_t             strobe_control_csr; // future use
   uint64_t             format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
@@ -418,7 +417,6 @@ typedef struct __dc1394_camera
   dc1394bool_t         bmode_capable;
   dc1394bool_t         one_shot_capable;
   dc1394bool_t         multi_shot_capable;
-  dc1394bool_t         adv_features_capable;
   dc1394bool_t         can_switch_on_off;
 
   // some current values
@@ -430,8 +428,6 @@ typedef struct __dc1394_camera
   uint32_t             iso_bandwidth;
   dc1394speed_t        iso_speed;
   uint32_t             mem_channel_number;
-  //uint32_t             save_channel;
-  //uint32_t             load_channel;
 
   int                  capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
 
@@ -886,6 +882,16 @@ dc1394error_t dc1394_format7_get_roi(dc1394camera_t *camera, dc1394video_mode_t 
 
 /* This will have to be fixed or removed: it's ugly...*/
 dc1394error_t dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera);
+
+
+/***************************************************************************
+     PIO, SIO and Strobe Functions
+ ***************************************************************************/
+
+/* PIO (Parallel Input-Output)*/
+dc1394error_t dc1394_pio_set(dc1394camera_t *camera, uint32_t value);
+dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
+
 
 #ifdef __cplusplus
 }
