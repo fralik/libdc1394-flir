@@ -1121,3 +1121,5 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
     * SVN 351: remove save_channel and load_channel from the dc1394camera_t
       structure. Also remove the functions dc1394_memory_get_save/load_ch()
       from the API.
+    * SVN 352: fix coherency of the format_7 mode used in grab_partial_image.c
+      (Thanks to Damien Delannay)

@@ -71,8 +71,8 @@ int main(int argc, char *argv[])
   //fprintf(stderr,"handle: 0x%x\n",capture.handle);
 
   dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
-  dc1394_video_set_mode(camera, DC1394_VIDEO_MODE_FORMAT7_1);
-  dc1394_format7_set_roi(camera, DC1394_VIDEO_MODE_FORMAT7_1,
+  dc1394_video_set_mode(camera, DC1394_VIDEO_MODE_FORMAT7_0);
+  dc1394_format7_set_roi(camera, DC1394_VIDEO_MODE_FORMAT7_0,
 			 DC1394_COLOR_CODING_MONO8,
 			 DC1394_USE_MAX_AVAIL, // use max packet size
 			 0, 0, // left, top
