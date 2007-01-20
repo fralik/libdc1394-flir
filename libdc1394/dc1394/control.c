@@ -397,6 +397,7 @@ dc1394_update_camera_info(dc1394camera_t *camera)
     camera->advanced_features_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
   }
 
+  /*
   if (camera->mem_channel_number>0) {
     err=dc1394_memory_get_load_ch(camera, &camera->load_channel);
     DC1394_ERR_RTN(err, "Could not get current load memory channel");
@@ -408,7 +409,7 @@ dc1394_update_camera_info(dc1394camera_t *camera)
     camera->load_channel=0;
     camera->save_channel=0;
   }
-  
+  */
   return err;
 }
 
@@ -1058,6 +1059,7 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
 					       (speed & 0x7UL) |
 					       (0x1 << 15) ));
     DC1394_ERR_RTN(err, "oops");
+    camera->iso_speed=speed;
   }
   else { // fallback to legacy
     if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
@@ -1073,6 +1075,7 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
 				 (uint32_t) (((channel & 0xFUL) << 28) |
 					      ((speed & 0x3UL) << 24) ));
     DC1394_ERR_RTN(err, "Could not set ISO data register");
+    camera->iso_speed=speed;
   }
   
   return err;;
@@ -1827,6 +1830,7 @@ dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, u
 /*
  * Memory load/save functions
  */
+/*
 dc1394error_t
 dc1394_memory_get_save_ch(dc1394camera_t *camera, uint32_t *channel)
 {
@@ -1847,7 +1851,7 @@ dc1394_memory_get_load_ch(dc1394camera_t *camera, uint32_t *channel)
   *channel= (uint32_t)((value >> 28) & 0xFUL);
   return err;
 }
-
+*/
 
 dc1394error_t
 dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value)

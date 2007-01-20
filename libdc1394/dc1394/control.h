@@ -399,8 +399,8 @@ typedef struct __dc1394_camera
   int                  port;
   uint16_t             node;
   uint64_t             euid_64;
-  uint32_t            ud_reg_tag_12;
-  uint32_t            ud_reg_tag_13;
+  uint32_t             ud_reg_tag_12;
+  uint32_t             ud_reg_tag_13;
   uint64_t             command_registers_base;
   uint64_t             unit_directory;
   uint64_t             unit_dependent_directory;
@@ -413,8 +413,8 @@ typedef struct __dc1394_camera
   dc1394iidc_version_t iidc_version;
   char                 vendor[MAX_CHARS + 1];
   char                 model[MAX_CHARS + 1];
-  uint32_t            vendor_id;
-  uint32_t            model_id;
+  uint32_t             vendor_id;
+  uint32_t             model_id;
   dc1394bool_t         bmode_capable;
   dc1394bool_t         one_shot_capable;
   dc1394bool_t         multi_shot_capable;
@@ -430,8 +430,8 @@ typedef struct __dc1394_camera
   uint32_t             iso_bandwidth;
   dc1394speed_t        iso_speed;
   uint32_t             mem_channel_number;
-  uint32_t             save_channel;
-  uint32_t             load_channel;
+  //uint32_t             save_channel;
+  //uint32_t             load_channel;
 
   int                  capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
 
@@ -708,8 +708,6 @@ dc1394error_t dc1394_reset_camera(dc1394camera_t *camera);
 dc1394error_t dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr);
 
 /* functions to read and write camera setups in memory channels */
-dc1394error_t dc1394_memory_get_load_ch(dc1394camera_t *camera, uint32_t *channel);
-dc1394error_t dc1394_memory_get_save_ch(dc1394camera_t *camera, uint32_t *channel);
 dc1394error_t dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value);
 dc1394error_t dc1394_memory_save(dc1394camera_t *camera, uint32_t channel);
 dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint32_t channel);
