@@ -1123,3 +1123,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       from the API.
     * SVN 352: fix coherency of the format_7 mode used in grab_partial_image.c
       (Thanks to Damien Delannay)
+    * SVN 353: Remove the check of err_flag_2 for now: it seems not to work
+      proprely.
+      (Thanks to Damien Delannay)

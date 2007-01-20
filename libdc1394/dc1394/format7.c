@@ -123,11 +123,14 @@ _dc1394_v130_handshake(dc1394camera_t *camera, dc1394video_mode_t video_mode)
       err=DC1394_FORMAT7_ERROR_FLAG_1;
       DC1394_ERR_RTN(err, "invalid image position, size, color coding or ISO speed");
     }
+    /*
+    // This seems to make problems. Remove for now.
     if (err_flag2>0) {
       err=DC1394_FORMAT7_ERROR_FLAG_2;
       DC1394_ERR_RTN(err, "proposed bytes per packet is not a valid value");
     }
-    
+    */    
+
     // bytes per packet... registers are ready for reading.
   }
 
