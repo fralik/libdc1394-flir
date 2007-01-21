@@ -18,7 +18,7 @@ Thu Jan 20 16:04:24 2000   <GordPeters@smarttech.com>
 	  and changed autoconfig script to test for endianness.  Added file
 	  src/config.h.in to define WORDS_BIGENDIAN.
 
-Wed Jan 26 20:03:28 2000   <GordPeters@smarttech.com>
+Wed Jan 26 20:03:28 2000   <GordPeters@sm7arttech.com>
 
 	* Fixed bug with #ifdef being using instead of #if for testing if
 	  !WORDS_BIGENDIAN
@@ -1128,3 +1128,6 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
       (Thanks to Damien Delannay)
     * SVN 354: Added Parallel Input/Output (PIO) functions. Prepared some
       support functions for SIO and strobe control. Misc cleqnups.
+
+2007-01-20 Damien Douxchamps<ddouxchamps@users.sf.net>
+    * SVN 355: release 2.0.0-rc5

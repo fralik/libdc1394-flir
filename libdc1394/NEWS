@@ -1,6 +1,9 @@
 Release information and news:
 -----------------------------
 
+-- 2.0.0-rc5:
+   More interface changes, PIO support, cleanup and fixes.
+
 -- 2.0.0-rc4:
    Intermediate release that includes a.o. the new capture API, better
    support for AVT cameras, conversion functions that work on the new
