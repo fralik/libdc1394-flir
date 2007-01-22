@@ -323,18 +323,6 @@ typedef enum {
   DC1394_CAPTURE_POLICY_POLL
 } dc1394capture_policy_t;
 
-/* Using this policy you can choose between two ring buffer behaviour:
-  1. FIFO: the function returns the next frame received
-  2. LIFO: the buffer always returns the last frame
-  The first one is good if you don't want to drop frames, the second
-  one is better if you want to limit latency.
-*/
-
-typedef enum { 
-  DC1394_RING_BUFFER_NEXT=0,
-  DC1394_RING_BUFFER_LAST
-} dc1394ring_buffer_policy_t;
-
 /* Yet another boolean data type */
 typedef enum {
   DC1394_FALSE= 0,

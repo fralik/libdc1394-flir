@@ -1,3 +1,9 @@
+
+2007-01-22 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 357: use only format7mode0 in the example program
+	           grab_partial_image. Remove the unused definition of
+		   dc1394ring_buffer_policy_t. Thanks to Damien Delannay.
+
 2007-01-22 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 356: reverse the order of entries in the ChangeLog and reformat
 		   some (mine-)fields. Changed most email addresses to URLs to

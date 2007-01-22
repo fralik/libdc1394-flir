@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
    *-----------------------------------------------------------------------*/
   imagefile=fopen("Part.pgm","w");
     
-  dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_FORMAT7_1, &width, &height);
+  dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_FORMAT7_0, &width, &height);
   fprintf(imagefile,"P5\n%u %u\n255\n", width, height);
   fwrite(frame->image, 1, height * width, imagefile);
   fclose(imagefile);
