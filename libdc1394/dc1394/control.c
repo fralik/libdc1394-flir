@@ -1976,12 +1976,12 @@ dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth)
   *depth = 0;
   if (camera->iidc_version >= DC1394_IIDC_VERSION_1_31) {
     err= GetCameraControlRegister(camera, REG_CAMERA_DATA_DEPTH, &value);
-    DC1394_ERR_RTN(err, "Could not get video data depth");
-    *depth = value >> 24;
+    if (err==DC1394_SUCCESS)
+      *depth = value >> 24;
   }
 
   /* For cameras that do not have the DATA_DEPTH register, perform a
-   * sane default. */
+     sane default. */
   if (*depth == 0) {
     err = dc1394_video_get_mode(camera, &mode);
     DC1394_ERR_RTN(err, "Could not get video mode");
