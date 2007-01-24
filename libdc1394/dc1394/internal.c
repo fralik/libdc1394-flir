@@ -419,7 +419,7 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
     return DC1394_FAILURE;
   }
 
-  frame->yuv_byte_order = DC1394_BYTE_ORDER_YUYV;
+  frame->yuv_byte_order = DC1394_BYTE_ORDER_UYVY;
 
   frame->total_bytes = frame->packets_per_frame * frame->bytes_per_packet;
 

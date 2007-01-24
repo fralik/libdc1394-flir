@@ -1,4 +1,7 @@
 
+2007-01-24 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 358: fixed YUV422 byte order. Thanks to Thomas Woellert.
+	
 2007-01-22 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 357: use only format7mode0 in the example program
 	           grab_partial_image. Remove the unused definition of
