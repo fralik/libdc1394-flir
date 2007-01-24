@@ -100,7 +100,9 @@ RAW1394topologyMap *raw1394GetTopologyMap(raw1394handle_t handle)
   int ret,p;
   quadlet_t buf;
   
-  topoMap=(RAW1394topologyMap*)malloc(sizeof(RAW1394topologyMap));
+  memset(&buf, 0, sizeof(quadlet_t)); // init to zero to avoid valgrind errors
+
+  topoMap=(RAW1394topologyMap*)calloc(1,sizeof(RAW1394topologyMap)); // init to zero to avoid valgrind errors
 
   if ((ret = cooked1394_read(handle, 0xffc0 | raw1394_get_local_id(handle),
 			     CSR_REGISTER_BASE + CSR_TOPOLOGY_MAP, 4,

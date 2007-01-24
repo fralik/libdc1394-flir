@@ -1,5 +1,7 @@
 
 2007-01-24 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 361: Set some variables to zero to avoid valgrind errors.
+	           Thanks to Jon Schewe.
 	* SVN 360: Fixed strobe control register offset. Thanks again to
 	           Matthias Hanel.
 	* SVN 359: don't require cameras (>=1.31) to have a data depth

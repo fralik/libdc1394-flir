@@ -62,7 +62,7 @@ int
 _dc1394_get_iidc_version(dc1394camera_t *camera)
 {
   dc1394error_t err=DC1394_SUCCESS;
-  uint32_t quadval;
+  uint32_t quadval = 0; // to avoid valgrind errors
   uint64_t offset;
 
   if (camera == NULL)
@@ -197,7 +197,8 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   dc1394error_t err;
   uint32_t len, i, count;
   uint64_t offset;
-  uint32_t value[2], quadval;
+  uint32_t value[2], quadval = 0; // set to zero to avoid valgrind errors
+  memset(value,0,2*sizeof(value)); // set to zero to avoid valgrind errors
 
   // init pointers to zero:
   camera->command_registers_base=0;
@@ -931,8 +932,8 @@ dc1394error_t
 dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
 {
   dc1394error_t err;
-  uint32_t value;
-  uint32_t format;
+  uint32_t value = 0; // set to zero to avoid valgrind errors
+  uint32_t format = 0; // set to zero to avoid valgrind errors
   
   err= GetCameraControlRegister(camera, REG_CAMERA_VIDEO_FORMAT, &value);
   DC1394_ERR_RTN(err, "Could not get video format");

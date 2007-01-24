@@ -43,6 +43,8 @@ GrabSelfIds(dc1394camera_t **cams, int ncams)
   dc1394camera_linux_t* camera_ptr;
   raw1394handle_t main_handle, port_handle;
 
+  memset(&packet, 0, sizeof(SelfIdPacket_t)); // init to zero to avoid valgrind errors
+
   // get the number of adapters:
   main_handle=raw1394_new_handle();
   int port_num=raw1394_get_port_info(main_handle, NULL, 0);
