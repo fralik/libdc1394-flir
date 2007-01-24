@@ -1,5 +1,7 @@
 
 2007-01-24 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 360: Fixed strobe control register offset. Thanks again to
+	           Matthias Hanel.
 	* SVN 359: don't require cameras (>=1.31) to have a data depth
 	           register. Thanks to Matthias Hanel.
 	* SVN 358: fixed YUV422 byte order. Thanks to Thomas Woellert.
