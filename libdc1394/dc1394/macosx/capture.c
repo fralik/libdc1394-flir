@@ -263,6 +263,8 @@ servicing_thread (void * cam_ptr)
   (*d)->AddIsochCallbackDispatcherToRunLoopForMode (d, CFRunLoopGetCurrent (),
                                                     kCFRunLoopDefaultMode);
 
+  MPSignalSemaphore(craw->capture.thread_init_semaphore);
+
   CFRunLoopRun ();
 
   return 0;
@@ -311,9 +313,15 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   MPCreateCriticalRegion (&capture->mutex);
 
   MPCreateQueue (&capture->termination_queue);
+  MPCreateSemaphore (1, 0, &capture->thread_init_semaphore);
   MPCreateTask (&servicing_thread, camera, 0, capture->termination_queue,
           NULL, NULL, 0, &capture->task);
-  /* TODO: wait for thread to start */
+
+  /* wait for thread to start */
+  MPWaitOnSemaphore (capture->thread_init_semaphore, kDurationForever);
+  MPDeleteSemaphore (capture->thread_init_semaphore);
+  capture->thread_init_semaphore = NULL;
+
   (*d)->TurnOnNotification (d);
 
   (*d)->GetSpeedToNode (d, craw->generation, &speed);

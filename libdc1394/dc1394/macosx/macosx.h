@@ -65,6 +65,7 @@ typedef struct __dc1394_capture
   uint8_t                  frames_ready;
   MPCriticalRegionID       mutex;
   MPQueueID                termination_queue;
+  MPSemaphoreID            thread_init_semaphore;
   MPTaskID                 task;
   CFRunLoopSourceRef       socket_source;
   uint8_t                  iso_is_allocated;
