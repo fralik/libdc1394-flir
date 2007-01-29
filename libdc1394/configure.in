@@ -67,7 +67,7 @@ lt_major=20
 lt_revision=0
 lt_age=0
 
-pkgincludedir=$includedir/dc1394
+pkgincludedir='{$includedir}/dc1394'
 AC_SUBST(pkgincludedir)
 
 AC_SUBST(lt_major)

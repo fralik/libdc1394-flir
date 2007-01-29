@@ -1,3 +1,7 @@
+2007-01-24 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 363: fix the definition pkgincludedir in configure.in
+	           Thanks to Frederic Devernay.
+
 2007-01-27 David Moore http://davemoore.org/
 	* SVN 362: Apply patch from Matt Robinson for the Mac OS capture
 	           routine to wait for thread creation with a semaphore.
