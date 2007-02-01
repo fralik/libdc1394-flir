@@ -401,25 +401,26 @@ dc1394_update_camera_info(dc1394camera_t *camera)
 
   if (camera->iidc_version>=DC1394_IIDC_VERSION_1_30) {
     err=GetCameraControlRegister(camera, REG_CAMERA_OPT_FUNC_INQ, &value[0]);
-    DC1394_ERR_RTN(err, "Could not get opt functionalities");
+    if (err==DC1394_SUCCESS) { // do not return an error here: opt function register is not mandatory
     
-    if (value[0] & 0x40000000) {
-      // get PIO CSR
-      err=GetCameraControlRegister(camera,REG_CAMERA_PIO_CONTROL_CSR_INQ, &quadval);
-      DC1394_ERR_RTN(err, "Could not get PIO control CSR");
-      camera->PIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
-    }
-    if (value[0] & 0x20000000) {
-      // get PIO CSR
-      err=GetCameraControlRegister(camera,REG_CAMERA_SIO_CONTROL_CSR_INQ, &quadval);
-      DC1394_ERR_RTN(err, "Could not get SIO control CSR");
-      camera->SIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
-    }
-    if (value[0] & 0x10000000) {
-      // get PIO CSR
-      err=GetCameraControlRegister(camera,REG_CAMERA_STROBE_CONTROL_CSR_INQ, &quadval);
-      DC1394_ERR_RTN(err, "Could not get strobe control CSR");
-      camera->strobe_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
+      if (value[0] & 0x40000000) {
+	// get PIO CSR
+	err=GetCameraControlRegister(camera,REG_CAMERA_PIO_CONTROL_CSR_INQ, &quadval);
+	DC1394_ERR_RTN(err, "Could not get PIO control CSR");
+	camera->PIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
+      }
+      if (value[0] & 0x20000000) {
+	// get PIO CSR
+	err=GetCameraControlRegister(camera,REG_CAMERA_SIO_CONTROL_CSR_INQ, &quadval);
+	DC1394_ERR_RTN(err, "Could not get SIO control CSR");
+	camera->SIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
+      }
+      if (value[0] & 0x10000000) {
+	// get PIO CSR
+	err=GetCameraControlRegister(camera,REG_CAMERA_STROBE_CONTROL_CSR_INQ, &quadval);
+	DC1394_ERR_RTN(err, "Could not get strobe control CSR");
+	camera->strobe_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
+      }
     }
   }
 

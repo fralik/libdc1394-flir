@@ -1,4 +1,6 @@
 2007-01-29 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 368: Do not fail to detect a camera if it does not have the
+	           optional functions register. Thanks to Fabien Spindler.
 	* SVN 367: set a default video mode if none is set at boot time.
 	           Thanks to Matthias Hanel.
 	* SVN 366: bayer downsampling function now take the INPUT image
