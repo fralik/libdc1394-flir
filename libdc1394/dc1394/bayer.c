@@ -762,9 +762,6 @@ dc1394_bayer_Downsample(const uint8_t *restrict bayer, uint8_t *restrict rgb, in
     register int i, j;
     int tmp;
 
-    sx *= 2;
-    sy *= 2;
-
     switch (tile) {
     case DC1394_COLOR_FILTER_GRBG:
     case DC1394_COLOR_FILTER_BGGR:
@@ -1582,9 +1579,6 @@ dc1394_bayer_Downsample_uint16(const uint16_t *restrict bayer, uint16_t *restric
     uint16_t *outR, *outG, *outB;
     register int i, j;
     int tmp;
-
-    sx *= 2;
-    sy *= 2;
 
     switch (tile) {
     case DC1394_COLOR_FILTER_GRBG:
