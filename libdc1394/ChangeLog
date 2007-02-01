@@ -1,3 +1,7 @@
+2007-01-29 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 365: allow debayering of MONO8 and MONO16 formats.
+	           Thanks to Matthias Barkhoff.
+
 2007-01-30 David Moore http://davemoore.org/
 	* SVN 364: pkgincludedir fix below still wasn't quite right
 

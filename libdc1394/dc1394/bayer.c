@@ -2645,6 +2645,7 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
 
   switch (in->color_coding) {
   case DC1394_COLOR_CODING_RAW8:
+  case DC1394_COLOR_CODING_MONO8:
     switch (method) {
     case DC1394_BAYER_METHOD_NEAREST:
       Adapt_buffer_bayer(in,out,method);
@@ -2682,6 +2683,7 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
       return DC1394_INVALID_BAYER_METHOD;
     }
     break;
+  case DC1394_COLOR_CODING_MONO16:
   case DC1394_COLOR_CODING_RAW16:
     switch (method) {
     case DC1394_BAYER_METHOD_NEAREST:
