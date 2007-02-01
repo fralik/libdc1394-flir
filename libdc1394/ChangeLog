@@ -1,4 +1,6 @@
 2007-01-29 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 367: set a default video mode if none is set at boot time.
+	           Thanks to Matthias Hanel.
 	* SVN 366: bayer downsampling function now take the INPUT image
 	           size as argument. It used to take the OUTPUT image size
 		   as argument but this is counter intuitive. 

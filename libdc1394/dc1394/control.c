@@ -370,8 +370,19 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   DC1394_ERR_RTN(err, "Could not get ISO channel and speed");
   
   err=dc1394_video_get_mode(camera, &camera->video_mode);
-  DC1394_ERR_RTN(err, "Could not get current video mode");
-  
+  dc1394video_modes_t modes;
+  if (err==DC1394_INVALID_VIDEO_FORMAT) {
+    // a proper video mode may not be present. Try to set a default video mode
+    err=dc1394_video_get_supported_modes(camera,&modes);
+    DC1394_ERR_RTN(err,"Could not get the list of supported video modes");
+
+    err=dc1394_video_set_mode(camera,modes.modes[0]);
+    DC1394_ERR_RTN(err,"Could not set a default video mode (%d)",modes.modes[0]);
+    
+    err=dc1394_video_get_mode(camera,&camera->video_mode);
+    DC1394_ERR_RTN(err,"Could not get current video mode. Giving up.");
+  }
+
   err=dc1394_video_get_framerate(camera, &camera->framerate);
   DC1394_ERR_RTN(err, "Could not get current video framerate");
   
