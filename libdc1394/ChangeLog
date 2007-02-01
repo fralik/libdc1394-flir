@@ -1,4 +1,6 @@
 2007-02-01 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 370: Allow to change the pinstate of AVT IO pins.
+	           Thanks to Chris French.
 	* SVN 369: Update examples to stop transmission before we stop
 	           capture.
 	* SVN 368: Do not fail to detect a camera if it does not have the

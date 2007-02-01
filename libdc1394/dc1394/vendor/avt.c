@@ -848,7 +848,7 @@ dc1394_avt_get_io(dc1394camera_t *camera, uint32_t IO,
 /************************************************************************/
 dc1394error_t
 dc1394_avt_set_io(dc1394camera_t *camera,uint32_t IO,
-		  dc1394bool_t polarity, uint32_t mode)
+		  dc1394bool_t polarity, uint32_t mode, dc1394bool_t pinstate)
 {
   dc1394error_t err;
   uint32_t curval;
@@ -863,6 +863,10 @@ dc1394_avt_set_io(dc1394camera_t *camera,uint32_t IO,
   /* mode : Bits 11..15 */
   curval = (curval & 0xFFE0FFFFUL) | ((mode << 16) & 0x1F0000UL );   
   
+  /* Pin state: bit 31 */
+  if (mode==1)
+    curval = (curval & 0xFFFFFFFEUL) | pinstate;
+
   /* Set  new IO parameters */            
   err=SetCameraAdvControlRegister(camera,IO, curval);
   DC1394_ERR_RTN(err,"Could not set AVT IO register");

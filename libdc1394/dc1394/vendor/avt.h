@@ -356,10 +356,11 @@ dc1394error_t dc1394_avt_get_io(dc1394camera_t *camera, uint32_t IO,
 /************************************************************************/
 /* Set IO	REG_CAMERA_IO_INP_CTRLx	or REG_CAMERA_IO_OUTP_CTRLx	*/
 /*----------------------------------------------------------------------*/
-/*  Set the polarity and the mode of the IO				*/
+/*  Set the polarity, the mode and the state of the IO			*/
 /************************************************************************/
 dc1394error_t dc1394_avt_set_io(dc1394camera_t *camera,uint32_t IO,
-				dc1394bool_t polarity, uint32_t mode);
+				dc1394bool_t polarity, uint32_t mode,
+				dc1394bool_t pinstate);
 		
 
 
