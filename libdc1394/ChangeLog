@@ -1,4 +1,6 @@
-2007-01-29 Damien Douxchamps http://damien.douxchamps.net/
+2007-02-01 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 369: Update examples to stop transmission before we stop
+	           capture.
 	* SVN 368: Do not fail to detect a camera if it does not have the
 	           optional functions register. Thanks to Fabien Spindler.
 	* SVN 367: set a default video mode if none is set at boot time.

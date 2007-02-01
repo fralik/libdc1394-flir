@@ -538,8 +538,8 @@ int dc_start(int palette)
 void dc_stop()
 {
 	if (g_v4l_mode != V4L_MODE_NONE) {
-	  dc1394_capture_stop(camera);
 	  dc1394_video_set_transmission(camera, DC1394_OFF);
+	  dc1394_capture_stop(camera);
 	}
 }
 		
@@ -910,10 +910,10 @@ void signal_handler( int sig) {
 void cleanup(void) {
 	if (v4l_dev)
 		close(v4l_dev);
+    dc1394_video_set_transmission(camera, DC1394_OFF);
     if (g_v4l_mode != V4L_MODE_NONE) {
         dc1394_capture_stop(camera);
     }
-    dc1394_video_set_transmission(camera, DC1394_OFF);
     dc1394_free_camera(camera);
 	if (out_pipe)
 		free(out_pipe);

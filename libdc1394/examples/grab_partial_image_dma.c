@@ -189,8 +189,8 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
-  dc1394_capture_stop(camera);
   dc1394_video_set_transmission(camera, DC1394_OFF);
+  dc1394_capture_stop(camera);
   dc1394_free_camera(camera);
   return 0;
 }

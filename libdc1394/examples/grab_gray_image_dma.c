@@ -24,8 +24,8 @@
  *-----------------------------------------------------------------------*/
 void cleanup_and_exit(dc1394camera_t *camera)
 {
-  dc1394_capture_stop(camera);
   dc1394_video_set_transmission(camera, DC1394_OFF);
+  dc1394_capture_stop(camera);
   dc1394_free_camera(camera);
   exit(1);
 }
