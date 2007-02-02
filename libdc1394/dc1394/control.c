@@ -525,15 +525,16 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   case DC1394_FEATURE_TRIGGER:
     feature->one_push= DC1394_FALSE;
     feature->polarity_capable= (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    int i;
+    int i, j;
     uint32_t value_tmp;
     
     feature->trigger_modes.num=0;
-    value_tmp= (value & (0xFF));
+    value_tmp= (value & (0xFFFF));
     //fprintf(stderr,"value: %x\n",value_tmp);
     
     for (i=DC1394_TRIGGER_MODE_MIN;i<=DC1394_TRIGGER_MODE_MAX;i++) {
-      if (value_tmp & (0x1 << (15-(i-DC1394_TRIGGER_MODE_MIN)-(i>5)*8))) { // (i>5)*8 to take the mode gap into account
+      j = i - DC1394_TRIGGER_MODE_MIN;
+      if (value_tmp & (0x1 << (15-j-(j>5)*8))) { // (i>5)*8 to take the mode gap into account
 	feature->trigger_modes.modes[feature->trigger_modes.num]=i;
 	feature->trigger_modes.num++;
       }
