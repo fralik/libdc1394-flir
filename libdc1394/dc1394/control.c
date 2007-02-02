@@ -573,7 +573,11 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
     feature->one_push_active= DC1394_FALSE;
     feature->trigger_polarity=
       (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->trigger_mode= (uint32_t)((value >> 14) & 0xF);
+    feature->trigger_mode= (uint32_t)((value >> 16) & 0xF);
+    if (feature->trigger_mode >= 14)
+        feature->trigger_mode += DC1394_TRIGGER_MODE_MIN - 8;
+    else
+        feature->trigger_mode += DC1394_TRIGGER_MODE_MIN;
     feature->auto_active= DC1394_FALSE;
     break;
   case DC1394_FEATURE_TRIGGER_DELAY:
