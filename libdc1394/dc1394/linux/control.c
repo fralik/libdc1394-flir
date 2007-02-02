@@ -37,13 +37,13 @@ void
 GrabSelfIds(dc1394camera_t **cams, int ncams)
 {
   RAW1394topologyMap *topomap;
-  SelfIdPacket_t packet;
+  SelfIdPacket_t packet[4];
   unsigned int* pselfid_int;
   int i, port,k;
   dc1394camera_linux_t* camera_ptr;
   raw1394handle_t main_handle, port_handle;
 
-  memset(&packet, 0, sizeof(SelfIdPacket_t)); // init to zero to avoid valgrind errors
+  memset(packet, 0, sizeof(packet)); // init to zero to avoid valgrind errors
 
   // get the number of adapters:
   main_handle=raw1394_new_handle();
@@ -59,14 +59,14 @@ GrabSelfIds(dc1394camera_t **cams, int ncams)
     if (topomap!=NULL) {
       for (i=0;i<topomap->selfIdCount;i++) {
 	pselfid_int = (unsigned int *) &topomap->selfIdPacket[i];
-	decode_selfid(&packet,pselfid_int);
+	decode_selfid(packet,pselfid_int);
 	// find the camera related to this packet:
 	
 	for (k=0;k<ncams;k++) {
 	  camera_ptr = (dc1394camera_linux_t *) cams[k];
-	  if ((cams[k]->node==packet.packetZero.phyID) &&
+	  if ((cams[k]->node==packet[0].packetZero.phyID) &&
 	      (cams[k]->port==port)) { // added a check for the port too!!
-	    camera_ptr->selfid_packet=packet;
+	    camera_ptr->selfid_packet=packet[0];
 	  }
 	}
       }
