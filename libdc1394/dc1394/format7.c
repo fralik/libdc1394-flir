@@ -649,7 +649,7 @@ dc1394_format7_get_data_depth(dc1394camera_t *camera,
   if (camera->iidc_version >= DC1394_IIDC_VERSION_1_31) {
     err=GetCameraFormat7Register(camera, video_mode,
         REG_CAMERA_FORMAT7_DATA_DEPTH_INQ, &value);
-    printf ("format7 raw depth %08x\n", value);
+    //printf ("format7 raw depth %08x\n", value);
     DC1394_ERR_RTN(err, "Could not get format7 data depth");
     *data_depth=value >> 24;
   }
