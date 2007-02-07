@@ -6,7 +6,7 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config.h.in \
 EXTRA_DIST = libdc1394.pc.in
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libdc1394.pc
+pkgconfig_DATA = libdc1394-2.pc
 
 if USE_LINUX
 install-exec-hook:

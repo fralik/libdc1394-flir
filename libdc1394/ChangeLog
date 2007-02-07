@@ -1,3 +1,7 @@
+2007-02-07 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 374: RAW16 formats are considered grayscale in conversion
+	           functions.
+
 2007-02-02 David Moore http://davemoore.org/
 	* SVN 373: Fix another typo in trigger mode detection.
 	* SVN 372: Avoid possible buffer overflow in topology code.

@@ -575,6 +575,7 @@ dc1394_convert_to_YUV422(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t h
     dc1394_MONO8_to_YUV422(src, dest, width, height, byte_order);
     break;
   case DC1394_COLOR_CODING_MONO16:
+  case DC1394_COLOR_CODING_RAW16:
     dc1394_MONO16_to_YUV422(src, dest, width, height, byte_order, bits);
     break;
   case DC1394_COLOR_CODING_RGB16:
@@ -630,6 +631,7 @@ dc1394_convert_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
     dc1394_MONO8_to_RGB8 (src, dest, width, height);
     break;
   case DC1394_COLOR_CODING_MONO16:
+  case DC1394_COLOR_CODING_RAW16:
     dc1394_MONO16_to_RGB8 (src, dest, width, height,bits);
     break;
   case DC1394_COLOR_CODING_RGB8:
@@ -733,6 +735,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
       dc1394_MONO8_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
       break;
     case DC1394_COLOR_CODING_MONO16:
+    case DC1394_COLOR_CODING_RAW16:
       Adapt_buffer_convert(in,out);
       dc1394_MONO16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->bit_depth);
       break;
@@ -784,6 +787,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
       dc1394_MONO8_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
       break;
     case DC1394_COLOR_CODING_MONO16:
+    case DC1394_COLOR_CODING_RAW16:
       Adapt_buffer_convert(in,out);
       dc1394_MONO16_to_RGB8 (in->image, out->image, in->size[0], in->size[1],in->bit_depth);
       break;
