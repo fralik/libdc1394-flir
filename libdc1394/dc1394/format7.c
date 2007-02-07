@@ -159,8 +159,12 @@ _dc1394_format7_set_image_size(dc1394camera_t *camera,
 			       uint32_t height)
 {
   dc1394error_t err;
+  dc1394video_mode_t mode;
 
-  if (camera->capture_is_set>0)
+  err=dc1394_video_get_mode(camera,&mode);
+  DC1394_ERR_RTN(err,"Could not get current video mode");
+
+  if ((camera->capture_is_set>0)&&(video_mode==mode))
     return DC1394_CAPTURE_IS_RUNNING;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
@@ -177,8 +181,12 @@ _dc1394_format7_set_color_coding(dc1394camera_t *camera,
 				 dc1394video_mode_t video_mode, dc1394color_coding_t color_coding)
 {
   dc1394error_t err;
+  dc1394video_mode_t mode;
 
-  if (camera->capture_is_set>0)
+  err=dc1394_video_get_mode(camera,&mode);
+  DC1394_ERR_RTN(err,"Could not get current video mode");
+
+  if ((camera->capture_is_set>0)&&(video_mode==mode))
     return DC1394_CAPTURE_IS_RUNNING;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
@@ -202,8 +210,12 @@ _dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
                                    uint32_t packet_bytes)
 {
   dc1394error_t err;
+  dc1394video_mode_t mode;
 
-  if (camera->capture_is_set>0)
+  err=dc1394_video_get_mode(camera,&mode);
+  DC1394_ERR_RTN(err,"Could not get current video mode");
+
+  if ((camera->capture_is_set>0)&&(video_mode==mode))
     return DC1394_CAPTURE_IS_RUNNING;
 
   if (!dc1394_is_video_mode_scalable(video_mode))

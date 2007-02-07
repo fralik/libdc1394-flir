@@ -1,4 +1,7 @@
 2007-02-07 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 376: Allow changing format7 properties while capture is
+	           running IF the current video mode is different from
+		   the video mode to be modified.
 	* SVN 375: fix typo in Makefile.am
         * SVN 374: RAW16 formats are considered grayscale in conversion
 	           functions.
