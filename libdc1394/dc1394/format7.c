@@ -144,6 +144,8 @@ _dc1394_format7_set_image_position(dc1394camera_t *camera,
 {
   dc1394error_t err;
 
+  // it is allowed to change the image position even if capture is running.
+
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_INVALID_VIDEO_MODE;
 
@@ -198,8 +200,8 @@ _dc1394_format7_set_color_coding(dc1394camera_t *camera,
   DC1394_ERR_RTN(err, "Format7 color coding setting failure");
 
   // IIDC v1.30 handshaking:
-  err=_dc1394_v130_handshake(camera, video_mode);
-  DC1394_ERR_RTN(err, "F7 handshake failure");
+  //err=_dc1394_v130_handshake(camera, video_mode);
+  //DC1394_ERR_RTN(err, "F7 handshake failure");
 
   return err;
 }
@@ -225,8 +227,8 @@ _dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
   DC1394_ERR_RTN(err, "Format7 bytes-per-packet setting failure");
 
   // IIDC v1.30 handshaking:
-  err=_dc1394_v130_handshake(camera, video_mode);
-  DC1394_ERR_RTN(err, "F7 handshake failure");
+  //err=_dc1394_v130_handshake(camera, video_mode);
+  //DC1394_ERR_RTN(err, "F7 handshake failure");
 
   return err;
 }

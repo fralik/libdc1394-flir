@@ -1,3 +1,6 @@
+2007-02-08 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 378: removed two extra handshakes in format7 functions.
+	
 2007-02-07 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 377: comment spurious debug message
 	* SVN 376: Allow changing format7 properties while capture is
