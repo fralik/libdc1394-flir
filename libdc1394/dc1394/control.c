@@ -197,8 +197,7 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   dc1394error_t err;
   uint32_t len, i, count;
   uint64_t offset;
-  uint32_t value[2], quadval = 0; // set to zero to avoid valgrind errors
-  memset(value,0,2*sizeof(value)); // set to zero to avoid valgrind errors
+  uint32_t value[2] = {0, 0}, quadval = 0; // set to zero to avoid valgrind errors
 
   // init pointers to zero:
   camera->command_registers_base=0;
@@ -410,13 +409,13 @@ dc1394_update_camera_info(dc1394camera_t *camera)
 	camera->PIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
       }
       if (value[0] & 0x20000000) {
-	// get PIO CSR
+	// get SIO CSR
 	err=GetCameraControlRegister(camera,REG_CAMERA_SIO_CONTROL_CSR_INQ, &quadval);
 	DC1394_ERR_RTN(err, "Could not get SIO control CSR");
 	camera->SIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
       }
       if (value[0] & 0x10000000) {
-	// get PIO CSR
+	// get strobe CSR
 	err=GetCameraControlRegister(camera,REG_CAMERA_STROBE_CONTROL_CSR_INQ, &quadval);
 	DC1394_ERR_RTN(err, "Could not get strobe control CSR");
 	camera->strobe_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;

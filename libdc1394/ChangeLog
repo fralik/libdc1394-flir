@@ -1,3 +1,7 @@
+2007-02-11 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 379: fixed the previous valgrind fix. Thanks to Robert
+	           Olsen, Jon Schewe and Andy Gotz.
+
 2007-02-08 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 378: removed two extra handshakes in format7 functions.
 	
