@@ -1,3 +1,8 @@
+2007-02-13 Peter Antoniac http://sourceforge.net/users/theseinfeld
+        * SVN 380: changed libdc1394.pc to libdc1394-2.pc to avoid
+	           pkg-config conflicts when using both versions
+		   (v1 - v2) of libdc1394.
+
 2007-02-11 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 379: fixed the previous valgrind fix. Thanks to Robert
 	           Olsen, Jon Schewe and Andy Gotz.

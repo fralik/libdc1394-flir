@@ -3,18 +3,18 @@
 SUBDIRS = dc1394 examples
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config.h.in \
 	stamp-h.in
-EXTRA_DIST = libdc1394.pc.in
+EXTRA_DIST = libdc1394-2.pc.in
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libdc1394.pc
+pkgconfig_DATA = libdc1394-2.pc
 
 if USE_LINUX
 install-exec-hook:
 	@if [ ! -c /dev/raw1394 ]; then                                 \
 		echo;                                                   \
 		echo "***********************************************"; \
-		echo "Please install libraw1394 before installing"; \
-		echo "the 1394-Based Digital Camera Control Library"; \
+		echo "Please install libraw1394 before installing    "; \
+		echo "the 1394-Based Digital Camera Control Library  "; \
 		echo "***********************************************"; \
 		echo;                                                   \
 	fi

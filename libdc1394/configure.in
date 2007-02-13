@@ -78,7 +78,7 @@ dnl AX_CFLAGS_WARN_ALL(CFLAGS)
 CFLAGS="$CFLAGS -Wall -Wunused"
 AC_CONFIG_FILES([ \
     Makefile \
-    libdc1394.pc \
+    libdc1394-2.pc \
     dc1394/Makefile \
     dc1394/linux/Makefile \
     dc1394/macosx/Makefile \
