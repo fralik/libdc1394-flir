@@ -42,6 +42,7 @@ typedef struct __dc1394_capture
   unsigned int             dma_last_buffer;
   int                      dma_fd;
   raw1394handle_t          handle;
+  uint32_t                 flags;
 
   dc1394video_frame_t     *frames;
 } dc1394capture_t;

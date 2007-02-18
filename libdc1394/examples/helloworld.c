@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   DC1394_ERR_RTN(err,"No camera on the bus");
 
   /* Setup capture with VIDEO1394 */
-  err=dc1394_capture_setup(cameras[0], 4);
+  err=dc1394_capture_setup(cameras[0], 4, DC1394_CAPTURE_FLAGS_DEFAULT);
   DC1394_ERR_RTN(err,"Problem setting capture");
   
   /* Start transmission */

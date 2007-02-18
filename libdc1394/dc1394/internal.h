@@ -129,10 +129,14 @@ dc1394bool_t
 IsFeatureBitSet(uint32_t value, uint32_t feature);
 
 dc1394error_t
-dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera);
+dc1394_allocate_iso_channel(dc1394camera_t *camera);
+dc1394error_t
+dc1394_allocate_bandwidth(dc1394camera_t *camera);
 
 dc1394error_t
-dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera);
+dc1394_free_iso_channel(dc1394camera_t *camera);
+dc1394error_t
+dc1394_free_bandwidth(dc1394camera_t *camera);
 /*
 dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);

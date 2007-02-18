@@ -389,7 +389,7 @@ int main(int argc,char *argv[])
     dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_400);
     dc1394_video_set_mode(cameras[i],res);
     dc1394_video_set_framerate(cameras[i],fps);
-    if (dc1394_capture_setup(cameras[i], NUM_BUFFERS) != DC1394_SUCCESS) {
+    if (dc1394_capture_setup(cameras[i], NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT) != DC1394_SUCCESS) {
       fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 	      __LINE__,__FILE__);
       perror("that the video mode,framerate and format are supported\n");

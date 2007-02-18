@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
   dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
   dc1394_video_set_mode(camera, video_mode);
   dc1394_video_set_framerate(camera, framerate);
-  if (dc1394_capture_setup(camera,4)!=DC1394_SUCCESS) {
+  if (dc1394_capture_setup(camera,4, DC1394_CAPTURE_FLAGS_DEFAULT)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode and framerate are\n"

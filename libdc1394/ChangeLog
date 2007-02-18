@@ -1,3 +1,12 @@
+2007-02-18 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 382: Add a flag argument to the capture setup function to
+	           allow finetuning of the automatic channel/bandwidth
+		   allocation.
+	           Adding an extra "DC1394_CAPTURE_FLAGS_DEFAULT" to
+		   every call to dc1394_capture_setup() will yield the
+		   same behaviour as before.
+		   Also removed old "_dma" examples.
+	
 2007-02-11 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 381: fix camera detection that failed if probing for
 	           optional capabilities returned an error. Thanks

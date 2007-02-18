@@ -347,6 +347,12 @@ typedef enum {
 } dc1394feature_mode_t;
 
 
+/* Capture flags */
+#define DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC   0x00000001U
+#define DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC 0x00000002U
+/* a reasonable default value: do alloc of bandwidth and channel */
+#define DC1394_CAPTURE_FLAGS_DEFAULT         0x00000003U
+
 /* Camera capture structure. Do not access directly from your application.
    Use dc1394_video_get_buffer and dc1394_video_get_fill_time instead. */
 
@@ -806,7 +812,7 @@ dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t 
  ***************************************************************************/
 
 /* setup/stop the capture */
-dc1394error_t dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers);
+dc1394error_t dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t flags);
 dc1394error_t dc1394_capture_stop(dc1394camera_t *camera);
 
 /* Get a file descriptor to be used for select().  Must be called after

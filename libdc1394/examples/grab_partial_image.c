@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 			 1280, 1024);  // width, height
   DC1394_ERR_RTN(err,"Unable to set Format7 mode 0.\nEdit the example file manually to fit your camera capabilities\n");
 
-  err=dc1394_capture_setup(camera, 4);
+  err=dc1394_capture_setup(camera, 4, DC1394_CAPTURE_FLAGS_DEFAULT);
   DC1394_ERR_CLN_RTN(err, dc1394_free_camera(camera), "Error capturing\n");
 
   //fprintf(stderr,"handle: 0x%x\n",capture.handle);

@@ -71,6 +71,8 @@ typedef struct __dc1394_capture
   uint8_t                  iso_is_allocated;
   uint8_t                  iso_is_started;
 
+  uint32_t                 flags;
+
   dc1394video_frame_t     *frames;
 } dc1394capture_t;
 

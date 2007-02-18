@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
   DC1394_ERR_RTN(err,"Could not set video mode 640x480xRGB8");
   dc1394_video_set_framerate(camera,DC1394_FRAMERATE_7_5);
   DC1394_ERR_RTN(err,"Could not set framerate to 7.5fps");
-  if (dc1394_capture_setup(camera, 4)!=DC1394_SUCCESS) {
+  if (dc1394_capture_setup(camera, 4, DC1394_CAPTURE_FLAGS_DEFAULT)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode,framerate and format are\n"

@@ -274,7 +274,7 @@ servicing_thread (void * cam_ptr)
  CAPTURE SETUP
 **************************************************************/
 dc1394error_t 
-dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
+dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t flags)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
@@ -291,6 +291,9 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   CFSocketContext socket_context = { 0, camera, NULL, NULL, NULL };
   CFSocketRef socket;
   
+  craw->capture.flags=flags;
+  // NOTE: flags are not yet taken into account in macosx code.
+
   capture->frames = malloc (num_dma_buffers * sizeof (dc1394video_frame_t));
   err = _dc1394_capture_basic_setup(camera, capture->frames);
   if (err != DC1394_SUCCESS)

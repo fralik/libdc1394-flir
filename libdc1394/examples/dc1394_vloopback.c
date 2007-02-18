@@ -524,7 +524,7 @@ int dc_start(int palette)
 	dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
 	dc1394_video_set_mode(camera, mode);
 	dc1394_video_set_framerate(camera, DC1394_FRAMERATE_15);
-	if (dc1394_capture_setup(camera, DC1394_BUFFERS) != DC1394_SUCCESS) 
+	if (dc1394_capture_setup(camera, DC1394_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT) != DC1394_SUCCESS) 
 	{
 		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
 			   __LINE__,__FILE__);

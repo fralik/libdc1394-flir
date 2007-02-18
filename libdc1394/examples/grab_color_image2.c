@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
    *  setup capture
    *-----------------------------------------------------------------------*/
   
-  if (dc1394_capture_setup(camera, 4)!=DC1394_SUCCESS) {
+  if (dc1394_capture_setup(camera, 4, DC1394_CAPTURE_FLAGS_DEFAULT)!=DC1394_SUCCESS) {
     fprintf( stderr,"unable to setup camera-\n"
              "check line %d of %s to make sure\n"
              "that the video mode,framerate and format are\n"
