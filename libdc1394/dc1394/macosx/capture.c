@@ -49,7 +49,10 @@ supported_channels (IOFireWireLibIsochPortRef rem_port, IOFWSpeed * maxSpeed,
   UInt64 * chanSupported)
 {
   dc1394camera_t * camera = (*rem_port)->GetRefCon (rem_port);
+  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  dc1394capture_t * capture = &(craw->capture);
   dc1394speed_t iso_speed;
+  uint32_t channel;
 
   if (dc1394_video_get_iso_speed (camera, &iso_speed) == DC1394_SUCCESS) {
       switch (iso_speed) {
@@ -74,6 +77,13 @@ supported_channels (IOFireWireLibIsochPortRef rem_port, IOFWSpeed * maxSpeed,
 
   /* Only the first 16 channels are allowed */
   *chanSupported = 0xFFFFULL << 48;
+  
+  /* If automatic IRM allocation is turned off, we only allow the channel
+   * that has been already set in the camera. */
+  if (!capture->do_irm &&
+          dc1394_video_get_iso_channel (camera, &channel) == DC1394_SUCCESS) {
+    *chanSupported = 0x1ULL << (63-channel);
+  }
   return kIOReturnSuccess;
 }
 
@@ -274,7 +284,8 @@ servicing_thread (void * cam_ptr)
  CAPTURE SETUP
 **************************************************************/
 dc1394error_t 
-dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t flags)
+dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
+        uint32_t flags)
 {
   DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
@@ -292,7 +303,17 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
   CFSocketRef socket;
   
   craw->capture.flags=flags;
-  // NOTE: flags are not yet taken into account in macosx code.
+  if (((flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) &&
+          (flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC)) ||
+          (flags & DC1394_CAPTURE_FLAGS_DEFAULT))
+    craw->capture.do_irm = true;
+  else if (!(flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) &&
+          !(flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC))
+    craw->capture.do_irm = false;
+  else {
+    err = DC1394_FAILURE;
+    DC1394_ERR_RTN (err, "Bandwidth and channel allocation must be enabled/disabled together\n");
+  }
 
   capture->frames = malloc (num_dma_buffers * sizeof (dc1394video_frame_t));
   err = _dc1394_capture_basic_setup(camera, capture->frames);
@@ -328,7 +349,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
   (*d)->TurnOnNotification (d);
 
   (*d)->GetSpeedToNode (d, craw->generation, &speed);
-  chan = (*d)->CreateIsochChannel (d, true,
+  chan = (*d)->CreateIsochChannel (d, craw->capture.do_irm,
       capture->frames[0].bytes_per_packet, speed,
       CFUUIDGetUUIDBytes (kIOFireWireIsochChannelInterfaceID));
   if (!chan) {

@@ -216,7 +216,7 @@ dc1394_read_cycle_timer_platform (dc1394camera_t * camera,
   IOFireWireLibDeviceRef d = craw->iface;
   struct timeval tv;
 
-  if ((*d)->GetCycleTime (d, cycle_timer) != 0)
+  if ((*d)->GetCycleTime (d, (UInt32 *) cycle_timer) != 0)
       return DC1394_FAILURE;
 
   gettimeofday (&tv, NULL);
