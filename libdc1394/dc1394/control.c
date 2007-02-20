@@ -1116,6 +1116,27 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
 }
 
 dc1394error_t
+dc1394_video_get_iso_channel(dc1394camera_t *camera, uint32_t * channel)
+{
+  dc1394error_t err;
+  uint32_t value_inq, value;
+
+  err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  DC1394_ERR_RTN(err, "Could not get basic function register");
+
+  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+  DC1394_ERR_RTN(err, "Could not get ISO data");
+
+  // check if 1394b is available and if we are now using 1394b
+  if ((value_inq & 0x00800000)&&(value & 0x00008000))
+    *channel = (value >> 8) & 0x3FUL;
+  else
+    *channel = (value >> 28) & 0xFUL;
+  
+  return DC1394_SUCCESS;
+}
+
+dc1394error_t
 dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
 {
   dc1394error_t err;

@@ -789,6 +789,7 @@ dc1394error_t dc1394_video_get_operation_mode(dc1394camera_t *camera, dc1394oper
 dc1394error_t dc1394_video_set_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t mode);
 dc1394error_t dc1394_video_get_iso_speed(dc1394camera_t *camera, dc1394speed_t *speed);
 dc1394error_t dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed);
+dc1394error_t dc1394_video_get_iso_channel(dc1394camera_t *camera, uint32_t * channel);
 dc1394error_t dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel);
 dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth);
  
