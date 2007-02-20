@@ -153,6 +153,9 @@ dc1394error_t
 dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras);
 dc1394error_t
 dc1394_reset_bus_platform(dc1394camera_t *camera);
+dc1394error_t
+dc1394_read_cycle_timer_platform (dc1394camera_t * camera,
+        uint32_t * cycle_timer, uint64_t * local_time);
 dc1394error_t _dc1394_capture_basic_setup (dc1394camera_t * camera,
     dc1394video_frame_t * frame);
 

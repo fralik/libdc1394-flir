@@ -327,6 +327,24 @@ dc1394_reset_bus_platform (dc1394camera_t * camera)
 }
 
 dc1394error_t
+dc1394_read_cycle_timer_platform (dc1394camera_t * camera,
+        uint32_t * cycle_timer, uint64_t * local_time)
+{
+  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  quadlet_t quad;
+  struct timeval tv;
+
+  if (raw1394_read (craw->handle, raw1394_get_local_id (craw->handle),
+          CSR_REGISTER_BASE + CSR_CYCLE_TIME, sizeof (quadlet_t), &quad) < 0)
+      return DC1394_FAILURE;
+
+  gettimeofday (&tv, NULL);
+  *cycle_timer = ntohl (quad);
+  *local_time = (uint64_t)tv.tv_sec * 1000000ULL + tv.tv_usec;
+  return DC1394_SUCCESS;
+}
+
+dc1394error_t
 GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);

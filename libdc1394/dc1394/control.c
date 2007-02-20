@@ -192,6 +192,13 @@ dc1394_reset_bus (dc1394camera_t * camera)
 }
 
 dc1394error_t
+dc1394_read_cycle_timer (dc1394camera_t * camera,
+        uint32_t * cycle_timer, uint64_t * local_time)
+{
+  return dc1394_read_cycle_timer_platform (camera, cycle_timer, local_time);
+}
+
+dc1394error_t
 dc1394_update_camera_info(dc1394camera_t *camera)
 {
   dc1394error_t err;

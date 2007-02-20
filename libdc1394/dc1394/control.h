@@ -687,6 +687,9 @@ dc1394error_t dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t p
    as a side effect. */
 dc1394error_t dc1394_reset_bus(dc1394camera_t *camera);
 
+dc1394error_t dc1394_read_cycle_timer (dc1394camera_t * camera,
+        uint32_t * cycle_timer, uint64_t * local_time);
+
 /***************************************************************************
      Other functionalities
  ***************************************************************************/
