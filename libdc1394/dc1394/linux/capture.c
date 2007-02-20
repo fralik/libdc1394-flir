@@ -275,6 +275,10 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   dc1394error_t err;
 
+  if (flags & DC1394_CAPTURE_FLAGS_DEFAULT)
+    flags = DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC |
+        DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC;
+
   craw->capture.flags=flags;
 
   // allocate channel/bandwidth if requested

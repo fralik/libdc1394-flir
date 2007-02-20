@@ -1,4 +1,6 @@
 2007-02-19 David Moore http://davemoore.org/
+	* SVN 386: Changed DC1394_CAPTURE_FLAGS_DEFAULT to be interpreted
+	  at runtime rather than at compile-time.
 	* SVN 385: Fixed Mac OS to honor flags argument of
 	  dc1394_capture_setup().
 	* SVN 384: Added missing function dc1394_video_get_iso_channel().

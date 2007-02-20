@@ -351,7 +351,7 @@ typedef enum {
 #define DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC   0x00000001U
 #define DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC 0x00000002U
 /* a reasonable default value: do alloc of bandwidth and channel */
-#define DC1394_CAPTURE_FLAGS_DEFAULT         0x00000003U
+#define DC1394_CAPTURE_FLAGS_DEFAULT         0x00000004U
 
 /* Camera capture structure. Do not access directly from your application.
    Use dc1394_video_get_buffer and dc1394_video_get_fill_time instead. */
