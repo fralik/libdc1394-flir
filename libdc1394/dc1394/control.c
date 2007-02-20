@@ -583,9 +583,13 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
       (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
     feature->trigger_mode= (uint32_t)((value >> 16) & 0xF);
     if (feature->trigger_mode >= 14)
-        feature->trigger_mode += DC1394_TRIGGER_MODE_MIN - 8;
+      feature->trigger_mode += DC1394_TRIGGER_MODE_MIN - 8;
     else
-        feature->trigger_mode += DC1394_TRIGGER_MODE_MIN;
+      feature->trigger_mode += DC1394_TRIGGER_MODE_MIN;
+    feature->trigger_source = (uint32_t)((value >> 21) & 0x7UL);
+    if (feature->trigger_source > 3)
+      feature->trigger_source -= 3;
+    feature->trigger_source += DC1394_TRIGGER_SOURCE_MIN;
     feature->auto_active= DC1394_FALSE;
     break;
   case DC1394_FEATURE_TRIGGER_DELAY:
@@ -1495,10 +1499,9 @@ dc1394_external_trigger_get_supported_sources(dc1394camera_t *camera, dc1394trig
   DC1394_ERR_RTN(err,"Could not query supported trigger sources");
 
   sources->num=0;
-  value=( (value & (0xF << 23)) >>23 );
-  for (i=DC1394_TRIGGER_SOURCE_MIN;i<=DC1394_TRIGGER_SOURCE_MAX;i++) {
-    if (value & (0x1 << (i-DC1394_TRIGGER_SOURCE_MIN))){ 
-      sources->sources[sources->num]=i;
+  for (i = 0; i < DC1394_TRIGGER_SOURCE_NUM; i++) {
+    if (value & (0x1 << (23-i-(i>3)*3))){ 
+      sources->sources[sources->num]=i+DC1394_TRIGGER_SOURCE_MIN;
       sources->num++;
     }
   }
@@ -1514,7 +1517,9 @@ dc1394_external_trigger_get_source(dc1394camera_t *camera, dc1394trigger_source_
   dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get trigger source");
   
-  *source= (uint32_t)( ((value >> 21) & 0x8UL) );
+  *source= (uint32_t)( ((value >> 21) & 0x7UL) );
+  if (*source > 3)
+      *source -= 3;
   (*source)+= DC1394_TRIGGER_SOURCE_MIN;
 
   return err;
@@ -1534,7 +1539,9 @@ dc1394_external_trigger_set_source(dc1394camera_t *camera, dc1394trigger_source_
   DC1394_ERR_RTN(err, "Could not get trigger source");
   
   source-= DC1394_TRIGGER_MODE_MIN;
-  curval= (curval & 0xFF1FFFFFUL) | ((source & 0x8UL) << 21);
+  if (source > 3)
+      source += 3;
+  curval= (curval & 0xFF1FFFFFUL) | ((source & 0x7UL) << 21);
   err=SetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, curval);
   DC1394_ERR_RTN(err, "Could not set trigger source");
   return err;

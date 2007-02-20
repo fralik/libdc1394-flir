@@ -1,3 +1,6 @@
+2007-02-20 David Moore http://davemoore.org/
+	* SVN 387: Bug fixes for trigger source get/set
+
 2007-02-19 David Moore http://davemoore.org/
 	* SVN 386: Changed DC1394_CAPTURE_FLAGS_DEFAULT to be interpreted
 	  at runtime rather than at compile-time.
@@ -7,6 +10,7 @@
 	* SVN 383: Add new function dc1394_read_cycle_timer() to get the
 	  value of the bus's cycle timer synchronized with the system
 	  time.  Implemented for both Mac OS X and Linux.
+
 2007-02-18 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 382: Add a flag argument to the capture setup function to
 	  allow finetuning of the automatic channel/bandwidth allocation.
