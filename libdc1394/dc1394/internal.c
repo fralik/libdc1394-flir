@@ -364,7 +364,6 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
 {
   dc1394error_t err;
   float bpp;
-  int bits_per_pixel;
 
   frame->camera = camera;
 
@@ -433,8 +432,7 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
   err = dc1394_get_bytes_per_pixel (frame->color_coding, &bpp);
   DC1394_ERR_RTN(err, "Unable to get bytes per pixel");
 
-  bits_per_pixel = bpp * 8 + 0.5;
-  frame->stride = bits_per_pixel * frame->size[0] / 8;
+  frame->stride = (int)(bpp * frame->size[0] +.5);//+.5 to avoid small round off errors 
   frame->image_bytes = frame->size[1] * frame->stride;
   frame->padding_bytes = frame->total_bytes - frame->image_bytes;
 
