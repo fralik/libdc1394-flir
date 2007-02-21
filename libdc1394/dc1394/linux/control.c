@@ -413,69 +413,63 @@ dc1394_allocate_iso_channel(dc1394camera_t *camera)
   int i;
   dc1394switch_t iso_was_on;
 
-  if (camera->capture_is_set==0) {
-    // capture is not set, and thus channels/bandwidth have not been allocated.
+  if (camera->capture_is_set) {
+    fprintf (stderr, "Error: capturing in progress, cannot allocate ISO channel\n");
+    return DC1394_FAILURE;
+  }
 
-    // if transmission is ON, stop it:
-    err=dc1394_video_get_transmission(camera,&iso_was_on);
-    DC1394_ERR_RTN(err, "Could not get ISO status");
-    
-    if (iso_was_on==DC1394_ON) {
-      err=dc1394_video_set_transmission(camera, DC1394_OFF);
-      DC1394_ERR_RTN(err, "Could not pause ISO transmission");
-    }
+  if (camera->iso_channel_is_set) {
+    fprintf (stderr, "Error: a channel is already allocated to this camera\n");
+    return DC1394_FAILURE;
+  }
 
-    // first we need to assign an ISO channel:  
-    if (camera->iso_channel_is_set==0){
-      if (camera->iso_channel>=0) {
-	// a specific channel is requested. try to book it.
-	if (raw1394_channel_modify(craw->handle, camera->iso_channel, RAW1394_MODIFY_ALLOC)==0) {
-	  // channel allocated.
+  // if transmission is ON, abort
+  err=dc1394_video_get_transmission(camera,&iso_was_on);
+  DC1394_ERR_RTN(err, "Could not get ISO status");
+
+  if (iso_was_on==DC1394_ON) {
+    fprintf (stderr, "Error: camera is already streaming, aborting ISO channel allocation...\n"
+        "  Perhaps it is in use by another application or a previous session was\n"
+        "  not cleaned up properly.\n");
+    return DC1394_FAILURE;
+  }
+
+  // first we need to assign an ISO channel:  
+  if (camera->iso_channel >= 0) {
+    // a specific channel is requested. try to book it.
+    if (raw1394_channel_modify(craw->handle, camera->iso_channel,
+          RAW1394_MODIFY_ALLOC)==0) {
+      // channel allocated.
 #ifdef DEBUG
-	  fprintf(stderr,"Allocated channel %d as requested\n",camera->iso_channel);
+      fprintf(stderr,"Allocated channel %d as requested\n",camera->iso_channel);
 #endif
-	  camera->iso_channel_is_set=1;
-	}
-	else {
-	  fprintf(stderr,"Channel %d already reserved. Trying other channels\n",camera->iso_channel);
-	}
-      }  
-    }
-
-    if (camera->iso_channel_is_set==0){
-      for (i=0;i<DC1394_NUM_ISO_CHANNELS;i++) {
-	if (raw1394_channel_modify(craw->handle, i, RAW1394_MODIFY_ALLOC)==0) {
-	  // channel allocated.
-	  camera->iso_channel=i;
-	  camera->iso_channel_is_set=1;
-#ifdef DEBUG
-	  fprintf(stderr,"Allocated channel %d\n",camera->iso_channel);
-#endif
-	  break;
-	}
-      }
-    }
-
-    // check if channel was allocated:
-    if (camera->iso_channel_is_set==0) {
-      return DC1394_NO_ISO_CHANNEL;
-    }
-    else {
-      // set channel in the camera
+      camera->iso_channel_is_set=1;
       err=dc1394_video_set_iso_channel(camera, camera->iso_channel);
       DC1394_ERR_RTN(err, "Could not set ISO channel in the camera");
+      return DC1394_SUCCESS;
     }
+    fprintf(stderr,"Channel %d already reserved. Trying other channels\n",camera->iso_channel);
+  }  
 
-    // if transmission was ON, restart it:
-    if (iso_was_on==DC1394_ON) {
-      err=dc1394_video_set_transmission(camera, DC1394_ON);
-      DC1394_ERR_RTN(err, "Could not restart ISO transmission");
+  for (i=0;i<DC1394_NUM_ISO_CHANNELS;i++) {
+    if (raw1394_channel_modify(craw->handle, i, RAW1394_MODIFY_ALLOC)==0) {
+      // channel allocated.
+      camera->iso_channel=i;
+      camera->iso_channel_is_set=1;
+#ifdef DEBUG
+      fprintf(stderr,"Allocated channel %d\n",camera->iso_channel);
+#endif
+      break;
     }
-  
   }
-  else {
-    // do nothing, capture is running, and channels/bandwidth is already allocated
-  }
+
+  // check if channel was allocated:
+  if (camera->iso_channel_is_set==0)
+    return DC1394_NO_ISO_CHANNEL;
+
+  // set channel in the camera
+  err=dc1394_video_set_iso_channel(camera, camera->iso_channel);
+  DC1394_ERR_RTN(err, "Could not set ISO channel in the camera");
 
   return DC1394_SUCCESS;
 }
@@ -485,32 +479,32 @@ dc1394_allocate_bandwidth(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   dc1394error_t err;
-  int i;
 
-  if (camera->capture_is_set==0) {
-    // capture is not set, and thus channels/bandwidth have not been allocated.
+  if (camera->capture_is_set) {
+    fprintf (stderr, "Error: capturing in progress, cannot allocate ISO bandwidth\n");
+    return DC1394_FAILURE;
+  }
 
-    if (camera->iso_bandwidth==0) {
-      //fprintf(stderr,"Estimating ISO bandwidth\n");
-      // then we book the bandwidth
-      err=dc1394_video_get_bandwidth_usage(camera, &camera->iso_bandwidth);
-      DC1394_ERR_RTN(err, "Could not estimate ISO bandwidth");
-      if (raw1394_bandwidth_modify(craw->handle, camera->iso_bandwidth, RAW1394_MODIFY_ALLOC)<0) {
-	camera->iso_bandwidth=0;
-	if (raw1394_channel_modify(craw->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1) {
-	  fprintf(stderr,"Error: could not free iso channel %d!\n",camera->iso_channel);
-	}
-	return DC1394_NO_BANDWIDTH;
-      }
-#ifdef DEBUG
-      else
-	fprintf(stderr,"Allocated %d bandwidth units\n",camera->iso_bandwidth);
-#endif
+  if (camera->iso_bandwidth) {
+    fprintf (stderr, "Error: bandwidth already allocated for this camera\n");
+    return DC1394_FAILURE;
+  }
+
+  err=dc1394_video_get_bandwidth_usage(camera, &camera->iso_bandwidth);
+  DC1394_ERR_RTN(err, "Could not estimate ISO bandwidth");
+  if (raw1394_bandwidth_modify(craw->handle, camera->iso_bandwidth,
+        RAW1394_MODIFY_ALLOC)<0) {
+    camera->iso_bandwidth=0;
+    if (raw1394_channel_modify(craw->handle, camera->iso_channel,
+          RAW1394_MODIFY_FREE)==-1) {
+      fprintf(stderr,"Error: could not free iso channel %d!\n",
+          camera->iso_channel);
     }
+    return DC1394_NO_BANDWIDTH;
   }
-  else {
-    // do nothing, capture is running, and channels/bandwidth is already allocated
-  }
+#ifdef DEBUG
+  fprintf(stderr,"Allocated %d bandwidth units\n",camera->iso_bandwidth);
+#endif
 
   return DC1394_SUCCESS;
 }
@@ -519,30 +513,38 @@ dc1394error_t
 dc1394_free_iso_channel(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  dc1394error_t err;
 #ifdef DEBUG
   fprintf(stderr,"capture: %d ISO: %d\n",camera->capture_is_set,camera->is_iso_on);
 #endif
-  if ((camera->capture_is_set==0)&&(camera->is_iso_on==0)) {
-    // capture is not set and transmission is not active: channels/bandwidth can be freed without interfering
-    
-    // free the ISO channel if it was allocated
-    if (camera->iso_channel_is_set>0) {
-      if (raw1394_channel_modify(craw->handle, camera->iso_channel, RAW1394_MODIFY_FREE)==-1) {
-	fprintf(stderr,"Error: could not free iso channel %d!\n",camera->iso_channel);
-	return DC1394_RAW1394_FAILURE;
-      }
-      else {
+  if (camera->capture_is_set) {
+    fprintf (stderr, "Error: capturing in progress, cannot free ISO channel\n");
+    return DC1394_FAILURE;
+  }
+
+  if (camera->is_iso_on) {
+    fprintf (stderr, "Warning: stopping transmission in order to free ISO channel\n");
+    err=dc1394_video_set_transmission(camera, DC1394_OFF);
+    DC1394_ERR_RTN(err, "Could not stop ISO transmission");
+  }
+
+  if (camera->iso_channel_is_set == 0) {
+    fprintf (stderr, "Error: no ISO channel to free\n");
+    return DC1394_FAILURE;
+  }
+
+  if (raw1394_channel_modify(craw->handle, camera->iso_channel,
+        RAW1394_MODIFY_FREE)==-1) {
+    fprintf(stderr,"Error: could not free iso channel %d!\n",
+        camera->iso_channel);
+    return DC1394_RAW1394_FAILURE;
+  }
+
 #ifdef DEBUG
-	fprintf(stderr,"Freed channel %d\n",camera->iso_channel);
+  fprintf(stderr,"Freed channel %d\n",camera->iso_channel);
 #endif
-	//camera->iso_channel=-1; // we don't need this line anymore.
-	camera->iso_channel_is_set=0;
-      }
-    }
-  }
-  else {
-    // capture is running, don't free any channel/bandwidth allocation
-  }
+  //camera->iso_channel=-1; // we don't need this line anymore.
+  camera->iso_channel_is_set=0;
   return DC1394_SUCCESS;
 } 
 
@@ -550,29 +552,38 @@ dc1394error_t
 dc1394_free_bandwidth(dc1394camera_t *camera)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  dc1394error_t err;
 #ifdef DEBUG
   fprintf(stderr,"capture: %d ISO: %d\n",camera->capture_is_set,camera->is_iso_on);
 #endif
-  if ((camera->capture_is_set==0)&&(camera->is_iso_on==0)) {
-    // capture is not set and transmission is not active: channels/bandwidth can be freed without interfering
+  if (camera->capture_is_set) {
+    fprintf (stderr, "Error: capturing in progress, cannot free ISO bandwidth\n");
+    return DC1394_FAILURE;
+  }
 
-    if (camera->iso_bandwidth>0) {
-      // first free the bandwidth
-      if (raw1394_bandwidth_modify(craw->handle, camera->iso_bandwidth, RAW1394_MODIFY_FREE)<0) {
-	fprintf(stderr,"Error: could not free %d units of bandwidth!\n", camera->iso_bandwidth);
-	return DC1394_RAW1394_FAILURE;
-      }
-      else {
+  if (camera->is_iso_on) {
+    fprintf (stderr, "Warning: stopping transmission in order to free ISO bandwidth\n");
+    err=dc1394_video_set_transmission(camera, DC1394_OFF);
+    DC1394_ERR_RTN(err, "Could not stop ISO transmission");
+  }
+
+  if (camera->iso_bandwidth == 0) {
+    fprintf (stderr, "Error: no ISO bandwidth to free\n");
+    return DC1394_FAILURE;
+  }
+
+  // first free the bandwidth
+  if (raw1394_bandwidth_modify(craw->handle, camera->iso_bandwidth,
+        RAW1394_MODIFY_FREE)<0) {
+    fprintf(stderr,"Error: could not free %d units of bandwidth!\n",
+        camera->iso_bandwidth);
+    return DC1394_RAW1394_FAILURE;
+  }
+
 #ifdef DEBUG
-	fprintf(stderr,"Freed %d bandwidth units\n",camera->iso_bandwidth);
+  fprintf(stderr,"Freed %d bandwidth units\n",camera->iso_bandwidth);
 #endif
-	camera->iso_bandwidth=0;
-      }
-    }
-  }
-  else {
-    // capture is running, don't free any channel/bandwidth allocation
-  }
+  camera->iso_bandwidth=0;
   return DC1394_SUCCESS;
 } 
 

@@ -1538,7 +1538,7 @@ dc1394_external_trigger_set_source(dc1394camera_t *camera, dc1394trigger_source_
   err=GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &curval);
   DC1394_ERR_RTN(err, "Could not get trigger source");
   
-  source-= DC1394_TRIGGER_MODE_MIN;
+  source-= DC1394_TRIGGER_SOURCE_MIN;
   if (source > 3)
       source += 3;
   curval= (curval & 0xFF1FFFFFUL) | ((source & 0x7UL) << 21);

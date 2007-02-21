@@ -1,4 +1,6 @@
 2007-02-20 David Moore http://davemoore.org/
+	* SVN 388: Improvements to error handling in channel/bandwidth
+	  allocation.
 	* SVN 387: Bug fixes for trigger source get/set
 
 2007-02-19 David Moore http://davemoore.org/
