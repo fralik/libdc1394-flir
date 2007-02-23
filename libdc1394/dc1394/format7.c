@@ -831,42 +831,33 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
 
   if (camera->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
-  
-  //fprintf(stderr,"Setting ROI\n");
 
+  // ===========================================================
+  // COLOR CODING
+  // ===========================================================
+  // deal with color coding early as it may have an effect on max bpp, sizes, etc...
   if (color_coding==DC1394_QUERY_FROM_CAMERA) {
     err=dc1394_format7_get_color_coding(camera, video_mode, &color_coding);
+    DC1394_ERR_RTN(err, "Unable to get color_coding %d", color_coding);
+  }
+  else {
+    if (color_coding<0) {
+      // error: other auto modes not supported
+      return DC1394_INVALID_ARGUMENT_VALUE;
+    }
+    // set color coding
+    err=_dc1394_format7_set_color_coding(camera, video_mode, color_coding);
     DC1394_ERR_RTN(err, "Unable to set color_coding %d", color_coding);
+
+    // do handshaking to be sure that the value is now effective
+    err=_dc1394_v130_handshake(camera, video_mode);
+    DC1394_ERR_RTN(err, "Handshaking failed after setting color_coding %d", color_coding);
   }
 
-  err=_dc1394_format7_set_color_coding(camera, video_mode, color_coding);
-  DC1394_ERR_RTN(err, "Unable to set color coding %d", color_coding);
-
-  // get BPP before setting sizes,...
-  if (bytes_per_packet==DC1394_QUERY_FROM_CAMERA) {
-    err=dc1394_format7_get_byte_per_packet(camera, video_mode, &uint_bpp);
-    DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", video_mode);
-    bytes_per_packet=uint_bpp;
-  }
-
-  /* The image position should be checked regardless of the left and top values
-     as we also use it for the size setting */
-  err=dc1394_format7_get_image_position(camera, video_mode, &camera_left, &camera_top);
-  DC1394_ERR_RTN(err, "Unable to query image position");
-
-  /* First set image position to (0,0) to allow the size/position to change
-     without passing through an impossible state. The order of the operations is
-     1) set position to (0,0), 2) set size 3) set position. Other orders may fail
-     to properly set the camera, even if the pos/size couple if OK. */
-  err=_dc1394_format7_set_image_position(camera, video_mode, 0,0);
-  DC1394_ERR_RTN(err, "Unable to set image position");
-    
-  /* Then we have to change the image SIZE */
-
-  /*-----------------------------------------------------------------------
-   *  If QUERY_FROM_CAMERA was given instead of an image size
-   *  use the actual value from camera.
-   *-----------------------------------------------------------------------*/
+  // ===========================================================
+  // POSITION AND SIZE
+  // ===========================================================
+  // we do this together as they influence each other. Only one hadshaking at the end.
   if ( width == DC1394_QUERY_FROM_CAMERA || height == DC1394_QUERY_FROM_CAMERA) {
     err=dc1394_format7_get_image_size(camera, video_mode, &camera_width, &camera_height);
     DC1394_ERR_RTN(err, "Unable to query image size");
@@ -887,61 +878,79 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
     }
   }
 
-  /*-----------------------------------------------------------------------
-   *  If USE_MAX_AVAIL was given instead of an image size
-   *  use the max image size for the given image position
-   *-----------------------------------------------------------------------*/
+  if ( left == DC1394_QUERY_FROM_CAMERA || top == DC1394_QUERY_FROM_CAMERA) {
+    err=dc1394_format7_get_image_position(camera, video_mode, &camera_left, &camera_top);
+    DC1394_ERR_RTN(err, "Unable to query image position");
+
+    if( left == DC1394_QUERY_FROM_CAMERA)
+      left = camera_left;
+    if( top == DC1394_QUERY_FROM_CAMERA)
+      top = camera_top;
+  }
+
   if ( width == DC1394_USE_MAX_AVAIL || height == DC1394_USE_MAX_AVAIL) {
     err=dc1394_format7_get_max_image_size(camera, video_mode, &max_width, &max_height);
     DC1394_ERR_RTN(err, "Unable to query max image size");
-    if( width == DC1394_USE_MAX_AVAIL)  width  = max_width - left;
-    if( height == DC1394_USE_MAX_AVAIL) height = max_height - top;
+    if( width == DC1394_USE_MAX_AVAIL)
+      width  = max_width - left;
+    if( height == DC1394_USE_MAX_AVAIL)
+      height = max_height - top;
   }
-
+  if ((left<0)||(top<0)) {
+    // error: other auto modes not supported
+    return DC1394_INVALID_ARGUMENT_VALUE;
+  }
+  /* First set image position to (0,0) to allow the size/position to change
+     without passing through an impossible state. The order of the operations is
+     1) set position to (0,0), 2) set size 3) set position. Other orders may fail
+     to properly set the camera, even if the pos/size couple if OK. */
+  err=_dc1394_format7_set_image_position(camera, video_mode, 0,0);
+  DC1394_ERR_RTN(err, "Unable to set image position");
   err=_dc1394_format7_set_image_size(camera, video_mode, width, height);
   DC1394_ERR_RTN(err, "Unable to set format 7 image size to [%d %d]",width, height);
-
-  /* At last we change the image POSITION */
-  /*-----------------------------------------------------------------------
-   *  set image position. If QUERY_FROM_CAMERA was given instead of a
-   *  position, use the actual value from camera
-   *-----------------------------------------------------------------------*/
-
-  if( left == DC1394_QUERY_FROM_CAMERA) left = camera_left;
-  if( top == DC1394_QUERY_FROM_CAMERA)  top = camera_top;
-  
   err=_dc1394_format7_set_image_position(camera, video_mode, left, top);
   DC1394_ERR_RTN(err, "Unable to set format 7 image position to [%d %d]",left, top);
+  // do handshaking to be sure that the value is now effective
+  err=_dc1394_v130_handshake(camera, video_mode);
+  DC1394_ERR_RTN(err, "Handshaking failed after setting size and position");
 
-  /*-----------------------------------------------------------------------
-   *  Bytes-per-packet definition
-   *-----------------------------------------------------------------------*/
-  err=dc1394_format7_get_recommended_byte_per_packet(camera, video_mode, &recom_bpp);
-  DC1394_ERR_RTN(err, "Recommended byte-per-packet inq error");
-  
-  err=dc1394_format7_get_packet_para(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
-  DC1394_ERR_RTN(err, "Packet para inq error");
+  // ===========================================================
+  // BYTES PER PACKET
+  // ===========================================================
+
+  if (bytes_per_packet==DC1394_QUERY_FROM_CAMERA) {
+    err=dc1394_format7_get_byte_per_packet(camera, video_mode, &uint_bpp);
+    DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", video_mode);
+    bytes_per_packet=uint_bpp;
+  }
 
   switch (bytes_per_packet) {
   case DC1394_USE_RECOMMENDED:
+    err=dc1394_format7_get_recommended_byte_per_packet(camera, video_mode, &recom_bpp);
+    DC1394_ERR_RTN(err, "Recommended byte-per-packet inq error");
     if (recom_bpp>0) {
       bytes_per_packet=recom_bpp;
     }
     else { // recom. bpp asked, but register is 0. IGNORED
+      err=dc1394_format7_get_packet_para(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
+      DC1394_ERR_RTN(err, "Packet para inq error");
       printf("(%s) Recommended bytes per packet asked, but register is zero. Falling back to MAX BPP for mode %d \n", __FILE__, video_mode);
       bytes_per_packet=max_bytes;
     }
     break;
   case DC1394_USE_MAX_AVAIL:
+    err=dc1394_format7_get_packet_para(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
+    DC1394_ERR_RTN(err, "Packet para inq error");
     bytes_per_packet = max_bytes;
     break;
-  //this case was handled by a previous call. Show error if we get in there. 
   case DC1394_QUERY_FROM_CAMERA:
     // if we wanted QUERY_FROM_CAMERA, the QUERY_FROM_CAMERA value has been overwritten by
     // the current value at the beginning of the program. It is thus not possible to reach this code fragment.
     printf("(%s:%d) Bytes_per_packet error: we should not reach this code region\n", __FILE__,__LINE__);
     break;
   default:
+    err=dc1394_format7_get_packet_para(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
+    DC1394_ERR_RTN(err, "Packet para inq error");
     // we have to take several tricks into account here:
     // 1) BPP could be zero, in which case it becomes MAX_BPP
     // 2) UNIT_BYTES could also be zero, in which case we force it to MAX_BPP.
@@ -961,34 +970,15 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
     bytes_per_packet-=bytes_per_packet % unit_bytes;
     break;
   }
-      
+
+  // set bpp:
   err=_dc1394_format7_set_byte_per_packet(camera, video_mode, bytes_per_packet);
   DC1394_ERR_RTN(err, "Unable to set format 7 bytes per packet for mode %d", video_mode);
-
-  if (bytes_per_packet<=0) {
-    printf("(%s) No format 7 bytes per packet %d \n", __FILE__, video_mode);
-    return DC1394_FAILURE;
-  }
 
   // IIDC v1.30 handshaking:
   err=_dc1394_v130_handshake(camera, video_mode);
   DC1394_ERR_RTN(err, "F7 handshake failure");
-  /*
-  err=dc1394_format7_get_color_coding(camera, video_mode, &color_coding);
-  DC1394_ERR_RTN(err, "====\nUnable to set color_coding %d", color_coding);
-  fprintf(stderr,"Color coding: %d\n",color_coding);
-  err=dc1394_format7_get_byte_per_packet(camera, video_mode, &uint_bpp);
-  DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", video_mode);
-  fprintf(stderr,"Bytes per packet: %d\n",uint_bpp);
-  err=dc1394_format7_get_image_position(camera, video_mode, &camera_left, &camera_top);
-  DC1394_ERR_RTN(err, "Unable to query image position");
-  fprintf(stderr,"Image position: %d %d\n",camera_left, camera_top);
-  err=dc1394_format7_get_image_size(camera, video_mode, &camera_width, &camera_height);
-  DC1394_ERR_RTN(err, "Unable to query image size");
-  fprintf(stderr,"Image size: %d %d\n",camera_width, camera_height);
-  
-  fprintf(stderr,"Finished setting ROI, err code %d\n",err);
-  */
+
   return err;
 }
 

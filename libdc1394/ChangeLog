@@ -1,3 +1,8 @@
+2007-02-23 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 390: rewrite the ROI setting function. This fixes a serious issue
+	           that occured when changing F7 parameters (color coding,
+		   among others)
+
 2007-02-21 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 389: rewite the expression defining the stride; cosmetic changes
 	           to the latest changelog entries
