@@ -226,7 +226,7 @@ _dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mo
 {
 
   uint32_t w, h, color_coding;
-  float bpp;
+  uint32_t bpp;
   dc1394error_t err;
 
   err=dc1394_get_image_size_from_video_mode(camera, video_mode, &w, &h);
@@ -235,10 +235,10 @@ _dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mo
   err=dc1394_get_color_coding_from_video_mode(camera, video_mode, &color_coding);
   DC1394_ERR_RTN(err, "Invalid mode ID");
 
-  err=dc1394_get_bytes_per_pixel(color_coding, &bpp);
+  err=dc1394_get_bits_per_pixel(color_coding, &bpp);
   DC1394_ERR_RTN(err, "Invalid color mode ID");
 
-  *quads=(uint32_t)(w*h*bpp/4);
+  *quads=(w*h*bpp)/32;
 
   return err;
 }
@@ -363,7 +363,7 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
     dc1394video_frame_t * frame)
 {
   dc1394error_t err;
-  float bpp;
+  uint32_t bpp;
 
   frame->camera = camera;
 
@@ -429,10 +429,10 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
   err = dc1394_video_get_data_depth (camera, &frame->bit_depth);
   DC1394_ERR_RTN(err, "Unable to get data depth");
 
-  err = dc1394_get_bytes_per_pixel (frame->color_coding, &bpp);
+  err = dc1394_get_bits_per_pixel (frame->color_coding, &bpp);
   DC1394_ERR_RTN(err, "Unable to get bytes per pixel");
 
-  frame->stride = (int)(bpp * frame->size[0] +.5);//+.5 to avoid small round off errors 
+  frame->stride = (bpp * frame->size[0])/8;
   frame->image_bytes = frame->size[1] * frame->stride;
   frame->padding_bytes = frame->total_bytes - frame->image_bytes;
 

@@ -1,3 +1,8 @@
+2007-03-01 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 391: change the function returning the number of bytes per pixel
+	           to a function that returns bits per pixel. That way we stay
+		   with int's and avoid round-off errors.
+	
 2007-02-23 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 390: rewrite the ROI setting function. This fixes a serious issue
 	           that occured when changing F7 parameters (color coding,

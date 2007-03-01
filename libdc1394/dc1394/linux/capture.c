@@ -318,6 +318,8 @@ fail:
   free (craw->capture.frames);
   craw->capture.frames = NULL;
   DC1394_ERR_RTN(err,"Could not setup DMA capture");
+
+  return err;
 }
 
 /*****************************************************

@@ -2561,7 +2561,7 @@ dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict r
 void
 Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method)
 {
-  float fbpp;
+  uint32_t bpp;
 
   // conversions will halve the buffer size if the method is DOWNSAMPLE:
   out->size[0]=in->size[0];
@@ -2606,8 +2606,8 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
   out->padding_bytes = in->padding_bytes;
 
   // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
-  dc1394_get_bytes_per_pixel(out->color_coding, &fbpp);
-  out->image_bytes=(int)(out->size[0]*out->size[1]*fbpp);
+  dc1394_get_bits_per_pixel(out->color_coding, &bpp);
+  out->image_bytes=(out->size[0]*out->size[1]*bpp)/8;
 
   // total is image_bytes + padding_bytes
   out->total_bytes = out->image_bytes + out->padding_bytes;

@@ -648,7 +648,7 @@ dc1394_convert_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
 void
 Adapt_buffer_convert(dc1394video_frame_t *in, dc1394video_frame_t *out)
 {
-  float fbpp;
+  uint32_t bpp;
 
   // conversions don't change the size of buffers or its position
   out->size[0]=in->size[0];
@@ -678,8 +678,8 @@ Adapt_buffer_convert(dc1394video_frame_t *in, dc1394video_frame_t *out)
   out->padding_bytes = in->padding_bytes;
 
   // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
-  dc1394_get_bytes_per_pixel(out->color_coding, &fbpp);
-  out->image_bytes=(int)(out->size[0]*out->size[1]*fbpp);
+  dc1394_get_bits_per_pixel(out->color_coding, &bpp);
+  out->image_bytes=(out->size[0]*out->size[1]*bpp)/8;
 
   // total is image_bytes + padding_bytes
   out->total_bytes = out->image_bytes + out->padding_bytes;
@@ -812,7 +812,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
 dc1394error_t
 Adapt_buffer_stereo(dc1394video_frame_t *in, dc1394video_frame_t *out)
 {
-  float fbpp;
+  uint32_t bpp;
   
   // buffer position is not changed. Size is boubled in Y
   out->size[0]=in->size[0];
@@ -853,8 +853,8 @@ Adapt_buffer_stereo(dc1394video_frame_t *in, dc1394video_frame_t *out)
   out->padding_bytes = in->padding_bytes;
 
   // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
-  dc1394_get_bytes_per_pixel(out->color_coding, &fbpp);
-  out->image_bytes=(int)(out->size[0]*out->size[1]*fbpp);
+  dc1394_get_bits_per_pixel(out->color_coding, &bpp);
+  out->image_bytes=(out->size[0]*out->size[1]*bpp)/8;
 
   // total is image_bytes + padding_bytes
   out->total_bytes = out->image_bytes + out->padding_bytes;
