@@ -1,4 +1,4 @@
-/*
+	/*
  * 1394-Based Digital Camera Control Library utilities
  * Copyright (C) Damien Douxchamps <ddouxchamps@users.sf.net>
  *
@@ -18,6 +18,11 @@
  */
 #ifndef __DC1394_UTILS_H__
 #define __DC1394_UTILS_H__
+/*! \file utils.h
+    \brief This is used for utility functions
+
+    More details soon
+*/
 
 #include <dc1394/control.h>
 

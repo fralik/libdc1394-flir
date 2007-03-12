@@ -19,6 +19,11 @@
 
 #ifndef __DC1394_REGISTER_H__
 #define __DC1394_REGISTER_H__
+/*! \file register.h
+    \brief This is used to get/set registry on the bus...
+
+    More details soon
+*/
 
 #include <unistd.h>
 #include <netinet/in.h>

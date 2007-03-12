@@ -1,50 +1,59 @@
+2007-03-12 Peter Antoniac http://sourceforge.net/users/theseinfeld
+	* SVN 392: changed Makefile.am, configure.in to include the Doxygen part.
+		   Added: acinclude.m4, aminclude.am and Doxyfile.in to configure
+		   the Doxygen part. This changes enable the doxygen documentation
+		   generation for the project, without interference with previous
+		   framework. Added/changed some comments in the Header files
+		   (dc1394/control.h, dc1394/conversions.h, dc1394/register.h,
+		   dc1394/utils.h) to demonstrate the way the documentation works.
+
 2007-03-01 Damien Douxchamps http://damien.douxchamps.net/
-        * SVN 391: change the function returning the number of bytes per pixel
-	           to a function that returns bits per pixel. That way we stay
+	* SVN 391: change the function returning the number of bytes per pixel
+		   to a function that returns bits per pixel. That way we stay
 		   with int's and avoid round-off errors.
 	
 2007-02-23 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 390: rewrite the ROI setting function. This fixes a serious issue
-	           that occured when changing F7 parameters (color coding,
+		   that occured when changing F7 parameters (color coding,
 		   among others)
 
 2007-02-21 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 389: rewite the expression defining the stride; cosmetic changes
-	           to the latest changelog entries
+		   to the latest changelog entries
 	
 2007-02-20 David Moore http://davemoore.org/
 	* SVN 388: Improvements to error handling in channel/bandwidth
-	           allocation.
+		   allocation.
 	* SVN 387: Bug fixes for trigger source get/set
 
 2007-02-19 David Moore http://davemoore.org/
 	* SVN 386: Changed DC1394_CAPTURE_FLAGS_DEFAULT to be interpreted at
-	           runtime rather than at compile-time.
+		    runtime rather than at compile-time.
 	* SVN 385: Fixed Mac OS to honor flags argument of
-	           dc1394_capture_setup().
+		   dc1394_capture_setup().
 	* SVN 384: Added missing function dc1394_video_get_iso_channel().
 	* SVN 383: Add new function dc1394_read_cycle_timer() to get the value
-	           of the bus's cycle timer synchronized with the system time.
+		   of the bus's cycle timer synchronized with the system time.
 		   Implemented for both Mac OS X and Linux.
 
 2007-02-18 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 382: Add a flag argument to the capture setup function to allow
-	           finetuning of the automatic channel/bandwidth allocation.
+		   finetuning of the automatic channel/bandwidth allocation.
 		   Adding an extra "DC1394_CAPTURE_FLAGS_DEFAULT" to every call
 		   to dc1394_capture_setup() will yield the same behaviour as
 		   before. Also removed old "_dma" examples.
 	
 2007-02-11 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 381: fix camera detection that failed if probing for optional
-	           capabilities returned an error. Thanks to Mark Munte.
+		   capabilities returned an error. Thanks to Mark Munte.
 	
 2007-02-13 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 380: changed libdc1394.pc to libdc1394-2.pc to avoid pkg-config
-	           conflicts when using both versions (v1 - v2) of libdc1394.
+		   conflicts when using both versions (v1 - v2) of libdc1394.
 
 2007-02-11 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 379: fixed the previous valgrind fix. Thanks to Robert
-	           Olsen, Jon Schewe and Andy Gotz.
+		   Olsen, Jon Schewe and Andy Gotz.
 
 2007-02-08 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 378: removed two extra handshakes in format7 functions.
@@ -52,11 +61,11 @@
 2007-02-07 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 377: comment spurious debug message
 	* SVN 376: Allow changing format7 properties while capture is
-	           running IF the current video mode is different from
+		   running IF the current video mode is different from
 		   the video mode to be modified.
 	* SVN 375: fix typo in Makefile.am
         * SVN 374: RAW16 formats are considered grayscale in conversion
-	           functions.
+		   functions.
 
 2007-02-02 David Moore http://davemoore.org/
 	* SVN 373: Fix another typo in trigger mode detection.
@@ -65,43 +74,43 @@
 
 2007-02-01 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 370: Allow to change the pinstate of AVT IO pins.
-	           Thanks to Chris French.
+		   Thanks to Chris French.
 	* SVN 369: Update examples to stop transmission before we stop
-	           capture.
+		   capture.
 	* SVN 368: Do not fail to detect a camera if it does not have the
-	           optional functions register. Thanks to Fabien Spindler.
+		   optional functions register. Thanks to Fabien Spindler.
 	* SVN 367: set a default video mode if none is set at boot time.
-	           Thanks to Matthias Hanel.
+		   Thanks to Matthias Hanel.
 	* SVN 366: bayer downsampling function now take the INPUT image
-	           size as argument. It used to take the OUTPUT image size
+		   size as argument. It used to take the OUTPUT image size
 		   as argument but this is counter intuitive. 
-	           Thanks to Matthias Barkhoff.
+		   Thanks to Matthias Barkhoff.
 	* SVN 365: allow debayering of MONO8 and MONO16 formats.
-	           Thanks to Matthias Barkhoff.
+		   Thanks to Matthias Barkhoff.
 
 2007-01-30 David Moore http://davemoore.org/
 	* SVN 364: pkgincludedir fix below still wasn't quite right
 
 2007-01-29 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 363: fix the definition pkgincludedir in configure.in
-	           Thanks to Frederic Devernay.
+		   Thanks to Frederic Devernay.
 
 2007-01-27 David Moore http://davemoore.org/
 	* SVN 362: Apply patch from Matt Robinson for the Mac OS capture
-	           routine to wait for thread creation with a semaphore.
+		   routine to wait for thread creation with a semaphore.
 
 2007-01-24 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 361: Set some variables to zero to avoid valgrind errors.
-	           Thanks to Jon Schewe.
+		   Thanks to Jon Schewe.
 	* SVN 360: Fixed strobe control register offset. Thanks again to
-	           Matthias Hanel.
+		   Matthias Hanel.
 	* SVN 359: don't require cameras (>=1.31) to have a data depth
-	           register. Thanks to Matthias Hanel.
+		   register. Thanks to Matthias Hanel.
 	* SVN 358: fixed YUV422 byte order. Thanks to Thomas Woellert.
 	
 2007-01-22 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 357: use only format7mode0 in the example program
-	           grab_partial_image. Remove the unused definition of
+		   grab_partial_image. Remove the unused definition of
 		   dc1394ring_buffer_policy_t. Thanks to Damien Delannay.
 
 2007-01-22 Peter Antoniac http://sourceforge.net/users/theseinfeld
@@ -161,7 +170,7 @@
 
 2006-12-12 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 338: added instructions on how to build the package (especially
-	           from SVN) in the README file.
+		   from SVN) in the README file.
 
 2006-12-12 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 337: New AHD Bayer interpolation (imported from DCRAW by Samuel

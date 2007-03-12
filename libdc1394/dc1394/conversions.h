@@ -21,6 +21,11 @@
  */
 #ifndef __DC1394_CONVERSIONS_H__
 #define __DC1394_CONVERSIONS_H__
+/*! \file conversions.h
+    \brief Various structures, etc...
+
+    More details soon
+*/
 
 #include "control.h"
 #include "utils.h"
