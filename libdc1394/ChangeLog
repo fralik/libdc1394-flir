@@ -1,3 +1,7 @@
+2007-03-18 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 393: Add a "juju" directory for the new kernel stack from Kristian
+		   Hogsberg. Thanks to... Kristian Hogsberg for the big patch ;)
+
 2007-03-12 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 392: changed Makefile.am, configure.in to include the Doxygen part.
 		   Added: acinclude.m4, aminclude.am and Doxyfile.in to configure

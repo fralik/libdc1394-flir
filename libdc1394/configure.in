@@ -25,7 +25,13 @@ AC_C_RESTRICT
 
 AC_CHECK_LIB(m, pow, [ LIBS="-lm $LIBS" ], [])
 
-case "$host" in
+AC_ARG_WITH(juju-dir,[  --with-juju-dir=<dir>  Path to juju include files])
+if ! test -z "$with_juju_dir" ; then
+   JUJU_DIR="$with_juju_dir"
+   dc1394platform=juju
+   AC_SUBST(JUJU_DIR)
+else
+  case "$host" in
   *-*-linux*)
     # Check for the new version of libraw1394 first since they might have both
     # installed and we want to use the newest version
@@ -40,7 +46,8 @@ case "$host" in
        [AC_MSG_ERROR(IOKitLib not found.)])
     dc1394platform=macosx
     ;;
-esac
+  esac
+fi
 AM_CONDITIONAL(USE_LINUX, test x$raw1394 = xtrue)
 AM_CONDITIONAL(USE_MACOSX, test x$iokit = xtrue)
 AC_SUBST(dc1394platform)
@@ -93,6 +100,7 @@ AC_CONFIG_FILES([ \
     libdc1394-2.pc \
     dc1394/Makefile \
     dc1394/linux/Makefile \
+    dc1394/juju/Makefile \
     dc1394/macosx/Makefile \
     dc1394/vendor/Makefile \
     examples/Makefile \
