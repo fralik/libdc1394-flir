@@ -1,4 +1,6 @@
 2007-04-26 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 395: add memset's in linux/capture.c to avoid valgrind errors
+	           (thanks to Jon Schewe)
 	* SVN 394: changed "min_bytes" to "unit_bytes" in
 	           dc1394_format7_get_packet_para()
 	

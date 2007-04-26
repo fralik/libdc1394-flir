@@ -152,6 +152,9 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   uint32_t i;
   dc1394video_frame_t * f;
 
+  memset(&vmmap, 0, sizeof(vmmap));
+  memset(&vwait, 0, sizeof(vwait));
+
   /* using_fd counter array NULL if not used yet -- initialize */
   if ( _dc1394_num_using_fd == NULL ) {
     _dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(uint32_t) );
@@ -406,6 +409,8 @@ dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, d
   int cb;
   int result=-1;
 
+  memset(&vwait, 0, sizeof(vwait));
+
   cb = (capture->dma_last_buffer + 1) % capture->num_dma_buffers;
   frame_tmp = capture->frames + cb;
 
@@ -446,6 +451,8 @@ dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame)
 {
   DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   struct video1394_wait vwait;
+
+  memset(&vwait, 0, sizeof(vwait));
 
   if (frame->camera != camera) {
     printf ("(%s) dc1394_capture_enqueue_dma: camera does not match frame's camera\n",
