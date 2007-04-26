@@ -423,7 +423,7 @@ dc1394_format7_get_total_bytes(dc1394camera_t *camera,
 
 dc1394error_t
 dc1394_format7_get_packet_para(dc1394camera_t *camera,
-			       dc1394video_mode_t video_mode, uint32_t *min_bytes,
+			       dc1394video_mode_t video_mode, uint32_t *unit_bytes,
 			       uint32_t *max_bytes)
 {
   dc1394error_t err;
@@ -435,7 +435,7 @@ dc1394_format7_get_packet_para(dc1394camera_t *camera,
   err= GetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_PACKET_PARA_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get F7 packet parameters");
 
-  *min_bytes= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
+  *unit_bytes= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
   *max_bytes= (uint32_t) ( value & 0x0000FFFFUL );       
   
   return err;

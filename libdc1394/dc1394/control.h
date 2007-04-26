@@ -861,7 +861,7 @@ dc1394error_t dc1394_format7_set_color_filter(dc1394camera_t *camera, dc1394vide
 dc1394error_t dc1394_format7_get_color_filter(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_filter_t *color_filter);
 
 /* packet */
-dc1394error_t dc1394_format7_get_packet_para(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *min_bytes, uint32_t *max_bytes);
+dc1394error_t dc1394_format7_get_packet_para(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *unit_bytes, uint32_t *max_bytes);
 dc1394error_t dc1394_format7_get_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *packet_bytes);
 dc1394error_t dc1394_format7_set_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t packet_bytes);
 dc1394error_t dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *bpp);
