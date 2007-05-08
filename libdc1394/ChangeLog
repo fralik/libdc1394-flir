@@ -1,3 +1,7 @@
+2007-05-08 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 396: added an example program to capture video from a Ladybug
+	           camera (Point Grey).
+	
 2007-04-26 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 395: add memset's in linux/capture.c to avoid valgrind errors
 	           (thanks to Jon Schewe)
