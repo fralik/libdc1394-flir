@@ -1,3 +1,7 @@
+2007-06-04 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 397: get optional function registers only if the IIDC version is
+	           > 1.30 (not >= 1.30). Thanks to Etienne Bieber.
+	
 2007-05-08 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 396: added an example program to capture video from a Ladybug
 	           camera (Point Grey).

@@ -405,7 +405,7 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   int adv_features_capable = (value[0] & 0x80000000) != 0;
   camera->can_switch_on_off  = (value[0] & (0x1<<16)) != 0;
 
-  if (camera->iidc_version>=DC1394_IIDC_VERSION_1_30) {
+  if (camera->iidc_version>DC1394_IIDC_VERSION_1_30) { // >, not >= (E.Bieber)
     err=GetCameraControlRegister(camera, REG_CAMERA_OPT_FUNC_INQ, &value[0]);
     if (err==DC1394_SUCCESS) { // do not return an error here: opt function register is not mandatory
     
