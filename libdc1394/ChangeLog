@@ -1,3 +1,6 @@
+2007-06-05 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 398: Version 2.0.0-rc6
+	
 2007-06-04 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 397: get optional function registers only if the IIDC version is
 	           > 1.30 (not >= 1.30). Thanks to Etienne Bieber.
