@@ -1,3 +1,7 @@
+2007-06-06 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 400: Include juju directory in the package. Thanks to Desmond for
+	           spotting this. Version 2.0.0-rc7.
+
 2007-06-05 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 399: Forgot to change some version numbers. This is 2.0.0-rc6.
 	* SVN 398: Version 2.0.0-rc6
