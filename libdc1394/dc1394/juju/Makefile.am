@@ -6,10 +6,8 @@ AM_CFLAGS = -I.. -I$(JUJU_DIR)
 libdc1394_juju_la_SOURCES =  \
 	control.c \
 	capture.c \
-	capture.h \
 	juju.h
 
 # headers to be installed
-pkgjujuinclude_HEADERS = \
-	capture.h
+pkgjujuinclude_HEADERS = 
 

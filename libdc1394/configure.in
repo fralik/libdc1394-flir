@@ -1,6 +1,6 @@
 # process this file with autoconf to get a configure script
 AC_PREREQ([2.6.0])
-AC_INIT([libdc1394],[2.0.0-rc6],[libdc1394-devel@lists.sf.net])
+AC_INIT([libdc1394],[2.0.0-rc7],[libdc1394-devel@lists.sf.net])
 AC_CONFIG_SRCDIR([dc1394/control.c])
 #
 DX_HTML_FEATURE(OFF)

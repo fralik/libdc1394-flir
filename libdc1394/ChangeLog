@@ -1,6 +1,8 @@
 2007-06-06 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 401: Solved juju include problems (capture.h does not exist).
+	           Version 2.0.0-rc7. 
 	* SVN 400: Include juju directory in the package. Thanks to Desmond for
-	           spotting this. Version 2.0.0-rc7.
+	           spotting this.
 
 2007-06-05 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 399: Forgot to change some version numbers. This is 2.0.0-rc6.
