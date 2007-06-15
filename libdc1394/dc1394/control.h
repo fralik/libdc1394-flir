@@ -314,7 +314,10 @@ typedef enum {
   DC1394_IOCTL_FAILURE,
   DC1394_CAPTURE_IS_NOT_SET = -30,
   DC1394_CAPTURE_IS_RUNNING = 31,
-  DC1394_RAW1394_FAILURE
+  DC1394_RAW1394_FAILURE,
+  DC1394_BASLER_NO_MORE_SFF_CHUNKS,
+  DC1394_BASLER_CORRUPTED_SFF_CHUNK,
+  DC1394_BASLER_UNKNOWN_SFF_CHUNK
 } dc1394error_t;
 #define DC1394_ERROR_NUM DC1394_RAW1394_FAILURE+1
 
@@ -440,6 +443,9 @@ typedef struct __dc1394_camera
   dc1394speed_t        phy_speed;
   dc1394power_class_t  power_class;
   dc1394phy_delay_t    phy_delay;
+  
+  // for Basler SFF
+  dc1394bool_t         sff_has_extended_data_stream;
 
 } dc1394camera_t;
 
@@ -693,6 +699,7 @@ dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint32_t channel);
  ***************************************************************************/
 
 /* external trigger feature functions */
+/* change this name to EXTERNAL TRIGGER */
 dc1394error_t dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity);
 dc1394error_t dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity);
 dc1394error_t dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polarity_capable);
@@ -774,6 +781,7 @@ dc1394error_t dc1394_video_get_iso_speed(dc1394camera_t *camera, dc1394speed_t *
 dc1394error_t dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed);
 dc1394error_t dc1394_video_get_iso_channel(dc1394camera_t *camera, uint32_t * channel);
 dc1394error_t dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel);
+/* Both "DATA DEPTH" and "BIT DEPTH" are used. This should be fixed. */
 dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth);
  
 /* start/stop isochronous data transmission */

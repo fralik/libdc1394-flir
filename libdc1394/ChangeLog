@@ -1,3 +1,11 @@
+2007-06-14 Mikael Olenfalk <mikael.olenfalk@gmail.com>
+	* SVN 402: - added Basler Smart Feature Framework support
+	           - vendor/basler.[ch]: the entry functions for Basler SFF
+	             support
+	           - vendor/basler_sff.h: types used for SFF
+	           - vendor/basler_sff_registry.[ch]: internal functions and
+     	             types for implemented SFF functionality
+
 2007-06-06 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 401: Solved juju include problems (capture.h does not exist).
 	           Version 2.0.0-rc7. 

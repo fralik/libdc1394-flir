@@ -20,7 +20,8 @@ libdc1394_la_SOURCES =  \
 	conversions.c    \
 	conversions.h    \
 	bayer.c          \
-	kernel-video1394.h
+	kernel-video1394.h \
+	checksum.c
 
 libdc1394_la_LIBADD = \
 	$(dc1394platform)/libdc1394-$(dc1394platform).la \
@@ -31,4 +32,5 @@ pkginclude_HEADERS = \
 	control.h \
 	utils.h \
 	conversions.h \
-	register.h
+	register.h \
+	checksum.h

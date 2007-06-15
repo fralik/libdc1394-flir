@@ -2,7 +2,8 @@ MAINTAINERCLEANFILES = Makefile.in
 AM_CPPFLAGS = -I $(top_srcdir)
 
 A = grab_gray_image grab_partial_image grab_color_image \
-	grab_color_image2 helloworld ladybug
+	grab_color_image2 helloworld ladybug \
+	basler_sff_info basler_sff_extended_data
 B = dc1394_reset_bus
 
 if USE_LINUX
@@ -47,6 +48,12 @@ dc1394_vloopback_LDADD = $(LDADD) -lm ../dc1394/libdc1394.la
 
 dc1394_reset_bus_SOURCES = dc1394_reset_bus.c
 dc1394_reset_bus_LDADD = $(LDADD) ../dc1394/libdc1394.la
+
+basler_sff_info_SOURCES = basler_sff_info.c
+basler_sff_info_LDADD = $(LDADD) ../dc1394/libdc1394.la
+
+basler_sff_extended_data_SOURCES = basler_sff_extended_data.c
+basler_sff_extended_data_LDADD = $(LDADD) ../dc1394/libdc1394.la
 
 if XVOK
 dc1394_multiview_CFLAGS = $(X_CFLAGS) $(XV_CFLAGS)

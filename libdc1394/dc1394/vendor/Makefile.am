@@ -7,10 +7,14 @@ libdc1394_vendor_la_SOURCES =  \
 	avt.c \
 	avt.h \
 	pixelink.c \
-	pixelink.h
+	pixelink.h \
+	basler.c \
+	basler_sff_registry.c
 
 # headers to be installed
 pkgvendorinclude_HEADERS = \
 	avt.h \
-	pixelink.h
+	pixelink.h \
+	basler.h \
+	basler_sff.h
 
