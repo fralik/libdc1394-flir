@@ -1,4 +1,5 @@
 2007-06-14 Mikael Olenfalk <mikael.olenfalk@gmail.com>
+	* SVN 403: Damien forgot to add the new files...
 	* SVN 402: - added Basler Smart Feature Framework support
 	           - vendor/basler.[ch]: the entry functions for Basler SFF
 	             support
