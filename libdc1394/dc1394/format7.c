@@ -457,7 +457,7 @@ dc1394_format7_get_byte_per_packet(dc1394camera_t *camera,
 
   *packet_bytes= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
   
-  if (packet_bytes==0) {
+  if (*packet_bytes==0) {
     printf("(%s): BYTES_PER_PACKET is zero. This should not happen.\n", __FILE__);
     return DC1394_FAILURE;
   }

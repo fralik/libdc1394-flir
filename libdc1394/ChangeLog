@@ -1,3 +1,7 @@
+2007-06-06 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 404: fixed missing * in dc1394_format7_get_byte_per_packet
+	           (thanks to Stian Skjelstad)
+
 2007-06-14 Mikael Olenfalk <mikael.olenfalk@gmail.com>
 	* SVN 403: Damien forgot to add the new files...
 	* SVN 402: - added Basler Smart Feature Framework support
