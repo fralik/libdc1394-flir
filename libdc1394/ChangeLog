@@ -1,4 +1,5 @@
 2007-06-19 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 406: added missing checksum.c/h. Thanks to Robert Harle.
 	* SVN 405: - update feature detection rules. Explanation written in
 	             control.c.
 	           - Member one_push renamed to one_push_capable as it is a
