@@ -453,7 +453,7 @@ typedef struct __dc1394feature_info_t_struct
 {
   dc1394feature_t    id;
   dc1394bool_t       available;
-  dc1394bool_t       one_push;
+  dc1394bool_t       one_push_capable;
   dc1394bool_t       absolute_capable;
   dc1394bool_t       readout_capable;
   dc1394bool_t       on_off_capable;

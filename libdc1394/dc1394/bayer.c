@@ -2717,7 +2717,7 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
     }
     break;
   default:
-    fprintf(stderr,"Conversion to between these two formats is not supported (yet)\n");
+    fprintf(stderr,"Conversion between these two formats (0x%x -> 0x%x) is not supported (yet)\n", in->color_coding, out->color_coding);
     return DC1394_FAILURE;
   }
 

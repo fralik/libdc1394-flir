@@ -745,7 +745,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
       dc1394_RGB16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->bit_depth);
     break;
     default:
-      fprintf(stderr,"Conversion to YUV422 from this color coding is not supported\n");
+      fprintf(stderr,"Conversion to YUV422 from this color coding is not supported (yet)\n");
       return DC1394_FAILURE;
     }
     break;
@@ -760,7 +760,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
       memcpy(out->image, in->image, in->size[0]*in->size[1]);
       break;
     default:
-      fprintf(stderr,"Conversion to MONO8 from this color coding is not supported\n");
+      fprintf(stderr,"Conversion to MONO8 from this color coding is not supported (yet)\n");
       return DC1394_FAILURE;
     }
     break;
@@ -797,12 +797,12 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
       memcpy(out->image, in->image, in->size[0]*in->size[1]*3);
       break;
     default:
-      fprintf(stderr,"Conversion to RGB8 from this color coding is not supported\n");
+      fprintf(stderr,"Conversion to RGB8 from this color coding is not supported (yet)\n");
       return DC1394_FAILURE;
     }
     break;
   default:
-    fprintf(stderr,"Conversion to between these two formats is not supported (yet)\n");
+    fprintf(stderr,"Conversion between these two formats (0x%x -> 0x%x) is not supported (yet)\n", in->color_coding, out->color_coding);
     return DC1394_FAILURE;
   }
  

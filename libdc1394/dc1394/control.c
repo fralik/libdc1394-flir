@@ -531,7 +531,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
 
   switch (feature->id) {
   case DC1394_FEATURE_TRIGGER:
-    feature->one_push= DC1394_FALSE;
+    feature->one_push_capable= DC1394_FALSE;
     feature->polarity_capable= (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
     int i, j;
     uint32_t value_tmp;
@@ -557,7 +557,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   default:
     feature->polarity_capable = 0;
     feature->trigger_mode     = 0;
-    feature->one_push         = (value & 0x10000000UL) ? DC1394_TRUE : DC1394_FALSE;
+    feature->one_push_capable = (value & 0x10000000UL) ? DC1394_TRUE : DC1394_FALSE;
     feature->auto_capable     = (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
     feature->manual_capable   = (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
     
@@ -659,7 +659,7 @@ dc1394_print_feature(dc1394feature_info_t *f)
     return DC1394_SUCCESS;
   }
   
-  if (f->one_push) 
+  if (f->one_push_capable) 
     printf("OP  ");
   if (f->readout_capable)
     printf("RC  ");
@@ -682,7 +682,7 @@ dc1394_print_feature(dc1394feature_info_t *f)
   else
     printf("\t");
 
-  if (f->one_push)  {
+  if (f->one_push_capable)  {
     if (f->one_push_active)
       printf("One push: ACTIVE  ");
     else
@@ -1597,13 +1597,38 @@ dc1394_feature_set_value(dc1394camera_t *camera, dc1394feature_t feature, uint32
 dc1394error_t
 dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value)
 {
+  /*
+ 
+  NOTE ON FEATURE PRESENCE DETECTION:
+  
+  The IIDC specs have 3 locations where the feature presence is notified, at offsets 0x40X,
+  0x5XX and 0x8XX. The specs do not give any difference between the different locations,
+  leading to different interpretations by different manufacturers, or even from model to
+  model. Firmware revisions may also reflect a change in interpretation by a company. This
+  problem is acknowledged by the IIDC working group and will be resolved in IIDC 1.32.
+
+  In the meantime, the policy of libdc1394 is to make an AND of the three locations to
+  determine if a feature is available or not. No other verifications is performed.
+
+  Some manufacturer may choose to indicate feature presence by other means, such as setting
+  a feature OFF and simultaneously disabling the capability to turn the feature ON. Another
+  technique is to disable all control means (on/off, manual, auto, absolute, etc.),
+  effectively resulting in a feature that can't be used.
+
+  This kind of interpretation could be implemented in libdc1394. However, the feature may
+  still be writable even if it is not possible to use it. To allow this off-state writing,
+  the decision on whether a feature is available or not is not taking this into account.
+
+  Damien
+
+  */
+
   dc1394error_t err;
   uint64_t offset;
   uint32_t quadval;
   
   *value=DC1394_FALSE;
   
-  // check feature presence in 0x404 and 0x408
   if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_INVALID_FEATURE;
   }
@@ -1615,6 +1640,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
     offset= REG_CAMERA_FEATURE_LO_INQ;
   }
 
+  // check feature presence in 0x40x
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get register for feature %d",feature);
   
@@ -1623,6 +1649,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
     return DC1394_SUCCESS;
   }
   
+  // if feature is present in 0x40x, check for availability in 0x5xx
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=GetCameraControlRegister(camera, offset, &quadval);
@@ -1633,8 +1660,23 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
   }
   else {
     *value= DC1394_FALSE;
+    return DC1394_SUCCESS;
   }
+
+  // if feature is present in 0x5xx, check for availability in 0x8xx
+  FEATURE_TO_VALUE_OFFSET(feature, offset);
   
+  err=GetCameraControlRegister(camera, offset, &quadval);
+  DC1394_ERR_RTN(err, "Could not get register for feature %d",feature);
+
+  if (quadval & 0x80000000UL) {
+    *value= DC1394_TRUE;
+  }
+  else {
+    *value= DC1394_FALSE;
+    return DC1394_SUCCESS;
+  }
+
   return err;
 }
 

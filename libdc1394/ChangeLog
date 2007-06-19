@@ -1,4 +1,11 @@
-2007-06-06 Damien Douxchamps http://damien.douxchamps.net/
+2007-06-19 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 405: - update feature detection rules. Explanation written in
+	             control.c.
+	           - Member one_push renamed to one_push_capable as it is a
+		     capability.
+		   - Fixed typo in error message
+
+2007-06-18 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 404: fixed missing * in dc1394_format7_get_byte_per_packet
 	           (thanks to Stian Skjelstad)
 
