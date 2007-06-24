@@ -28,12 +28,7 @@
 #include <errno.h>
 #include <poll.h>
 
-#include "config.h"
-#include "internal.h"
-#include "control.h"
-#include "utils.h"
 #include "juju/juju.h"
-#include "juju/capture.h"
 
 #define ptr_to_u64(p) ((__u64)(unsigned long)(p))
 #define u64_to_ptr(p) ((void *)(unsigned long)(p))
@@ -62,14 +57,14 @@ init_frame(dc1394camera_t *camera, int index, dc1394video_frame_t *proto)
   for (i = 0; i < count; i++) {
     payload_length = proto->bytes_per_packet * N;
     if (payload_length < total)
-      f->packets[i].payload_length = payload_length;
+      f->packets[i].control = FW_CDEV_ISO_PAYLOAD_LENGTH(payload_length);
     else
-      f->packets[i].payload_length = total;
-    f->packets[i].header_length = 4 * N;
+      f->packets[i].control = FW_CDEV_ISO_PAYLOAD_LENGTH(total);
+    f->packets[i].control |= FW_CDEV_ISO_HEADER_LENGTH(4 * N);
     total -= payload_length;
   }
-  f->packets[0].skip = 1;
-  f->packets[i - 1].interrupt = 1;
+  f->packets[0].control |= FW_CDEV_ISO_SKIP;
+  f->packets[i - 1].control |= FW_CDEV_ISO_INTERRUPT;
 
   return DC1394_SUCCESS;
 }
@@ -94,6 +89,7 @@ queue_frame (dc1394camera_t *camera, int index)
   queue.size = f->size;
   queue.data = ptr_to_u64(f->frame.image);
   queue.packets = ptr_to_u64(f->packets);
+  queue.handle = craw->iso_handle;
 
   retval = ioctl(craw->iso_fd, FW_CDEV_IOC_QUEUE_ISO, &queue);
   if (retval < 0) {
@@ -147,6 +143,8 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   if (ioctl(craw->iso_fd, FW_CDEV_IOC_CREATE_ISO_CONTEXT, &create) < 0)
     goto error_fd;
 
+  craw->iso_handle = create.handle;
+
   err = _dc1394_capture_basic_setup(camera, &proto);
   if (err != DC1394_SUCCESS)
     goto error_fd;
@@ -190,6 +188,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   start_iso.cycle   = -1;
   start_iso.tags = FW_CDEV_ISO_CONTEXT_MATCH_ALL_TAGS;
   start_iso.sync = 1;
+  start_iso.handle = craw->iso_handle;
   retval = ioctl(craw->iso_fd, FW_CDEV_IOC_START_ISO, &start_iso);
   err = DC1394_IOCTL_FAILURE;
   if (retval < 0)

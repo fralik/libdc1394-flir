@@ -46,15 +46,6 @@
    creation might have happened in the creating (as opposed to created) thread.*/
 #define DC1394_SLOW_DOWN            ((rand()%20)+10)
 
-/* transaction acknowldegements (this should be in the raw1394 headers) */
-#define ACK_COMPLETE                0x0001U
-#define ACK_PENDING                 0x0002U
-#define ACK_LOCAL                   0x0010U
-
-/*Response codes (this should be in the raw1394 headers) */
-//not currently used
-#define RESP_COMPLETE               0x0000U
-#define RESP_SONY_HACK              0x000fU
 
 // Format_0
 #define DC1394_VIDEO_MODE_FORMAT0_MIN	    DC1394_VIDEO_MODE_160x120_YUV444

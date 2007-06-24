@@ -21,9 +21,6 @@
 #include "config.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include "internal.h"
-#include "register.h"
-#include "offsets.h"
 #include "juju/juju.h"
 #include "utils.h"
 

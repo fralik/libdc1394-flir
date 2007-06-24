@@ -1,3 +1,7 @@
+2007-06-24  David Moore  <dcm@acm.org>
+	* SVN 407: Applied modified version of Kristian Høgsberg's patch to
+	           bring Juju support up to date with kernel 2.6.22.
+
 2007-06-19 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 406: added missing checksum.c/h. Thanks to Robert Harle.
 	* SVN 405: - update feature detection rules. Explanation written in

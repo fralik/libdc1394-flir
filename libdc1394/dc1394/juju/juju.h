@@ -19,8 +19,12 @@
 #ifndef __DC1394_JUJU_H__
 #define __DC1394_JUJU_H__
 
+#include <linux/firewire-cdev.h>
+#include "config.h"
+#include "internal.h"
+#include "register.h"
+#include "offsets.h"
 #include "control.h"
-#include <fw-device-cdev.h>
 
 #define DC1394_CAST_CAMERA_TO_JUJU(camjuju, camera) \
 	dc1394camera_juju_t * camjuju = (dc1394camera_juju_t *) camera
@@ -39,6 +43,7 @@ typedef struct __dc1394_camera_juju
   uint32_t			 config_rom[256];
 
   int				 iso_fd;
+  int				 iso_handle;
   unsigned int			 num_frames;
   int				 current;
   int				 ready_frames;
