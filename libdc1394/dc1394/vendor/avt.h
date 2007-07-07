@@ -28,27 +28,59 @@
 
 typedef struct __dc1394_avt_adv_feature_info_struct 
 {
-  uint32_t feature_id;
+  uint32_t feature_id; 
   dc1394bool_t features_requested;
-  dc1394bool_t MaxResolution;
-  dc1394bool_t TimeBase;
-  dc1394bool_t ExtdShutter;
-  dc1394bool_t TestImage;
-  dc1394bool_t FrameInfo;
-  dc1394bool_t Sequences;
-  dc1394bool_t VersionInfo;
-  dc1394bool_t Lookup_Tables;
-  dc1394bool_t Shading;
-  dc1394bool_t DeferredTrans;
-  dc1394bool_t HDR_Mode;
-  dc1394bool_t DSNU;
-  dc1394bool_t TriggerDelay;    
-  dc1394bool_t GP_Buffer;
-  dc1394bool_t Input_1;    
-  dc1394bool_t Input_2;        
-  dc1394bool_t Output_1;    
-  dc1394bool_t Output_2;        
-  dc1394bool_t IntEnaDelay;        
+  /************************************************************************/
+  dc1394bool_t MaxResolution;      //ADV_INQ_1 0
+  dc1394bool_t TimeBase;           //ADV_INQ_1 1
+  dc1394bool_t ExtdShutter;        //ADV_INQ_1 2
+  dc1394bool_t TestImage;          //ADV_INQ_1 3
+  dc1394bool_t FrameInfo;          //ADV_INQ_1 4
+  dc1394bool_t Sequences;          //ADV_INQ_1 5
+  dc1394bool_t VersionInfo;        //ADV_INQ_1 6
+                                   //ADV_INQ_1 7
+  dc1394bool_t Lookup_Tables;      //ADV_INQ_1 8
+  dc1394bool_t Shading;            //ADV_INQ_1 9
+  dc1394bool_t DeferredTrans;      //ADV_INQ_1 10
+  dc1394bool_t HDR_Mode;           //ADV_INQ_1 11
+  dc1394bool_t DSNU;               //ADV_INQ_1 12
+  dc1394bool_t BlemishCorrection;  //ADV_INQ_1 13
+  dc1394bool_t TriggerDelay;       //ADV_INQ_1 14
+  dc1394bool_t MirrorImage;        //ADV_INQ_1 15
+  dc1394bool_t SoftReset;          //ADV_INQ_1 16
+  dc1394bool_t HSNR;               //ADV_INQ_1 17
+  dc1394bool_t ColorCorrection;    //ADV_INQ_1 18
+  dc1394bool_t UserProfiles;       //ADV_INQ_1 19
+                                   //ADV_INQ_1 20
+  dc1394bool_t UserSets;           //ADV_INQ_1 21
+  dc1394bool_t TimeStamp;          //ADV_INQ_1 22
+  dc1394bool_t FrmCntStamp;        //ADV_INQ_1 23
+  dc1394bool_t TrgCntStamp;        //ADV_INQ_1 24
+                                   //ADV_INQ_1 25-30
+  dc1394bool_t GP_Buffer;          //ADV_INQ_1 31
+  /************************************************************************/
+  dc1394bool_t Input_1;            //ADV_INQ_2 0   
+  dc1394bool_t Input_2;            //ADV_INQ_2 1
+                                   //ADV_INQ_2 2-7
+  dc1394bool_t Output_1;           //ADV_INQ_2 8       
+  dc1394bool_t Output_2;           //ADV_INQ_2 9
+  dc1394bool_t Output_3;           //ADV_INQ_2 10           
+  dc1394bool_t Output_4;           //ADV_INQ_2 11           
+                                   //ADV_INQ_2 12-15
+  dc1394bool_t IntEnaDelay;        //ADV_INQ_2 16
+  dc1394bool_t IncDecoder;         //ADV_INQ_2 17
+                                   //ADV_INQ_2 18-31
+  /************************************************************************/
+  dc1394bool_t CameraStatus;       //ADV_INQ_3 0
+                                   //ADV_INQ_3 1-3
+  dc1394bool_t AutoShutter;        //ADV_INQ_3 4
+  dc1394bool_t AutoGain;           //ADV_INQ_3 5
+  dc1394bool_t AutoFunctionAOI;    //ADV_INQ_3 6
+                                   //ADV_INQ_3 7-31
+  /************************************************************************/
+  dc1394bool_t HDRPike;            //ADV_INQ_4 0
+                                   //ADV_INQ_4 1-31
+
   
 } dc1394_avt_adv_feature_info_t;
 
@@ -544,16 +576,42 @@ dc1394error_t dc1394_avt_write_shading_img(dc1394camera_t *camera,
 					   unsigned char *buf, uint32_t size);
 
 /************************************************************************/
-/* Read channel adjust (AVT Pike)										*/
+/* Read channel adjust (AVT Pike)					*/
 /************************************************************************/
 dc1394error_t dc1394_avt_get_channel_adjust(dc1394camera_t *camera, 
 						int16_t *channel_adjust);
 
 /************************************************************************/
-/* Write channel adjust (AVT Pike)										*/
+/* Write channel adjust (AVT Pike)					*/
 /************************************************************************/
 dc1394error_t dc1394_avt_set_channel_adjust(dc1394camera_t *camera, 
 						int16_t channel_adjust);
+
+/************************************************************************/
+/* Set Color Correction + Coefficients		       			*/
+/************************************************************************/
+
+dc1394error_t dc1394_avt_set_color_corr(dc1394camera_t *camera, dc1394bool_t on_off, dc1394bool_t reset, 
+		int32_t Crr, int32_t Cgr, int32_t Cbr, int32_t Crg, int32_t Cgg, int32_t Cbg, int32_t Crb, int32_t Cgb, int32_t Cbb);
+
+/************************************************************************/
+/* Get Color Correction + Coefficients					*/
+/************************************************************************/
+
+dc1394error_t dc1394_avt_get_color_corr(dc1394camera_t *camera, dc1394bool_t *on_off, 
+		int32_t *Crr, int32_t *Cgr, int32_t *Cbr, int32_t *Crg, int32_t *Cgg, int32_t *Cbg, int32_t *Crb, int32_t *Cgb, int32_t *Cbb);
+
+/************************************************************************/
+/* Get HSNR								*/
+/************************************************************************/
+
+dc1394error_t dc1394_avt_get_hsnr(dc1394camera_t *camera, dc1394bool_t *on_off, uint32_t *grabCount);
+
+/************************************************************************/
+/* Set HSNR								*/
+/************************************************************************/
+
+dc1394error_t dc1394_avt_set_hsnr(dc1394camera_t *camera, dc1394bool_t on_off, uint32_t grabCount);
 
 #ifdef __cplusplus
 }

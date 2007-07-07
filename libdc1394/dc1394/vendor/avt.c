@@ -26,57 +26,68 @@
 /********************************************************/
 /* Configuration Register Offsets for Advances features */
 /********************************************************/
-/* See the Marlin Technical Manuel for definitions of these */
 
-#define REG_CAMERA_AVT_VERSION_INFO1			        0x010U  
-#define REG_CAMERA_AVT_VERSION_INFO3				0x018U  
-#define REG_CAMERA_AVT_ADV_INQ_1				0x040U  
-#define REG_CAMERA_AVT_ADV_INQ_2				0x044U  
-#define REG_CAMERA_AVT_ADV_INQ_3				0x048U  
-#define REG_CAMERA_AVT_ADV_INQ_4				0x04CU  
-#define REG_CAMERA_AVT_MAX_RESOLUTION				0x200U  
-#define REG_CAMERA_AVT_TIMEBASE					0x208U  
-#define REG_CAMERA_AVT_EXTD_SHUTTER				0x20CU  
-#define REG_CAMERA_AVT_TEST_IMAGE				0x210U  
-#define REG_CAMERA_AVT_SEQUENCE_CTRL				0x220U  /* except MF131x */
-#define REG_CAMERA_AVT_SEQUENCE_PARAM				0x224U  /* except MF131x */
-#define REG_CAMERA_AVT_LUT_CTRL					0x240U  
-#define REG_CAMERA_AVT_LUT_MEM_CTRL				0x244U  
-#define REG_CAMERA_AVT_LUT_INFO					0x248U  
-#define REG_CAMERA_AVT_SHDG_CTRL				0x250U  
-#define REG_CAMERA_AVT_SHDG_MEM_CTRL				0x254U  
-#define REG_CAMERA_AVT_SHDG_INFO				0x258U  
-#define REG_CAMERA_AVT_DEFERRED_TRANS				0x260U  
-#define REG_CAMERA_AVT_FRAMEINFO				0x270U  
-#define REG_CAMERA_AVT_FRAMECOUNTER				0x274U  
-#define REG_CAMERA_AVT_HDR_CONTROL				0x280U  /* MF131x only */
-#define REG_CAMERA_AVT_KNEEPOINT_1				0x284U  /* MF131x only */
-#define REG_CAMERA_AVT_KNEEPOINT_2				0x288U  /* MF131x only */
-#define REG_CAMERA_AVT_KNEEPOINT_3				0x28CU  /* MF131x only */
-#define REG_CAMERA_AVT_DSNU_CONTROL				0x290U  /* MF131B only; Firmware 2.02 */
-#define REG_CAMERA_AVT_BLEMISH_CONTROL				0x294U  /* MF131x only; Firmware 2.02 */
-#define REG_CAMERA_AVT_IO_INP_CTRL1				0x300U  
-#define REG_CAMERA_AVT_IO_INP_CTRL2				0x304U  
-#define REG_CAMERA_AVT_IO_INP_CTRL3				0x308U  /* Dolphin series only */
-#define REG_CAMERA_AVT_IO_OUTP_CTRL1				0x320U  
-#define REG_CAMERA_AVT_IO_OUTP_CTRL2				0x324U  
-#define REG_CAMERA_AVT_IO_OUTP_CTRL3				0x328U  /* Dolphin series only */
-#define REG_CAMERA_AVT_IO_INTENA_DELAY				0x340U  
-#define REG_CAMERA_AVT_AUTOSHUTTER_CTRL				0x360U  /* Marlin series only */
-#define REG_CAMERA_AVT_AUTOSHUTTER_LO				0x364U  /* Marlin series only */
-#define REG_CAMERA_AVT_AUTOSHUTTER_HI				0x368U  /* Marlin series only */
-#define REG_CAMERA_AVT_AUTOGAIN_CTRL				0x370U  /* Marlin series only */
-#define REG_CAMERA_AVT_AUTOFNC_AOI				0x390U  /* Marlin series only */
-#define REG_CAMERA_AVT_AF_AREA_POSITION				0x394U  /* Marlin series only */
-#define REG_CAMERA_AVT_AF_AREA_SIZE				0x398U  /* Marlin series only */
-#define REG_CAMERA_AVT_COLOR_CORR				0x3A0U  /* Marlin C-type cameras only */
-#define REG_CAMERA_AVT_TRIGGER_DELAY				0x400U  
-#define REG_CAMERA_AVT_MIRROR_IMAGE				0x410U  /* Marlin series only */
-#define REG_CAMERA_AVT_CHANNEL_ADJUST_CTRL          	        0x420U  /* Pike series only ? */
-#define REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE        	        0x424U  /* Pike series only ? */
-#define REG_CAMERA_AVT_SOFT_RESET				0x510U  
-#define REG_CAMERA_AVT_GPDATA_INFO				0xFFCU  
-#define REG_CAMERA_AVT_GPDATA_BUFFER				0x1000U
+#define REG_CAMERA_AVT_VERSION_INFO1			0x010U  
+#define REG_CAMERA_AVT_VERSION_INFO3			0x018U  
+#define REG_CAMERA_AVT_ADV_INQ_1			0x040U  
+#define REG_CAMERA_AVT_ADV_INQ_2			0x044U  
+#define REG_CAMERA_AVT_ADV_INQ_3			0x048U  
+#define REG_CAMERA_AVT_ADV_INQ_4			0x04CU  
+#define REG_CAMERA_AVT_MAX_RESOLUTION			0x200U  
+#define REG_CAMERA_AVT_TIMEBASE				0x208U 
+#define REG_CAMERA_AVT_EXTD_SHUTTER			0x20CU  
+#define REG_CAMERA_AVT_TEST_IMAGE			0x210U  
+#define REG_CAMERA_AVT_SEQUENCE_CTRL			0x220U
+#define REG_CAMERA_AVT_SEQUENCE_PARAM			0x224U
+#define REG_CAMERA_AVT_LUT_CTRL				0x240U  
+#define REG_CAMERA_AVT_LUT_MEM_CTRL			0x244U  
+#define REG_CAMERA_AVT_LUT_INFO				0x248U  
+#define REG_CAMERA_AVT_SHDG_CTRL			0x250U  
+#define REG_CAMERA_AVT_SHDG_MEM_CTRL			0x254U  
+#define REG_CAMERA_AVT_SHDG_INFO			0x258U  
+#define REG_CAMERA_AVT_DEFERRED_TRANS			0x260U  
+#define REG_CAMERA_AVT_FRAMEINFO			0x270U  
+#define REG_CAMERA_AVT_FRAMECOUNTER			0x274U  
+#define REG_CAMERA_AVT_HDR_CONTROL			0x280U
+#define REG_CAMERA_AVT_KNEEPOINT_1			0x284U
+#define REG_CAMERA_AVT_KNEEPOINT_2			0x288U
+#define REG_CAMERA_AVT_KNEEPOINT_3			0x28CU
+#define REG_CAMERA_AVT_DSNU_CONTROL			0x290U
+#define REG_CAMERA_AVT_BLEMISH_CONTROL			0x294U
+#define REG_CAMERA_AVT_IO_INP_CTRL1			0x300U  
+#define REG_CAMERA_AVT_IO_INP_CTRL2			0x304U  
+#define REG_CAMERA_AVT_IO_INP_CTRL3			0x308U
+#define REG_CAMERA_AVT_IO_INP_CTRL4			0x30CU
+#define REG_CAMERA_AVT_IO_OUTP_CTRL1			0x320U  
+#define REG_CAMERA_AVT_IO_OUTP_CTRL2			0x324U  
+#define REG_CAMERA_AVT_IO_OUTP_CTRL3			0x328U
+#define REG_CAMERA_AVT_IO_OUTP_CTRL4			0x32CU
+#define REG_CAMERA_AVT_IO_INTENA_DELAY			0x340U  
+#define REG_CAMERA_AVT_AUTOSHUTTER_CTRL			0x360U
+#define REG_CAMERA_AVT_AUTOSHUTTER_LO			0x364U
+#define REG_CAMERA_AVT_AUTOSHUTTER_HI			0x368U
+#define REG_CAMERA_AVT_AUTOGAIN_CTRL			0x370U
+#define REG_CAMERA_AVT_AUTOFNC_AOI			0x390U
+#define REG_CAMERA_AVT_AF_AREA_POSITION			0x394U
+#define REG_CAMERA_AVT_AF_AREA_SIZE			0x398U
+#define REG_CAMERA_AVT_COLOR_CORR			0x3A0U
+#define REG_CAMERA_AVT_COLOR_CORR_CRR			0x3A4U
+#define REG_CAMERA_AVT_COLOR_CORR_CGR			0x3A8U
+#define REG_CAMERA_AVT_COLOR_CORR_CBR			0x3ACU
+#define REG_CAMERA_AVT_COLOR_CORR_CRG			0x3B0U
+#define REG_CAMERA_AVT_COLOR_CORR_CGG			0x3B4U
+#define REG_CAMERA_AVT_COLOR_CORR_CBG			0x3B8U
+#define REG_CAMERA_AVT_COLOR_CORR_CRB			0x3BCU
+#define REG_CAMERA_AVT_COLOR_CORR_CGB			0x3C0U
+#define REG_CAMERA_AVT_COLOR_CORR_CBB			0x3C4U
+#define REG_CAMERA_AVT_TRIGGER_DELAY			0x400U  
+#define REG_CAMERA_AVT_MIRROR_IMAGE			0x410U
+#define REG_CAMERA_AVT_CHANNEL_ADJUST_CTRL              0x420U
+#define REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE	        0x424U
+#define REG_CAMERA_AVT_SOFT_RESET		        0x510U
+#define REG_CAMERA_AVT_HSNRR		 	        0x520U
+#define REG_CAMERA_AVT_GPDATA_INFO		        0xFFCU  
+#define REG_CAMERA_AVT_GPDATA_BUFFER		        0x1000U
 
 /************************************************************************/
 /* Get Version  	(Read Only)					*/
@@ -123,20 +134,33 @@ dc1394_avt_get_advanced_feature_inquiry(dc1394camera_t *camera,
   err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_ADV_INQ_1, &value);
   DC1394_ERR_RTN(err,"Could not get AVT advanced features INQ 1");
   
-  adv_feature->MaxResolution=	(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->TimeBase= 	(value & 0x40000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->ExtdShutter= 	(value & 0x20000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->TestImage= 	(value & 0x10000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->FrameInfo= 	(value & 0x08000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->Sequences= 	(value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->VersionInfo= 	(value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->Lookup_Tables=   (value & 0x00800000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->Shading= 	(value & 0x00400000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->DeferredTrans=   (value & 0x00200000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->HDR_Mode= 	(value & 0x00100000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->DSNU= 		(value & 0x00080000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->TriggerDelay= 	(value & 0x00040000UL) ? DC1394_TRUE : DC1394_FALSE;    
-  adv_feature->GP_Buffer= 	(value & 0x00000001UL) ? DC1394_TRUE : DC1394_FALSE;        
+  adv_feature->MaxResolution=		(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->TimeBase=			(value & 0x40000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->ExtdShutter=			(value & 0x20000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->TestImage=			(value & 0x10000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->FrameInfo=			(value & 0x08000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->Sequences=			(value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->VersionInfo=			(value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  //ADV_INQ_1 7
+  adv_feature->Lookup_Tables=		(value & 0x00800000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->Shading=				(value & 0x00400000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->DeferredTrans=		(value & 0x00200000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->HDR_Mode=			(value & 0x00100000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->DSNU=				(value & 0x00080000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->BlemishCorrection=	(value & 0x00040000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->TriggerDelay=		(value & 0x00020000UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->MirrorImage=			(value & 0x00010000UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->SoftReset=			(value & 0x00008000UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->HSNR=				(value & 0x00004000UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->ColorCorrection=		(value & 0x00002000UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->UserProfiles=		(value & 0x00001000UL) ? DC1394_TRUE : DC1394_FALSE;  
+  //ADV_INQ_1 20
+  adv_feature->UserSets=			(value & 0x00000800UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->TimeStamp=			(value & 0x00000400UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->FrmCntStamp=			(value & 0x00000200UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->TrgCntStamp=			(value & 0x00000100UL) ? DC1394_TRUE : DC1394_FALSE;  
+  //ADV_INQ_1 25-30
+  adv_feature->GP_Buffer=			(value & 0x00000001UL) ? DC1394_TRUE : DC1394_FALSE;        
        
   /* Remember this request have been done */ 
   adv_feature->features_requested = DC1394_TRUE;                     
@@ -145,14 +169,35 @@ dc1394_avt_get_advanced_feature_inquiry(dc1394camera_t *camera,
   err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_ADV_INQ_2, &value);
   DC1394_ERR_RTN(err,"Could not get AVT advanced features INQ 2");
   
-  adv_feature->Input_1 = 	(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->Input_2 = 	(value & 0x40000000UL) ? DC1394_TRUE : DC1394_FALSE;
-  adv_feature->Output_1= 	(value & 0x00800000UL) ? DC1394_TRUE : DC1394_FALSE;  
-  adv_feature->Output_2= 	(value & 0x00400000UL) ? DC1394_TRUE : DC1394_FALSE;        
-  adv_feature->IntEnaDelay= 	(value & 0x00008000UL) ? DC1394_TRUE : DC1394_FALSE;     
- 
-  return DC1394_SUCCESS;
+  adv_feature->Input_1 =			(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->Input_2 =			(value & 0x40000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  //ADV_INQ_2 2-7
+  adv_feature->Output_1=			(value & 0x00800000UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->Output_2=			(value & 0x00400000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->Output_3=			(value & 0x00200000UL) ? DC1394_TRUE : DC1394_FALSE;  
+  adv_feature->Output_4=			(value & 0x00100000UL) ? DC1394_TRUE : DC1394_FALSE;
+  //ADV_INQ_2 12-15
+  adv_feature->IntEnaDelay=			(value & 0x00008000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->IncDecoder=			(value & 0x00004000UL) ? DC1394_TRUE : DC1394_FALSE;     
+  //ADV_INQ_2 18-31
   
+  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_ADV_INQ_3, &value);
+  DC1394_ERR_RTN(err,"Could not get AVT advanced features INQ 3");
+
+  adv_feature->CameraStatus=		(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  //ADV_INQ_3 1-3
+  adv_feature->AutoShutter=			(value & 0x08000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->AutoGain=			(value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  adv_feature->AutoFunctionAOI=		(value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  //ADV_INQ_3 7-31
+
+  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_ADV_INQ_4, &value);
+  DC1394_ERR_RTN(err,"Could not get AVT advanced features INQ 4");
+
+  adv_feature->HDRPike=		(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
+  //ADV_INQ_4 1-31
+
+  return DC1394_SUCCESS;
 }
 
 /************************************************************************/
@@ -170,19 +215,50 @@ dc1394_avt_print_advanced_feature(dc1394_avt_adv_feature_info_t *adv_feature)
   if(adv_feature->FrameInfo == DC1394_TRUE) 	puts (" FrameInfo ");
   if(adv_feature->Sequences == DC1394_TRUE) 	puts (" Sequences ");
   if(adv_feature->VersionInfo == DC1394_TRUE) 	puts (" VersionInfo ");
+  //ADV_INQ_1 7
   if(adv_feature->Lookup_Tables == DC1394_TRUE)	puts (" Lookup_Tables ");
   if(adv_feature->Shading == DC1394_TRUE) 	puts (" Shading ");
   if(adv_feature->DeferredTrans == DC1394_TRUE) puts (" DeferredTrans ");
   if(adv_feature->HDR_Mode == DC1394_TRUE) 	puts (" HDR_Mode ");
   if(adv_feature->DSNU == DC1394_TRUE) 		puts (" DSNU ");
+  if(adv_feature->BlemishCorrection == DC1394_TRUE) 		puts (" BlemishCorrection ");
   if(adv_feature->TriggerDelay == DC1394_TRUE) 	puts (" TriggerDelay ");
+  if(adv_feature->MirrorImage == DC1394_TRUE) 	puts (" MirrorImage ");
+  if(adv_feature->SoftReset == DC1394_TRUE) 	puts (" SoftReset ");
+  if(adv_feature->HSNR == DC1394_TRUE) 	puts (" HSNR ");
+  if(adv_feature->ColorCorrection == DC1394_TRUE) 	puts (" ColorCorrection ");
+  if(adv_feature->UserProfiles == DC1394_TRUE) 	puts (" UserProfiles ");
+  //ADV_INQ_1 20
+  if(adv_feature->UserSets == DC1394_TRUE) 	puts (" UserSets ");
+  if(adv_feature->TimeStamp == DC1394_TRUE) 	puts (" TimeStamp ");
+  if(adv_feature->FrmCntStamp == DC1394_TRUE) 	puts (" FrmCntStamp ");
+  if(adv_feature->TrgCntStamp == DC1394_TRUE) 	puts (" TrgCntStamp ");
+  //ADV_INQ_1 25-30
   if(adv_feature->GP_Buffer == DC1394_TRUE) 	puts (" GP_Buffer ");
+  
+  
   if(adv_feature->Input_1 == DC1394_TRUE)	puts (" Input_1 ");
   if(adv_feature->Input_2 == DC1394_TRUE) 	puts (" Input_2 ");
+  //ADV_INQ_2 2-7
   if(adv_feature->Output_1 == DC1394_TRUE) 	puts (" Output_1 ");
   if(adv_feature->Output_2 == DC1394_TRUE) 	puts (" Output_2 ");
+  if(adv_feature->Output_3 == DC1394_TRUE) 	puts (" Output_3 ");
+  if(adv_feature->Output_4 == DC1394_TRUE) 	puts (" Output_4 ");
+  //ADV_INQ_2 12-15
   if(adv_feature->IntEnaDelay == DC1394_TRUE) 	puts (" IntEnaDelay ");
-  
+  if(adv_feature->IncDecoder == DC1394_TRUE) 	puts (" IncDecoder ");
+  //ADV_INQ_2 18-31
+
+  if(adv_feature->CameraStatus == DC1394_TRUE) 	puts (" CameraStatus ");
+  //ADV_INQ_3 1-3
+  if(adv_feature->AutoShutter == DC1394_TRUE) 	puts (" AutoShutter ");
+  if(adv_feature->AutoGain == DC1394_TRUE) 	puts (" AutoGain ");
+  if(adv_feature->AutoFunctionAOI == DC1394_TRUE) 	puts (" AutoFunctionAOI ");
+  //ADV_INQ_3 7-31
+
+  if(adv_feature->HDRPike == DC1394_TRUE) 	puts (" HDRPike ");
+  //ADV_INQ_4 1-31
+
   return DC1394_SUCCESS;
   
 }
@@ -818,7 +894,7 @@ dc1394_avt_set_blemish(dc1394camera_t *camera,
 
 
 /************************************************************************/
-/* Get IO	REG_CAMERA_AVT_IO_INP_CTRLx	or REG_CAMERA_AVT_IO_OUTP_CTRLx	*/
+/* Get IO   REG_CAMERA_AVT_IO_INP_CTRLx	or REG_CAMERA_AVT_IO_OUTP_CTRLx	*/
 /************************************************************************/
 dc1394error_t
 dc1394_avt_get_io(dc1394camera_t *camera, uint32_t IO,
@@ -844,7 +920,7 @@ dc1394_avt_get_io(dc1394camera_t *camera, uint32_t IO,
 }
 
 /************************************************************************/
-/* Set IO	REG_CAMERA_AVT_IO_INP_CTRLx	or REG_CAMERA_AVT_IO_OUTP_CTRLx	*/
+/* Set IO   REG_CAMERA_AVT_IO_INP_CTRLx	or REG_CAMERA_AVT_IO_OUTP_CTRLx	*/
 /************************************************************************/
 dc1394error_t
 dc1394_avt_set_io(dc1394camera_t *camera,uint32_t IO,
@@ -1482,5 +1558,163 @@ dc1394error_t dc1394_avt_set_channel_adjust(dc1394camera_t *camera, int16_t chan
   err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE, (uint32_t)channel_adjust);
   DC1394_ERR_RTN(err,"Could not set AVT channel adjust");
 
+  return DC1394_SUCCESS;
+}
+
+/************************************************************************/
+/* Set Color Correction + Coefficients				  	*/
+/************************************************************************/
+
+dc1394error_t dc1394_avt_set_color_corr(dc1394camera_t *camera, dc1394bool_t on_off, dc1394bool_t reset, int32_t Crr, int32_t Cgr, int32_t Cbr, int32_t Crg, int32_t Cgg, int32_t Cbg, int32_t Crb, int32_t Cgb, int32_t Cbb)
+{	
+  dc1394error_t err;
+  uint32_t curval;
+    
+  //retrieve color correction
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR, &curval);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction");
+  
+  //ON / OFF : Bit 6
+  curval = (curval & 0xFDFFFFFFUL) | ((on_off) << 25); 
+
+  //reset coefficients to defaults : Bit 7
+  curval = (curval & 0xFEFFFFFFUL) | ((reset) << 24); 
+
+  //set new parameters
+  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_COLOR_CORR, curval);
+  DC1394_ERR_RTN(err,"Could not set AVT color correction");
+
+  if (!reset)
+  {
+	  //red channel coefficients
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRR, Crr);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Crr");
+
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGR, Cgr);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cgr");
+
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBR, Cbr);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cbr");
+	  
+	  //green channel coefficients
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRG, Crg);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Crg");
+
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGG, Cgg);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cgg");
+
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBG, Cbg);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cbg");
+	  
+	  //blue channel coefficients
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRB, Crb);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Crb");
+
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGB, Cgb);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cgb");
+
+	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBB, Cbb);
+	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cbb");
+  }
+  
+  return DC1394_SUCCESS;  
+}
+
+
+/************************************************************************/
+/* Get Color Correction + Coefficients				    	*/
+/************************************************************************/
+
+dc1394error_t dc1394_avt_get_color_corr(dc1394camera_t *camera, dc1394bool_t *on_off, int32_t *Crr, int32_t *Cgr, int32_t *Cbr, int32_t *Crg, int32_t *Cgg, int32_t *Cbg, int32_t *Crb, int32_t *Cgb, int32_t *Cbb)
+{	
+  dc1394error_t err;
+  uint32_t value;
+    
+  //retrieve color correction
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR, &value);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction");
+  
+  //ON / OFF : Bit 6
+  *on_off = (uint32_t)((value & 0x2000000UL) >> 25); 
+
+  //red channel coefficients
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRR, (uint32_t *)Crr);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Crr");
+
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGR, (uint32_t *)Cgr);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cgr");
+
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBR, (uint32_t *)Cbr);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cbr");
+  
+  //green channel coefficients
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRG, (uint32_t *)Crg);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Crg");
+
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGG, (uint32_t *)Cgg);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cgg");
+
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBG, (uint32_t *)Cbg);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cbg");
+  
+  //blue channel coefficients
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRB, (uint32_t *)Crb);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Crb");
+
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGB, (uint32_t *)Cgb);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cgb");
+
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBB, (uint32_t *)Cbb);
+  DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cbb");
+  
+  return DC1394_SUCCESS;  
+}
+
+/************************************************************************/
+/* Get HSNR							   	*/
+/************************************************************************/
+
+dc1394error_t dc1394_avt_get_hsnr(dc1394camera_t *camera, dc1394bool_t *on_off, uint32_t *grabCount)
+{
+  dc1394error_t err;
+  uint32_t value;
+    
+  /* Retrieve HSNRR */    
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_HSNRR, &value);
+  DC1394_ERR_RTN(err,"Could not get AVT HSNRR");
+  
+  /*ON / OFF : Bit 6 */
+  *on_off = (uint32_t)((value & 0x2000000UL) >> 25); 
+  
+  /* grabCount: Bits 23..31 */
+  *grabCount =(uint32_t)((value & 0x1FFUL));
+  
+  return DC1394_SUCCESS;
+}
+
+
+/************************************************************************/
+/* Set HSNR	      							*/
+/************************************************************************/
+
+dc1394error_t dc1394_avt_set_hsnr(dc1394camera_t *camera, dc1394bool_t on_off, uint32_t grabCount)
+{
+  dc1394error_t err;
+  uint32_t curval;
+  
+  /* Retrieve HSNR */       
+  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_HSNRR, &curval);
+  DC1394_ERR_RTN(err,"Could not get AVT HSNRR");
+  
+  /*ON / OFF : Bit 6 */
+  curval = (curval & 0xFDFFFFFFUL) | ((on_off) << 25); 
+  
+  /* grabCount: Bits 23..31 */
+  curval = (curval & 0xFFFFFE00UL) | grabCount;   
+  
+  /* Set new parameters */     
+  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_HSNRR, curval);
+  DC1394_ERR_RTN(err,"Could not set AVT HSNRR");
+  
   return DC1394_SUCCESS;
 }
