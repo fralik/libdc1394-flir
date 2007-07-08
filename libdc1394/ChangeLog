@@ -1,3 +1,7 @@
+2007-07-08 David Moore  <dcm@acm.org>
+	* SVN 409: Better socket cleanup in Mac OS capture code (from
+	           Simon Andersson). 
+
 2007-07-07 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 408: Applied the AVT patch from Mark Munte (with small extra
 	           cosmetic changes)

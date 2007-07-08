@@ -67,6 +67,7 @@ typedef struct __dc1394_capture
   MPQueueID                termination_queue;
   MPSemaphoreID            thread_init_semaphore;
   MPTaskID                 task;
+  CFSocketRef              socket;
   CFRunLoopSourceRef       socket_source;
   uint8_t                  iso_is_allocated;
   uint8_t                  iso_is_started;

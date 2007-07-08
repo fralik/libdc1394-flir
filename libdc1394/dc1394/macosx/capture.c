@@ -300,7 +300,6 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   int frame_size;
   int numdcls;
   CFSocketContext socket_context = { 0, camera, NULL, NULL, NULL };
-  CFSocketRef socket;
   
   craw->capture.flags=flags;
   if (((flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) &&
@@ -324,10 +323,13 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   capture->num_frames = num_dma_buffers;
   pipe (capture->notify_pipe);
 
-  socket = CFSocketCreateWithNative (NULL, capture->notify_pipe[0],
+  capture->socket = CFSocketCreateWithNative (NULL, capture->notify_pipe[0],
       kCFSocketReadCallBack, socket_callback, &socket_context);
-  capture->socket_source = CFSocketCreateRunLoopSource (NULL, socket, 0);
-  CFRelease (socket);
+  /* Set flags so that the underlying fd is not closed with the socket */
+  CFSocketSetSocketFlags (capture->socket,
+      CFSocketGetSocketFlags (capture->socket) & ~kCFSocketCloseOnInvalidate);
+  capture->socket_source = CFSocketCreateRunLoopSource (NULL,
+      capture->socket, 0);
   if (!capture->run_loop)
     dc1394_capture_schedule_with_runloop (camera,
         CFRunLoopGetCurrent (), kCFRunLoopDefaultMode);
@@ -498,6 +500,12 @@ dc1394_capture_stop(dc1394camera_t *camera)
     CFRelease (capture->socket_source);
   }
   capture->socket_source = NULL;
+
+  if (capture->socket) {
+    CFSocketInvalidate (capture->socket);
+    CFRelease (capture->socket);
+  }
+  capture->socket = NULL;
   
   if (capture->mutex)
     MPDeleteCriticalRegion (capture->mutex);
