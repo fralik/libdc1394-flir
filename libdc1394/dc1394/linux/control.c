@@ -359,7 +359,6 @@ GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uin
 #ifdef DC1394_DEBUG_LOWEST_LEVEL
     fprintf(stderr,"0x%lx [...]\n", value[0]);
 #endif
-    usleep(DC1394_SLOW_DOWN);
 
     if (!retval) {
       goto out;
@@ -367,6 +366,9 @@ GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uin
     else if (errno != EAGAIN) {
       return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
     }
+
+    // usleep is executed only if the read fails!!!
+    usleep(DC1394_SLOW_DOWN);
     
   }
 
@@ -394,11 +396,12 @@ SetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uin
 #endif
     retval= raw1394_write(craw->handle, 0xffc0 | camera->node, offset + CONFIG_ROM_BASE, 4 * num_quads, value);
 
-    usleep(DC1394_SLOW_DOWN);
-
     if (!retval || (errno != EAGAIN)) {
       return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );;
     }
+
+    // usleep is executed only if the read fails!!!
+    usleep(DC1394_SLOW_DOWN);
     
   }
   
