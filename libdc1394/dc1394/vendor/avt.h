@@ -94,7 +94,9 @@ extern "C" {
 /* Retrieve the firmware version, FPGA version and the camera ID	*/	 
 /************************************************************************/
 dc1394error_t dc1394_avt_get_version(dc1394camera_t *camera, 
-				     uint32_t *Version, uint32_t *Camera_ID,
+				     uint32_t *UCType,
+				     uint32_t *Version,
+				     uint32_t *Camera_ID,
 				     uint32_t *FPGA_Version);
 
 

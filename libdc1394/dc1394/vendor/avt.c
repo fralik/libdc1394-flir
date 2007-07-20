@@ -94,14 +94,14 @@
 /************************************************************************/
 dc1394error_t
 dc1394_avt_get_version(dc1394camera_t *camera, 
-		       uint32_t *Version, uint32_t *Camera_ID, uint32_t *FPGA_Version)
+		       uint32_t *UCType, uint32_t *Version,
+		       uint32_t *Camera_ID, uint32_t *FPGA_Version)
 {
   dc1394error_t err;
   uint32_t value;
   
   /* Retrieve uC */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_VERSION_INFO1, &value);
-  DC1394_ERR_RTN(err,"Could not get AVT version info 1");
+  *UCType =GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_VERSION_INFO1,&value);
 
   /* uC Version : Bits 16..31 */
   *Version =(uint32_t)(value & 0xFFFFUL );

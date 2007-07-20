@@ -1,5 +1,8 @@
-2007-07-07 Damien Douxchamps http://damien.douxchamps.net/
-	* SVN 410: execute a "SLOW_DOWN" only if the read or write fails,
+2007-07-20 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 411: Applied AVT patch from Seemant Kulleen
+	
+2007-07-11 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 410: execute a "SLOW_DOWN" only if the ROM read or write fails,
 	           not everytime. This makes much more sense and also makes
 		   applications much faster (example: coriander starts in
 		   0.5 seconds instead of 3 seconds). The SLOW_DOWN thing
