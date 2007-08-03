@@ -1219,14 +1219,9 @@ dc1394_query_format7_frame_interval(raw1394handle_t handle, nodeid_t node,
 				    float *interval);
 
 int
-dc1394_set_format7_color_filter_id(raw1394handle_t handle, nodeid_t node,
-				   unsigned int mode,
-				   unsigned int color_id);
-
-int
 dc1394_query_format7_color_filter_id(raw1394handle_t handle, nodeid_t node,
 				     unsigned int mode,
-				     unsigned int *color_id);
+				     unsigned int *filter_id);
 
 /**********************************
  *   ABSOLUTE SETTING FUNCTIONS   *		     

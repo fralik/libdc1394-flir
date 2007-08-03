@@ -548,3 +548,9 @@ Wed Jul 30 09:32:01 CEST 2003 <ddouxchamps@users.sf.net>
 2006-04-05 Damien <ddouxchamps@users.sf.net>
     * replaced CLK_TCK by CLOCKS_PER_SEC. Thanks to Sean Darcy for (re)
       spotting this in version 1.
+	
+2007-08-03 Damien <ddouxchamps@users.sf.net>
+    * Fixed color filter bug (Johann Schoonees)
+    * Removed unnecessary function to set the color filter
+      (color filter is read only) (Johann Schoonees)
+    * release 1.2.2
