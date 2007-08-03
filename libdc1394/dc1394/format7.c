@@ -690,32 +690,7 @@ dc1394_format7_get_color_filter(dc1394camera_t *camera,
   *color_filter= (value >> 24)+DC1394_COLOR_FILTER_MIN;
   return err;
 }   
-     
-dc1394error_t
-dc1394_format7_set_color_filter(dc1394camera_t *camera,
-				dc1394video_mode_t video_mode, dc1394color_filter_t color_filter)
-{   
-  dc1394error_t err;
-
-  if (!dc1394_is_video_mode_scalable(video_mode))
-    return DC1394_INVALID_VIDEO_MODE;
-  
-  if (camera->iidc_version<DC1394_IIDC_VERSION_1_31)
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-
-  if ((color_filter<DC1394_COLOR_FILTER_MIN)||(color_filter>DC1394_COLOR_FILTER_MAX))
-    return DC1394_INVALID_COLOR_FILTER;
-
-  color_filter -= DC1394_COLOR_FILTER_MIN;
-  color_filter <<= 24;
-
-  err=SetCameraFormat7Register(camera, video_mode, REG_CAMERA_FORMAT7_COLOR_FILTER_ID,
-			       color_filter);
-  DC1394_ERR_RTN(err, "Could not set color filter ID");
-
-  return err;
-}   
-
+    
 dc1394error_t
 dc1394_format7_get_mode_info(dc1394camera_t *camera,
 			     dc1394video_mode_t video_mode, dc1394format7mode_t *f7_mode)

@@ -838,7 +838,6 @@ dc1394error_t dc1394_format7_get_unit_position(dc1394camera_t *camera, dc1394vid
 dc1394error_t dc1394_format7_get_color_coding(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding);
 dc1394error_t dc1394_format7_get_color_codings(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_codings_t *codings);
 dc1394error_t dc1394_format7_set_color_coding(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t color_coding);
-dc1394error_t dc1394_format7_set_color_filter(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_filter_t color_filter);
 dc1394error_t dc1394_format7_get_color_filter(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_filter_t *color_filter);
 
 /* packet */

@@ -1,4 +1,8 @@
 2007-07-20 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 413: Removed unnecessary function to set the color filter
+	           (the latter is read only!). Thanks to Johann Schoonees.
+
+2007-07-20 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 411: Applied AVT patch from Seemant Kulleen
 	
 2007-07-11 Damien Douxchamps http://damien.douxchamps.net/
