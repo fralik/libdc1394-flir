@@ -38,6 +38,7 @@
 #define _DEVICE_H_
 #include <linux/videodev.h>
 #include <getopt.h>
+#include <stdint.h>
 
 #include <dc1394/control.h>
 #include "affine.h"

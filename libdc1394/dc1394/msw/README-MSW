@@ -1,0 +1,31 @@
+	Building for MS Windows
+
+The code talk to 1394 bus on msw using virtual 1394 device. This facility is only available on windows XP, so the code won't work on win2k. The code uses the driver that comes with windows DDK (driver development kit). In order to build the library you have to have windows DDK installed together with examples for 1394 bus, that contain the source code of virtual driver. Specify the path to winddk root directory using argument --with-winddk to configure script.
+
+The library and examples were built using MinGW gcc compiler (http://www.mingw.org/) using cygwin utilities (http://www.cygwin.com/). In order to use MinGW  with cygwin add path to mingw bin directory to your PATH variable as described in http://www.mingw.org/mingwfaq.shtml#faq-usingwithmsys
+
+To build the library and examples from SVN source tree use the following commands:
+
+autoreconf -i -v -f
+mkdir build-msw
+cd build-msw
+../configure --build=mingw32
+make
+
+Before running examples for the first time you need to build and install the microsoft virtual 1394 driver according to DDK instructions. Basically- start ddk build environment, cd to src dirctory and type build.
+
+Run examples without installation using libtool as follows:
+
+cd examples
+../libtool --mode=execute ./grab_color_image
+
+In order to use the library with MS development tools you need to create import library with the following commands:
+
+pexports.exe libdc1394-20.dll >libdc1394.def
+lib /def:libdc1394.def /out:libdc1394.lib
+
+and link resulting libdc1394.lib to application.
+
+The first time you will run any program that activates virtual 1394 device you will get the usual "Found new hardware" dialog. If you have not installed the virtual driver in advance, direct the dialog to the folder where you have built ddk drivers (src/wdm/1394/driver/1394vdev) for info file, the driver itself is in src/wdm/1394/driver/1394vdev/objfre_wxp_x86/i386/1394VDEV.sys.
+
+Important: call the capture related functions (setup/queue/dequeue/stop) for a single camera from a single thread. It is safe to work with different cameras from different threads. 

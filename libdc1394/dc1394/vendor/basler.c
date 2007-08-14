@@ -21,10 +21,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "../control.h"
-#include "../register.h"
 #include "../internal.h"
+#include "../register.h"
 #include "../checksum.h"
+#include "../control.h"
 #include "basler.h"
 #include "basler_sff_registry.h"
 

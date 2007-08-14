@@ -2,7 +2,7 @@ noinst_LTLIBRARIES = libdc1394-vendor.la
 
 pkgvendorincludedir = $(pkgincludedir)/vendor
 
-AM_CFLAGS = -I..
+AM_CFLAGS = -I$(top_srcdir) -I$(srcdir)/..
 libdc1394_vendor_la_SOURCES =  \
 	avt.c \
 	avt.h \

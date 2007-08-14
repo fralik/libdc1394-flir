@@ -2,6 +2,13 @@
 AC_PREREQ([2.6.0])
 AC_INIT([libdc1394],[2.0.0-rc7],[libdc1394-devel@lists.sf.net])
 AC_CONFIG_SRCDIR([dc1394/control.c])
+
+case "$host" in
+*-*-cygwin* | *-*-mingw*)
+AC_LIBTOOL_WIN32_DLL
+;;
+esac
+
 #
 DX_HTML_FEATURE(OFF)
 DX_CHM_FEATURE(OFF)
@@ -46,11 +53,25 @@ else
        [AC_MSG_ERROR(IOKitLib not found.)])
     dc1394platform=macosx
     ;;
+  *-*-cygwin* | *-*-mingw*)
+    AC_ARG_WITH(winddk,[  --with-winddk=<dir>  Path to WINDDK root dir (c:/WINDDK/2600.1106)])
+    if ! test -z "$with_winddk" ; then
+       WINDDK="$with_winddk"
+    else
+       WINDDK="c:/WINDDK/2600.1106"
+    fi
+    AC_SUBST(WINDDK)
+    dc1394platform=msw
+	CFLAGS="$CFLAGS -include \${top_srcdir}/dc1394/msw/compat.h"
+	platform_LDFLAGS="-Wl,--export-all -no-undefined -lsetupapi -lws2_32"
+	AC_SUBST(platform_LDFLAGS)
+    ;;
   esac
 fi
 AM_CONDITIONAL(USE_LINUX, test x$raw1394 = xtrue)
 AM_CONDITIONAL(USE_MACOSX, test x$iokit = xtrue)
 AC_SUBST(dc1394platform)
+
 
 # check for Xv extensions (necessary for examples/dc1394_multiview)
 # imported from Coriander
@@ -74,7 +95,7 @@ AC_DEFUN([AC_CHECK_XV],[
 AC_CHECK_XV
 
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h sys/ioctl.h unistd.h)
+AC_CHECK_HEADERS(stdint.h fcntl.h sys/ioctl.h unistd.h sys/mman.h netinet/in.h)
 AC_PATH_XTRA
 
 AC_TYPE_SIZE_T
@@ -102,6 +123,7 @@ AC_CONFIG_FILES([ \
     dc1394/linux/Makefile \
     dc1394/juju/Makefile \
     dc1394/macosx/Makefile \
+    dc1394/msw/Makefile \
     dc1394/vendor/Makefile \
     examples/Makefile \
 ])

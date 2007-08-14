@@ -2,9 +2,10 @@ MAINTAINERCLEANFILES = Makefile.in
 lib_LTLIBRARIES = libdc1394.la
 
 SUBDIRS = $(dc1394platform) vendor
-DIST_SUBDIRS = linux macosx vendor juju
+DIST_SUBDIRS = linux macosx vendor juju msw
+AM_CFLAGS = -DDC1394_DLL_EXPORTS -I$(top_srcdir)
 
-libdc1394_la_LDFLAGS = -version-info @lt_major@:@lt_revision@:@lt_age@
+libdc1394_la_LDFLAGS = $(platform_LDFLAGS) -version-info @lt_major@:@lt_revision@:@lt_age@
 
 libdc1394_la_SOURCES =  \
 	control.c 	\

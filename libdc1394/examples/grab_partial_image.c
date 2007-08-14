@@ -14,12 +14,18 @@
 **************************************************************************/
 
 #include <stdio.h>
+#include <stdint.h>
 #include <dc1394/utils.h>
 #include <dc1394/control.h>
 #include <stdlib.h>
 #include <time.h>
-#include <sys/times.h>
 
+#ifdef _WIN32
+#define times 0**(int*)
+struct tms {int a;};
+#else
+#include <sys/times.h>
+#endif
 
 int main(int argc, char *argv[]) 
 {
@@ -174,7 +180,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  save last image as Part.pgm
    *-----------------------------------------------------------------------*/
-  imagefile=fopen("Part.pgm","w");
+  imagefile=fopen("Part.pgm","wb");
     
   dc1394_get_image_size_from_video_mode(camera, DC1394_VIDEO_MODE_FORMAT7_0, &width, &height);
   fprintf(imagefile,"P5\n%u %u\n255\n", width, height);

@@ -31,6 +31,7 @@
 #include <X11/keysym.h>
 #define _GNU_SOURCE
 #include <getopt.h>
+#include <stdint.h>
 
 #include <libraw1394/raw1394.h>
 #include "dc1394/control.h"

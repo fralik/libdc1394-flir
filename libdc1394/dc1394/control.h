@@ -29,22 +29,6 @@
     More details soon
 */
 
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <stdint.h>
-
-
 /* Note on the coding of libdc1394 versions:
    - LIBDC1394_VERSION represent the release number of the library,
      e.g. 2.0.0. It consists in 4 digits, 2 for each number in the version.
@@ -60,6 +44,8 @@
    version installed on the machine. They appeared in 2.0 so that you
    may need to check their existance if your code must work with 1.x.
 */
+
+
 #define LIBDC1394_VERSION            0200
 #define LIBDC1394_VERSION_MAJOR        20
 #define LIBDC1394_VERSION_REVISION      0
@@ -561,6 +547,7 @@ enum {
 extern const char *dc1394_feature_desc[DC1394_FEATURE_NUM];
 extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 
+#if ! defined (_MSC_VER)
 /* Error checking function. displays an error string on stderr and exit current function
    if error is positive. Neg errors are messages and are thus ignored */
 
@@ -640,6 +627,8 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
     }                                                                \
     }
 
+#endif /* _MSC_VER */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -653,6 +642,12 @@ void dc1394_free_camera(dc1394camera_t *camera);
 
 /* locate and initialise the cameras */
 dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint32_t* numCameras);
+
+/* Release the memory block allocated by dc1394_find_cameras.
+   Call this instead of free() in a portable application because the library may be
+   linked to a different run-time than your application and memory management
+   functions of application and library may be incompatibe. */
+void dc1394_camera_list_free(void *p);
 
 /* print the camera information */
 dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);

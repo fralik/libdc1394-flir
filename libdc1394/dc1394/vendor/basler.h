@@ -23,7 +23,7 @@
 #ifndef __DC1394_VENDOR_BASLER_H__
 #define __DC1394_VENDOR_BASLER_H__
 
-#include "../control.h"
+#include "dc1394/control.h"
 #include "basler_sff.h"
 
 #ifdef __cplusplus

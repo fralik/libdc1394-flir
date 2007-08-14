@@ -25,8 +25,8 @@
 #ifndef __TOPOLOGY_H__
 #define __TOPOLOGY_H__
 
-#include "linux/linux.h"
 #include "internal.h"
+#include "linux/linux.h"
 
 #define SHIFT_START	30
 #define WIDTH_START	2

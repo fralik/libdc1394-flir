@@ -32,7 +32,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include <dc1394/control.h>
+#include <dc1394/internal.h>
 #include <dc1394/register.h>
 
 /*

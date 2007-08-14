@@ -14,6 +14,7 @@
 **************************************************************************/
 
 #include <stdio.h>
+#include <stdint.h>
 #include <dc1394/utils.h>
 #include <dc1394/control.h>
 #include <dc1394/conversions.h>
@@ -318,7 +319,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  save image as 'Image.pgm'
    *-----------------------------------------------------------------------*/
-  imagefile=fopen(IMAGE_FILE_NAME, "w");
+  imagefile=fopen(IMAGE_FILE_NAME, "wb");
 
   if( imagefile == NULL) {
     perror( "Can't create '" IMAGE_FILE_NAME "'");

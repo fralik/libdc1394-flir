@@ -22,6 +22,7 @@
  */
 
 #include <memory.h>
+#include <stdint.h>
 
 #include "../control.h"
 #include "basler_sff_registry.h"

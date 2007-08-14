@@ -21,9 +21,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "internal.h"
 #include "control.h"
 #include "config.h"
-#include "internal.h"
 #include "register.h"
 #include "offsets.h"
 #include "utils.h"
@@ -56,6 +56,10 @@ dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint32_t* numCameras)
 {
   return dc1394_find_cameras_platform(cameras_ptr, numCameras);
 
+}
+
+void dc1394_camera_list_free(void *p) {
+	free(p);
 }
 
 int

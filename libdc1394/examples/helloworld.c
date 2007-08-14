@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <dc1394/control.h>
 
 int main(int argc, char *argv[]) 

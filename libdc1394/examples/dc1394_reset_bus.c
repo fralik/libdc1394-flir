@@ -9,6 +9,7 @@
 **************************************************************************/
 
 #include <stdio.h>
+#include <stdint.h>
 #include <dc1394/control.h>
 #include <stdlib.h>
 
