@@ -25,6 +25,7 @@
 
 #include "dc1394/control.h"
 #include "basler_sff.h"
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {

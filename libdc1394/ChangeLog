@@ -1,4 +1,5 @@
 2007-08-14 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 415: basler_cff.h needed <string.h>
         * SVN 414: Merged patch from Vladimir Avdonin for the compilation and
 	           use of libdc1394 on MS Windows XP.
 
