@@ -21,7 +21,6 @@ libdc1394_la_SOURCES =  \
 	conversions.c    \
 	conversions.h    \
 	bayer.c          \
-	kernel-video1394.h \
 	checksum.c
 
 libdc1394_la_LIBADD = \

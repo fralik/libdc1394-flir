@@ -25,14 +25,14 @@
 #include <libraw1394/csr.h>
 #include "config.h"
 #include "internal.h"
-#include "linux/raw1394support.h"
-#include "linux/topology.h"
+//#include "linux/raw1394support.h"
+//#include "linux/topology.h"
 #include "register.h"
 #include "offsets.h"
 #include "linux/linux.h"
 #include "utils.h"
 
-
+/*
 void
 GrabSelfIds(dc1394camera_t **cams, int ncams)
 {
@@ -86,6 +86,8 @@ GrabSelfIds(dc1394camera_t **cams, int ncams)
   }
 
 }
+
+*/
 
 dc1394camera_t*
 dc1394_new_camera_platform (uint32_t port, uint16_t node)
@@ -308,9 +310,11 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
   
   if (numCam==0)
     return DC1394_NO_CAMERA;
-  else {
-    GrabSelfIds(cameras, numCam);
-  }
+
+  // no support for this info in Linux at this time
+  //else {
+  //  GrabSelfIds(cameras, numCam);
+  //}
 
   return DC1394_SUCCESS;
 }

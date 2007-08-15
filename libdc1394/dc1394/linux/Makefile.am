@@ -7,10 +7,8 @@ libdc1394_linux_la_SOURCES =  \
 	control.c \
 	capture.c \
 	capture.h \
-	linux.h \
-	topology.h \
-	topology.c \
-	raw1394support.h
+	kernel-video1394.h \
+	linux.h 
 
 # headers to be installed
 pkglinuxinclude_HEADERS = \

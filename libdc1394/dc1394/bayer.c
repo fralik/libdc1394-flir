@@ -473,7 +473,7 @@ dc1394_bayer_HQLinear(const uint8_t *restrict bayer, uint8_t *restrict rgb, int 
     }
 }
 
-/* coriander's Bayer decoding (GPL) */
+/* coriander's Bayer decoding */
 /* Edge Sensing Interpolation II from http://www-ise.stanford.edu/~tingchen/ */
 /*   (Laroche,Claude A.  "Apparatus and method for adaptively
      interpolating a full color image utilizing chrominance gradients"

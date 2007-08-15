@@ -141,7 +141,7 @@ dc1394_new_camera(uint32_t port, uint16_t node)
    cam->iso_bandwidth=0;
    cam->capture_is_set=0;
    cam->broadcast=DC1394_FALSE;
-   // default values for PHY stuff:
+   // default values for PHY stuff. This won't be changed 'cause there's no support in Linux for this info.
    cam->phy_speed=-1;
    cam->power_class=DC1394_POWER_CLASS_NONE;
    cam->phy_delay=DC1394_PHY_DELAY_MAX_144_NS;

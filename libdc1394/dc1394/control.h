@@ -415,7 +415,6 @@ typedef struct __dc1394_camera
   uint32_t             iso_bandwidth;
   dc1394speed_t        iso_speed;
   uint32_t             mem_channel_number;
-
   int                  capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
 
   // for broadcast:
