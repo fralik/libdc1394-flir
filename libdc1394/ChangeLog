@@ -1,4 +1,8 @@
 2007-08-15 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 417: First alpha implementation of the new API for camera
+	           detection. It consists in wrappers around existing
+		   functions. An example (test_new_api) is provided to...
+		   test this new API.
         * SVN 416: remove topology.c/h and raw1394support.h. This gets rid of
 	           GPL files that were tainting the library license. Thanks to
 		   Olaf Hering for spoting this. The topology data is now only

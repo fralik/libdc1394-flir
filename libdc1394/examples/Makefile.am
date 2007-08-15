@@ -3,7 +3,8 @@ AM_CPPFLAGS = -I $(top_srcdir)
 
 A = grab_gray_image grab_partial_image grab_color_image \
 	grab_color_image2 helloworld ladybug \
-	basler_sff_info basler_sff_extended_data
+	basler_sff_info basler_sff_extended_data \
+	test_new_api
 B = dc1394_reset_bus
 
 if USE_LINUX
@@ -54,6 +55,9 @@ basler_sff_info_LDADD = $(LDADD) ../dc1394/libdc1394.la
 
 basler_sff_extended_data_SOURCES = basler_sff_extended_data.c
 basler_sff_extended_data_LDADD = $(LDADD) ../dc1394/libdc1394.la
+
+test_new_api_SOURCES = test_new_api.c
+test_new_api_LDADD = $(LDADD) ../dc1394/libdc1394.la
 
 if XVOK
 dc1394_multiview_CFLAGS = $(X_CFLAGS) $(XV_CFLAGS)

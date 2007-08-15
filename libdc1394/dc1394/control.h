@@ -872,6 +872,25 @@ dc1394error_t dc1394_pio_set(dc1394camera_t *camera, uint32_t value);
 dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
 
 
+/***************************************************************************
+     New API for camera detection
+ ***************************************************************************/
+
+typedef struct __dc1394_t
+{
+  // a list of cameras (GUIDs) attached to this host:
+  uint64_t* guids;
+  uint32_t n_cameras;
+}
+dc1394_t;
+
+dc1394_t* dc1394_new(void);
+void dc1394_free(dc1394_t *dc1394);
+dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394);
+dc1394camera_t* dc1394_camera_new(dc1394_t *dc1394, uint64_t guid);
+void dc1394_camera_free(dc1394camera_t *camera);
+
+
 #ifdef __cplusplus
 }
 #endif

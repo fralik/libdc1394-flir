@@ -2309,3 +2309,108 @@ dc1394_pio_get(dc1394camera_t *camera, uint32_t *value)
 
   return err;
 }
+
+/*******************************************************************************
+   New API for camera detection. For now we only have wrappers around existing
+   functions, which is of course far from optimal.
+ *******************************************************************************/
+
+/*
+  Create a new dc1394 struct, which also initialises the library
+*/
+dc1394_t*
+dc1394_new(void)
+{
+  return (dc1394_t*)malloc(sizeof(dc1394_t));
+}
+
+/*
+  Free a dc1394 struct, which also terminates the use of the library
+*/
+void
+dc1394_free(dc1394_t *dc1394)
+{
+  if (dc1394->n_cameras>0)
+    free(dc1394->guids);
+
+  free(dc1394);
+}
+
+/*
+  Returns the list of unique identifiers (GUID) for all cameras connected to the
+  computer. The number of cameras is also returned. 
+*/
+dc1394error_t
+dc1394_enumerate_cameras(dc1394_t *dc1394)
+{
+  // use dc1394_find_cameras to get all cameras:
+  dc1394camera_t **cameras;
+  uint32_t num, i;
+  dc1394error_t err;
+
+  err=dc1394_find_cameras(&cameras, &num);
+  if (err!=DC1394_NO_CAMERA) {
+    DC1394_ERR_RTN(err,"Could not find cameras");
+  }
+    
+  // the camera structs now contain the GUIDs. Extract them and return:
+  dc1394->guids=(uint64_t*)malloc(num*sizeof(uint64_t));
+  dc1394->n_cameras=num;
+  
+  for (i=0;i<num;i++) {
+    dc1394->guids[i]=cameras[i]->euid_64; // FIXME: we should change the name "euid_64" to "guid"
+    dc1394_free_camera(cameras[i]);
+    // note: don't confuse "dc1394_free_camera" (old API) and "dc1394_camera_free" (this new API)
+  }
+  
+  // free the camera vector:
+  free(cameras);
+
+  return DC1394_SUCCESS;
+}
+
+/*
+  Creates a new camera structure and initialise it so that it's ready to use.
+  This requires a fair amount of discussions between the camera and the host.
+*/
+dc1394camera_t*
+dc1394_camera_new(dc1394_t *dc1394, uint64_t guid)
+{
+  // use dc1394_find_cameras to get all cameras:
+  dc1394camera_t **cameras;
+  uint32_t num, i;
+  dc1394error_t err;
+  // if the GUID given does not correspond to an available camera, return NULL.
+  dc1394camera_t *out=NULL;
+
+  err=dc1394_find_cameras(&cameras, &num);
+
+  // check for the GUID only if we have a valid camera vector
+  if (err==DC1394_SUCCESS) {
+
+    for (i=0;i<num;i++) {
+      if (cameras[i]->euid_64==guid)
+	out=cameras[i];
+      else
+	dc1394_free_camera(cameras[i]);
+    }
+
+    // free the camera vector
+    free(cameras);
+
+  }
+
+  return out;
+}
+
+/*
+  Free a camera structure as well as resources used by that camera (bandwidth,
+  ISO channels, etc...)
+*/
+void
+dc1394_camera_free(dc1394camera_t *camera)
+{
+  dc1394_free_camera(camera);
+}
+
+
