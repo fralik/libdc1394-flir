@@ -2321,7 +2321,37 @@ dc1394_pio_get(dc1394camera_t *camera, uint32_t *value)
 dc1394_t*
 dc1394_new(void)
 {
-  return (dc1394_t*)malloc(sizeof(dc1394_t));
+  dc1394_t *dc1394;
+  dc1394camera_t **cameras;
+  uint32_t num, i;
+  dc1394error_t err;
+
+  dc1394=(dc1394_t*)malloc(sizeof(dc1394_t));
+
+  // use dc1394_find_cameras to get all cameras:
+
+  err=dc1394_find_cameras(&cameras, &num);
+  if ((err!=DC1394_NO_CAMERA)&&(err!=DC1394_SUCCESS)) {
+    fprintf(stderr,"Could not find cameras\n");
+    return NULL;
+  }
+    
+  // the camera structs now contain the GUIDs. Extract them and return:
+  dc1394->guids_internal=(uint64_t*)malloc(num*sizeof(uint64_t));
+  dc1394->n_cam_internal=num;
+  dc1394->guids_public=NULL;
+  dc1394->n_cam_public=0;
+
+
+  for (i=0;i<num;i++) {
+    dc1394->guids_internal[i]=cameras[i]->euid_64; // FIXME: we should change the name "euid_64" to "guid"
+    dc1394_free_camera(cameras[i]);
+    // note: don't confuse "dc1394_free_camera" (old API) and "dc1394_camera_free" (this new API)
+  }
+  // free the camera vector:
+  free(cameras);
+
+  return dc1394;
 }
 
 /*
@@ -2330,8 +2360,11 @@ dc1394_new(void)
 void
 dc1394_free(dc1394_t *dc1394)
 {
-  if (dc1394->n_cameras>0)
-    free(dc1394->guids);
+  if (dc1394->guids_internal!=NULL)
+    free(dc1394->guids_internal);
+
+  if (dc1394->guids_public!=NULL)
+    free(dc1394->guids_public);
 
   free(dc1394);
 }
@@ -2341,30 +2374,25 @@ dc1394_free(dc1394_t *dc1394)
   computer. The number of cameras is also returned. 
 */
 dc1394error_t
-dc1394_enumerate_cameras(dc1394_t *dc1394)
+dc1394_enumerate_cameras(dc1394_t *dc1394, uint64_t **guids, uint32_t *num)
 {
-  // use dc1394_find_cameras to get all cameras:
-  dc1394camera_t **cameras;
-  uint32_t num, i;
-  dc1394error_t err;
+  int i;
 
-  err=dc1394_find_cameras(&cameras, &num);
-  if (err!=DC1394_NO_CAMERA) {
-    DC1394_ERR_RTN(err,"Could not find cameras");
-  }
-    
-  // the camera structs now contain the GUIDs. Extract them and return:
-  dc1394->guids=(uint64_t*)malloc(num*sizeof(uint64_t));
-  dc1394->n_cameras=num;
+  // copy the internal data from internal to public arrays and
+  // send this back to the user. At this time we do this by copying data
+  // but exchanging pointers could be used too.
+
+  if (dc1394->guids_public!=NULL)
+    free(dc1394->guids_public);
+
+  dc1394->guids_public=(uint64_t*)malloc(dc1394->n_cam_internal*sizeof(uint64_t));
+  dc1394->n_cam_public=dc1394->n_cam_internal;
   
-  for (i=0;i<num;i++) {
-    dc1394->guids[i]=cameras[i]->euid_64; // FIXME: we should change the name "euid_64" to "guid"
-    dc1394_free_camera(cameras[i]);
-    // note: don't confuse "dc1394_free_camera" (old API) and "dc1394_camera_free" (this new API)
-  }
-  
-  // free the camera vector:
-  free(cameras);
+  for (i=0;i<dc1394->n_cam_public;i++)
+    dc1394->guids_public[i]=dc1394->guids_internal[i];
+
+  *guids=dc1394->guids_public;
+  *num=dc1394->n_cam_public;
 
   return DC1394_SUCCESS;
 }
