@@ -876,20 +876,24 @@ dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
      New API for camera detection
  ***************************************************************************/
 
+typedef struct __dc1394camera_list_t
+{
+  uint32_t      num;
+  uint64_t     *guids;
+} dc1394camera_list_t;
+
 typedef struct __dc1394_t
 {
   // a list of cameras (GUIDs) attached to this host. Two vectors are used to deal with
   // async changes. Mutexes will have to be used too.
-  uint64_t* guids_internal;
-  uint32_t  n_cam_internal;
-  uint64_t* guids_public;
-  uint32_t  n_cam_public;
+  uint64_t* guids;
+  uint32_t  n_cam;
 }
 dc1394_t;
 
 dc1394_t* dc1394_new(void);
 void dc1394_free(dc1394_t *dc1394);
-dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, uint64_t **guids, uint32_t *num);
+dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t *list);
 dc1394camera_t* dc1394_camera_new(dc1394_t *dc1394, uint64_t guid);
 void dc1394_camera_free(dc1394camera_t *camera);
 

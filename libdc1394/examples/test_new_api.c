@@ -21,27 +21,29 @@ int main(int argc, char *argv[])
   dc1394_t *dc1394;
   dc1394camera_t *camera;
   dc1394error_t err;
-  uint64_t *guids;
-  uint32_t ncam;
+  dc1394camera_list_t list;
   int i;
 
   // initialise the library
   dc1394=dc1394_new();
 
   // enumerate camera GUIDs
-  err=dc1394_enumerate_cameras(dc1394,&guids, &ncam);
+  err=dc1394_enumerate_cameras(dc1394,&list);
   if (err!=DC1394_NO_CAMERA) {
     DC1394_ERR_RTN(err,"Could not enumerate cameras");
   }    
-  fprintf(stderr,"Found %d camera(s)\n",ncam);
+  fprintf(stderr,"Found %d camera(s)\n",list.num);
   
   // get each camera struct, print info and erase camera
-  for (i=0;i<ncam;i++) {
-    camera=dc1394_camera_new(dc1394,guids[i]);
+  for (i=0;i<list.num;i++) {
+    camera=dc1394_camera_new(dc1394,list.guids[i]);
     dc1394_print_camera_info(camera);
     dc1394_camera_free(camera);
   }
     
+  // free camera list:
+  free(list.guids);
+
   // exit the library
   dc1394_free(dc1394);
 

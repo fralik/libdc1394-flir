@@ -2337,14 +2337,12 @@ dc1394_new(void)
   }
     
   // the camera structs now contain the GUIDs. Extract them and return:
-  dc1394->guids_internal=(uint64_t*)malloc(num*sizeof(uint64_t));
-  dc1394->n_cam_internal=num;
-  dc1394->guids_public=NULL;
-  dc1394->n_cam_public=0;
+  dc1394->guids=(uint64_t*)malloc(num*sizeof(uint64_t));
+  dc1394->n_cam=num;
 
 
   for (i=0;i<num;i++) {
-    dc1394->guids_internal[i]=cameras[i]->euid_64; // FIXME: we should change the name "euid_64" to "guid"
+    dc1394->guids[i]=cameras[i]->euid_64; // FIXME: we should change the name "euid_64" to "guid"
     dc1394_free_camera(cameras[i]);
     // note: don't confuse "dc1394_free_camera" (old API) and "dc1394_camera_free" (this new API)
   }
@@ -2360,11 +2358,8 @@ dc1394_new(void)
 void
 dc1394_free(dc1394_t *dc1394)
 {
-  if (dc1394->guids_internal!=NULL)
-    free(dc1394->guids_internal);
-
-  if (dc1394->guids_public!=NULL)
-    free(dc1394->guids_public);
+  if (dc1394->guids!=NULL)
+    free(dc1394->guids);
 
   free(dc1394);
 }
@@ -2374,7 +2369,7 @@ dc1394_free(dc1394_t *dc1394)
   computer. The number of cameras is also returned. 
 */
 dc1394error_t
-dc1394_enumerate_cameras(dc1394_t *dc1394, uint64_t **guids, uint32_t *num)
+dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t *list)
 {
   int i;
 
@@ -2382,17 +2377,15 @@ dc1394_enumerate_cameras(dc1394_t *dc1394, uint64_t **guids, uint32_t *num)
   // send this back to the user. At this time we do this by copying data
   // but exchanging pointers could be used too.
 
-  if (dc1394->guids_public!=NULL)
-    free(dc1394->guids_public);
+  // we can't automatically free this because list->guids may not have been initialised to NULL.
+  //if (list->guids!=NULL)
+  //  free(list->guids);
 
-  dc1394->guids_public=(uint64_t*)malloc(dc1394->n_cam_internal*sizeof(uint64_t));
-  dc1394->n_cam_public=dc1394->n_cam_internal;
+  list->guids=(uint64_t*)malloc(dc1394->n_cam*sizeof(uint64_t));
+  list->num=dc1394->n_cam;
   
-  for (i=0;i<dc1394->n_cam_public;i++)
-    dc1394->guids_public[i]=dc1394->guids_internal[i];
-
-  *guids=dc1394->guids_public;
-  *num=dc1394->n_cam_public;
+  for (i=0;i<dc1394->n_cam;i++)
+    list->guids[i]=dc1394->guids[i];
 
   return DC1394_SUCCESS;
 }
