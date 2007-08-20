@@ -893,7 +893,8 @@ dc1394_t;
 
 dc1394_t* dc1394_new(void);
 void dc1394_free(dc1394_t *dc1394);
-dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t *list);
+dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list);
+void dc1394_free_camera_list(dc1394camera_list_t *list);
 dc1394camera_t* dc1394_camera_new(dc1394_t *dc1394, uint64_t guid);
 void dc1394_camera_free(dc1394camera_t *camera);
 
