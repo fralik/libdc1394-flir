@@ -24,8 +24,6 @@
 #ifndef __DC1394_CAMERA_CONTROL_H__
 #define __DC1394_CAMERA_CONTROL_H__
 
-#include "config.h"
-
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>

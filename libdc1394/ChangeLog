@@ -1,4 +1,5 @@
 2007-08-22 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 423: moved the include of config.h into internal.h
 	* SVN 422: little fixes in the new camera detection API.
         * SVN 421: Reverted some changes concerning where #includes are placed.
 	           This was changed for windows compatibility but breaks

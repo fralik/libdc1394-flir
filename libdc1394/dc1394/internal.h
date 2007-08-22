@@ -21,6 +21,7 @@
 
 #include "control.h"
 #include "offsets.h"
+#include "config.h"
 
 /* Definitions which application developers shouldn't care about */
 #define CONFIG_ROM_BASE             0xFFFFF0000000ULL
