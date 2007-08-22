@@ -20,8 +20,32 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #ifndef __DC1394_CAMERA_CONTROL_H__
 #define __DC1394_CAMERA_CONTROL_H__
+
+#include "config.h"
+
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#if HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+#if HAVE_SYS_MMAN_H
+#include <sys/mman.h>
+#endif
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#include <stdint.h>
 
 /*! \file control.h
     \brief Controls the library

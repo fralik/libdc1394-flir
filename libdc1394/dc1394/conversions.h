@@ -27,7 +27,7 @@
     More details soon
 */
 
-#include "internal.h"
+#include "control.h"
 #include "utils.h"
 #define restrict __restrict
 

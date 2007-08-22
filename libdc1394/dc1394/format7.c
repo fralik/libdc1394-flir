@@ -23,8 +23,8 @@
 #include <errno.h>
 #include <stdlib.h>
  
-#include "internal.h"
 #include "control.h"
+#include "internal.h"
 #include "register.h"
 #include "offsets.h"
 #include "utils.h"
