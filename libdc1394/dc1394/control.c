@@ -2337,9 +2337,14 @@ dc1394_new(void)
   }
     
   // the camera structs now contain the GUIDs. Extract them and return:
+  if (err==DC1394_NO_CAMERA) {
+    dc1394->guids=NULL;
+    dc1394->n_cam=0;
+    return dc1394;
+  }
+
   dc1394->guids=(uint64_t*)malloc(num*sizeof(uint64_t));
   dc1394->n_cam=num;
-
 
   for (i=0;i<num;i++) {
     dc1394->guids[i]=cameras[i]->euid_64; // FIXME: we should change the name "euid_64" to "guid"
@@ -2358,10 +2363,11 @@ dc1394_new(void)
 void
 dc1394_free(dc1394_t *dc1394)
 {
-  if (dc1394->guids!=NULL)
-    free(dc1394->guids);
-
-  free(dc1394);
+  if (dc1394!=NULL) {
+    if (dc1394->guids!=NULL)
+      free(dc1394->guids);
+    free(dc1394);
+  }
 }
 
 /*
@@ -2381,6 +2387,11 @@ dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list)
   //if (list->guids!=NULL)
   //  free(list->guids);
 
+  if (dc1394->n_cam==0) {
+    *list=NULL;
+    return DC1394_NO_CAMERA;
+  }
+
   *list=(dc1394camera_list_t*)malloc(sizeof(dc1394camera_list_t));
 
   (*list)->guids=(uint64_t*)malloc(dc1394->n_cam*sizeof(uint64_t));
@@ -2399,8 +2410,10 @@ dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list)
 void
 dc1394_free_camera_list(dc1394camera_list_t *list)
 {
-  free(list->guids);
-  free(list);
+  if (list!=NULL) {
+    free(list->guids);
+    free(list);
+  }
 }
 
 
