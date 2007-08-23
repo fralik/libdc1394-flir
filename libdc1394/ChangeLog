@@ -1,3 +1,11 @@
+2007-08-23 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 424: - Change the split between dc1394_update_camera_info and
+	             _dc1394_get_iidc_version so that getting the IIDC version
+		     also gets the GUID at the same time. This reduces the
+		     number of operations required to tell if a node is IIDC
+		     compliant or not.
+		   - dc1394camera_t member "euid_64"'s name changed to "guid"
+
 2007-08-22 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 423: moved the include of config.h into internal.h
 	* SVN 422: little fixes in the new camera detection API.

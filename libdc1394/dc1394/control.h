@@ -407,7 +407,7 @@ typedef struct __dc1394_camera
   // system/firmware information
   int                  port;
   uint16_t             node;
-  uint64_t             euid_64;
+  uint64_t             guid;
   uint32_t             ud_reg_tag_12;
   uint32_t             ud_reg_tag_13;
   uint64_t             command_registers_base;

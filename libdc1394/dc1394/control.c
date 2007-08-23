@@ -63,14 +63,70 @@ void dc1394_camera_list_free(void *p) {
 }
 
 int
-_dc1394_get_iidc_version(dc1394camera_t *camera)
+_dc1394_get_iidc_version_and_guid(dc1394camera_t *camera)
 {
   dc1394error_t err=DC1394_SUCCESS;
   uint32_t quadval = 0; // to avoid valgrind errors
   uint64_t offset;
+  uint32_t value[2] = {0, 0};
 
   if (camera == NULL)
     return DC1394_CAMERA_NOT_INITIALIZED;
+
+  // first we grab basic registers and offsets
+
+  /* get the GUID */
+  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
+  if (err!=DC1394_SUCCESS) return err;
+  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x10, &value[1]);
+  if (err!=DC1394_SUCCESS) return err;
+  camera->guid= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
+  
+  /* get the unit_directory offset */
+  offset= ROM_ROOT_DIRECTORY;
+  err=GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval);
+  if (err!=DC1394_SUCCESS) return err;
+  camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
+
+  /* get the vendor_id*/
+  offset= ROM_ROOT_DIRECTORY;
+  err=GetConfigROMTaggedRegister(camera, 0x03, &offset, &quadval);
+  if (err==DC1394_SUCCESS) {
+    camera->vendor_id=quadval & 0xFFFFFFUL;
+  }
+  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
+    camera->vendor_id=0;
+  }
+  else {
+    DC1394_ERR_RTN(err, "Could not get vendor ID");
+    return err;
+  }
+
+  /* get the model_id*/
+  offset= camera->unit_directory;
+  err=GetConfigROMTaggedRegister(camera, 0x17, &offset, &quadval);
+  if (err==DC1394_SUCCESS) {
+    camera->model_id=quadval & 0xFFFFFFUL;
+  }
+  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
+    camera->model_id=0;
+  }
+  else {
+    DC1394_ERR_RTN(err, "Could not get model ID");
+    return err;
+  }
+
+  /* get the spec_id value */
+  offset=camera->unit_directory;
+  err=GetConfigROMTaggedRegister(camera, 0x12, &offset, &quadval);
+  if (err!=DC1394_SUCCESS) return err;
+  camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
+
+  /* get the iidc revision */
+  offset=camera->unit_directory;
+  err=GetConfigROMTaggedRegister(camera, 0x13, &offset, &quadval);
+  if (err!=DC1394_SUCCESS) return err;
+  camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
 
   /*
      Note on Point Grey (PG) cameras:
@@ -120,24 +176,22 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
     return DC1394_INVALID_IIDC_VERSION;
   }
 
+  /* -- get the unit_dependent_directory offset --
+     We can do it here since we know it's a camera, and thus the UDD should exists
+     This UDD will be re-checked after but it does not really matter. */
+
+  offset= camera->unit_directory;
+  err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
+  DC1394_ERR_RTN(err, "Could not get unit dependent directory");
+  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
+  
   /* IIDC 1.31 check */
   if (camera->iidc_version==DC1394_IIDC_VERSION_1_30) {
     
-    /* -- get the unit_dependent_directory offset --
-       We can do it here since we know it's a camera, and thus the UDD should exists
-       This UDD will be re-checked after but it does not really matter. */
-
-    offset= camera->unit_directory;
-    err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
-    DC1394_ERR_RTN(err, "Could not get unit dependent directory");
-    camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
-  
-    //fprintf(stderr,"1.30 detected\n");
     offset=camera->unit_dependent_directory;
     err=GetConfigROMTaggedRegister(camera, 0x38, &offset, &quadval);
     if (err!=DC1394_SUCCESS) {
       if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
-	//fprintf(stderr,"not tag reg\n");
 	// If it fails here we return success with the most accurate version estimation: 1.30.
 	// This is because the GetConfigROMTaggedRegister will return a failure both if there is a comm
 	// problem but also if the tag is not found. In the latter case it simply means that the
@@ -148,7 +202,6 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
       else 
 	DC1394_ERR_RTN(err, "Could not get tagged register 0x38");
     }
-    //fprintf(stderr,"test2\n");
 
     switch (quadval&0xFFFFFFUL) {
     case 0x10:
@@ -185,7 +238,7 @@ _dc1394_get_iidc_version(dc1394camera_t *camera)
       break;
     }
   }
-  //fprintf(stderr,"test\n");
+
   return err;
 }
 
@@ -206,93 +259,16 @@ dc1394error_t
 dc1394_update_camera_info(dc1394camera_t *camera)
 {
   dc1394error_t err;
-  uint32_t len, i, count;
+  uint32_t len, count;
   uint64_t offset;
-  uint32_t value[2] = {0, 0}, quadval = 0; // set to zero to avoid valgrind errors
+  uint32_t value=0, quadval = 0; // set to zero to avoid valgrind errors
 
-  // init pointers to zero:
-  camera->command_registers_base=0;
-  camera->unit_directory=0;
-  camera->unit_dependent_directory=0;
-  camera->advanced_features_csr=0;
-  camera->PIO_control_csr=0;
-  camera->SIO_control_csr=0;
-  camera->strobe_control_csr=0;
-
-  for (i=0;i<DC1394_VIDEO_MODE_FORMAT7_NUM;i++)
-    camera->format7_csr[i]=0;
-
-  // return silently on all errors as a bad rom just means a device that is not a camera
-  
-  /* get the unit_directory offset */
-  offset= ROM_ROOT_DIRECTORY;
-  err=GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval);
-  if (err!=DC1394_SUCCESS) return err;
-  camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
-
-  /* get the vendor_id*/
-  offset= ROM_ROOT_DIRECTORY;
-  err=GetConfigROMTaggedRegister(camera, 0x03, &offset, &quadval);
-  if (err==DC1394_SUCCESS) {
-    camera->vendor_id=quadval & 0xFFFFFFUL;
-  }
-  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
-    camera->vendor_id=0;
-  }
-  else {
-    DC1394_ERR_RTN(err, "Could not get vendor ID");
-    return err;
-  }
-
-  /* get the spec_id value */
-  offset=camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0x12, &offset, &quadval);
-  if (err!=DC1394_SUCCESS) return err;
-  camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
-
-  /* get the iidc revision */
-  offset=camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0x13, &offset, &quadval);
-  if (err!=DC1394_SUCCESS) return err;
-  camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
-
-  /* verify the version/revision and find the IIDC_REVISION value from that */
-  /* Note: this requires the UDD to be set in order to verify IIDC 1.31 compliance. */
-  err=_dc1394_get_iidc_version(camera);
+  /* Verify if this node is a camera and get its GUID*/
+  err=_dc1394_get_iidc_version_and_guid(camera);
   if (err==DC1394_NOT_A_CAMERA)
     return err;
   DC1394_ERR_RTN(err, "Problem inferring the IIDC version");
 
-  /* get the model_id*/
-  offset= camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0x17, &offset, &quadval);
-  if (err==DC1394_SUCCESS) {
-    camera->model_id=quadval & 0xFFFFFFUL;
-  }
-  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
-    camera->model_id=0;
-  }
-  else {
-    DC1394_ERR_RTN(err, "Could not get model ID");
-    return err;
-  }
-
-  /* get the unit_dependent_directory offset */
-  offset= camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0xD4, &offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get unit dependent directory");
-  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
-  
-  // at this point we know it's a camera so we start returning errors if registers
-  // are not found
-
-  /* now get the EUID-64 */
-  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
-  if (err!=DC1394_SUCCESS) return err;
-  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x10, &value[1]);
-  if (err!=DC1394_SUCCESS) return err;
-  camera->euid_64= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
-  
   /* now get the command_regs_base */
   offset= camera->unit_dependent_directory;
   err=GetConfigROMTaggedRegister(camera, 0x40, &offset, &quadval);
@@ -305,12 +281,12 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   err=GetConfigROMTaggedRegister(camera, 0x81, &offset, &quadval);
   if (err==DC1394_SUCCESS) {
     offset=(quadval & 0xFFFFFFUL)*4+offset;
-    
+
     /* read in the length of the vendor name */
-    err=GetCameraROMValue(camera, offset, &value[0]);
+    err=GetCameraROMValue(camera, offset, &value);
     DC1394_ERR_RTN(err, "Could not get vendor leaf length");
     
-    len= (uint32_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
+    len= (uint32_t)(value >> 16)*4-8; /* Tim Evers corrected length value */ 
     
     if (len > MAX_CHARS) {
       len= MAX_CHARS;
@@ -320,13 +296,13 @@ dc1394_update_camera_info(dc1394camera_t *camera)
 
     /* grab the vendor name */
     while (len > 0) {
-      err=GetCameraROMValue(camera, offset+count, &value[0]);
+      err=GetCameraROMValue(camera, offset+count, &value);
       DC1394_ERR_RTN(err, "Could not get vendor string character");
       
-      camera->vendor[count++]= (value[0] >> 24);
-      camera->vendor[count++]= (value[0] >> 16) & 0xFFUL;
-      camera->vendor[count++]= (value[0] >> 8) & 0xFFUL;
-      camera->vendor[count++]= value[0] & 0xFFUL;
+      camera->vendor[count++]= (value >> 24);
+      camera->vendor[count++]= (value >> 16) & 0xFFUL;
+      camera->vendor[count++]= (value >> 8) & 0xFFUL;
+      camera->vendor[count++]= value & 0xFFUL;
       len-= 4;
       
       camera->vendor[count]= '\0';
@@ -346,10 +322,10 @@ dc1394_update_camera_info(dc1394camera_t *camera)
     offset=(quadval & 0xFFFFFFUL)*4+offset;
     
     /* read in the length of the model name */
-    err=GetCameraROMValue(camera, offset, &value[0]);
+    err=GetCameraROMValue(camera, offset, &value);
     DC1394_ERR_RTN(err, "Could not get model name leaf length");
     
-    len= (uint32_t)(value[0] >> 16)*4-8; /* Tim Evers corrected length value */ 
+    len= (uint32_t)(value >> 16)*4-8; /* Tim Evers corrected length value */ 
     
     if (len > MAX_CHARS) {
       len= MAX_CHARS;
@@ -359,13 +335,13 @@ dc1394_update_camera_info(dc1394camera_t *camera)
     
     /* grab the model name */
     while (len > 0) {
-      err=GetCameraROMValue(camera, offset+count, &value[0]);
+      err=GetCameraROMValue(camera, offset+count, &value);
       DC1394_ERR_RTN(err, "Could not get model name character");
       
-      camera->model[count++]= (value[0] >> 24);
-      camera->model[count++]= (value[0] >> 16) & 0xFFUL;
-      camera->model[count++]= (value[0] >> 8) & 0xFFUL;
-      camera->model[count++]= value[0] & 0xFFUL;
+      camera->model[count++]= (value >> 24);
+      camera->model[count++]= (value >> 16) & 0xFFUL;
+      camera->model[count++]= (value >> 8) & 0xFFUL;
+      camera->model[count++]= value & 0xFFUL;
       len-= 4;
       
       camera->model[count]= '\0';
@@ -399,33 +375,33 @@ dc1394_update_camera_info(dc1394camera_t *camera)
   err=dc1394_video_get_transmission(camera, &camera->is_iso_on);
   DC1394_ERR_RTN(err, "Could not get ISO status");
   
-  err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value[0]);
+  err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get basic functionalities");
 
-  camera->mem_channel_number = (value[0] & 0x0000000F);
-  camera->bmode_capable      = (value[0] & 0x00800000) != 0;
-  camera->one_shot_capable   = (value[0] & 0x00000800) != 0;
-  camera->multi_shot_capable = (value[0] & 0x00001000) != 0;
-  int adv_features_capable = (value[0] & 0x80000000) != 0;
-  camera->can_switch_on_off  = (value[0] & (0x1<<16)) != 0;
+  camera->mem_channel_number = (value & 0x0000000F);
+  camera->bmode_capable      = (value & 0x00800000) != 0;
+  camera->one_shot_capable   = (value & 0x00000800) != 0;
+  camera->multi_shot_capable = (value & 0x00001000) != 0;
+  int adv_features_capable = (value & 0x80000000) != 0;
+  camera->can_switch_on_off  = (value & (0x1<<16)) != 0;
 
   if (camera->iidc_version>DC1394_IIDC_VERSION_1_30) { // >, not >= (E.Bieber)
-    err=GetCameraControlRegister(camera, REG_CAMERA_OPT_FUNC_INQ, &value[0]);
+    err=GetCameraControlRegister(camera, REG_CAMERA_OPT_FUNC_INQ, &value);
     if (err==DC1394_SUCCESS) { // do not return an error here: opt function register is not mandatory
     
-      if (value[0] & 0x40000000) {
+      if (value & 0x40000000) {
 	// get PIO CSR
 	err=GetCameraControlRegister(camera,REG_CAMERA_PIO_CONTROL_CSR_INQ, &quadval);
 	DC1394_ERR_RTN(err, "Could not get PIO control CSR");
 	camera->PIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
       }
-      if (value[0] & 0x20000000) {
+      if (value & 0x20000000) {
 	// get SIO CSR
 	err=GetCameraControlRegister(camera,REG_CAMERA_SIO_CONTROL_CSR_INQ, &quadval);
 	DC1394_ERR_RTN(err, "Could not get SIO control CSR");
 	camera->SIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
       }
-      if (value[0] & 0x10000000) {
+      if (value & 0x10000000) {
 	// get strobe CSR
 	err=GetCameraControlRegister(camera,REG_CAMERA_STROBE_CONTROL_CSR_INQ, &quadval);
 	DC1394_ERR_RTN(err, "Could not get strobe control CSR");
@@ -459,8 +435,8 @@ dc1394_print_camera_info(dc1394camera_t *camera)
 {
   uint32_t value[2];
   
-  value[0]= camera->euid_64 & 0xffffffff;
-  value[1]= (camera->euid_64 >>32) & 0xffffffff;
+  value[0]= camera->guid & 0xffffffff;
+  value[1]= (camera->guid >>32) & 0xffffffff;
   printf("------ Camera information ------\n");
   printf("Vendor                            :     %s\n", camera->vendor);
   printf("Model                             :     %s\n", camera->model);
@@ -2329,7 +2305,6 @@ dc1394_new(void)
   dc1394=(dc1394_t*)malloc(sizeof(dc1394_t));
 
   // use dc1394_find_cameras to get all cameras:
-
   err=dc1394_find_cameras(&cameras, &num);
   if ((err!=DC1394_NO_CAMERA)&&(err!=DC1394_SUCCESS)) {
     fprintf(stderr,"Could not find cameras\n");
@@ -2347,7 +2322,7 @@ dc1394_new(void)
   dc1394->n_cam=num;
 
   for (i=0;i<num;i++) {
-    dc1394->guids[i]=cameras[i]->euid_64; // FIXME: we should change the name "euid_64" to "guid"
+    dc1394->guids[i]=cameras[i]->guid; 
     dc1394_free_camera(cameras[i]);
     // note: don't confuse "dc1394_free_camera" (old API) and "dc1394_camera_free" (this new API)
   }
@@ -2437,7 +2412,7 @@ dc1394_camera_new(dc1394_t *dc1394, uint64_t guid)
   if (err==DC1394_SUCCESS) {
 
     for (i=0;i<num;i++) {
-      if (cameras[i]->euid_64==guid)
+      if (cameras[i]->guid==guid)
 	out=cameras[i];
       else
 	dc1394_free_camera(cameras[i]);

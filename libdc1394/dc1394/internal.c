@@ -128,7 +128,8 @@ dc1394camera_t*
 dc1394_new_camera(uint32_t port, uint16_t node)
 {
   dc1394camera_t *cam;
- 
+  int i;
+
   cam = dc1394_new_camera_platform (port, node);
  
   if (cam==NULL)
@@ -146,6 +147,18 @@ dc1394_new_camera(uint32_t port, uint16_t node)
    cam->power_class=DC1394_POWER_CLASS_NONE;
    cam->phy_delay=DC1394_PHY_DELAY_MAX_144_NS;
  
+   // init ROM pointers to zero:
+   cam->command_registers_base=0;
+   cam->unit_directory=0;
+   cam->unit_dependent_directory=0;
+   cam->advanced_features_csr=0;
+   cam->PIO_control_csr=0;
+   cam->SIO_control_csr=0;
+   cam->strobe_control_csr=0;
+
+   for (i=0;i<DC1394_VIDEO_MODE_FORMAT7_NUM;i++)
+     cam->format7_csr[i]=0;
+
    return cam;
 }
 

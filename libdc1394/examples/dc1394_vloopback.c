@@ -138,7 +138,7 @@ void get_options(int argc,char *argv[])
 					printf( "\n"
 						"%s - send video from dc1394 through vloopback\n\n"
 						"Usage:\n"
-						"    %s [--daemon] [--pipe] [--guid=camera-euid]\n"
+						"    %s [--daemon] [--pipe] [--guid=camera-guid]\n"
 						"       [--video1394=/dev/video1394/x] [--vloopback=/dev/video0]\n"
 						"       [--palette=format] [--width=n] [--height=n]\n\n"
 						"    --daemon    - run as a daemon, detached from console (optional)\n"
@@ -431,7 +431,7 @@ int dc_init()
       else {
 	/* attempt to locate camera by guid */
 	for (i = 0; i< camCount && found == 0; i++) {
-	  if (cameras[i]->euid_64 == g_guid) {
+	  if (cameras[i]->guid == g_guid) {
 	    cam=i;
 	    found = 1;
 	  }

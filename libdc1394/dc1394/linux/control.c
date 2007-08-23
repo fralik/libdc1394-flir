@@ -231,14 +231,14 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 	//fprintf(stderr,"camera found: %s\n",tmpcam->model);
 	if (numCam>0) {
 	  for (i=0;i<numCam;i++) {
-	    if (tmpcam->euid_64==cameras[i]->euid_64) {
+	    if (tmpcam->guid==cameras[i]->guid) {
 	      i++; // add 1 because we remove one in all cases below, while we should not do it if a cam is detected here.
 	      // the camera is already there. don't append.
 	      break;
 	    }
 	  }
 	  i--; // remove 1 since i might be =numCam and the max index is numCam-1
-	  if (tmpcam->euid_64!=cameras[i]->euid_64) {
+	  if (tmpcam->guid!=cameras[i]->guid) {
 	    //fprintf(stderr,"another camera added\n");
 	    cameras[numCam]=tmpcam;
 	    tmpcam=NULL;

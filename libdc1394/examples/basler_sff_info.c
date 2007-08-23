@@ -37,7 +37,7 @@ int list_cameras (dc1394camera_t **cameras, uint32_t num_cameras)
     sff_available = DC1394_FALSE;
     dc1394_basler_sff_is_available (cameras[i], &sff_available);
 
-    printf ("%02d:0x%016llx:%s:%s:%s\n", i, cameras[i]->euid_64, cameras[i]->vendor, cameras[i]->model, sff_available ? "SFF" : "NO SFF");
+    printf ("%02d:0x%016llx:%s:%s:%s\n", i, cameras[i]->guid, cameras[i]->vendor, cameras[i]->model, sff_available ? "SFF" : "NO SFF");
   }
   return 0;
 }
@@ -53,7 +53,7 @@ void cleanup (dc1394camera_t** cameras, uint32_t num_cameras)
 
 int print_usage ()
 {
-  printf ("usage: basler_sff_info [--list-cameras|[--euid EUID]]\n");
+  printf ("usage: basler_sff_info [--list-cameras|[--guid GUID]]\n");
   return 1;
 }
 
@@ -62,7 +62,7 @@ int main (int argc, char **argv)
   dc1394error_t err;
   dc1394camera_t **cameras, *camera = NULL;
   uint32_t num_cameras, i;
-  uint64_t euid = 0x0LL;
+  uint64_t guid = 0x0LL;
 
   err = dc1394_find_cameras (&cameras, &num_cameras);
   if (err != DC1394_SUCCESS) {
@@ -87,8 +87,8 @@ int main (int argc, char **argv)
       return print_usage();
     }  
   } else if (argc == 3) {
-    if (!strcmp (argv[1], "--euid")) {
-      if (sscanf (argv[2], "0x%llx", &euid) == 1) {
+    if (!strcmp (argv[1], "--guid")) {
+      if (sscanf (argv[2], "0x%llx", &guid) == 1) {
       } else {
         cleanup (cameras, num_cameras);
         return print_usage();
@@ -99,7 +99,7 @@ int main (int argc, char **argv)
     return print_usage();
   }
 
-  if (euid == 0x0LL) {
+  if (guid == 0x0LL) {
     printf ("I: found %d camera%s, working with camera 0\n", num_cameras, num_cameras == 1 ? "" : "s");
     camera = cameras[0];
     for (i = 1; i < num_cameras; i ++) {
@@ -108,7 +108,7 @@ int main (int argc, char **argv)
     free (cameras);
   } else {
     for (i = 0; i < num_cameras; i ++) {
-      if (cameras[i]->euid_64 == euid) {
+      if (cameras[i]->guid == guid) {
         camera = cameras[i];
       } else {
         dc1394_free_camera(cameras[i]);
@@ -117,11 +117,11 @@ int main (int argc, char **argv)
     free (cameras);
 
     if (camera == NULL) {
-      fprintf (stderr, "E: no camera with euid 0x%016llx found\n", euid);
+      fprintf (stderr, "E: no camera with guid 0x%016llx found\n", guid);
       return 1;
     }
 
-    printf ("I: found camera with euid 0x%016llx\n", euid);
+    printf ("I: found camera with guid 0x%016llx\n", guid);
   }
 
   dc1394_print_camera_info (camera);
