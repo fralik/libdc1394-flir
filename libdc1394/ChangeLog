@@ -1,3 +1,9 @@
+2007-08-28 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 425: Image data returned in the dc1394_video_frame_t struct was
+	           read-only (Linux). It doesn't cost anything to make it
+		   writable, so from now on you can overwite captured image
+		   data. Thanks to Ferenc Kahlesz for the modification.
+
 2007-08-23 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 424: - Change the split between dc1394_update_camera_info and
 	             _dc1394_get_iidc_version so that getting the IIDC version

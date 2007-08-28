@@ -93,7 +93,7 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
 
   // if the dma device file has been set manually, use that device name
   if (craw->capture.dma_device_file!=NULL) {
-    if ( (craw->capture.dma_fd = open(craw->capture.dma_device_file,O_RDONLY)) < 0 ) {
+    if ( (craw->capture.dma_fd = open(craw->capture.dma_device_file,O_RDWR)) < 0 ) {
       return DC1394_INVALID_VIDEO1394_DEVICE;
     }
     else {
@@ -107,7 +107,7 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
   sprintf(filename,"/dev/video1394/%d",camera->port);
   if ( stat (filename, &statbuf) == 0 &&
           S_ISCHR (statbuf.st_mode) &&
-          (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+          (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
     _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
     _dc1394_num_using_fd[camera->port]++;
     return DC1394_SUCCESS;
@@ -116,7 +116,7 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
   sprintf(filename,"/dev/video1394-%d",camera->port);
   if ( stat (filename, &statbuf) == 0 &&
           S_ISCHR (statbuf.st_mode) &&
-          (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+          (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
     _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
     _dc1394_num_using_fd[camera->port]++;
     return DC1394_SUCCESS;
@@ -126,7 +126,7 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
     sprintf(filename,"/dev/video1394");
     if ( stat (filename, &statbuf) == 0 &&
             S_ISCHR (statbuf.st_mode) &&
-            (craw->capture.dma_fd = open(filename,O_RDONLY)) >= 0 ) {
+            (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
       _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
       _dc1394_num_using_fd[camera->port]++;
       return DC1394_SUCCESS;
@@ -205,7 +205,7 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
   }
   
   craw->capture.dma_ring_buffer= mmap(0, vmmap.nb_buffers * vmmap.buf_size,
-				 PROT_READ,MAP_SHARED, craw->capture.dma_fd, 0);
+				 PROT_READ|PROT_WRITE,MAP_SHARED, craw->capture.dma_fd, 0);
   
   /* make sure the ring buffer was allocated */
   if (craw->capture.dma_ring_buffer == (uint8_t*)(-1)) {
