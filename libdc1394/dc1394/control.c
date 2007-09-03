@@ -62,7 +62,7 @@ void dc1394_camera_list_free(void *p) {
 	free(p);
 }
 
-int
+dc1394error_t
 _dc1394_get_iidc_version_and_guid(dc1394camera_t *camera)
 {
   dc1394error_t err=DC1394_SUCCESS;
@@ -77,15 +77,19 @@ _dc1394_get_iidc_version_and_guid(dc1394camera_t *camera)
 
   /* get the GUID */
   err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
-  if (err!=DC1394_SUCCESS) return err;
+  if (err!=DC1394_SUCCESS)
+    return DC1394_NOT_A_CAMERA;
   err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x10, &value[1]);
-  if (err!=DC1394_SUCCESS) return err;
+  if (err!=DC1394_SUCCESS)
+    return DC1394_NOT_A_CAMERA;
+
   camera->guid= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
   
   /* get the unit_directory offset */
   offset= ROM_ROOT_DIRECTORY;
   err=GetConfigROMTaggedRegister(camera, 0xD1, &offset, &quadval);
-  if (err!=DC1394_SUCCESS) return err;
+  if (err!=DC1394_SUCCESS)
+    return DC1394_NOT_A_CAMERA;
   camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
 
   /* get the vendor_id*/
@@ -98,8 +102,7 @@ _dc1394_get_iidc_version_and_guid(dc1394camera_t *camera)
     camera->vendor_id=0;
   }
   else {
-    DC1394_ERR_RTN(err, "Could not get vendor ID");
-    return err;
+    return DC1394_NOT_A_CAMERA;
   }
 
   /* get the model_id*/
@@ -112,20 +115,21 @@ _dc1394_get_iidc_version_and_guid(dc1394camera_t *camera)
     camera->model_id=0;
   }
   else {
-    DC1394_ERR_RTN(err, "Could not get model ID");
-    return err;
+    return DC1394_NOT_A_CAMERA;
   }
 
   /* get the spec_id value */
   offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x12, &offset, &quadval);
-  if (err!=DC1394_SUCCESS) return err;
+  if (err!=DC1394_SUCCESS)
+    return DC1394_NOT_A_CAMERA;
   camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
 
   /* get the iidc revision */
   offset=camera->unit_directory;
   err=GetConfigROMTaggedRegister(camera, 0x13, &offset, &quadval);
-  if (err!=DC1394_SUCCESS) return err;
+  if (err!=DC1394_SUCCESS)
+    return DC1394_NOT_A_CAMERA;
   camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
 
   /*

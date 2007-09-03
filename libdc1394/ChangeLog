@@ -1,3 +1,6 @@
+2007-09-03 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 426: don't display warnings if a node is not a camera.
+	
 2007-08-28 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 425: Image data returned in the dc1394_video_frame_t struct was
 	           read-only (Linux). It doesn't cost anything to make it
