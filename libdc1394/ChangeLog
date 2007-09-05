@@ -1,3 +1,6 @@
+2007-09-05 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 427: Fixed borders in bayer.c (thanks to Johann Schoonees)
+
 2007-09-03 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 426: don't display warnings if a node is not a camera.
 	

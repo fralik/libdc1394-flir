@@ -47,8 +47,10 @@ ClearBorders(uint8_t *rgb, int sx, int sy, int w)
 	rgb[i--] = 0;
 	rgb[j--] = 0;
     }
-    i = sx * (sy - 1) * 3 - 1 + w * 3;
-    while (i > sx) {
+
+    int low = sx * (w - 1) * 3 - 1 + w * 3;
+    i = low + sx * (sy - w * 2 + 1) * 3;
+    while (i > low) {
 	j = 6 * w;
 	while (j > 0) {
 	    rgb[i--] = 0;
@@ -71,8 +73,9 @@ ClearBorders_uint16(uint16_t * rgb, int sx, int sy, int w)
 	rgb[j--] = 0;
     }
 
-    i = sx * (sy - 1) * 3 - 1 + w * 3;
-    while (i > sx) {
+    int low = sx * (w - 1) * 3 - 1 + w * 3;
+    i = low + sx * (sy - w * 2 + 1) * 3;
+    while (i > low) {
 	j = 6 * w;
 	while (j > 0) {
 	    rgb[i--] = 0;
