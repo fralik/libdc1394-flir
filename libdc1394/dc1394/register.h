@@ -155,7 +155,10 @@ SetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t
 /* Find a register with a specific tag                                          */
 /********************************************************************************/
 dc1394error_t
-GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint64_t *offset, uint32_t *value);
+GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint16_t instance_number, uint64_t *offset, uint32_t *value);
+
+dc1394error_t
+GetConfigROMTaggedRegisterCount(dc1394camera_t *camera, unsigned int tag, uint64_t *offset, uint32_t *count);
 
 #ifdef __cplusplus
 }

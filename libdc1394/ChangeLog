@@ -1,3 +1,8 @@
+2007-09-13 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 428: Support for multi-unit cameras. Thanks to Karl Regier
+	           for the patch. Tested with coriander and test_new_api,
+		   but on Linux only.
+
 2007-09-05 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 427: Fixed borders in bayer.c (thanks to Johann Schoonees)
 

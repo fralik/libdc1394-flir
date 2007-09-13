@@ -125,7 +125,7 @@ const int quadlets_per_packet_format_2[64] =
 };
 
 dc1394camera_t*
-dc1394_new_camera(uint32_t port, uint16_t node)
+dc1394_new_camera(uint32_t port, uint16_t node, uint16_t unit)
 {
   dc1394camera_t *cam;
   int i;
@@ -137,6 +137,7 @@ dc1394_new_camera(uint32_t port, uint16_t node)
   
    cam->port=port;
    cam->node=node;
+   cam->unit=unit;
    cam->iso_channel_is_set=0;
    cam->iso_channel=-1;
    cam->iso_bandwidth=0;

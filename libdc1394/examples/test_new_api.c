@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
   
   // get each camera struct, print info and erase camera
   for (i=0;i<list->num;i++) {
-    camera=dc1394_camera_new(dc1394,list->guids[i]);
+    camera=dc1394_camera_new(dc1394,list->guids[i],list->units[i]);
     dc1394_print_camera_info(camera);
     dc1394_camera_free(camera);
   }

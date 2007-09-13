@@ -275,3 +275,13 @@ dc1394_is_video_mode_still_image(dc1394video_mode_t video_mode)
 {
   return ((video_mode>=DC1394_VIDEO_MODE_FORMAT6_MIN)&&(video_mode<=DC1394_VIDEO_MODE_FORMAT6_MAX));
 }
+
+dc1394bool_t
+dc1394_is_same_camera(dc1394camera_t *camera1, dc1394camera_t *camera2)
+{
+  if ((camera1==NULL)||(camera2==NULL))
+    return 0;
+
+  return ((camera1->guid==camera2->guid)&&(camera1->unit==camera2->unit));
+
+}

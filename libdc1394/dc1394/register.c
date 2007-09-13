@@ -324,8 +324,7 @@ SetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t
 
 // Don Murray's debug version
 int
-GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, 
-uint64_t *offset, uint32_t *value)
+GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint16_t instance_number, uint64_t *offset, uint32_t *value)
 {
   unsigned int block_length;
   int i;
@@ -348,8 +347,12 @@ uint64_t *offset, uint32_t *value)
       return DC1394_FAILURE;
     }
     if ((*value>>24)==tag) {
-      fprintf(stderr,"found tag 0x%x!!\n", tag );
-      return DC1394_SUCCESS;
+      fprintf(stderr,"found tag 0x%x, waiting for next instance\n", tag );
+      if (instance_number == 0) {
+	fprintf(stderr,"found tag 0x%x!!\n", tag );
+	return DC1394_SUCCESS;
+      }
+      instance_number--;
     }
     else {
       fprintf(stderr,"found tag 0x%x (value 0x%x) - continue \n",
@@ -366,13 +369,17 @@ uint64_t *offset, uint32_t *value)
 #else
 
 dc1394error_t
-GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint64_t *offset, uint32_t *value)
+GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint16_t instance_number, uint64_t *offset, uint32_t *value)
 {
   unsigned int block_length;
   int i;
   
+  // This function returns the InstanceNumber instance of a tagged
+  //  register in a directory.  The first instance of a tag is 
+  //  instance_number = 0.
+  
   // get the block length
-  //fprintf(stderr,"Getting register tag 0x%x starting at offset 0x%x\n",tag,*offset);
+  //  fprintf(stderr,"Getting block size...\n",tag,*offset);
   if (GetCameraROMValue(camera, *offset, value)!=DC1394_SUCCESS) {
     return DC1394_FAILURE;
   }
@@ -390,7 +397,9 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint64_t *o
       return DC1394_FAILURE;
     }
     if ((*value>>24)==tag) {
-      return DC1394_SUCCESS;
+      if (instance_number == 0)
+	return DC1394_SUCCESS;
+      instance_number--;
     }
   }
 
@@ -398,3 +407,41 @@ GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint64_t *o
 }
 
 #endif
+
+dc1394error_t
+GetConfigROMTaggedRegisterCount(dc1394camera_t *camera, unsigned int tag, uint64_t *offset, uint32_t *count)
+{
+  unsigned int block_length;
+  int i;
+  uint32_t value;
+
+  // This function returns the number of directory entries
+  //  with the matching tag
+  
+  // get the block length
+  //fprintf(stderr,"GetConfigROMTaggedRegisterCount enter...\n");
+  if (GetCameraROMValue(camera, *offset, &value)!=DC1394_SUCCESS) {
+    return DC1394_FAILURE;
+  }
+  
+  block_length=value>>16;
+  //fprintf(stderr,"  block length = %d\n",block_length);
+  if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
+    block_length=(CSR_CONFIG_ROM_END-*offset)/4;
+  }
+
+  // count the matching tags and return the result
+  count = 0;
+  for (i=0;i<block_length;i++) {
+    *offset+=4;
+    if (GetCameraROMValue(camera,*offset,&value)!=DC1394_SUCCESS) {
+      return DC1394_FAILURE;
+    }
+    if ((value>>24)==tag) {
+      count++;
+    }
+  }
+
+  return DC1394_SUCCESS;
+}
+

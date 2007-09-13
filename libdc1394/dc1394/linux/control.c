@@ -144,6 +144,9 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
   dc1394camera_t **cameras;
   uint32_t numCam, err=DC1394_SUCCESS, i, numNodes;
   uint16_t node;
+  uint32_t unit, numUnitDirectories;
+  int retval;
+  uint32_t root_directory_size,value;
 
   //dc1394bool_t isCamera;
   dc1394camera_t *tmpcam=NULL;
@@ -179,134 +182,152 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
     
     // find the cameras on this card
     numNodes = raw1394_get_nodecount(handle);
-    raw1394_destroy_handle(handle);
-    handle=NULL;
+//   raw1394_destroy_handle(handle);
+//   handle=NULL;
     //fprintf(stderr,"testing port %d with %d nodes ============\n",port,numNodes);
     
     for (node=0;node<numNodes;node++){
-      //fprintf(stderr,"------------------------ New device -----------------\n");
-      // create a camera struct for probing
-      if (tmpcam==NULL) {
-	//fprintf(stderr,"Allocating new cam struct %d %d\n",port, node);
-	tmpcam=dc1394_new_camera(port,node);
-      } 
-      // verify memory allocation
-      if (tmpcam==NULL) {
-	for (i=0;i<numCam;i++) {
-	  dc1394_free_camera(cameras[i]);
-	  cameras[i]=NULL;
-	}
-	free(cameras);
-	//fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't allocate camera structure\n");
-	return DC1394_MEMORY_ALLOCATION_FAILURE;
+      //fprintf(stderr,"----------- Scanning Node %d -----------------\n", node );
+
+      // Now get size of configuration ROM root directory.
+      retval=raw1394_read( handle, 0xFFC0 | node, CONFIG_ROM_BASE + ROM_ROOT_DIRECTORY, 4, &root_directory_size );
+      usleep(DC1394_SLOW_DOWN);
+      if (retval) {
+        fprintf(stderr,"Unable to get size of root directory.\n");
+        raw1394_destroy_handle(handle);
+	return DC1394_RAW1394_FAILURE;
       }
-      
-      // get camera information
-      //fprintf(stderr,"info update...\n");
-      err=dc1394_update_camera_info(tmpcam);
-      //fprintf(stderr,"info updated\n");
-      
-      // This segment has been removed. Reason: some devices (like my hub) refuse to honour read requests even at offset 0x414.
-      // The result of this is a low-level error that is translated by DC1394_FAILURE. The latter error code was interpreted as
-      // a major system failure while it is actually simply a bad device.
-      /*
-	if ((err != DC1394_SUCCESS) &&
-	    (err != DC1394_NOT_A_CAMERA) &&
-	    (err != DC1394_TAGGED_REGISTER_NOT_FOUND)) {
-	
-	for (i=0;i<numCam;i++)
-	  dc1394_free_camera(cameras[i]);
-	free(cameras);
-	
-	dc1394_free_camera(tmpcam);
-	
-	fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't check if node is a camera\n");
-	return err;
+
+      root_directory_size = ntohl(root_directory_size) >> 16;
+      //fprintf(stderr, "Root directory size = %d\n", root_directory_size );
+
+      //  and count how many unit directories are present in the root
+      numUnitDirectories = 0;
+      for (i=0; i<root_directory_size; i++) {
+        retval=raw1394_read( handle, 0xFFC0 | node, CONFIG_ROM_BASE + ROM_ROOT_DIRECTORY + (i+1)*4, 4, &value );
+        value = ntohl(value);
+        //fprintf(stderr, "Root directory entry %d = %x\n", i, value );
+	if ((value >> 24) == 0xD1)
+	  numUnitDirectories++;
       }
-      */
-      
-      if (err == DC1394_SUCCESS) { // is it a camera?
-	// check if this camera was not found yet. (a camera might appear twice with strange bus topologies)
-	// this hack comes from coriander.
-	//fprintf(stderr,"camera found: %s\n",tmpcam->model);
-	if (numCam>0) {
-	  for (i=0;i<numCam;i++) {
-	    if (tmpcam->guid==cameras[i]->guid) {
-	      i++; // add 1 because we remove one in all cases below, while we should not do it if a cam is detected here.
-	      // the camera is already there. don't append.
-	      break;
-	    }
-	  }
-	  i--; // remove 1 since i might be =numCam and the max index is numCam-1
-	  if (tmpcam->guid!=cameras[i]->guid) {
-	    //fprintf(stderr,"another camera added\n");
-	    cameras[numCam]=tmpcam;
-	    tmpcam=NULL;
-	    numCam++;
-	  }
-	  else {
-	    //fprintf(stderr,"camera already there, removing duplicate\n");
-	    dc1394_free_camera(tmpcam);
-	    tmpcam=NULL;
-	  }
-	}
-	else { // numcam == 0: we add the first camera without questions
-	  //fprintf(stderr,"first camera added\n");
-	  cameras[numCam]=tmpcam;
-	  tmpcam=NULL;
-	  numCam++;
-	}
+
+      //fprintf(stderr,"Found %d unit directories in this node.\n", numUnitDirectories);
+
+      if (numUnitDirectories == 0) {
+        //fprintf(stderr, "No unit directories found! Skipping node.\n");
+        break;
       }
-      // don't forget to free the 1394 device we just found if it's not a camera
-      // thanks to Jack Morrison for spotting this.
-      else {
-	//fprintf(stderr,"Not a camera\n");
-	dc1394_free_camera(tmpcam);
-	tmpcam=NULL;
-      }
-      
-      if (numCam>=allocated_size) {
-	allocated_size*=2;
-	newcam=realloc(cameras,allocated_size*sizeof(dc1394camera_t*));
-	if (newcam ==NULL) {
+
+      for (unit=0; unit<numUnitDirectories; unit++) {
+
+        // create a camera struct for probing
+        if (tmpcam==NULL) {
+	  //fprintf(stderr,"Allocating new cam struct %d %d\n",port, node);
+  	  tmpcam=dc1394_new_camera(port,node,unit);
+        } 
+        // verify memory allocation
+        if (tmpcam==NULL) {
 	  for (i=0;i<numCam;i++) {
 	    dc1394_free_camera(cameras[i]);
 	    cameras[i]=NULL;
 	  }
 	  free(cameras);
-	  
-	  if (tmpcam!=NULL) {
-	    dc1394_free_camera(tmpcam);
-	    tmpcam=NULL;
-	  }
-	  
-	  fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
-		  __FILE__, __FUNCTION__, __LINE__,
-		  "Can't reallocate camera array");
+          raw1394_destroy_handle(handle);
+	  //fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't allocate camera structure\n");
 	  return DC1394_MEMORY_ALLOCATION_FAILURE;
+         }
+
+      
+	// get camera information
+	err=dc1394_update_camera_info(tmpcam);
+	
+	if (err == DC1394_SUCCESS) { // is it a camera?
+	  // check if this camera was not found yet. (a camera might appear twice with strange bus topologies)
+	  // this hack comes from coriander.
+	  //fprintf(stderr,"camera found: %s\n",tmpcam->model);
+	  if (numCam>0) {
+	    for (i=0;i<numCam;i++) {
+	      if (dc1394_is_same_camera(tmpcam,cameras[i])) {
+		i++; // add 1 because we remove one in all cases below, while we should not do it if a cam is detected here.
+		//fprintf(stderr,"the camera is already there. don't append\n");
+		break;
+	      }
+	    }
+	    i--; // remove 1 since i might be =numCam and the max index is numCam-1
+	    if (dc1394_is_same_camera(tmpcam,cameras[i])) {
+	      //fprintf(stderr,"another camera added\n");
+	      cameras[numCam]=tmpcam;
+	      tmpcam=NULL;
+	      numCam++;
+	    }
+	    else {
+	      //fprintf(stderr,"camera already there, removing duplicate\n");
+	      dc1394_free_camera(tmpcam);
+	      tmpcam=NULL;
+	    }
+	  }
+	  else { // numcam == 0: we add the first camera without questions
+	    //fprintf(stderr,"first camera added\n");
+	    cameras[numCam]=tmpcam;
+	    tmpcam=NULL;
+	    numCam++;
+	  }
 	}
+	// don't forget to free the 1394 device we just found if it's not a camera
+	// thanks to Jack Morrison for spotting this.
 	else {
-	  cameras=newcam;
+	  //fprintf(stderr,"Not a camera\n");
+	  dc1394_free_camera(tmpcam);
+	  tmpcam=NULL;
+	}
+	
+	if (numCam>=allocated_size) {
+	  allocated_size*=2;
+	  newcam=realloc(cameras,allocated_size*sizeof(dc1394camera_t*));
+	  if (newcam ==NULL) {
+	    for (i=0;i<numCam;i++) {
+	      dc1394_free_camera(cameras[i]);
+	      cameras[i]=NULL;
+	    }
+	    free(cameras);
+	    
+	    if (tmpcam!=NULL) {
+	      dc1394_free_camera(tmpcam);
+	      tmpcam=NULL;
+	    }
+	    
+	    fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
+		    __FILE__, __FUNCTION__, __LINE__,
+		    "Can't reallocate camera array");
+	    raw1394_destroy_handle(handle);
+	    return DC1394_MEMORY_ALLOCATION_FAILURE;
+	  }
+	  else {
+	    cameras=newcam;
+	  }
+	}
+	
+	if (tmpcam!=NULL) {
+	  dc1394_free_camera(tmpcam);
+	  tmpcam=NULL;
 	}
       }
-
-      if (tmpcam!=NULL) {
-	dc1394_free_camera(tmpcam);
-	tmpcam=NULL;
-      }
+      //fprintf(stderr,"next device\n");
     }
-  }
     
+    raw1394_destroy_handle(handle);
+    handle=NULL;
+    //fprintf(stderr,"next port\n");
+  }
+  
   *numCameras=numCam;
-
+  
   *cameras_ptr=cameras;
-
+  
   if (tmpcam!=NULL) {
     dc1394_free_camera(tmpcam);
     tmpcam=NULL;
   }
-
-  //fprintf(stderr,"leaving dc1394_find_cameras\n");
   
   if (numCam==0)
     return DC1394_NO_CAMERA;

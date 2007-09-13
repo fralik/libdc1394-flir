@@ -134,7 +134,7 @@ dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);
 */
 dc1394camera_t*
-dc1394_new_camera (uint32_t port, uint16_t node);
+dc1394_new_camera (uint32_t port, uint16_t node, uint16_t unit);
 dc1394camera_t*
 dc1394_new_camera_platform (uint32_t port, uint16_t node);
 void
