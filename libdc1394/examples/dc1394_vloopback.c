@@ -431,7 +431,7 @@ int dc_init()
       else {
 	/* attempt to locate camera by guid */
 	for (i = 0; i< camCount && found == 0; i++) {
-	  if (cameras[i]->guid == g_guid) {
+	  if (cameras[i]->id.guid == g_guid) {
 	    cam=i;
 	    found = 1;
 	  }

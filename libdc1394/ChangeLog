@@ -1,3 +1,8 @@
+2007-09-14 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 429: Introduce a new type: dc1394id_t. It contains the GUID
+	           and the unit number for unique identification. The function
+		   dc1394_is_same_camera(id1, id2) can be used to compare ids.
+
 2007-09-13 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 428: Support for multi-unit cameras. Thanks to Karl Regier
 	           for the patch. Tested with coriander and test_new_api,

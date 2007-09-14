@@ -83,11 +83,11 @@ _dc1394_get_iidc_version_and_guid(dc1394camera_t *camera)
   if (err!=DC1394_SUCCESS)
     return DC1394_NOT_A_CAMERA;
 
-  camera->guid= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
+  camera->id.guid= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
   
   /* get the unit_directory offset */
   offset= ROM_ROOT_DIRECTORY;
-  err=GetConfigROMTaggedRegister(camera, 0xD1, camera->unit, &offset, &quadval);
+  err=GetConfigROMTaggedRegister(camera, 0xD1, camera->id.unit, &offset, &quadval);
   if (err!=DC1394_SUCCESS)
     return DC1394_NOT_A_CAMERA;
   camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
@@ -440,12 +440,12 @@ dc1394_print_camera_info(dc1394camera_t *camera)
 {
   uint32_t value[2];
   
-  value[0]= camera->guid & 0xffffffff;
-  value[1]= (camera->guid >>32) & 0xffffffff;
+  value[0]= camera->id.guid & 0xffffffff;
+  value[1]= (camera->id.guid >>32) & 0xffffffff;
   printf("------ Camera information ------\n");
   printf("Vendor                            :     %s\n", camera->vendor);
   printf("Model                             :     %s\n", camera->model);
-  printf("Unit                              :     %d\n", camera->unit);
+  printf("Unit                              :     %d\n", camera->id.unit);
   printf("Node                              :     0x%x\n", camera->node);
   printf("Port                              :     %d\n", camera->port);
   printf("Specifications ID                 :     0x%x\n", camera->ud_reg_tag_12);
@@ -2319,18 +2319,17 @@ dc1394_new(void)
     
   // the camera structs now contain the GUIDs. Extract them and return:
   if (err==DC1394_NO_CAMERA) {
-    dc1394->guids=NULL;
-    dc1394->n_cam=0;
+    dc1394->camera_list.ids=NULL;
+    dc1394->camera_list.num=0;
     return dc1394;
   }
 
-  dc1394->guids=(uint64_t*)malloc(num*sizeof(uint64_t));
-  dc1394->units=(uint16_t*)malloc(num*sizeof(uint16_t));
-  dc1394->n_cam=num;
+  dc1394->camera_list.ids=(dc1394id_t*)malloc(num*sizeof(dc1394id_t));
+  dc1394->camera_list.num=num;
 
   for (i=0;i<num;i++) {
-    dc1394->guids[i]=cameras[i]->guid; 
-    dc1394->units[i]=cameras[i]->unit; 
+    dc1394->camera_list.ids[i].guid=cameras[i]->id.guid; 
+    dc1394->camera_list.ids[i].unit=cameras[i]->id.unit; 
     dc1394_free_camera(cameras[i]);
     // note: don't confuse "dc1394_free_camera" (old API) and "dc1394_camera_free" (this new API)
   }
@@ -2347,10 +2346,8 @@ void
 dc1394_free(dc1394_t *dc1394)
 {
   if (dc1394!=NULL) {
-    if (dc1394->guids!=NULL)
-      free(dc1394->guids);
-    if (dc1394->units!=NULL)
-      free(dc1394->units);
+    if (dc1394->camera_list.ids!=NULL)
+      free(dc1394->camera_list.ids);
     free(dc1394);
   }
 }
@@ -2372,20 +2369,19 @@ dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list)
   //if (list->guids!=NULL)
   //  free(list->guids);
 
-  if (dc1394->n_cam==0) {
+  if (dc1394->camera_list.num==0) {
     *list=NULL;
     return DC1394_NO_CAMERA;
   }
 
   *list=(dc1394camera_list_t*)malloc(sizeof(dc1394camera_list_t));
 
-  (*list)->guids=(uint64_t*)malloc(dc1394->n_cam*sizeof(uint64_t));
-  (*list)->units=(uint16_t*)malloc(dc1394->n_cam*sizeof(uint16_t));
-  (*list)->num=dc1394->n_cam;
+  (*list)->ids=(dc1394id_t*)malloc(dc1394->camera_list.num*sizeof(dc1394id_t));
+  (*list)->num=dc1394->camera_list.num;
   
-  for (i=0;i<dc1394->n_cam;i++) {
-    (*list)->guids[i]=dc1394->guids[i];
-    (*list)->units[i]=dc1394->units[i];
+  for (i=0;i<dc1394->camera_list.num;i++) {
+    (*list)->ids[i].guid=dc1394->camera_list.ids[i].guid;
+    (*list)->ids[i].unit=dc1394->camera_list.ids[i].unit;
   }
 
   return DC1394_SUCCESS;
@@ -2399,10 +2395,8 @@ void
 dc1394_free_camera_list(dc1394camera_list_t *list)
 {
   if (list!=NULL) {
-    if (list->guids!=NULL)
-      free(list->guids);
-    if (list->units!=NULL)
-      free(list->units);
+    if (list->ids!=NULL)
+      free(list->ids);
     free(list);
   }
 }
@@ -2413,7 +2407,7 @@ dc1394_free_camera_list(dc1394camera_list_t *list)
   This requires a fair amount of discussions between the camera and the host.
 */
 dc1394camera_t*
-dc1394_camera_new(dc1394_t *dc1394, uint64_t guid, uint16_t unit)
+dc1394_camera_new(dc1394_t *dc1394, dc1394id_t id)
 {
   // use dc1394_find_cameras to get all cameras:
   dc1394camera_t **cameras;
@@ -2428,7 +2422,7 @@ dc1394_camera_new(dc1394_t *dc1394, uint64_t guid, uint16_t unit)
   if (err==DC1394_SUCCESS) {
 
     for (i=0;i<num;i++) {
-      if ((cameras[i]->guid==guid)&&(cameras[i]->unit==unit))
+      if (dc1394_is_same_camera(cameras[i]->id, id))
 	out=cameras[i];
       else
 	dc1394_free_camera(cameras[i]);

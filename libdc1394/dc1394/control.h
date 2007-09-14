@@ -401,14 +401,19 @@ typedef struct
   dc1394trigger_source_t    sources[DC1394_TRIGGER_SOURCE_NUM];
 } dc1394trigger_sources_t;
 
+typedef struct
+{
+  uint16_t             unit;
+  uint64_t             guid;
+} dc1394id_t;
+
 /* Camera structure */
 typedef struct __dc1394_camera
 {
   // system/firmware information
   int                  port;
   uint16_t             node;
-  uint16_t             unit;
-  uint64_t             guid;
+  dc1394id_t           id;
   uint32_t             ud_reg_tag_12;
   uint32_t             ud_reg_tag_13;
   uint64_t             command_registers_base;
@@ -902,17 +907,13 @@ dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
 typedef struct __dc1394camera_list_t
 {
   uint32_t      num;
-  uint64_t     *guids;
-  uint16_t     *units;
+  dc1394id_t    *ids;
 } dc1394camera_list_t;
 
 typedef struct __dc1394_t
 {
-  // a list of cameras (GUIDs) attached to this host. Two vectors are used to deal with
-  // async changes. Mutexes will have to be used too.
-  uint64_t* guids;
-  uint16_t* units;
-  uint32_t  n_cam;
+  // a list of cameras (GUIDs) attached to this host. More may be added later, such as mutexes.
+  dc1394camera_list_t camera_list;
 }
 dc1394_t;
 
@@ -920,7 +921,7 @@ dc1394_t* dc1394_new(void);
 void dc1394_free(dc1394_t *dc1394);
 dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list);
 void dc1394_free_camera_list(dc1394camera_list_t *list);
-dc1394camera_t* dc1394_camera_new(dc1394_t *dc1394, uint64_t guid, uint16_t unit);
+dc1394camera_t* dc1394_camera_new(dc1394_t *dc1394, dc1394id_t id);
 void dc1394_camera_free(dc1394camera_t *camera);
 
 

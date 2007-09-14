@@ -37,7 +37,7 @@ int list_cameras (dc1394camera_t **cameras, uint32_t num_cameras)
     sff_available = DC1394_FALSE;
     dc1394_basler_sff_is_available (cameras[i], &sff_available);
 
-    printf ("%02d:0x%016llx:%s:%s:%s\n", i, cameras[i]->guid, cameras[i]->vendor, cameras[i]->model, sff_available ? "SFF" : "NO SFF");
+    printf ("%02d:0x%016llx:%s:%s:%s\n", i, cameras[i]->id.guid, cameras[i]->vendor, cameras[i]->model, sff_available ? "SFF" : "NO SFF");
   }
   return 0;
 }
@@ -108,7 +108,7 @@ int main (int argc, char **argv)
     free (cameras);
   } else {
     for (i = 0; i < num_cameras; i ++) {
-      if (cameras[i]->guid == guid) {
+      if (cameras[i]->id.guid == guid) {
         camera = cameras[i];
       } else {
         dc1394_free_camera(cameras[i]);

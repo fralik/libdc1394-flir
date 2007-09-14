@@ -137,7 +137,7 @@ dc1394_new_camera(uint32_t port, uint16_t node, uint16_t unit)
   
    cam->port=port;
    cam->node=node;
-   cam->unit=unit;
+   cam->id.unit=unit;
    cam->iso_channel_is_set=0;
    cam->iso_channel=-1;
    cam->iso_bandwidth=0;
