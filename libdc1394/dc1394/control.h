@@ -457,6 +457,9 @@ typedef struct __dc1394_camera
   // for Basler SFF
   dc1394bool_t         sff_has_extended_data_stream;
 
+  // not used, for future use:
+  uint32_t             flags;
+
 } dc1394camera_t;
 
 typedef struct __dc1394feature_info_t_struct 
