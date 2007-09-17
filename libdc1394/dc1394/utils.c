@@ -277,7 +277,7 @@ dc1394_is_video_mode_still_image(dc1394video_mode_t video_mode)
 }
 
 dc1394bool_t
-dc1394_is_same_camera(dc1394id_t id1, dc1394id_t id2)
+dc1394_is_same_camera(dc1394camera_id_t id1, dc1394camera_id_t id2)
 {
   return ((id1.guid==id2.guid)&&(id1.unit==id2.unit));
 }

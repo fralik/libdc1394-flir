@@ -1,3 +1,8 @@
+2007-09-17 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 430: Change the name dc1394id_t to dc1394camera_id_t to avoid
+	           confusion and future IDs that could be created later in
+		   libdc1394.
+
 2007-09-14 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 429: Introduce a new type: dc1394id_t. It contains the GUID
 	           and the unit number for unique identification. The function

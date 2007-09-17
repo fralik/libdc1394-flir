@@ -2324,7 +2324,7 @@ dc1394_new(void)
     return dc1394;
   }
 
-  dc1394->camera_list.ids=(dc1394id_t*)malloc(num*sizeof(dc1394id_t));
+  dc1394->camera_list.ids=(dc1394camera_id_t*)malloc(num*sizeof(dc1394camera_id_t));
   dc1394->camera_list.num=num;
 
   for (i=0;i<num;i++) {
@@ -2376,7 +2376,7 @@ dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list)
 
   *list=(dc1394camera_list_t*)malloc(sizeof(dc1394camera_list_t));
 
-  (*list)->ids=(dc1394id_t*)malloc(dc1394->camera_list.num*sizeof(dc1394id_t));
+  (*list)->ids=(dc1394camera_id_t*)malloc(dc1394->camera_list.num*sizeof(dc1394camera_id_t));
   (*list)->num=dc1394->camera_list.num;
   
   for (i=0;i<dc1394->camera_list.num;i++) {
@@ -2407,7 +2407,7 @@ dc1394_free_camera_list(dc1394camera_list_t *list)
   This requires a fair amount of discussions between the camera and the host.
 */
 dc1394camera_t*
-dc1394_camera_new(dc1394_t *dc1394, dc1394id_t id)
+dc1394_camera_new(dc1394_t *dc1394, dc1394camera_id_t id)
 {
   // use dc1394_find_cameras to get all cameras:
   dc1394camera_t **cameras;

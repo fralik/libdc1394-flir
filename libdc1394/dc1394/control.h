@@ -405,7 +405,7 @@ typedef struct
 {
   uint16_t             unit;
   uint64_t             guid;
-} dc1394id_t;
+} dc1394camera_id_t;
 
 /* Camera structure */
 typedef struct __dc1394_camera
@@ -413,7 +413,7 @@ typedef struct __dc1394_camera
   // system/firmware information
   int                  port;
   uint16_t             node;
-  dc1394id_t           id;
+  dc1394camera_id_t    id;
   uint32_t             ud_reg_tag_12;
   uint32_t             ud_reg_tag_13;
   uint64_t             command_registers_base;
@@ -907,7 +907,7 @@ dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
 typedef struct __dc1394camera_list_t
 {
   uint32_t      num;
-  dc1394id_t    *ids;
+  dc1394camera_id_t    *ids;
 } dc1394camera_list_t;
 
 typedef struct __dc1394_t
@@ -921,7 +921,7 @@ dc1394_t* dc1394_new(void);
 void dc1394_free(dc1394_t *dc1394);
 dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list);
 void dc1394_free_camera_list(dc1394camera_list_t *list);
-dc1394camera_t* dc1394_camera_new(dc1394_t *dc1394, dc1394id_t id);
+dc1394camera_t* dc1394_camera_new(dc1394_t *dc1394, dc1394camera_id_t id);
 void dc1394_camera_free(dc1394camera_t *camera);
 
 
