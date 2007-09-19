@@ -1,3 +1,8 @@
+2007-09-19 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 433: fixed some warnings that appeared when using the
+	           "-pedantic" compilation option (variadic macros and
+		   // comments)
+
 2007-09-18 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 432: Removed spurious comma in the declaration of
 	           dc1394trigger_source_t (Johann Schoonees)

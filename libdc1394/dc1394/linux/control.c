@@ -21,8 +21,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <libraw1394/raw1394.h>
 #include <libraw1394/csr.h>
+#include <unistd.h>
 #include "config.h"
 #include "internal.h"
 //#include "linux/raw1394support.h"

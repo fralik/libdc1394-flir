@@ -140,7 +140,7 @@ typedef enum {
 #define DC1394_VIDEO_MODE_MAX       DC1394_VIDEO_MODE_FORMAT7_7
 #define DC1394_VIDEO_MODE_NUM      (DC1394_VIDEO_MODE_MAX - DC1394_VIDEO_MODE_MIN + 1)
 
-// Special min/max are defined for Format_7
+/* Special min/max are defined for Format_7 */
 #define DC1394_VIDEO_MODE_FORMAT7_MIN       DC1394_VIDEO_MODE_FORMAT7_0
 #define DC1394_VIDEO_MODE_FORMAT7_MAX       DC1394_VIDEO_MODE_FORMAT7_7
 #define DC1394_VIDEO_MODE_FORMAT7_NUM      (DC1394_VIDEO_MODE_FORMAT7_MAX - DC1394_VIDEO_MODE_FORMAT7_MIN + 1)
@@ -410,7 +410,7 @@ typedef struct
 /* Camera structure */
 typedef struct __dc1394_camera
 {
-  // system/firmware information
+  /* system/firmware information */
   int                  port;
   uint16_t             node;
   dc1394camera_id_t    id;
@@ -421,8 +421,8 @@ typedef struct __dc1394_camera
   uint64_t             unit_dependent_directory;
   uint64_t             advanced_features_csr;
   uint64_t             PIO_control_csr;
-  uint64_t             SIO_control_csr; // future use
-  uint64_t             strobe_control_csr; // future use
+  uint64_t             SIO_control_csr; /* future use */
+  uint64_t             strobe_control_csr; /* future use */
   uint64_t             format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
   dc1394iidc_version_t iidc_version;
   char                 vendor[MAX_CHARS + 1];
@@ -434,30 +434,30 @@ typedef struct __dc1394_camera
   dc1394bool_t         multi_shot_capable;
   dc1394bool_t         can_switch_on_off;
 
-  // some current values
+  /* some current values */
   dc1394video_mode_t   video_mode;
   dc1394framerate_t    framerate;
   dc1394switch_t       is_iso_on;
-  int                  iso_channel; // this variable contains the iso channel requests or the current iso channel
-  int                  iso_channel_is_set; // >0 if the iso_channel above has been allocated within libraw1394
+  int                  iso_channel; /* this variable contains the iso channel requests or the current iso channel */
+  int                  iso_channel_is_set; /* >0 if the iso_channel above has been allocated within libraw1394 */
   uint32_t             iso_bandwidth;
   dc1394speed_t        iso_speed;
   uint32_t             mem_channel_number;
-  int                  capture_is_set; // 0 for not set, 1 for RAW1394 and 2 for DMA
+  int                  capture_is_set; /* 0 for not set, 1 for RAW1394 and 2 for DMA */
 
-  // for broadcast:
+  /* for broadcast: */
   dc1394bool_t         broadcast;
   uint16_t             node_id_backup;
 
-  // 1394 PHY interface data:
+  /* 1394 PHY interface data: */
   dc1394speed_t        phy_speed;
   dc1394power_class_t  power_class;
   dc1394phy_delay_t    phy_delay;
   
-  // for Basler SFF
+  /* for Basler SFF */
   dc1394bool_t         sff_has_extended_data_stream;
 
-  // not used, for future use:
+  /* not used, for future use: */
   uint32_t             flags;
 
 } dc1394camera_t;
@@ -525,7 +525,7 @@ typedef struct __dc1394format7mode_t
 
   uint32_t pixnum;
 
-  uint32_t bpp; // bpp is byte_per_packet, not bit per pixel.
+  uint32_t bpp; /* bpp is byte_per_packet, not bit per pixel. */
   uint32_t min_bpp;
   uint32_t max_bpp;
 
@@ -581,7 +581,7 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 /* Error checking function. displays an error string on stderr and exit current function
    if error is positive. Neg errors are messages and are thus ignored */
 
-#define DC1394_WRN(err, err_string...)                       \
+#define DC1394_WRN(err,...)                                  \
     {                                                        \
     if ((err<0)||(err>DC1394_ERROR_NUM))                     \
       err=DC1394_INVALID_ERROR_CODE;                         \
@@ -590,12 +590,12 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
       fprintf(stderr,"Libdc1394 warning (%s:%s:%d): %s : ",  \
 	      __FILE__, __FUNCTION__, __LINE__,              \
 	      dc1394_error_strings[err]);                    \
-      fprintf(stderr, err_string);                           \
+      fprintf(stderr, __VA_ARGS__);                          \
       fprintf(stderr,"\n");                                  \
     }                                                        \
     }
 
-#define DC1394_ERR(err, err_string...)                       \
+#define DC1394_ERR(err,...)                                  \
     {                                                        \
     if ((err<0)||(err>DC1394_ERROR_NUM))                     \
       err=DC1394_INVALID_ERROR_CODE;                         \
@@ -604,13 +604,13 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
       fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
 	      __FILE__, __FUNCTION__, __LINE__,              \
 	      dc1394_error_strings[err]);                    \
-      fprintf(stderr, err_string);                           \
+      fprintf(stderr, __VA_ARGS__);                          \
       fprintf(stderr,"\n");                                  \
       return;                                                \
     }                                                        \
     }
 
-#define DC1394_ERR_RTN(err, err_string...)                   \
+#define DC1394_ERR_RTN(err,...)                              \
     {                                                        \
     if ((err<0)||(err>DC1394_ERROR_NUM))                     \
       err=DC1394_INVALID_ERROR_CODE;                         \
@@ -619,13 +619,13 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
       fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
 	      __FILE__, __FUNCTION__, __LINE__,              \
 	      dc1394_error_strings[err]);                    \
-      fprintf(stderr, err_string);                           \
+      fprintf(stderr, __VA_ARGS__);                          \
       fprintf(stderr,"\n");                                  \
       return err;                                            \
     }                                                        \
     }
 
-#define DC1394_ERR_CLN(err, cleanup, err_string...)                  \
+#define DC1394_ERR_CLN(err, cleanup,...)                             \
     {                                                                \
     if ((err<0)||(err>DC1394_ERROR_NUM))                             \
       err=DC1394_INVALID_ERROR_CODE;                                 \
@@ -634,14 +634,14 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
       fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
 	      __FILE__, __FUNCTION__, __LINE__,                      \
 	      dc1394_error_strings[err]);                            \
-      fprintf(stderr, err_string);                                   \
+      fprintf(stderr, __VA_ARGS__);                                  \
       fprintf(stderr,"\n");                                          \
       cleanup;                                                       \
       return;                                                        \
     }                                                                \
     }
 
-#define DC1394_ERR_CLN_RTN(err, cleanup, err_string...)              \
+#define DC1394_ERR_CLN_RTN(err, cleanup,...)                         \
     {                                                                \
     if ((err<0)||(err>DC1394_ERROR_NUM))                             \
       err=DC1394_INVALID_ERROR_CODE;                                 \
@@ -650,7 +650,7 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
       fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
 	      __FILE__, __FUNCTION__, __LINE__,                      \
 	      dc1394_error_strings[err]);                            \
-      fprintf(stderr, err_string);                                   \
+      fprintf(stderr, __VA_ARGS__);                                  \
       fprintf(stderr,"\n");                                          \
       cleanup;                                                       \
       return err;                                                    \
@@ -915,7 +915,7 @@ typedef struct __dc1394camera_list_t
 
 typedef struct __dc1394_t
 {
-  // a list of cameras (GUIDs) attached to this host. More may be added later, such as mutexes.
+  /* a list of cameras (GUIDs) attached to this host. More may be added later, such as mutexes. */
   dc1394camera_list_t camera_list;
 }
 dc1394_t;
