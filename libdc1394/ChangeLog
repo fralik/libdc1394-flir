@@ -1,3 +1,7 @@
+2007-09-20 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 434: Updated the definition of DC1394_BAYER_METHOD_MAX
+	           (Johann Schoonees)
+
 2007-09-19 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 433: fixed some warnings that appeared when using the
 	           "-pedantic" compilation option (variadic macros and
