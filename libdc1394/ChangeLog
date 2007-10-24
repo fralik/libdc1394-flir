@@ -1,3 +1,7 @@
+2007-10-27 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 437: Several bugs corrected by Irv Elshoff in the camera
+	           detection code (Linux only).
+
 2007-09-26 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 435: Updated the AUTHORS file.
 	

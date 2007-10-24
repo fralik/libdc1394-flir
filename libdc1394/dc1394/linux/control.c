@@ -195,9 +195,12 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
       retval=raw1394_read( handle, 0xFFC0 | node, CONFIG_ROM_BASE + ROM_ROOT_DIRECTORY, 4, &root_directory_size );
       usleep(DC1394_SLOW_DOWN);
       if (retval) {
-        fprintf(stderr,"Unable to get size of root directory.\n");
+	// don't write warnings and especially don't quit as other devices that don't play nice (e.g. hubs) may
+	// have a very very partial ROM.
+        //fprintf(stderr,"Unable to get size of root directory.\n");
         raw1394_destroy_handle(handle);
-	return DC1394_RAW1394_FAILURE;
+	//return DC1394_RAW1394_FAILURE;
+	continue;
       }
 
       root_directory_size = ntohl(root_directory_size) >> 16;
@@ -217,7 +220,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 
       if (numUnitDirectories == 0) {
         //fprintf(stderr, "No unit directories found! Skipping node.\n");
-        break;
+        continue;
       }
 
       for (unit=0; unit<numUnitDirectories; unit++) {
@@ -256,7 +259,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 	      }
 	    }
 	    i--; // remove 1 since i might be =numCam and the max index is numCam-1
-	    if (dc1394_is_same_camera(tmpcam->id, cameras[i]->id)) {
+	    if (!dc1394_is_same_camera(tmpcam->id, cameras[i]->id)) {
 	      //fprintf(stderr,"another camera added\n");
 	      cameras[numCam]=tmpcam;
 	      tmpcam=NULL;
