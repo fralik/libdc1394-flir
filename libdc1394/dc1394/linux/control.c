@@ -210,6 +210,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
       numUnitDirectories = 0;
       for (i=0; i<root_directory_size; i++) {
         retval=raw1394_read( handle, 0xFFC0 | node, CONFIG_ROM_BASE + ROM_ROOT_DIRECTORY + (i+1)*4, 4, &value );
+	usleep(DC1394_SLOW_DOWN);
         value = ntohl(value);
         //fprintf(stderr, "Root directory entry %d = %x\n", i, value );
 	if ((value >> 24) == 0xD1)
