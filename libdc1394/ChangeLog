@@ -1,6 +1,6 @@
 2007-10-21 Damien Douxchamps http://damien.douxchamps.net/
-	* SVN 438: Add a pause between ROM readings in camera detection
-        * SVN 437: Several bugs corrected by Irv Elshoff in the camera
+	* SVN 437: Add a pause between ROM readings in camera detection
+        * SVN 436: Several bugs corrected by Irv Elshoff in the camera
 	           detection code (Linux only).
 
 2007-09-26 Damien Douxchamps http://damien.douxchamps.net/
