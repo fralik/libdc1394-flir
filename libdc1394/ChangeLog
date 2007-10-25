@@ -1,4 +1,9 @@
+2007-10-25 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 439: dc1394_get_one_shot never returned DC1394_TRUE but 2^31
+	           instead. Fixed by Damien Delannay.
+
 2007-10-21 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 438: Fix SVN version in the changelog
 	* SVN 437: Add a pause between ROM readings in camera detection
         * SVN 436: Several bugs corrected by Irv Elshoff in the camera
 	           detection code (Linux only).

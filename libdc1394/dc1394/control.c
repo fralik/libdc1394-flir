@@ -1312,7 +1312,7 @@ dc1394_video_get_one_shot(dc1394camera_t *camera, dc1394bool_t *is_on)
   uint32_t value;
   dc1394error_t err = GetCameraControlRegister(camera, REG_CAMERA_ONE_SHOT, &value);
   DC1394_ERR_RTN(err, "Could not get one-shot status");
-  *is_on = value & DC1394_FEATURE_ON;
+  *is_on = ( value & DC1394_FEATURE_ON) ? DC1394_TRUE : DC1394_FALSE;
   return err;
 }
 
@@ -1678,12 +1678,7 @@ dc1394_feature_has_one_push_auto(dc1394camera_t *camera, dc1394feature_t feature
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get one-push capability for feature %d",feature);
   
-  if (quadval & 0x10000000UL) {
-    *value= DC1394_TRUE;
-  }
-  else {
-    *value= DC1394_FALSE;
-  }
+  *value = (quadval & 0x10000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
   return err;
 }
@@ -1700,12 +1695,7 @@ dc1394_feature_is_readable(dc1394camera_t *camera, dc1394feature_t feature, dc13
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get read-out capability for feature %d",feature);
   
-  if (quadval & 0x08000000UL) {
-    *value= DC1394_TRUE;
-  }
-  else {
-    *value= DC1394_FALSE;
-  }
+  *value = (quadval & 0x08000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
   return err;
 }
@@ -1722,12 +1712,7 @@ dc1394_feature_is_switchable(dc1394camera_t *camera, dc1394feature_t feature, dc
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get power capability for feature %d",feature);
   
-  if (quadval & 0x04000000UL) {
-    *value= DC1394_TRUE;
-  }
-  else {
-    *value= DC1394_FALSE;
-  }
+  *value = (quadval & 0x04000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
   return err;
 }
@@ -1744,12 +1729,7 @@ dc1394_feature_get_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get feature %d status",feature);
   
-  if (quadval & 0x02000000UL) {
-    *value= DC1394_TRUE;
-  }
-  else {
-    *value= DC1394_FALSE;
-  }
+  *value = (quadval & 0x02000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
   return err;
 }
@@ -1796,12 +1776,7 @@ dc1394_feature_has_auto_mode(dc1394camera_t *camera, dc1394feature_t feature, dc
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get automode capability for feature %d",feature);
   
-  if (quadval & 0x02000000UL) {
-    *value= DC1394_TRUE;
-  }
-  else {
-    *value= DC1394_FALSE;
-  }
+  *value = (quadval & 0x02000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
   return err;
 }
@@ -1822,12 +1797,7 @@ dc1394_feature_has_manual_mode(dc1394camera_t *camera, dc1394feature_t feature, 
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get manual modecapability for feature %d",feature);
   
-  if (quadval & 0x01000000UL) {
-    *value= DC1394_TRUE;
-  }
-  else {
-    *value= DC1394_FALSE;
-  }
+  *value = (quadval & 0x01000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
   return err;
 }
@@ -1994,12 +1964,7 @@ dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polar
   err=GetCameraControlRegister(camera, offset + ((DC1394_FEATURE_TRIGGER - DC1394_FEATURE_MIN) * 0x04U), &quadval);
   DC1394_ERR_RTN(err, "Could not get trigger polarity capability");
   
-  if (quadval & 0x02000000UL) {
-    *polarity= DC1394_TRUE;
-  }
-  else {
-    *polarity= DC1394_FALSE;
-  }
+  *polarity = (quadval & 0x02000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
   return err;
 }
@@ -2095,12 +2060,7 @@ dc1394_feature_get_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get get abs control for feature %d",feature);
   
-  if (quadval & 0x40000000UL) {
-    *pwr= DC1394_ON;
-  }
-  else {
-    *pwr= DC1394_OFF;
-  }
+  *pwr = (quadval & 0x40000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
   return err;
 }
@@ -2144,13 +2104,8 @@ dc1394_feature_has_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   err=GetCameraControlRegister(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get absolute control register for feature %d",feature);
   
-  if (quadval & 0x40000000UL) {
-    *value= DC1394_TRUE;
-  }
-  else {
-    *value= DC1394_FALSE;
-  }
-  
+  *value = (quadval & 0x40000000UL) ? DC1394_TRUE: DC1394_FALSE;
+
   return err;
 }
 
