@@ -1,4 +1,6 @@
 2007-10-25 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 440: Fixed bad #define in two example programs. Thanks to
+	           Edward Rankin.
 	* SVN 439: dc1394_get_one_shot never returned DC1394_TRUE but 2^31
 	           instead. Fixed by Damien Delannay.
 

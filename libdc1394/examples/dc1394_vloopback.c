@@ -46,7 +46,6 @@
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
 /* uncomment the following to drop frames to prevent delays */
-#define DROP_FRAMES DC1394_RING_BUFFER_LAST
 #define MAX_PORTS 4
 #define DC1394_BUFFERS 8
 #define DC1394_WIDTH 640

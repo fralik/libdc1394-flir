@@ -38,7 +38,6 @@
 
 
 /* uncomment the following to drop frames to prevent delays */
-#define DROP_FRAMES DC1394_RING_BUFFER_LAST
 #define MAX_PORTS   4
 #define MAX_CAMERAS 8
 #define NUM_BUFFERS 8
