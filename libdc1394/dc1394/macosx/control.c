@@ -116,7 +116,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
     dc1394camera_t * camera;
     uint32_t err;
 
-    camera = dc1394_new_camera (0, 0);
+    camera = dc1394_new_camera (0, 0, 0); // FIXME: the last zero forces the unit value to zero. Hence no multi-unit cameras on OSX at this time.
     if (!camera) {
       IOObjectRelease (node);
       continue;

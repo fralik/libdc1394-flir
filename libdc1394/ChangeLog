@@ -1,4 +1,7 @@
 2007-10-31 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 443: Force the unit number to be zero on OSX, otherwise
+	           compilation fails. To be updated with a proper scan of
+		   units later.
 	* SVN 442: Initialise some variables to zero to avoid valgrind
 	           warnings (Fabien Spindler)
 	* SVN 441: Don't free the raw1394 handle when we see a hub (Fabien
