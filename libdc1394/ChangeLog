@@ -1,4 +1,6 @@
-2007-10-25 Damien Douxchamps http://damien.douxchamps.net/
+2007-10-31 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 442: Initialise some variables to zero to avoid valgrind
+	           warnings (Fabien Spindler)
 	* SVN 441: Don't free the raw1394 handle when we see a hub (Fabien
 	           Spindler)
 

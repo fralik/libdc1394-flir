@@ -1064,7 +1064,7 @@ dc1394error_t
 dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
 {
   dc1394error_t err;
-  uint32_t value;
+  uint32_t value=0;
   int channel;
 
   if (camera->capture_is_set>0)
@@ -1130,7 +1130,7 @@ dc1394error_t
 dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
 {
   dc1394error_t err;
-  uint32_t value_inq, value;
+  uint32_t value_inq, value=0;
   int speed;
 
   err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);

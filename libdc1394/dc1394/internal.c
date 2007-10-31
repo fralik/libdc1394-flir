@@ -440,6 +440,7 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
       &frame->color_coding);
   DC1394_ERR_RTN(err, "Unable to get color coding");
 
+  frame->bit_depth=0; // to avoid valgrind warnings
   err = dc1394_video_get_data_depth (camera, &frame->bit_depth);
   DC1394_ERR_RTN(err, "Unable to get data depth");
 

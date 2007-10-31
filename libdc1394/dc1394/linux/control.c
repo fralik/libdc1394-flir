@@ -148,7 +148,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
   uint16_t node;
   uint32_t unit, numUnitDirectories;
   int retval;
-  uint32_t root_directory_size,value;
+  uint32_t root_directory_size,value=0;
 
   //dc1394bool_t isCamera;
   dc1394camera_t *tmpcam=NULL;
