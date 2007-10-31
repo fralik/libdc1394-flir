@@ -197,9 +197,6 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
       if (retval) {
 	// don't write warnings and especially don't quit as other devices that don't play nice (e.g. hubs) may
 	// have a very very partial ROM.
-        //fprintf(stderr,"Unable to get size of root directory.\n");
-        raw1394_destroy_handle(handle);
-	//return DC1394_RAW1394_FAILURE;
 	continue;
       }
 
@@ -239,6 +236,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 	  }
 	  free(cameras);
           raw1394_destroy_handle(handle);
+	  handle=NULL;
 	  //fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ", __FILE__, __FUNCTION__, __LINE__, "Can't allocate camera structure\n");
 	  return DC1394_MEMORY_ALLOCATION_FAILURE;
          }
