@@ -357,9 +357,15 @@ dc1394_update_camera_info(dc1394camera_t *camera)
     DC1394_ERR_RTN(err, "Could not get model name leaf offset");
   }
 
+  /* get the current ISO speed, and verify it*/
   err=dc1394_video_get_iso_speed(camera, &camera->iso_speed);
-  DC1394_ERR_RTN(err, "Could not get ISO channel and speed");
-  
+  if (err==DC1394_INVALID_ISO_SPEED) {
+    // default to the most probable speed: 400 Mbps
+    err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+    DC1394_ERR_RTN(err,"Invalid ISO speed, and could not the speed to a valid default (ISO 400)");
+  }
+
+  /* get the current video mode, and verify it*/
   err=dc1394_video_get_mode(camera, &camera->video_mode);
   dc1394video_modes_t modes;
   if (err==DC1394_INVALID_VIDEO_FORMAT) {
@@ -374,8 +380,21 @@ dc1394_update_camera_info(dc1394camera_t *camera)
     DC1394_ERR_RTN(err,"Could not get current video mode. Giving up.");
   }
 
+  /* get the current framerate, and verify it*/
   err=dc1394_video_get_framerate(camera, &camera->framerate);
   DC1394_ERR_RTN(err, "Could not get current video framerate");
+  dc1394framerates_t framerates;
+  if (err==DC1394_INVALID_FRAMERATE) {
+    // a proper framerate may not be present. Try to set a default framerate
+    err=dc1394_video_get_supported_framerates(camera,camera->video_mode,&framerates);
+    DC1394_ERR_RTN(err,"Could not get the list of supported framerates");
+
+    err=dc1394_video_set_framerate(camera,framerates.framerates[0]);
+    DC1394_ERR_RTN(err,"Could not set a default framerate (%d)",modes.modes[0]);
+    
+    err=dc1394_video_get_framerate(camera,&camera->framerate);
+    DC1394_ERR_RTN(err,"Could not get current framerate. Giving up.");
+  }
   
   err=dc1394_video_get_transmission(camera, &camera->is_iso_on);
   DC1394_ERR_RTN(err, "Could not get ISO status");
@@ -1048,13 +1067,19 @@ dc1394_video_get_iso_speed(dc1394camera_t *camera, dc1394speed_t *speed)
   if (camera->bmode_capable) { // check if 1394b is available
     if (value & 0x00008000) { //check if we are now using 1394b
       *speed= (uint32_t)(value& 0x7UL);
+      if ((*speed<DC1394_ISO_SPEED_MIN)||(*speed>DC1394_ISO_SPEED_MAX)) // abort if speed not within valid range
+	return DC1394_INVALID_ISO_SPEED;
     }
     else { // fallback to legacy
       *speed= (uint32_t)((value >> 24) & 0x3UL);
+      if ((*speed<DC1394_ISO_SPEED_MIN)||(*speed>DC1394_ISO_SPEED_400)) // abort if speed not within valid range
+	return DC1394_INVALID_ISO_SPEED;
     }
   }
   else { // legacy
     *speed= (uint32_t)((value >> 24) & 0x3UL);
+    if ((*speed<DC1394_ISO_SPEED_MIN)||(*speed>DC1394_ISO_SPEED_400)) // abort if speed not within valid range
+      return DC1394_INVALID_ISO_SPEED;
   }
   
   return err;

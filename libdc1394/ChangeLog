@@ -1,3 +1,8 @@
+2007-11-10 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 444: Verify the format, mode, framerate and ISO speed at
+	           boot time because some older cameras may have invalid
+		   data there.
+
 2007-10-31 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 443: Force the unit number to be zero on OSX, otherwise
 	           compilation fails. To be updated with a proper scan of
