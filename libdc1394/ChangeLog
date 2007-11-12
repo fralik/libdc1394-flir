@@ -1,3 +1,6 @@
+2007-11-12 David Moore  <dcm@acm.org>
+	* SVN 445: Fix mmap error with Mac OS Leopard (from Mark)
+
 2007-11-10 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 444: Verify the format, mode, framerate and ISO speed at
 	           boot time because some older cameras may have invalid

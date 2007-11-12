@@ -203,8 +203,8 @@ CreateDCLProgram (dc1394camera_t * camera)
   databuf->length = (capture->num_frames *
     capture->frame_pages + 1) * getpagesize ();
   databuf->address = (UInt32) mmap (NULL, databuf->length,
-      PROT_READ | PROT_WRITE, MAP_ANON, -1, 0);
-  if (!databuf->address) {
+      PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
+  if (!databuf->address || databuf->address == (UInt32)-1) {
     fprintf (stderr, "Error: mmap failed\n");
     return NULL;
   }
