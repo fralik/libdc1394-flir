@@ -117,7 +117,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr,
       continue;
     }
 
-    camera = dc1394_new_camera (0, 0);
+    camera = dc1394_new_camera (0, 0, 0);
     if (!camera) {
       close(fd);
       continue;

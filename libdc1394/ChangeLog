@@ -1,3 +1,9 @@
+2007-11-14 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 446: Add the unit argument to the call to dc1394_new_camera
+	           in juju/control.c. The argument is hardcoded to zero, so
+		   you can only access the unit 0 on juju (same as on osx).
+		   To be further updated...
+
 2007-11-12 David Moore  <dcm@acm.org>
 	* SVN 445: Fix mmap error with Mac OS Leopard (from Mark)
 
