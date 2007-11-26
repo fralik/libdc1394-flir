@@ -32,6 +32,7 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 #include <libraw1394/raw1394.h>
 #include "dc1394/control.h"
@@ -58,7 +59,7 @@
 
 /* declarations for libdc1394 */
 uint32_t numCameras = 0;
-dc1394camera_t **cameras;
+dc1394camera_t *cameras[MAX_CAMERAS];
 dc1394featureset_t features;
 dc1394video_frame_t * frames[MAX_CAMERAS];
 
@@ -318,7 +319,9 @@ int main(int argc,char *argv[])
   XGCValues xgcv;
   long background=0x010203;
   unsigned int speed;
-  int i;
+  int i, j;
+  dc1394_t * d;
+  dc1394camera_list_t * list;
   
   get_options(argc,argv);
   /* process options */
@@ -351,19 +354,37 @@ int main(int argc,char *argv[])
     break;
   }
   
-  if (dc1394_find_cameras(&cameras,&numCameras)!=DC1394_SUCCESS) {
-    fprintf(stderr,"Error: can't find cameras");
-    exit(0);
+  d = dc1394_new ();
+  if (dc1394_enumerate_cameras (d, &list) != DC1394_SUCCESS) {
+    fprintf (stderr, "Failed to enumerate cameras\n");
+    exit (1);
   }
 
-  if (numCameras>MAX_CAMERAS) {
-    for (i=MAX_CAMERAS;i<numCameras;i++)
-      dc1394_free_camera(cameras[i]);
-    numCameras=MAX_CAMERAS;
+  if (list->num == 0) {
+    fprintf (stderr, "No cameras found\n");
+    exit (1);
   }
 
-  //fprintf(stderr,"Cameras found: %d\n",numCameras);
+  j = 0;
+  for (i = 0; i < list->num; i++) {
+    if (j >= MAX_CAMERAS)
+      break;
+    cameras[j] = dc1394_camera_new (d, list->ids[i].guid);
+    if (!cameras[j]) {
+      fprintf (stderr, "Failed to initialize camera with guid %"PRIx64"\n",
+          list->ids[i].guid);
+      continue;
+    }
+    j++;
+  }
+  numCameras = j;
+  dc1394_free_camera_list (list);
 
+  if (numCameras == 0) {
+    fprintf (stderr, "No cameras found\n");
+    exit (1);
+  }
+  
   /* setup cameras for capture */
   for (i = 0; i < numCameras; i++) {	
     
@@ -379,13 +400,6 @@ int main(int argc,char *argv[])
       exit(-1);
     }
     
-    if (device_name!=NULL) {
-      if (dc1394_capture_set_device_filename(cameras[i],device_name) != DC1394_SUCCESS) {
-	fprintf(stderr,"unable to set dma device filename!\n");
-	return 0;
-      }
-    }
-
     dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_400);
     dc1394_video_set_mode(cameras[i],res);
     dc1394_video_set_framerate(cameras[i],fps);

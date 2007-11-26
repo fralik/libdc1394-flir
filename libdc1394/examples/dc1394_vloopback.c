@@ -39,6 +39,7 @@
 #include <linux/videodev.h>
 #include <getopt.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 #include <dc1394/control.h>
 #include "affine.h"
@@ -111,7 +112,7 @@ void get_options(int argc,char *argv[])
 					g_v4l_mode = V4L_MODE_PIPE;
 					break;
 				case 2:
-					sscanf(optarg, "%llx", &g_guid);
+					sscanf(optarg, "%"PRIx64, &g_guid);
 					break;
 				case 3:
 					dc_dev_name=strdup(optarg);
@@ -411,81 +412,43 @@ int capture_mmap(int frame)
 
 int dc_init()
 {
-  int reset;
-  uint32_t camCount = 0;
-  int found = 0;
-  dc1394camera_t **cameras=NULL;
-  int err, i;
-  int cam=-1;
+  dc1394_t * d;
+  dc1394camera_list_t * list;
+
+  d = dc1394_new ();
+  if (dc1394_enumerate_cameras (d, &list) != DC1394_SUCCESS) {
+    fprintf (stderr, "Failed to enumerate cameras\n");
+    exit (1);
+  }
+
+  if (list->num == 0) {
+    fprintf (stderr, "No cameras found\n");
+    exit (1);
+  }
   
-  for (reset=0;reset<MAX_RESETS;reset++) {
-    err=dc1394_find_cameras(&cameras, &camCount);
-    DC1394_ERR_RTN(err,"Could not find cameras");
-    if (camCount > 0) {
-      if (g_guid == 0) {
-	/* use the first camera found */
-	cam=0;
-	found = 1;
-      }
-      else {
-	/* attempt to locate camera by guid */
-	for (i = 0; i< camCount && found == 0; i++) {
-	  if (cameras[i]->id.guid == g_guid) {
-	    cam=i;
-	    found = 1;
-	  }
-	}
-      }
-    }
-    if (found == 1) {
-      camera=cameras[cam];
-      for (i=0;i<camCount;i++) {
-	if (i!=cam)
-	  dc1394_free_camera(cameras[i]);
-      }
-      free(cameras);
-      cameras=NULL;
-
-      dc1394_print_camera_info(camera);
-    
-#if 0
-      /* camera can not be root--highest order node */
-      if (camera->node == raw1394_get_nodecount(camera->handle)-1) {
-	/* reset and retry if root */
-	//fprintf(stderr,"reset\n");
-	raw1394_reset_bus(camera->handle);
-	sleep(2);
-	found = 0;
-	dc1394_free_camera(camera);
-      }
-      else
-#endif
-	break;
-    }
-  } /* next reset retry */
-
-  if (found) {
-    /*have the camera start sending us data*/
-    if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS) {
-      perror("unable to start camera iso transmission\n");
-      exit(-1);
+  if (g_guid == 0) {
+    camera = dc1394_camera_new (d, list->ids[0].guid);
+    if (!camera) {
+      fprintf (stderr, "Failed to initialize camera with guid %"PRIx64"\n",
+          list->ids[0].guid);
+      exit (1);
     }
   }
-  if (found == 0 && g_guid != 0) {
-    fprintf( stderr, "Unable to locate camera node by guid\n");
-    exit(-1);
+  else {
+    camera = dc1394_camera_new (d, g_guid);
+    if (!camera) {
+      fprintf (stderr, "Failed to find camera with guid %"PRIx64"\n",
+          list->ids[0].guid);
+      exit (1);
+    }
   }
-  else if (camCount == 0) {
-    fprintf( stderr, "no cameras found :(\n");
-    exit(-1);
-  }
-  if (reset == MAX_RESETS) {
-    fprintf( stderr, "failed to not make camera root node :(\n");
-    exit(-1);
-  }
+  dc1394_free_camera_list (list);
 
-  //fprintf(stderr,"found\n");
-  return found;
+  printf("Using camera with GUID %"PRIx64"\n", camera->guid);
+
+  dc1394_print_camera_info(camera);
+
+  return 1;
 }
 
 int dc_start(int palette)
@@ -514,13 +477,6 @@ int dc_start(int palette)
 		return 0;
 	}
 	 
-	if (dc_dev_name!=NULL) {
-	  if (dc1394_capture_set_device_filename(camera,dc_dev_name) != DC1394_SUCCESS) {
-	    fprintf(stderr,"unable to set dma device filename!\n");
-	    return 0;
-	  }
-	}
-
 	dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
 	dc1394_video_set_mode(camera, mode);
 	dc1394_video_set_framerate(camera, DC1394_FRAMERATE_15);
@@ -532,6 +488,10 @@ int dc_start(int palette)
 		fprintf(stderr, "is one supported by your camera\n");
 		return 0;
 	}
+  if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS) {
+    perror("unable to start camera iso transmission\n");
+    return 0;
+  }
 	return 1;
 }
 
@@ -914,7 +874,7 @@ void cleanup(void) {
     if (g_v4l_mode != V4L_MODE_NONE) {
         dc1394_capture_stop(camera);
     }
-    dc1394_free_camera(camera);
+    dc1394_camera_free(camera);
 	if (out_pipe)
 		free(out_pipe);
 	if (out_mmap)
