@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 #include <dc1394/control.h>
 
@@ -40,19 +41,33 @@ main(int argn, char **argv)
 {
 
   dc1394error_t err;
-  dc1394camera_t **cameras;
   dc1394camera_t *camera;
   dc1394video_frame_t *frame;
-  unsigned int ncams;
   char filename[256];
 
   FILE *fd;
 
-  // detect cameras
-  err=dc1394_find_cameras(&cameras, &ncams);
-  DC1394_ERR_RTN(err,"erreur!");
-  fprintf(stderr,"Found %d camera(s)\n",ncams);
-  camera=cameras[0];
+  dc1394_t * d;
+  dc1394camera_list_t * list;
+
+  d = dc1394_new ();
+  if (dc1394_enumerate_cameras (d, &list) != DC1394_SUCCESS) {
+    fprintf (stderr, "Failed to enumerate cameras\n");
+    return 1;
+  }
+
+  if (list->num == 0) {
+    fprintf (stderr, "No cameras found\n");
+    return 1;
+  }
+  
+  camera = dc1394_camera_new (d, list->ids[0].guid);
+  if (!camera) {
+    fprintf (stderr, "Failed to initialize camera with guid %"PRIx64"\n",
+        list->ids[0].guid);
+    return 1;
+  }
+  dc1394_free_camera_list (list);
   fprintf(stderr,"Using camera \"%s %s\"\n",camera->vendor,camera->model);
 
   // setup video mode, etc...
@@ -117,5 +132,7 @@ main(int argn, char **argv)
   DC1394_ERR_RTN(err,"erreur!");
   err=dc1394_capture_stop(camera);
   DC1394_ERR_RTN(err,"erreur!");
+  dc1394_camera_free (camera);
+  dc1394_free (d);
   return 0;
 }

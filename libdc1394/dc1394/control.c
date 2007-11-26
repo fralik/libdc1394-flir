@@ -21,6 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <inttypes.h>
+
 #include "control.h"
 #include "internal.h"
 #include "config.h"
@@ -29,6 +31,7 @@
 #include "utils.h"
  
 
+#if 0
 dc1394error_t
 dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
 {
@@ -50,439 +53,100 @@ dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
 
   return DC1394_SUCCESS;
 }
-
-dc1394error_t
-dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint32_t* numCameras)
-{
-  return dc1394_find_cameras_platform(cameras_ptr, numCameras);
-
-}
-
-void dc1394_camera_list_free(void *p) {
-	free(p);
-}
-
-dc1394error_t
-_dc1394_get_iidc_version_and_guid(dc1394camera_t *camera)
-{
-  dc1394error_t err=DC1394_SUCCESS;
-  uint32_t quadval = 0; // to avoid valgrind errors
-  uint64_t offset;
-  uint32_t value[2] = {0, 0};
-
-  if (camera == NULL)
-    return DC1394_CAMERA_NOT_INITIALIZED;
-
-  // first we grab basic registers and offsets
-
-  /* get the GUID */
-  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x0C, &value[0]);
-  if (err!=DC1394_SUCCESS)
-    return DC1394_NOT_A_CAMERA;
-  err=GetCameraROMValue(camera, ROM_BUS_INFO_BLOCK+0x10, &value[1]);
-  if (err!=DC1394_SUCCESS)
-    return DC1394_NOT_A_CAMERA;
-
-  camera->id.guid= ((uint64_t)value[0] << 32) | (uint64_t)value[1];
-  
-  /* get the unit_directory offset */
-  offset= ROM_ROOT_DIRECTORY;
-  err=GetConfigROMTaggedRegister(camera, 0xD1, camera->id.unit, &offset, &quadval);
-  if (err!=DC1394_SUCCESS)
-    return DC1394_NOT_A_CAMERA;
-  camera->unit_directory=(quadval & 0xFFFFFFUL)*4+offset;
-  //fprintf(stderr,"Unit directory = %x\n",camera->unit_directory);
-
-  /* get the vendor_id*/
-  offset= ROM_ROOT_DIRECTORY;
-  err=GetConfigROMTaggedRegister(camera, 0x03, 0, &offset, &quadval);
-  if (err==DC1394_SUCCESS) {
-    camera->vendor_id=quadval & 0xFFFFFFUL;
-  }
-  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
-    camera->vendor_id=0;
-  }
-  else {
-    return DC1394_NOT_A_CAMERA;
-  }
-
-  /* get the model_id*/
-  offset= camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0x17, 0, &offset, &quadval);
-  if (err==DC1394_SUCCESS) {
-    camera->model_id=quadval & 0xFFFFFFUL;
-  }
-  else if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
-    camera->model_id=0;
-  }
-  else {
-    return DC1394_NOT_A_CAMERA;
-  }
-
-  /* get the spec_id value */
-  offset=camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0x12, 0, &offset, &quadval);
-  if (err!=DC1394_SUCCESS)
-    return DC1394_NOT_A_CAMERA;
-  camera->ud_reg_tag_12=quadval&0xFFFFFFUL;
-
-  /* get the iidc revision */
-  offset=camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0x13, 0, &offset, &quadval);
-  if (err!=DC1394_SUCCESS)
-    return DC1394_NOT_A_CAMERA;
-  camera->ud_reg_tag_13=quadval&0xFFFFFFUL;
-
-  /*
-     Note on Point Grey (PG) cameras:
-     Although not always advertised, PG cameras are 'sometimes' compatible
-     with IIDC specs. This is especially the case with PG stereo products.
-     The following modifications have been tested with a stereo head
-     (BumbleBee). Most other cameras should be compatible, please consider
-     contributing to the lib if your PG camera is not recognized.
-     
-     PG cams sometimes have a Unit_Spec_ID of 0xB09D, instead of the
-     0xA02D of classic IIDC cameras. Also, their software revision differs.
-     I could only get a 1.14 version from my BumbleBee but other versions
-     might exist.
-
-     As PG is regularly providing firmware updates you might also install
-     the latest one in your camera for an increased compatibility.
-     
-     Damien
-
-     (updated 2005-04-30)
-  */
-  
-  if ( (camera->ud_reg_tag_12 != 0x000A02DUL) &&
-       (camera->ud_reg_tag_12 != 0x000B09DUL) ) {
-    camera->iidc_version=-1;
-    return DC1394_NOT_A_CAMERA;
-  }
-  
-  switch (camera->ud_reg_tag_13&0xFFFFFFUL) {
-  case 0x000100:
-    camera->iidc_version=DC1394_IIDC_VERSION_1_04;
-    break;
-  case 0x000101:
-    camera->iidc_version=DC1394_IIDC_VERSION_1_20;
-    break;
-  case 0x000102:
-    camera->iidc_version=DC1394_IIDC_VERSION_1_30;
-    break;
-  case 0x000114:
-  case 0x800002:
-    if (camera->ud_reg_tag_12 == 0x000B09DUL)
-      camera->iidc_version=DC1394_IIDC_VERSION_PTGREY;
-    else
-      camera->iidc_version = -1; // an error should be sent in this case
-    break;
-  default:
-    return DC1394_INVALID_IIDC_VERSION;
-  }
-
-  /* -- get the unit_dependent_directory offset --
-     We can do it here since we know it's a camera, and thus the UDD should exists
-     This UDD will be re-checked after but it does not really matter. */
-
-  offset= camera->unit_directory;
-  err=GetConfigROMTaggedRegister(camera, 0xD4, 0, &offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get unit dependent directory");
-  camera->unit_dependent_directory=(quadval & 0xFFFFFFUL)*4+offset;
-  
-  /* IIDC 1.31 check */
-  if (camera->iidc_version==DC1394_IIDC_VERSION_1_30) {
-    
-    offset=camera->unit_dependent_directory;
-    err=GetConfigROMTaggedRegister(camera, 0x38, 0, &offset, &quadval);
-    if (err!=DC1394_SUCCESS) {
-      if (err==DC1394_TAGGED_REGISTER_NOT_FOUND) {
-	// If it fails here we return success with the most accurate version estimation: 1.30.
-	// This is because the GetConfigROMTaggedRegister will return a failure both if there is a comm
-	// problem but also if the tag is not found. In the latter case it simply means that the
-	// camera version is 1.30
-	camera->iidc_version=DC1394_IIDC_VERSION_1_30;
-	return DC1394_SUCCESS;
-      }
-      else 
-	DC1394_ERR_RTN(err, "Could not get tagged register 0x38");
-    }
-
-    switch (quadval&0xFFFFFFUL) {
-    case 0x10:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_31;
-      break;
-    case 0x20:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_32;
-      break;
-    case 0x30:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_33;
-      break;
-    case 0x40:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_34;
-      break;
-    case 0x50:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_35;
-      break;
-    case 0x60:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_36;
-      break;
-    case 0x70:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_37;
-      break;
-    case 0x80:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_38;
-      break;
-    case 0x90:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_39;
-      break;
-    // if we arrived here without errors we suppose that the camera is at least 1.30.
-    // we don't flag the camera as non compliant.
-    default:
-      camera->iidc_version=DC1394_IIDC_VERSION_1_30;
-      break;
-    }
-  }
-
-  return err;
-}
+#endif
 
 dc1394error_t
 dc1394_reset_bus (dc1394camera_t * camera)
 {
-  return dc1394_reset_bus_platform (camera);
+  dc1394camera_priv_t * priv = DC1394_CAMERA_PRIV (camera);
+  return platform_reset_bus (priv->pcam);
 }
 
 dc1394error_t
 dc1394_read_cycle_timer (dc1394camera_t * camera,
         uint32_t * cycle_timer, uint64_t * local_time)
 {
-  return dc1394_read_cycle_timer_platform (camera, cycle_timer, local_time);
+  dc1394camera_priv_t * priv = DC1394_CAMERA_PRIV (camera);
+  return platform_read_cycle_timer (priv->pcam, cycle_timer, local_time);
 }
 
-dc1394error_t
-dc1394_update_camera_info(dc1394camera_t *camera)
+static dc1394error_t
+update_camera_info (dc1394camera_t *camera)
 {
-  dc1394error_t err;
-  uint32_t len, count;
-  uint64_t offset;
   uint32_t value=0, quadval = 0; // set to zero to avoid valgrind errors
 
-  /* Verify if this node is a camera and get its GUID*/
-  err=_dc1394_get_iidc_version_and_guid(camera);
-  if (err==DC1394_NOT_A_CAMERA)
-    return err;
-  DC1394_ERR_RTN(err, "Problem inferring the IIDC version");
+  dc1394_get_control_register(camera, REG_CAMERA_BASIC_FUNC_INQ, &value);
 
-  /* now get the command_regs_base */
-  offset= camera->unit_dependent_directory;
-  err=GetConfigROMTaggedRegister(camera, 0x40, 0, &offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get commands base address");
-  camera->command_registers_base= (uint64_t)(quadval & 0xFFFFFFUL)*4;
+  int adv_features_capable = value >> 31;
+  camera->has_vmode_error_status = (value >> 30) & 1;
+  camera->has_feature_error_status = (value >> 29) & 1;
+  int opt_function_capable = (value >> 28) & 1;
+  camera->bmode_capable = (value >> 23) & 1;
+  camera->can_switch_on_off = (value >> 15) & 1;
+  camera->one_shot_capable = (value >> 12) & 1;
+  camera->multi_shot_capable = (value >> 11) & 1;
+  camera->max_mem_channel    = value & 0xf;
 
-  /* get the vendor_name_leaf offset (optional) */
-  offset= camera->unit_dependent_directory;
-  camera->vendor[0] = '\0';
-  err=GetConfigROMTaggedRegister(camera, 0x81, 0, &offset, &quadval);
-  if (err==DC1394_SUCCESS) {
-    offset=(quadval & 0xFFFFFFUL)*4+offset;
+  if (adv_features_capable)
+    if (dc1394_get_control_register (camera, REG_CAMERA_ADV_FEATURE_INQ,
+          &quadval) == DC1394_SUCCESS)
+      camera->advanced_features_csr = (uint64_t) quadval * 4;
 
-    /* read in the length of the vendor name */
-    err=GetCameraROMValue(camera, offset, &value);
-    DC1394_ERR_RTN(err, "Could not get vendor leaf length");
-    
-    len= (uint32_t)(value >> 16)*4-8; /* Tim Evers corrected length value */ 
-    
-    if (len > MAX_CHARS) {
-      len= MAX_CHARS;
-    }
-    offset+= 12;
-    count= 0;
-
-    /* grab the vendor name */
-    while (len > 0) {
-      err=GetCameraROMValue(camera, offset+count, &value);
-      DC1394_ERR_RTN(err, "Could not get vendor string character");
-      
-      camera->vendor[count++]= (value >> 24);
-      camera->vendor[count++]= (value >> 16) & 0xFFUL;
-      camera->vendor[count++]= (value >> 8) & 0xFFUL;
-      camera->vendor[count++]= value & 0xFFUL;
-      len-= 4;
-      
-      camera->vendor[count]= '\0';
-    }
-  }
-  /* if the tagged register is not found, don't make a fuss about it. */
-  else if (err!=DC1394_TAGGED_REGISTER_NOT_FOUND) {
-    DC1394_ERR_RTN(err, "Could not get vendor leaf offset");
+  if (opt_function_capable) {
+    value = 0;
+    dc1394_get_control_register (camera, REG_CAMERA_OPT_FUNC_INQ, &value);
+    if ((value >> 30) & 1)
+      if (dc1394_get_control_register (camera,
+            REG_CAMERA_PIO_CONTROL_CSR_INQ, &quadval) == DC1394_SUCCESS)
+        camera->PIO_control_csr = (uint64_t) quadval * 4;
+    if ((value >> 29) & 1)
+      if (dc1394_get_control_register (camera,
+            REG_CAMERA_SIO_CONTROL_CSR_INQ, &quadval) == DC1394_SUCCESS)
+        camera->SIO_control_csr = (uint64_t) quadval * 4;
+    if ((value >> 28) & 1)
+      if (dc1394_get_control_register (camera,
+            REG_CAMERA_STROBE_CONTROL_CSR_INQ, &quadval) == DC1394_SUCCESS)
+        camera->strobe_control_csr = (uint64_t) quadval * 4;
   }
 
-  /* get the model_name_leaf offset (optional) */
-  offset= camera->unit_dependent_directory;
-  camera->model[0] = '\0';
-  err=GetConfigROMTaggedRegister(camera, 0x82, 0, &offset, &quadval);
-
-  if (err==DC1394_SUCCESS) {
-    offset=(quadval & 0xFFFFFFUL)*4+offset;
-    
-    /* read in the length of the model name */
-    err=GetCameraROMValue(camera, offset, &value);
-    DC1394_ERR_RTN(err, "Could not get model name leaf length");
-    
-    len= (uint32_t)(value >> 16)*4-8; /* Tim Evers corrected length value */ 
-    
-    if (len > MAX_CHARS) {
-      len= MAX_CHARS;
-    }
-    offset+= 12;
-    count= 0;
-    
-    /* grab the model name */
-    while (len > 0) {
-      err=GetCameraROMValue(camera, offset+count, &value);
-      DC1394_ERR_RTN(err, "Could not get model name character");
-      
-      camera->model[count++]= (value >> 24);
-      camera->model[count++]= (value >> 16) & 0xFFUL;
-      camera->model[count++]= (value >> 8) & 0xFFUL;
-      camera->model[count++]= value & 0xFFUL;
-      len-= 4;
-      
-      camera->model[count]= '\0';
-    }
-  }
-  /* if the tagged register is not found, don't make a fuss about it. */
-  else if (err!=DC1394_TAGGED_REGISTER_NOT_FOUND) {
-    DC1394_ERR_RTN(err, "Could not get model name leaf offset");
-  }
-
-  /* get the current ISO speed, and verify it*/
-  err=dc1394_video_get_iso_speed(camera, &camera->iso_speed);
-  if (err==DC1394_INVALID_ISO_SPEED) {
-    // default to the most probable speed: 400 Mbps
-    err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
-    DC1394_ERR_RTN(err,"Invalid ISO speed, and could not the speed to a valid default (ISO 400)");
-  }
-
-  /* get the current video mode, and verify it*/
-  err=dc1394_video_get_mode(camera, &camera->video_mode);
-  dc1394video_modes_t modes;
-  if (err==DC1394_INVALID_VIDEO_FORMAT) {
-    // a proper video mode may not be present. Try to set a default video mode
-    err=dc1394_video_get_supported_modes(camera,&modes);
-    DC1394_ERR_RTN(err,"Could not get the list of supported video modes");
-
-    err=dc1394_video_set_mode(camera,modes.modes[0]);
-    DC1394_ERR_RTN(err,"Could not set a default video mode (%d)",modes.modes[0]);
-    
-    err=dc1394_video_get_mode(camera,&camera->video_mode);
-    DC1394_ERR_RTN(err,"Could not get current video mode. Giving up.");
-  }
-
-  /* get the current framerate, and verify it*/
-  err=dc1394_video_get_framerate(camera, &camera->framerate);
-  DC1394_ERR_RTN(err, "Could not get current video framerate");
-  dc1394framerates_t framerates;
-  if (err==DC1394_INVALID_FRAMERATE) {
-    // a proper framerate may not be present. Try to set a default framerate
-    err=dc1394_video_get_supported_framerates(camera,camera->video_mode,&framerates);
-    DC1394_ERR_RTN(err,"Could not get the list of supported framerates");
-
-    err=dc1394_video_set_framerate(camera,framerates.framerates[0]);
-    DC1394_ERR_RTN(err,"Could not set a default framerate (%d)",modes.modes[0]);
-    
-    err=dc1394_video_get_framerate(camera,&camera->framerate);
-    DC1394_ERR_RTN(err,"Could not get current framerate. Giving up.");
-  }
-  
-  err=dc1394_video_get_transmission(camera, &camera->is_iso_on);
-  DC1394_ERR_RTN(err, "Could not get ISO status");
-  
-  err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value);
-  DC1394_ERR_RTN(err, "Could not get basic functionalities");
-
-  camera->mem_channel_number = (value & 0x0000000F);
-  camera->bmode_capable      = (value & 0x00800000) != 0;
-  camera->one_shot_capable   = (value & 0x00000800) != 0;
-  camera->multi_shot_capable = (value & 0x00001000) != 0;
-  int adv_features_capable = (value & 0x80000000) != 0;
-  camera->can_switch_on_off  = (value & (0x1<<16)) != 0;
-
-  if (camera->iidc_version>DC1394_IIDC_VERSION_1_30) { // >, not >= (E.Bieber)
-    err=GetCameraControlRegister(camera, REG_CAMERA_OPT_FUNC_INQ, &value);
-    if (err==DC1394_SUCCESS) { // do not return an error here: opt function register is not mandatory
-    
-      if (value & 0x40000000) {
-	// get PIO CSR
-	err=GetCameraControlRegister(camera,REG_CAMERA_PIO_CONTROL_CSR_INQ, &quadval);
-	DC1394_ERR_RTN(err, "Could not get PIO control CSR");
-	camera->PIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
-      }
-      if (value & 0x20000000) {
-	// get SIO CSR
-	err=GetCameraControlRegister(camera,REG_CAMERA_SIO_CONTROL_CSR_INQ, &quadval);
-	DC1394_ERR_RTN(err, "Could not get SIO control CSR");
-	camera->SIO_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
-      }
-      if (value & 0x10000000) {
-	// get strobe CSR
-	err=GetCameraControlRegister(camera,REG_CAMERA_STROBE_CONTROL_CSR_INQ, &quadval);
-	DC1394_ERR_RTN(err, "Could not get strobe control CSR");
-	camera->strobe_control_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
-      }
-    }
-    else
-      err=DC1394_SUCCESS;
-  }
-
-  if (adv_features_capable>0) {
-    // get advanced features CSR
-    err=GetCameraControlRegister(camera,REG_CAMERA_ADV_FEATURE_INQ, &quadval);
-    DC1394_ERR_RTN(err, "Could not get advanced features CSR");
-    camera->advanced_features_csr= (uint64_t)(quadval & 0xFFFFFFUL)*4;
-  }
-
-  return err;
-}
-
-void
-dc1394_free_camera(dc1394camera_t *camera)
-{
-  if (camera == NULL)
-    return;
-  dc1394_free_camera_platform (camera);
+  return DC1394_SUCCESS;
 }
 
 dc1394error_t
 dc1394_print_camera_info(dc1394camera_t *camera) 
 {
+  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
   uint32_t value[2];
   
-  value[0]= camera->id.guid & 0xffffffff;
-  value[1]= (camera->id.guid >>32) & 0xffffffff;
-  printf("------ Camera information ------\n");
-  printf("Vendor                            :     %s\n", camera->vendor);
-  printf("Model                             :     %s\n", camera->model);
-  printf("Unit                              :     %d\n", camera->id.unit);
-  printf("Node                              :     0x%x\n", camera->node);
-  printf("Port                              :     %d\n", camera->port);
-  printf("Specifications ID                 :     0x%x\n", camera->ud_reg_tag_12);
-  printf("Software revision                 :     0x%x\n", camera->ud_reg_tag_13);
-  printf("IIDC version code                 :     %d\n", camera->iidc_version);
-  printf("Unit directory offset             :     0x%llx\n", (uint64_t)camera->unit_directory);
-  printf("Unit dependent directory offset   :     0x%llx\n", (uint64_t)camera->unit_dependent_directory);
-  printf("Commands registers base           :     0x%llx\n", (uint64_t)camera->command_registers_base);
-  printf("Unique ID                         :     0x%08x%08x\n", value[1], value[0]);
+  value[0]= camera->guid & 0xffffffff;
+  value[1]= (camera->guid >>32) & 0xffffffff;
+  printf ("------ Camera information ------\n");
+  printf ("Vendor                            :     %s\n", camera->vendor);
+  printf ("Model                             :     %s\n", camera->model);
+  printf ("Unit                              :     %d\n", camera->unit);
+  printf ("Specifications ID                 :     0x%x\n",
+          camera->unit_spec_ID);
+  printf ("Software revision                 :     0x%x\n",
+          camera->unit_sw_version);
+  printf ("IIDC version code                 :     %d\n",
+          camera->iidc_version);
+  printf ("Unit dependent directory offset   :     0x%x\n",
+          camera->unit_dependent_directory);
+  printf ("Commands registers base           :     0x%x\n",
+          camera->command_registers_base);
+  printf ("Unique ID                         :     0x%08x%08x\n",
+          value[1], value[0]);
+  printf ("Vendor ID                         :     0x%x\n", camera->vendor_id);
+  printf ("Model ID                          :     0x%x\n", camera->model_id);
   if (camera->advanced_features_csr>0)
-    printf("Advanced features found at offset :     0x%llx\n", (uint64_t)camera->advanced_features_csr);
+    printf("Advanced features found at offset :     0x%"PRIx64"\n", camera->advanced_features_csr);
   printf("1394b mode capable (>=800Mbit/s)  :     ");
   if (camera->bmode_capable==DC1394_TRUE)
     printf("Yes\n");
   else
     printf("No\n");
 
-  dc1394_print_camera_info_platform (camera);
+  platform_camera_print_info (cpriv->pcam);
 
   return DC1394_SUCCESS;
 }
@@ -531,7 +195,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
 
   // get capabilities
   FEATURE_TO_INQUIRY_OFFSET(feature->id, offset);
-  err=GetCameraControlRegister(camera, offset, &value);
+  err=dc1394_get_control_register(camera, offset, &value);
   DC1394_ERR_RTN(err, "Could not check feature %d characteristics",feature->id);
 
   switch (feature->id) {
@@ -578,7 +242,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   // get current values
   FEATURE_TO_VALUE_OFFSET(feature->id, offset);
   
-  err=GetCameraControlRegister(camera, offset, &value);
+  err=dc1394_get_control_register(camera, offset, &value);
   DC1394_ERR_RTN(err, "Could not get feature register");
   
   switch (feature->id) {
@@ -796,7 +460,7 @@ dc1394error_t
 dc1394_reset_camera(dc1394camera_t *camera)
 {
   dc1394error_t err;
-  err=SetCameraControlRegister(camera, REG_CAMERA_INITIALIZE, DC1394_FEATURE_ON);
+  err=dc1394_set_control_register(camera, REG_CAMERA_INITIALIZE, DC1394_FEATURE_ON);
   DC1394_ERR_RTN(err, "Could not reset the camera");
   return err;
 }
@@ -809,7 +473,7 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
   dc1394video_mode_t mode;
 
   // get supported formats
-  err=GetCameraControlRegister(camera, REG_CAMERA_V_FORMAT_INQ, &sup_formats);
+  err=dc1394_get_control_register(camera, REG_CAMERA_V_FORMAT_INQ, &sup_formats);
   DC1394_ERR_RTN(err, "Could not get supported formats");
 
   //fprintf(stderr,"supoerted formats: 0x%x\n",sup_formats);
@@ -821,7 +485,7 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
   //fprintf(stderr,"shiftval=%d, mask=0x%x\n",31-(FORMAT0-FORMAT_MIN),0x1 << (31-(FORMAT0-FORMAT_MIN)));
   if ((sup_formats & (0x1 << (31-(DC1394_FORMAT0-DC1394_FORMAT_MIN)))) > 0) {
     //fprintf(stderr,"F0 available\n");
-    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT0-DC1394_FORMAT_MIN) * 0x04U), &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT0-DC1394_FORMAT_MIN) * 0x04U), &value);
     DC1394_ERR_RTN(err, "Could not get supported modes for Format_0");
     
     //fprintf(stderr,"modes 0: 0x%x\n",value);
@@ -835,7 +499,7 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
   }
   // Format_1
   if ((sup_formats & (0x1 << (31-(DC1394_FORMAT1-DC1394_FORMAT_MIN)))) > 0) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT1-DC1394_FORMAT_MIN) * 0x04U), &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT1-DC1394_FORMAT_MIN) * 0x04U), &value);
     DC1394_ERR_RTN(err, "Could not get supported modes for Format_1");
     
     for (mode=DC1394_VIDEO_MODE_FORMAT1_MIN;mode<=DC1394_VIDEO_MODE_FORMAT1_MAX;mode++) {
@@ -847,7 +511,7 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
   }
   // Format_2
   if ((sup_formats & (0x1 << (31-(DC1394_FORMAT2-DC1394_FORMAT_MIN)))) > 0) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT2-DC1394_FORMAT_MIN) * 0x04U), &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT2-DC1394_FORMAT_MIN) * 0x04U), &value);
     DC1394_ERR_RTN(err, "Could not get supported modes for Format_2");
     
     for (mode=DC1394_VIDEO_MODE_FORMAT2_MIN;mode<=DC1394_VIDEO_MODE_FORMAT2_MAX;mode++) {
@@ -859,7 +523,7 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
   }
   // Format_6
   if ((sup_formats & (0x1 << (31-(DC1394_FORMAT6-DC1394_FORMAT_MIN)))) > 0) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT6-DC1394_FORMAT_MIN) * 0x04U), &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT6-DC1394_FORMAT_MIN) * 0x04U), &value);
     DC1394_ERR_RTN(err, "Could not get supported modes for Format_3");
     
     for (mode=DC1394_VIDEO_MODE_FORMAT6_MIN;mode<=DC1394_VIDEO_MODE_FORMAT6_MAX;mode++) {
@@ -871,7 +535,7 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
   }
   // Format_7
   if ((sup_formats & (0x1 << (31-(DC1394_FORMAT7-DC1394_FORMAT_MIN)))) > 0) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT7-DC1394_FORMAT_MIN) * 0x04U), &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT7-DC1394_FORMAT_MIN) * 0x04U), &value);
     DC1394_ERR_RTN(err, "Could not get supported modes for Format_4");
     
     for (mode=DC1394_VIDEO_MODE_FORMAT7_MIN;mode<=DC1394_VIDEO_MODE_FORMAT7_MAX;mode++) {
@@ -915,7 +579,7 @@ dc1394_video_get_supported_framerates(dc1394camera_t *camera, dc1394video_mode_t
   format-=DC1394_FORMAT_MIN;
   
 
-  err=GetCameraControlRegister(camera,REG_CAMERA_V_RATE_INQ_BASE + (format * 0x20U) + (video_mode * 0x04U), &value);
+  err=dc1394_get_control_register(camera,REG_CAMERA_V_RATE_INQ_BASE + (format * 0x20U) + (video_mode * 0x04U), &value);
   DC1394_ERR_RTN(err, "Could not get supported framerates");
 
   framerates->num=0;
@@ -936,7 +600,7 @@ dc1394_video_get_framerate(dc1394camera_t *camera, dc1394framerate_t *framerate)
   uint32_t value;
   dc1394error_t err;
 
-  err=GetCameraControlRegister(camera, REG_CAMERA_FRAME_RATE, &value);
+  err=dc1394_get_control_register(camera, REG_CAMERA_FRAME_RATE, &value);
   DC1394_ERR_RTN(err, "Could not get video framerate");
   
   *framerate= (uint32_t)((value >> 29) & 0x7UL) + DC1394_FRAMERATE_MIN;
@@ -955,7 +619,7 @@ dc1394_video_set_framerate(dc1394camera_t *camera, dc1394framerate_t framerate)
   if (camera->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
   
-  err=SetCameraControlRegister(camera, REG_CAMERA_FRAME_RATE,
+  err=dc1394_set_control_register(camera, REG_CAMERA_FRAME_RATE,
 			       (uint32_t)(((framerate - DC1394_FRAMERATE_MIN) & 0x7UL) << 29));
   DC1394_ERR_RTN(err, "Could not set video framerate");
 
@@ -969,7 +633,7 @@ dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
   uint32_t value = 0; // set to zero to avoid valgrind errors
   uint32_t format = 0; // set to zero to avoid valgrind errors
   
-  err= GetCameraControlRegister(camera, REG_CAMERA_VIDEO_FORMAT, &value);
+  err= dc1394_get_control_register(camera, REG_CAMERA_VIDEO_FORMAT, &value);
   DC1394_ERR_RTN(err, "Could not get video format");
 
   format= (uint32_t)((value >> 29) & 0x7UL) + DC1394_FORMAT_MIN;
@@ -979,7 +643,7 @@ dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
 
   //fprintf(stderr,"format: %d\n",format);
 
-  err= GetCameraControlRegister(camera, REG_CAMERA_VIDEO_MODE, &value);
+  err= dc1394_get_control_register(camera, REG_CAMERA_VIDEO_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get video mode");
   
   switch(format) {
@@ -1045,10 +709,10 @@ dc1394_video_set_mode(dc1394camera_t *camera, dc1394video_mode_t  mode)
   //if (format>FORMAT2)
   //  format+=DC1394_FORMAT_GAP;
   
-  err=SetCameraControlRegister(camera, REG_CAMERA_VIDEO_FORMAT, (uint32_t)(((format - DC1394_FORMAT_MIN) & 0x7UL) << 29));
+  err=dc1394_set_control_register(camera, REG_CAMERA_VIDEO_FORMAT, (uint32_t)(((format - DC1394_FORMAT_MIN) & 0x7UL) << 29));
   DC1394_ERR_RTN(err, "Could not set video format");
 
-  err=SetCameraControlRegister(camera, REG_CAMERA_VIDEO_MODE, (uint32_t)(((mode - min) & 0x7UL) << 29));
+  err=dc1394_set_control_register(camera, REG_CAMERA_VIDEO_MODE, (uint32_t)(((mode - min) & 0x7UL) << 29));
   DC1394_ERR_RTN(err, "Could not set video mode");
 
   return err;
@@ -1061,7 +725,7 @@ dc1394_video_get_iso_speed(dc1394camera_t *camera, dc1394speed_t *speed)
   dc1394error_t err;
   uint32_t value;
   
-  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+  err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
 
   if (camera->bmode_capable) { // check if 1394b is available
@@ -1095,15 +759,15 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
   if (camera->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
   
-  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+  err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
 
   // check if 1394b is available and if we are now using 1394b
   if ((camera->bmode_capable)&&(value & 0x00008000)) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
     DC1394_ERR_RTN(err, "oops");
     channel=(value >> 8) & 0x3FUL;
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
+    err=dc1394_set_control_register(camera, REG_CAMERA_ISO_DATA,
 				 (uint32_t) ( ((channel & 0x3FUL) << 8) |
 					       (speed & 0x7UL) |
 					       (0x1 << 15) ));
@@ -1117,10 +781,10 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
       fprintf(stderr,"              1394b ISO speeds\n");
       return DC1394_INVALID_ISO_SPEED;
     }
-    err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
     DC1394_ERR_RTN(err, "oops");
     channel=(value >> 28) & 0xFUL;
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
+    err=dc1394_set_control_register(camera, REG_CAMERA_ISO_DATA,
 				 (uint32_t) (((channel & 0xFUL) << 28) |
 					      ((speed & 0x3UL) << 24) ));
     DC1394_ERR_RTN(err, "Could not set ISO data register");
@@ -1136,10 +800,10 @@ dc1394_video_get_iso_channel(dc1394camera_t *camera, uint32_t * channel)
   dc1394error_t err;
   uint32_t value_inq, value;
 
-  err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  err=dc1394_get_control_register(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
   DC1394_ERR_RTN(err, "Could not get basic function register");
 
-  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+  err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
 
   // check if 1394b is available and if we are now using 1394b
@@ -1158,25 +822,25 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
   uint32_t value_inq, value=0;
   int speed;
 
-  err=GetCameraControlRegister(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
+  err=dc1394_get_control_register(camera, REG_CAMERA_BASIC_FUNC_INQ, &value_inq);
   DC1394_ERR_RTN(err, "Could not get basic function register");
 
-  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+  err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
 
   // check if 1394b is available and if we are now using 1394b
   if ((value_inq & 0x00800000)&&(value & 0x00008000)) {
-    err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
     DC1394_ERR_RTN(err, "oops");
     speed=value & 0x7UL;
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
+    err=dc1394_set_control_register(camera, REG_CAMERA_ISO_DATA,
 				 (uint32_t) ( ((channel & 0x3FUL) << 8) |
 					       (speed & 0x7UL) |
 					       (0x1 << 15) ));
     DC1394_ERR_RTN(err, "oops");
   }
   else { // fallback to legacy
-    err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+    err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
     DC1394_ERR_RTN(err, "oops");
     speed=(value >> 24) & 0x3UL;
     if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
@@ -1185,7 +849,7 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
       fprintf(stderr,"              1394b ISO speeds\n");
       return DC1394_FAILURE;
     }
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
+    err=dc1394_set_control_register(camera, REG_CAMERA_ISO_DATA,
 				 (uint32_t) (((channel & 0xFUL) << 28) |
 					      ((speed & 0x3UL) << 24) ));
     DC1394_ERR_RTN(err, "Could not set ISO data register");
@@ -1200,7 +864,7 @@ dc1394_video_get_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t  
   dc1394error_t err;
   uint32_t value;
 
-  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+  err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
   
   if (camera->bmode_capable==DC1394_TRUE) {
@@ -1226,17 +890,17 @@ dc1394_video_set_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t  
   if (camera->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
   
-  err=GetCameraControlRegister(camera, REG_CAMERA_ISO_DATA, &value);
+  err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
   
   if (mode==DC1394_OPERATION_MODE_LEGACY) {
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
+    err=dc1394_set_control_register(camera, REG_CAMERA_ISO_DATA,
 				 (uint32_t) (value & 0xFFFF7FFF));
     DC1394_ERR_RTN(err, "Could not set ISO data");
   }
   else { // 1394b
     if (camera->bmode_capable) { // if 1394b available
-      err=SetCameraControlRegister(camera, REG_CAMERA_ISO_DATA,
+      err=dc1394_set_control_register(camera, REG_CAMERA_ISO_DATA,
 				   (uint32_t) (value | 0x00008000));
       DC1394_ERR_RTN(err, "Could not set ISO data");
     }
@@ -1255,11 +919,11 @@ dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr)
   dc1394error_t err;
   switch (pwr) {
   case DC1394_ON:
-    err=SetCameraControlRegister(camera, REG_CAMERA_POWER, DC1394_FEATURE_ON);
+    err=dc1394_set_control_register(camera, REG_CAMERA_POWER, DC1394_FEATURE_ON);
     DC1394_ERR_RTN(err, "Could not switch camera ON");
     break;
   case DC1394_OFF:
-    err=SetCameraControlRegister(camera, REG_CAMERA_POWER, DC1394_FEATURE_OFF);
+    err=dc1394_set_control_register(camera, REG_CAMERA_POWER, DC1394_FEATURE_OFF);
     DC1394_ERR_RTN(err, "Could not switch camera OFF");
     break;
   default:
@@ -1279,14 +943,14 @@ dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr)
     // err=dc1394_allocate_iso_channel_and_bandwidth(camera);
     // DC1394_ERR_RTN(err, "Could not allocate ISO channel and bandwidth");
     // then we start ISO
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_ON);
+    err=dc1394_set_control_register(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_ON);
     if (err==DC1394_SUCCESS)
       camera->is_iso_on=1;
     DC1394_ERR_RTN(err, "Could not start ISO transmission");
   }
   else {
     // first we stop ISO
-    err=SetCameraControlRegister(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_OFF);
+    err=dc1394_set_control_register(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_OFF);
     if (err==DC1394_SUCCESS) {
       camera->is_iso_on=0;
       // then we free iso bandwidth and iso channels
@@ -1304,7 +968,7 @@ dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch_t *is_on)
 {
   dc1394error_t err;
   uint32_t value;
-  err= GetCameraControlRegister(camera, REG_CAMERA_ISO_EN, &value);
+  err= dc1394_get_control_register(camera, REG_CAMERA_ISO_EN, &value);
   DC1394_ERR_RTN(err, "Could not get ISO status");
   
   *is_on= (value & DC1394_FEATURE_ON)>>31;
@@ -1317,11 +981,11 @@ dc1394_video_set_one_shot(dc1394camera_t *camera, dc1394switch_t pwr)
   dc1394error_t err;
   switch (pwr) {
   case DC1394_ON:
-    err=SetCameraControlRegister(camera, REG_CAMERA_ONE_SHOT, DC1394_FEATURE_ON);
+    err=dc1394_set_control_register(camera, REG_CAMERA_ONE_SHOT, DC1394_FEATURE_ON);
     DC1394_ERR_RTN(err, "Could not set one-shot");
     break;
   case DC1394_OFF:
-    err=SetCameraControlRegister(camera, REG_CAMERA_ONE_SHOT, DC1394_FEATURE_OFF);
+    err=dc1394_set_control_register(camera, REG_CAMERA_ONE_SHOT, DC1394_FEATURE_OFF);
     DC1394_ERR_RTN(err, "Could not unset one-shot");
     break;
   default:
@@ -1335,7 +999,7 @@ dc1394error_t
 dc1394_video_get_one_shot(dc1394camera_t *camera, dc1394bool_t *is_on)
 {
   uint32_t value;
-  dc1394error_t err = GetCameraControlRegister(camera, REG_CAMERA_ONE_SHOT, &value);
+  dc1394error_t err = dc1394_get_control_register(camera, REG_CAMERA_ONE_SHOT, &value);
   DC1394_ERR_RTN(err, "Could not get one-shot status");
   *is_on = ( value & DC1394_FEATURE_ON) ? DC1394_TRUE : DC1394_FALSE;
   return err;
@@ -1345,7 +1009,7 @@ dc1394error_t
 dc1394_video_get_multi_shot(dc1394camera_t *camera, dc1394bool_t *is_on, uint32_t *numFrames)
 {
   uint32_t value;
-  dc1394error_t err = GetCameraControlRegister(camera, REG_CAMERA_ONE_SHOT, &value);
+  dc1394error_t err = dc1394_get_control_register(camera, REG_CAMERA_ONE_SHOT, &value);
   DC1394_ERR_RTN(err, "Could not get multishot status");
   *is_on = (value & (DC1394_FEATURE_ON>>1)) >> 30;
   *numFrames= value & 0xFFFFUL;
@@ -1359,7 +1023,7 @@ dc1394_video_set_multi_shot(dc1394camera_t *camera, uint32_t numFrames, dc1394sw
   dc1394error_t err;
   switch (pwr) {
   case DC1394_ON:
-    err=SetCameraControlRegister(camera, REG_CAMERA_ONE_SHOT,
+    err=dc1394_set_control_register(camera, REG_CAMERA_ONE_SHOT,
 				 (0x40000000UL | (numFrames & 0xFFFFUL)));
     DC1394_ERR_RTN(err, "Could not set multishot");
     break;
@@ -1378,7 +1042,7 @@ dc1394error_t
 dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint32_t *u_b_value, uint32_t *v_r_value)
 {
   uint32_t value;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_WHITE_BALANCE, &value);
+  dc1394error_t err= dc1394_get_control_register(camera, REG_CAMERA_WHITE_BALANCE, &value);
   DC1394_ERR_RTN(err, "Could not get white balance");
 
   *u_b_value= (uint32_t)((value & 0xFFF000UL) >> 12);
@@ -1391,12 +1055,12 @@ dc1394_feature_whitebalance_set_value(dc1394camera_t *camera, uint32_t u_b_value
 {
   uint32_t curval;
   dc1394error_t err;
-  err=GetCameraControlRegister(camera, REG_CAMERA_WHITE_BALANCE, &curval);
+  err=dc1394_get_control_register(camera, REG_CAMERA_WHITE_BALANCE, &curval);
   DC1394_ERR_RTN(err, "Could not get white balance");
   
   curval= (curval & 0xFF000000UL) | ( ((u_b_value & 0xFFFUL) << 12) |
 				      (v_r_value & 0xFFFUL) );
-  err=SetCameraControlRegister(camera, REG_CAMERA_WHITE_BALANCE, curval);
+  err=dc1394_set_control_register(camera, REG_CAMERA_WHITE_BALANCE, curval);
   DC1394_ERR_RTN(err, "Could not set white balance");
   return err;
 }
@@ -1405,7 +1069,7 @@ dc1394error_t
 dc1394_feature_temperature_get_value(dc1394camera_t *camera, uint32_t *target_temperature, uint32_t *temperature)
 {
   uint32_t value;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TEMPERATURE, &value);
+  dc1394error_t err= dc1394_get_control_register(camera, REG_CAMERA_TEMPERATURE, &value);
   DC1394_ERR_RTN(err, "Could not get temperature");
   *target_temperature= (uint32_t)((value >> 12) & 0xFFF);
   *temperature= (uint32_t)(value & 0xFFFUL);
@@ -1418,11 +1082,11 @@ dc1394_feature_temperature_set_value(dc1394camera_t *camera, uint32_t target_tem
   dc1394error_t err;
   uint32_t curval;
   
-  err=GetCameraControlRegister(camera, REG_CAMERA_TEMPERATURE, &curval);
+  err=dc1394_get_control_register(camera, REG_CAMERA_TEMPERATURE, &curval);
   DC1394_ERR_RTN(err, "Could not get temperature");
   
   curval= (curval & 0xFF000FFFUL) | ((target_temperature & 0xFFFUL) << 12);
-  err= SetCameraControlRegister(camera, REG_CAMERA_TEMPERATURE, curval);
+  err= dc1394_set_control_register(camera, REG_CAMERA_TEMPERATURE, curval);
   DC1394_ERR_RTN(err, "Could not set temperature");
 
   return err;
@@ -1432,7 +1096,7 @@ dc1394error_t
 dc1394_feature_whiteshading_get_value(dc1394camera_t *camera, uint32_t *r_value, uint32_t *g_value, uint32_t *b_value)
 {
   uint32_t value;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_WHITE_SHADING, &value);
+  dc1394error_t err= dc1394_get_control_register(camera, REG_CAMERA_WHITE_SHADING, &value);
   DC1394_ERR_RTN(err, "Could not get white shading");
   
   *r_value= (uint32_t)((value & 0xFF0000UL) >> 16);
@@ -1447,13 +1111,13 @@ dc1394_feature_whiteshading_set_value(dc1394camera_t *camera, uint32_t r_value, 
 {
   uint32_t curval;
   
-  dc1394error_t err=GetCameraControlRegister(camera, REG_CAMERA_WHITE_SHADING, &curval);
+  dc1394error_t err=dc1394_get_control_register(camera, REG_CAMERA_WHITE_SHADING, &curval);
   DC1394_ERR_RTN(err, "Could not get white shading");
   
   curval= (curval & 0xFF000000UL) | ( ((r_value & 0xFFUL) << 16) |
 				      ((g_value & 0xFFUL) << 8) |
 				      (b_value & 0xFFUL) );
-  err=SetCameraControlRegister(camera, REG_CAMERA_WHITE_SHADING, curval);
+  err=dc1394_set_control_register(camera, REG_CAMERA_WHITE_SHADING, curval);
   DC1394_ERR_RTN(err, "Could not set white shading");
 
   return err;
@@ -1463,7 +1127,7 @@ dc1394error_t
 dc1394_external_trigger_get_mode(dc1394camera_t *camera, dc1394trigger_mode_t *mode)
 {
   uint32_t value;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &value);
+  dc1394error_t err= dc1394_get_control_register(camera, REG_CAMERA_TRIGGER_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get trigger mode");
   
   *mode= (uint32_t)( ((value >> 16) & 0xFUL) );
@@ -1484,14 +1148,14 @@ dc1394_external_trigger_set_mode(dc1394camera_t *camera, dc1394trigger_mode_t mo
     return DC1394_INVALID_TRIGGER_MODE;
   }
   
-  err=GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &curval);
+  err=dc1394_get_control_register(camera, REG_CAMERA_TRIGGER_MODE, &curval);
   DC1394_ERR_RTN(err, "Could not get trigger mode");
   
   mode-= DC1394_TRIGGER_MODE_MIN;
   if (mode>5)
     mode+=8;
   curval= (curval & 0xFFF0FFFFUL) | ((mode & 0xFUL) << 16);
-  err=SetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, curval);
+  err=dc1394_set_control_register(camera, REG_CAMERA_TRIGGER_MODE, curval);
   DC1394_ERR_RTN(err, "Could not set trigger mode");
   return err;
 }
@@ -1506,7 +1170,7 @@ dc1394_external_trigger_get_supported_sources(dc1394camera_t *camera, dc1394trig
   int i;
 
   FEATURE_TO_INQUIRY_OFFSET(DC1394_FEATURE_TRIGGER, offset);
-  err=GetCameraControlRegister(camera, offset, &value);
+  err=dc1394_get_control_register(camera, offset, &value);
   DC1394_ERR_RTN(err,"Could not query supported trigger sources");
 
   sources->num=0;
@@ -1525,7 +1189,7 @@ dc1394error_t
 dc1394_external_trigger_get_source(dc1394camera_t *camera, dc1394trigger_source_t *source)
 {
   uint32_t value;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &value);
+  dc1394error_t err= dc1394_get_control_register(camera, REG_CAMERA_TRIGGER_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get trigger source");
   
   *source= (uint32_t)( ((value >> 21) & 0x7UL) );
@@ -1546,14 +1210,14 @@ dc1394_external_trigger_set_source(dc1394camera_t *camera, dc1394trigger_source_
     return DC1394_INVALID_TRIGGER_SOURCE;
   }
   
-  err=GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &curval);
+  err=dc1394_get_control_register(camera, REG_CAMERA_TRIGGER_MODE, &curval);
   DC1394_ERR_RTN(err, "Could not get trigger source");
   
   source-= DC1394_TRIGGER_SOURCE_MIN;
   if (source > 3)
       source += 3;
   curval= (curval & 0xFF1FFFFFUL) | ((source & 0x7UL) << 21);
-  err=SetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, curval);
+  err=dc1394_set_control_register(camera, REG_CAMERA_TRIGGER_MODE, curval);
   DC1394_ERR_RTN(err, "Could not set trigger source");
   return err;
 }
@@ -1574,7 +1238,7 @@ dc1394_feature_get_value(dc1394camera_t *camera, dc1394feature_t feature, uint32
 
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get feature %d value",feature);
   *value= (uint32_t)(quadval & 0xFFFUL);
   
@@ -1597,10 +1261,10 @@ dc1394_feature_set_value(dc1394camera_t *camera, dc1394feature_t feature, uint32
 
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get feature %d value",feature);
   
-  err=SetCameraControlRegister(camera, offset, (quadval & 0xFFFFF000UL) | (value & 0xFFFUL));
+  err=dc1394_set_control_register(camera, offset, (quadval & 0xFFFFF000UL) | (value & 0xFFFUL));
   DC1394_ERR_RTN(err, "Could not set feature %d value",feature);
   return err;
 }
@@ -1652,7 +1316,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
   }
 
   // check feature presence in 0x40x
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get register for feature %d",feature);
   
   if (IsFeatureBitSet(quadval, feature)!=DC1394_TRUE) {
@@ -1663,7 +1327,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
   // if feature is present in 0x40x, check for availability in 0x5xx
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get register for feature %d",feature);
   
   if (quadval & 0x80000000UL) {
@@ -1677,7 +1341,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
   // if feature is present in 0x5xx, check for availability in 0x8xx
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get register for feature %d",feature);
 
   if (quadval & 0x80000000UL) {
@@ -1700,7 +1364,7 @@ dc1394_feature_has_one_push_auto(dc1394camera_t *camera, dc1394feature_t feature
   
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get one-push capability for feature %d",feature);
   
   *value = (quadval & 0x10000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -1717,7 +1381,7 @@ dc1394_feature_is_readable(dc1394camera_t *camera, dc1394feature_t feature, dc13
   
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get read-out capability for feature %d",feature);
   
   *value = (quadval & 0x08000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -1734,7 +1398,7 @@ dc1394_feature_is_switchable(dc1394camera_t *camera, dc1394feature_t feature, dc
   
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get power capability for feature %d",feature);
   
   *value = (quadval & 0x04000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -1751,7 +1415,7 @@ dc1394_feature_get_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394
   
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get feature %d status",feature);
   
   *value = (quadval & 0x02000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -1768,17 +1432,17 @@ dc1394_feature_set_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394
 
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &curval);
+  err=dc1394_get_control_register(camera, offset, &curval);
   DC1394_ERR_RTN(err, "Could not get feature %d register",feature);
   
   if (value && !(curval & 0x02000000UL)) {    
     curval|= 0x02000000UL;
-    err=SetCameraControlRegister(camera, offset, curval);
+    err=dc1394_set_control_register(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not set feature %d power",feature);
   }
   else if (!value && (curval & 0x02000000UL)) {
     curval&= 0xFDFFFFFFUL;
-    err=SetCameraControlRegister(camera, offset, curval);
+    err=dc1394_set_control_register(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not set feature %d power",feature);
   }
   
@@ -1798,7 +1462,7 @@ dc1394_feature_has_auto_mode(dc1394camera_t *camera, dc1394feature_t feature, dc
   
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get automode capability for feature %d",feature);
   
   *value = (quadval & 0x02000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -1819,7 +1483,7 @@ dc1394_feature_has_manual_mode(dc1394camera_t *camera, dc1394feature_t feature, 
   
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get manual modecapability for feature %d",feature);
   
   *value = (quadval & 0x01000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -1840,7 +1504,7 @@ dc1394_feature_get_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394f
   
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get feature %d auto status",feature);
   
   if (quadval & 0x04000000UL) {
@@ -1869,22 +1533,22 @@ dc1394_feature_set_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394f
   
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &curval);
+  err=dc1394_get_control_register(camera, offset, &curval);
   DC1394_ERR_RTN(err, "Could not get feature %d register",feature);
   
   if ((mode==DC1394_FEATURE_MODE_AUTO) && !(curval & 0x01000000UL)) {
     curval|= 0x01000000UL;
-    err=SetCameraControlRegister(camera, offset, curval);
+    err=dc1394_set_control_register(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not set auto mode for feature %d",feature);
   }
   else if ((mode==DC1394_FEATURE_MODE_MANUAL) && (curval & 0x01000000UL)) {
     curval&= 0xFEFFFFFFUL;
-    err=SetCameraControlRegister(camera, offset, curval);
+    err=dc1394_set_control_register(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not set auto mode for feature %d",feature);
   }
   else if ((mode==DC1394_FEATURE_MODE_ONE_PUSH_AUTO)&& !(curval & 0x04000000UL)) {
     curval|= 0x04000000UL;
-    err=SetCameraControlRegister(camera, offset, curval);
+    err=dc1394_set_control_register(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not sart one-push capability for feature %d",feature);
   }
   
@@ -1904,7 +1568,7 @@ dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, u
   
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get feature %d min value",feature);
   
   *min= (uint32_t)((quadval & 0xFFF000UL) >> 12);
@@ -1920,7 +1584,7 @@ dc1394error_t
 dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value)
 {
   uint32_t quadlet;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_MEMORY_SAVE, &quadlet);
+  dc1394error_t err= dc1394_get_control_register(camera, REG_CAMERA_MEMORY_SAVE, &quadlet);
   DC1394_ERR_RTN(err, "Could not get memory busy status");
   *value = (quadlet & DC1394_FEATURE_ON) >> 31;
   return err;
@@ -1929,11 +1593,11 @@ dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value)
 dc1394error_t
 dc1394_memory_save(dc1394camera_t *camera, uint32_t channel)
 {
-  dc1394error_t err=SetCameraControlRegister(camera, REG_CAMERA_MEM_SAVE_CH,
+  dc1394error_t err=dc1394_set_control_register(camera, REG_CAMERA_MEM_SAVE_CH,
 				  (uint32_t)((channel & 0xFUL) << 28));
   DC1394_ERR_RTN(err, "Could not save memory channel");
 
-  err=SetCameraControlRegister(camera, REG_CAMERA_MEMORY_SAVE, DC1394_FEATURE_ON);
+  err=dc1394_set_control_register(camera, REG_CAMERA_MEMORY_SAVE, DC1394_FEATURE_ON);
   DC1394_ERR_RTN(err, "Could not save to memory");
   return err;
 }
@@ -1941,7 +1605,7 @@ dc1394_memory_save(dc1394camera_t *camera, uint32_t channel)
 dc1394error_t
 dc1394_memory_load(dc1394camera_t *camera, uint32_t channel)
 {
-  dc1394error_t err=SetCameraControlRegister(camera, REG_CAMERA_CUR_MEM_CH,
+  dc1394error_t err=dc1394_set_control_register(camera, REG_CAMERA_CUR_MEM_CH,
 				  (uint32_t)((channel & 0xFUL) << 28));
   DC1394_ERR_RTN(err, "Could not load from memory");
   return err;
@@ -1957,11 +1621,11 @@ dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polar
   dc1394error_t err;
   uint32_t curval;
   
-  err=GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &curval);
+  err=dc1394_get_control_register(camera, REG_CAMERA_TRIGGER_MODE, &curval);
   DC1394_ERR_RTN(err, "Could not get trigger register");
   
   curval= (curval & 0xFEFFFFFFUL) | ((polarity & 0x1UL) << 24);
-  err=SetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, curval);
+  err=dc1394_set_control_register(camera, REG_CAMERA_TRIGGER_MODE, curval);
   DC1394_ERR_RTN(err, "Could not set set trigger polarity");
   return err;
 }
@@ -1970,7 +1634,7 @@ dc1394error_t
 dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity)
 {
   uint32_t value;
-  dc1394error_t err= GetCameraControlRegister(camera, REG_CAMERA_TRIGGER_MODE, &value);
+  dc1394error_t err= dc1394_get_control_register(camera, REG_CAMERA_TRIGGER_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get trigger polarity");
   
   *polarity= (uint32_t)( ((value >> 24) & 0x1UL) );
@@ -1986,7 +1650,7 @@ dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polar
   
   offset= REG_CAMERA_FEATURE_HI_BASE_INQ;
   
-  err=GetCameraControlRegister(camera, offset + ((DC1394_FEATURE_TRIGGER - DC1394_FEATURE_MIN) * 0x04U), &quadval);
+  err=dc1394_get_control_register(camera, offset + ((DC1394_FEATURE_TRIGGER - DC1394_FEATURE_MIN) * 0x04U), &quadval);
   DC1394_ERR_RTN(err, "Could not get trigger polarity capability");
   
   *polarity = (quadval & 0x02000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -2016,10 +1680,10 @@ dc1394_software_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr)
   dc1394error_t err;
 
   if (pwr==DC1394_ON) {
-    err=SetCameraControlRegister(camera, REG_CAMERA_SOFT_TRIGGER, DC1394_FEATURE_ON);
+    err=dc1394_set_control_register(camera, REG_CAMERA_SOFT_TRIGGER, DC1394_FEATURE_ON);
   }
   else {
-    err=SetCameraControlRegister(camera, REG_CAMERA_SOFT_TRIGGER, DC1394_FEATURE_OFF);
+    err=dc1394_set_control_register(camera, REG_CAMERA_SOFT_TRIGGER, DC1394_FEATURE_OFF);
   }
   DC1394_ERR_RTN(err, "Could not set software trigger");
   return err;
@@ -2029,7 +1693,7 @@ dc1394error_t
 dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr)
 {
   uint32_t value;
-  dc1394error_t err = GetCameraControlRegister(camera, REG_CAMERA_SOFT_TRIGGER, &value);
+  dc1394error_t err = dc1394_get_control_register(camera, REG_CAMERA_SOFT_TRIGGER, &value);
   DC1394_ERR_RTN(err, "Could not get software trigger status");
   
   *pwr = (value & DC1394_FEATURE_ON)? DC1394_ON : DC1394_OFF;
@@ -2047,7 +1711,7 @@ dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth)
 
   *depth = 0;
   if (camera->iidc_version >= DC1394_IIDC_VERSION_1_31) {
-    err= GetCameraControlRegister(camera, REG_CAMERA_DATA_DEPTH, &value);
+    err= dc1394_get_control_register(camera, REG_CAMERA_DATA_DEPTH, &value);
     if (err==DC1394_SUCCESS)
       *depth = value >> 24;
   }
@@ -2082,7 +1746,7 @@ dc1394_feature_get_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get get abs control for feature %d",feature);
   
   *pwr = (quadval & 0x40000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -2099,17 +1763,17 @@ dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &curval);
+  err=dc1394_get_control_register(camera, offset, &curval);
   DC1394_ERR_RTN(err, "Could not get abs setting status for feature %d",feature);
   
   if (pwr && !(curval & 0x40000000UL)) {
     curval|= 0x40000000UL;
-    err=SetCameraControlRegister(camera, offset, curval);
+    err=dc1394_set_control_register(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not set absolute control for feature %d",feature);
   }
   else if (!pwr && (curval & 0x40000000UL)) {
     curval&= 0xBFFFFFFFUL;
-    err=SetCameraControlRegister(camera, offset, curval);
+    err=dc1394_set_control_register(camera, offset, curval);
     DC1394_ERR_RTN(err, "Could not set absolute control for feature %d",feature);
   }
   
@@ -2126,7 +1790,7 @@ dc1394_feature_has_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
-  err=GetCameraControlRegister(camera, offset, &quadval);
+  err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get absolute control register for feature %d",feature);
   
   *value = (quadval & 0x40000000UL) ? DC1394_TRUE: DC1394_FALSE;
@@ -2280,140 +1944,162 @@ dc1394_pio_get(dc1394camera_t *camera, uint32_t *value)
 /*
   Create a new dc1394 struct, which also initialises the library
 */
-dc1394_t*
-dc1394_new(void)
+dc1394_t *
+dc1394_new (void)
 {
-  dc1394_t *dc1394;
-  dc1394camera_t **cameras;
-  uint32_t num, i;
-  dc1394error_t err;
-
-  dc1394=(dc1394_t*)malloc(sizeof(dc1394_t));
-
-  // use dc1394_find_cameras to get all cameras:
-  err=dc1394_find_cameras(&cameras, &num);
-  if ((err!=DC1394_NO_CAMERA)&&(err!=DC1394_SUCCESS)) {
-    fprintf(stderr,"Could not find cameras\n");
+  platform_t * p = platform_new ();
+  if (!p)
     return NULL;
-  }
-    
-  // the camera structs now contain the GUIDs. Extract them and return:
-  if (err==DC1394_NO_CAMERA) {
-    dc1394->camera_list.ids=NULL;
-    dc1394->camera_list.num=0;
-    return dc1394;
-  }
 
-  dc1394->camera_list.ids=(dc1394camera_id_t*)malloc(num*sizeof(dc1394camera_id_t));
-  dc1394->camera_list.num=num;
-
-  for (i=0;i<num;i++) {
-    dc1394->camera_list.ids[i].guid=cameras[i]->id.guid; 
-    dc1394->camera_list.ids[i].unit=cameras[i]->id.unit; 
-    dc1394_free_camera(cameras[i]);
-    // note: don't confuse "dc1394_free_camera" (old API) and "dc1394_camera_free" (this new API)
-  }
-  // free the camera vector:
-  free(cameras);
-
-  return dc1394;
+  dc1394_t * d = calloc (1, sizeof (dc1394_t));
+  d->platform = p;
+  return d;
 }
 
 /*
   Free a dc1394 struct, which also terminates the use of the library
 */
 void
-dc1394_free(dc1394_t *dc1394)
+dc1394_free (dc1394_t * d)
 {
-  if (dc1394!=NULL) {
-    if (dc1394->camera_list.ids!=NULL)
-      free(dc1394->camera_list.ids);
-    free(dc1394);
-  }
+  free_enumeration (d);
+  platform_free (d->platform);
+  free (d);
 }
 
-/*
-  Returns the list of unique identifiers (GUID) for all cameras connected to the
-  computer. The number of cameras is also returned. 
-*/
-dc1394error_t
-dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list)
+char *
+get_leaf_string (platform_camera_t * pcam, uint32_t offset)
+{
+  uint32_t quad;
+  int len, i;
+  char * str;
+
+  if (platform_camera_read_quad (pcam, offset, &quad) < 0)
+    return NULL;
+
+  len = quad >> 16;
+  str = malloc (4 * (len - 2) + 1);
+  for (i = 0; i < len - 2; i++) {
+    if (platform_camera_read_quad (pcam, offset + 12 + 4 * i, &quad) < 0) {
+      free (str);
+      return NULL;
+    }
+    str[4*i+0] = quad >> 24;
+    str[4*i+1] = (quad >> 16) & 0xff;
+    str[4*i+2] = (quad >> 8) & 0xff;
+    str[4*i+3] = quad & 0xff;
+  }
+  str[4*i] = '\0';
+  return str;
+}
+
+dc1394camera_t *
+dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
 {
   int i;
+  camera_info_t * info = NULL;
+  platform_camera_t * pcam;
+  uint32_t command_regs_base = 0;
+  uint32_t vendor_name_offset = 0;
+  uint32_t model_name_offset = 0;
+  uint32_t unit_sub_sw_version = 0;
+  uint32_t ghigh, glow, quad;
+  uint32_t offset, num_entries;
+  dc1394camera_t * camera;
+  dc1394camera_priv_t * cpriv;
 
-  // copy the internal data from internal to public arrays and
-  // send this back to the user. At this time we do this by copying data
-  // but exchanging pointers could be used too.
+  if (!d->device_list)
+    refresh_enumeration (d);
 
-  // we can't automatically free this because list->guids may not have been initialised to NULL.
-  //if (list->guids!=NULL)
-  //  free(list->guids);
-
-  if (dc1394->camera_list.num==0) {
-    *list=NULL;
-    return DC1394_NO_CAMERA;
-  }
-
-  *list=(dc1394camera_list_t*)malloc(sizeof(dc1394camera_list_t));
-
-  (*list)->ids=(dc1394camera_id_t*)malloc(dc1394->camera_list.num*sizeof(dc1394camera_id_t));
-  (*list)->num=dc1394->camera_list.num;
-  
-  for (i=0;i<dc1394->camera_list.num;i++) {
-    (*list)->ids[i].guid=dc1394->camera_list.ids[i].guid;
-    (*list)->ids[i].unit=dc1394->camera_list.ids[i].unit;
-  }
-
-  return DC1394_SUCCESS;
-}
-
-
-/*
-  Free a list of cameras returned by dc1394_enumerate_cameras()
- */
-void
-dc1394_free_camera_list(dc1394camera_list_t *list)
-{
-  if (list!=NULL) {
-    if (list->ids!=NULL)
-      free(list->ids);
-    free(list);
-  }
-}
-
-
-/*
-  Creates a new camera structure and initialise it so that it's ready to use.
-  This requires a fair amount of discussions between the camera and the host.
-*/
-dc1394camera_t*
-dc1394_camera_new(dc1394_t *dc1394, dc1394camera_id_t id)
-{
-  // use dc1394_find_cameras to get all cameras:
-  dc1394camera_t **cameras;
-  uint32_t num, i;
-  dc1394error_t err;
-  // if the GUID given does not correspond to an available camera, return NULL.
-  dc1394camera_t *out=NULL;
-
-  err=dc1394_find_cameras(&cameras, &num);
-
-  // check for the GUID only if we have a valid camera vector
-  if (err==DC1394_SUCCESS) {
-
-    for (i=0;i<num;i++) {
-      if (dc1394_is_same_camera(cameras[i]->id, id))
-	out=cameras[i];
-      else
-	dc1394_free_camera(cameras[i]);
+  for (i = 0; i < d->num_cameras; i++) {
+    if (d->cameras[i].guid == guid &&
+        (unit < 0 || d->cameras[i].unit == unit)) {
+      info = d->cameras + i;
+      break;
     }
+  }
+  if (!info)
+    return NULL;
 
-    // free the camera vector
-    free(cameras);
+  pcam = platform_camera_new (d->platform, info->device,
+      info->unit_dependent_directory);
+  if (!pcam)
+    return NULL;
 
+  /* Check to make sure the GUID still matches. */
+  if (platform_camera_read_quad (pcam, 0x40C, &ghigh) < 0 ||
+      platform_camera_read_quad (pcam, 0x410, &glow) < 0)
+    goto fail;
+
+  if (ghigh != (info->guid >> 32) || glow != (info->guid & 0xffffffff))
+    goto fail;
+
+  if (platform_camera_read_quad (pcam, info->unit_dependent_directory,
+        &quad) < 0)
+    goto fail;
+
+  num_entries = quad >> 16;
+  offset = info->unit_dependent_directory + 4;
+  for (i = 0; i < num_entries; i++) {
+    if (platform_camera_read_quad (pcam, offset + 4 * i, &quad) < 0)
+      goto fail;
+    if ((quad >> 24) == 0x40)
+      command_regs_base = quad & 0xffffff;
+    else if ((quad >> 24) == 0x81)
+      vendor_name_offset = offset + 4 * ((quad & 0xffffff) + i);
+    else if ((quad >> 24) == 0x82)
+      model_name_offset = offset + 4 * ((quad & 0xffffff) + i);
+    else if ((quad >> 24) == 0x38)
+      unit_sub_sw_version = quad & 0xffffff;
   }
 
-  return out;
+  if (!command_regs_base)
+    goto fail;
+
+  camera = calloc (1, sizeof (dc1394camera_priv_t));
+  cpriv = DC1394_CAMERA_PRIV (camera);
+
+  cpriv->pcam = pcam;
+  camera->guid = info->guid;
+  camera->unit = info->unit;
+  camera->unit_spec_ID = info->unit_spec_ID;
+  camera->unit_sw_version = info->unit_sw_version;
+  camera->unit_sub_sw_version = unit_sub_sw_version;
+  camera->unit_dependent_directory = info->unit_dependent_directory;
+  camera->command_registers_base = command_regs_base * 4;
+  camera->vendor_id = info->vendor_id;
+  camera->model_id = info->model_id;
+
+  camera->vendor = get_leaf_string (pcam, vendor_name_offset);
+  camera->model = get_leaf_string (pcam, model_name_offset);
+
+  if (camera->unit_spec_ID == 0xA02D) {
+    if (info->unit_sw_version == 0x100)
+      camera->iidc_version = DC1394_IIDC_VERSION_1_04;
+    else if (info->unit_sw_version == 0x101)
+      camera->iidc_version = DC1394_IIDC_VERSION_1_20;
+    else if (info->unit_sw_version == 0x102) {
+      camera->iidc_version = DC1394_IIDC_VERSION_1_30;
+      camera->iidc_version += unit_sub_sw_version >> 4;
+    }
+  }
+  else
+    camera->iidc_version = DC1394_IIDC_VERSION_PTGREY;
+
+  platform_camera_set_parent (cpriv->pcam, camera);
+  update_camera_info (camera);
+
+  return camera;
+
+fail:
+  platform_camera_free (pcam);
+  return NULL;
+}
+
+dc1394camera_t *
+dc1394_camera_new (dc1394_t * d, uint64_t guid)
+{
+  return dc1394_camera_new_unit (d, guid, -1);
 }
 
 /*
@@ -2423,7 +2109,12 @@ dc1394_camera_new(dc1394_t *dc1394, dc1394camera_id_t id)
 void
 dc1394_camera_free(dc1394camera_t *camera)
 {
-  dc1394_free_camera(camera);
+  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+
+  platform_camera_free (cpriv->pcam);
+  free (camera->vendor);
+  free (camera->model);
+  free (camera);
 }
 
 

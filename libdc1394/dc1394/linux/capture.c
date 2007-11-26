@@ -42,16 +42,6 @@
 
 #define MAX_NUM_PORTS 16
 
-/* Variables used for simultaneous capture of video from muliple cameras
-   This is only used by RAW1394 capture. VIDEO1394 (aka DMA) capture
-   doesn't use this */
-int *_dc1394_buffer[DC1394_NUM_ISO_CHANNELS];
-int _dc1394_frame_captured[DC1394_NUM_ISO_CHANNELS];
-int _dc1394_offset[DC1394_NUM_ISO_CHANNELS];
-int _dc1394_quadlets_per_frame[DC1394_NUM_ISO_CHANNELS];
-int _dc1394_quadlets_per_packet[DC1394_NUM_ISO_CHANNELS];
-int _dc1394_all_captured;
-
 /* variables to handle multiple cameras using a single fd. */
 int *_dc1394_dma_fd = NULL;
 int *_dc1394_num_using_fd = NULL;
@@ -78,16 +68,15 @@ _dc1394_capture_cleanup_alloc(void)
 }
 
 dc1394error_t
-_dc1394_open_dma_device(dc1394camera_t *camera)
+_dc1394_open_dma_device(platform_camera_t * craw)
 {
-  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   char filename[64];
   struct stat statbuf;
 
   // if the file has already been opened: increment the number of uses and return
-  if (_dc1394_num_using_fd[camera->port] != 0) {
-    _dc1394_num_using_fd[camera->port]++;
-    craw->capture.dma_fd = _dc1394_dma_fd[camera->port];
+  if (_dc1394_num_using_fd[craw->port] != 0) {
+    _dc1394_num_using_fd[craw->port]++;
+    craw->capture.dma_fd = _dc1394_dma_fd[craw->port];
     return DC1394_SUCCESS;
   }
 
@@ -97,38 +86,38 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
       return DC1394_INVALID_VIDEO1394_DEVICE;
     }
     else {
-      _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
-      _dc1394_num_using_fd[camera->port]++;
+      _dc1394_dma_fd[craw->port] = craw->capture.dma_fd;
+      _dc1394_num_using_fd[craw->port]++;
       return DC1394_SUCCESS;
     }
   }
 
   // automatic mode: try to open several usual device files.
-  sprintf(filename,"/dev/video1394/%d",camera->port);
+  sprintf(filename,"/dev/video1394/%d",craw->port);
   if ( stat (filename, &statbuf) == 0 &&
           S_ISCHR (statbuf.st_mode) &&
           (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
-    _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
-    _dc1394_num_using_fd[camera->port]++;
+    _dc1394_dma_fd[craw->port] = craw->capture.dma_fd;
+    _dc1394_num_using_fd[craw->port]++;
     return DC1394_SUCCESS;
   }
 
-  sprintf(filename,"/dev/video1394-%d",camera->port);
+  sprintf(filename,"/dev/video1394-%d",craw->port);
   if ( stat (filename, &statbuf) == 0 &&
           S_ISCHR (statbuf.st_mode) &&
           (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
-    _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
-    _dc1394_num_using_fd[camera->port]++;
+    _dc1394_dma_fd[craw->port] = craw->capture.dma_fd;
+    _dc1394_num_using_fd[craw->port]++;
     return DC1394_SUCCESS;
   }
   
-  if (camera->port==0) {
+  if (craw->port==0) {
     sprintf(filename,"/dev/video1394");
     if ( stat (filename, &statbuf) == 0 &&
             S_ISCHR (statbuf.st_mode) &&
             (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
-      _dc1394_dma_fd[camera->port] = craw->capture.dma_fd;
-      _dc1394_num_using_fd[camera->port]++;
+      _dc1394_dma_fd[craw->port] = craw->capture.dma_fd;
+      _dc1394_num_using_fd[craw->port]++;
       return DC1394_SUCCESS;
     }
   }
@@ -144,9 +133,9 @@ _dc1394_open_dma_device(dc1394camera_t *camera)
 
 ******************************************************/
 dc1394error_t
-_dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
+_dc1394_capture_dma_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
 {
-  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  dc1394camera_t * camera = craw->camera;
   struct video1394_mmap vmmap;
   struct video1394_wait vwait;
   uint32_t i;
@@ -161,7 +150,7 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
     _dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(uint32_t) );
   }
 
-  if (_dc1394_open_dma_device(camera) != DC1394_SUCCESS) {
+  if (_dc1394_open_dma_device(craw) != DC1394_SUCCESS) {
     fprintf (stderr, "Could not open video1394 device file in /dev\n");
     _dc1394_capture_cleanup_alloc(); // free allocated memory if necessary
     return DC1394_INVALID_VIDEO1394_DEVICE;
@@ -260,7 +249,8 @@ _dc1394_capture_dma_setup(dc1394camera_t *camera, uint32_t num_dma_buffers)
 dc1394error_t
 dc1394_capture_set_device_filename(dc1394camera_t* camera, char *filename)
 {
-  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+  platform_camera_t * craw = cpriv->pcam;
   if (craw->capture.dma_device_file==NULL) {
     craw->capture.dma_device_file=(char*)malloc(64*sizeof(char));
     if (craw->capture.dma_device_file==NULL)
@@ -273,9 +263,10 @@ dc1394_capture_set_device_filename(dc1394camera_t* camera, char *filename)
 }
 
 dc1394error_t
-dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t flags)
+platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
+		     uint32_t flags)
 {
-  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  dc1394camera_t * camera = craw->camera;
   dc1394error_t err;
 
   if (flags & DC1394_CAPTURE_FLAGS_DEFAULT)
@@ -301,7 +292,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
     goto fail;
   
   // the capture_is_set flag is set inside this function:
-  err=_dc1394_capture_dma_setup (camera, num_dma_buffers);
+  err=_dc1394_capture_dma_setup (craw, num_dma_buffers);
   if (err != DC1394_SUCCESS)
     goto fail;
 
@@ -329,11 +320,11 @@ fail:
  CAPTURE_STOP
 *****************************************************/
 
-dc1394error_t 
-dc1394_capture_stop(dc1394camera_t *camera) 
+dc1394error_t
+platform_capture_stop(platform_camera_t *craw)
 {
+  dc1394camera_t * camera = craw->camera;
   int err;
-  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
 
   if (camera->capture_is_set>0) {
     switch (camera->capture_is_set) {
@@ -350,9 +341,9 @@ dc1394_capture_stop(dc1394camera_t *camera)
           munmap((void*)craw->capture.dma_ring_buffer,craw->capture.dma_buffer_size);
         }
 
-        _dc1394_num_using_fd[camera->port]--;
+        _dc1394_num_using_fd[craw->port]--;
 
-        if (_dc1394_num_using_fd[camera->port] == 0) {
+        if (_dc1394_num_using_fd[craw->port] == 0) {
 
           while (close(craw->capture.dma_fd) != 0) {
             printf("(%s) waiting for dma_fd to close\n", __FILE__);
@@ -400,9 +391,11 @@ dc1394_capture_stop(dc1394camera_t *camera)
 
 
 dc1394error_t
-dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, dc1394video_frame_t **frame)
+platform_capture_dequeue (platform_camera_t * craw,
+			dc1394capture_policy_t policy,
+			dc1394video_frame_t **frame)
 {
-  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  dc1394camera_t * camera = craw->camera;
   dc1394capture_t * capture = &(craw->capture);
   struct video1394_wait vwait;
   dc1394video_frame_t * frame_tmp;
@@ -447,9 +440,10 @@ dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, d
 }
 
 dc1394error_t
-dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame)
+platform_capture_enqueue (platform_camera_t * craw,
+			dc1394video_frame_t * frame)
 {
-  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
+  dc1394camera_t * camera = craw->camera;
   struct video1394_wait vwait;
 
   memset(&vwait, 0, sizeof(vwait));
@@ -472,9 +466,8 @@ dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame)
 }
 
 int
-dc1394_capture_get_fileno (dc1394camera_t * camera)
+platform_capture_get_fileno (platform_camera_t * craw)
 {
-  DC1394_CAST_CAMERA_TO_LINUX(craw, camera);
   return craw->capture.dma_fd;
 }
 

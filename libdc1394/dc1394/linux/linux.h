@@ -28,7 +28,9 @@
 //#include "linux/raw1394support.h"
 #include "control.h"
 
-#define DC1394_CAST_CAMERA_TO_LINUX(camlinux, camera) dc1394camera_linux_t * camlinux = (dc1394camera_linux_t *) camera
+struct _platform_t {
+  int dummy;
+};
 
 typedef struct __dc1394_capture
 {
@@ -47,13 +49,13 @@ typedef struct __dc1394_capture
   dc1394video_frame_t     *frames;
 } dc1394capture_t;
 
-typedef struct __dc1394_camera_linux
-{
-  dc1394camera_t     camera;
-  raw1394handle_t    handle;
-  dc1394capture_t    capture;
-  //SelfIdPacket_t     selfid_packet; // removed from linux code: it was old crap anyway.
-  
-} dc1394camera_linux_t;
+struct _platform_camera_t {
+  raw1394handle_t handle;
+  int node, port;
+
+  dc1394camera_t * camera;
+
+  dc1394capture_t capture;
+};
 
 #endif

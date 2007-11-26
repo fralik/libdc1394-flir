@@ -124,45 +124,6 @@ const int quadlets_per_packet_format_2[64] =
   250, 500, 1000, 2000, 4000, 8000,   -1, -1
 };
 
-dc1394camera_t*
-dc1394_new_camera(uint32_t port, uint16_t node, uint16_t unit)
-{
-  dc1394camera_t *cam;
-  int i;
-
-  cam = dc1394_new_camera_platform (port, node);
- 
-  if (cam==NULL)
-    return NULL;
-  
-   cam->port=port;
-   cam->node=node;
-   cam->id.unit=unit;
-   cam->iso_channel_is_set=0;
-   cam->iso_channel=-1;
-   cam->iso_bandwidth=0;
-   cam->capture_is_set=0;
-   cam->broadcast=DC1394_FALSE;
-   // default values for PHY stuff. This won't be changed 'cause there's no support in Linux for this info.
-   cam->phy_speed=-1;
-   cam->power_class=DC1394_POWER_CLASS_NONE;
-   cam->phy_delay=DC1394_PHY_DELAY_MAX_144_NS;
- 
-   // init ROM pointers to zero:
-   cam->command_registers_base=0;
-   cam->unit_directory=0;
-   cam->unit_dependent_directory=0;
-   cam->advanced_features_csr=0;
-   cam->PIO_control_csr=0;
-   cam->SIO_control_csr=0;
-   cam->strobe_control_csr=0;
-
-   for (i=0;i<DC1394_VIDEO_MODE_FORMAT7_NUM;i++)
-     cam->format7_csr[i]=0;
-
-   return cam;
-}
-
 /********************************************************
  _dc1394_get_quadlets_per_packet
 

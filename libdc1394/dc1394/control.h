@@ -411,28 +411,30 @@ typedef struct
 typedef struct __dc1394_camera
 {
   /* system/firmware information */
-  int                  port;
-  uint16_t             node;
-  dc1394camera_id_t    id;
-  uint32_t             ud_reg_tag_12;
-  uint32_t             ud_reg_tag_13;
-  uint64_t             command_registers_base;
-  uint64_t             unit_directory;
-  uint64_t             unit_dependent_directory;
+  uint64_t             guid;
+  int                  unit;
+  uint32_t             unit_spec_ID;
+  uint32_t             unit_sw_version;
+  uint32_t             unit_sub_sw_version;
+  uint32_t             command_registers_base;
+  uint32_t             unit_dependent_directory;
   uint64_t             advanced_features_csr;
   uint64_t             PIO_control_csr;
-  uint64_t             SIO_control_csr; /* future use */
-  uint64_t             strobe_control_csr; /* future use */
+  uint64_t             SIO_control_csr;
+  uint64_t             strobe_control_csr;
   uint64_t             format7_csr[DC1394_VIDEO_MODE_FORMAT7_NUM];
   dc1394iidc_version_t iidc_version;
-  char                 vendor[MAX_CHARS + 1];
-  char                 model[MAX_CHARS + 1];
+  char               * vendor;
+  char               * model;
   uint32_t             vendor_id;
   uint32_t             model_id;
   dc1394bool_t         bmode_capable;
   dc1394bool_t         one_shot_capable;
   dc1394bool_t         multi_shot_capable;
   dc1394bool_t         can_switch_on_off;
+  dc1394bool_t         has_vmode_error_status;
+  dc1394bool_t         has_feature_error_status;
+  int                  max_mem_channel;
 
   /* some current values */
   dc1394video_mode_t   video_mode;
@@ -442,7 +444,6 @@ typedef struct __dc1394_camera
   int                  iso_channel_is_set; /* >0 if the iso_channel above has been allocated within libraw1394 */
   uint32_t             iso_bandwidth;
   dc1394speed_t        iso_speed;
-  uint32_t             mem_channel_number;
   int                  capture_is_set; /* 0 for not set, 1 for RAW1394 and 2 for DMA */
 
   /* for broadcast: */
@@ -666,18 +667,6 @@ extern "C" {
 /***************************************************************************
      General system functions
  ***************************************************************************/
-
-/* create / free camera structure */
-void dc1394_free_camera(dc1394camera_t *camera);
-
-/* locate and initialise the cameras */
-dc1394error_t dc1394_find_cameras(dc1394camera_t ***cameras_ptr, uint32_t* numCameras);
-
-/* Release the memory block allocated by dc1394_find_cameras.
-   Call this instead of free() in a portable application because the library may be
-   linked to a different run-time than your application and memory management
-   functions of application and library may be incompatibe. */
-void dc1394_camera_list_free(void *p);
 
 /* print the camera information */
 dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
@@ -913,19 +902,17 @@ typedef struct __dc1394camera_list_t
   dc1394camera_id_t    *ids;
 } dc1394camera_list_t;
 
-typedef struct __dc1394_t
-{
-  /* a list of cameras (GUIDs) attached to this host. More may be added later, such as mutexes. */
-  dc1394camera_list_t camera_list;
-}
-dc1394_t;
+typedef struct __dc1394_t dc1394_t;
 
-dc1394_t* dc1394_new(void);
-void dc1394_free(dc1394_t *dc1394);
+dc1394_t* dc1394_new (void);
+void dc1394_free (dc1394_t *dc1394);
 dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list);
 void dc1394_free_camera_list(dc1394camera_list_t *list);
-dc1394camera_t* dc1394_camera_new(dc1394_t *dc1394, dc1394camera_id_t id);
+dc1394camera_t * dc1394_camera_new(dc1394_t *dc1394, uint64_t guid);
+dc1394camera_t * dc1394_camera_new_unit(dc1394_t *dc1394, uint64_t guid,
+    int unit);
 void dc1394_camera_free(dc1394camera_t *camera);
+
 
 
 #ifdef __cplusplus

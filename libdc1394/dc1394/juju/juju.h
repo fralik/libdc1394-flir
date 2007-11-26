@@ -26,41 +26,34 @@
 #include "offsets.h"
 #include "control.h"
 
-#define DC1394_CAST_CAMERA_TO_JUJU(camjuju, camera) \
-	dc1394camera_juju_t * camjuju = (dc1394camera_juju_t *) camera
+struct _platform_t {
+  int dummy;
+};
+
+struct _platform_camera_t {
+  int fd;
+  char filename[32];
+  int generation;
+
+  dc1394camera_t * camera;
+
+  int iso_fd;
+  int iso_handle;
+  struct juju_frame	* frames;
+  unsigned char	* buffer;
+  size_t buffer_size;
+  uint32_t flags;
+  unsigned int num_frames;
+  int current;
+  int ready_frames;
+};
+
 
 struct juju_frame {
   dc1394video_frame_t		 frame;
   size_t			 size;
   struct fw_cdev_iso_packet	*packets;
 };
-
-typedef struct __dc1394_camera_juju
-{
-  dc1394camera_t		 camera;
-  int				 fd;
-  char				*filename;
-  uint32_t			 config_rom[256];
-
-  int				 iso_fd;
-  int				 iso_handle;
-  unsigned int			 num_frames;
-  int				 current;
-  int				 ready_frames;
-  struct juju_frame		*frames;
-
-  size_t			 buffer_size;
-  unsigned char			*buffer;
-
-  uint32_t			 flags;
-
-  struct {
-    int				 done;
-    uint32_t			 buffer[64];
-    int				 generation;
-  } async;
-
-} dc1394camera_juju_t;
 
 dc1394error_t
 _juju_iterate(dc1394camera_t *camera);

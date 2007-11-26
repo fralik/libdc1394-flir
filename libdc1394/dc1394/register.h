@@ -36,44 +36,45 @@
 extern "C" {
 #endif
 
-dc1394error_t
-GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads);
 
-static inline dc1394error_t
-GetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+dc1394error_t dc1394_get_registers (dc1394camera_t *camera,
+    uint64_t offset, uint32_t *value, uint32_t num_regs);
+
+static inline dc1394error_t dc1394_get_register (dc1394camera_t *camera,
+    uint64_t offset, uint32_t *value)
 {
-  return GetCameraROMValues(camera, offset, value, 1);
+  return dc1394_get_registers (camera, offset, value, 1);
 }
 
-dc1394error_t
-SetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads);
+dc1394error_t dc1394_set_registers (dc1394camera_t *camera,
+        uint64_t offset, uint32_t *value, uint32_t num_regs);
 
-static inline dc1394error_t
-SetCameraROMValue(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+static inline dc1394error_t dc1394_set_register (dc1394camera_t *camera,
+    uint64_t offset, uint32_t value)
 {
-  return SetCameraROMValues(camera, offset, &value, 1);
+  return dc1394_set_registers (camera, offset, &value, 1);
 }
 
 
 /********************************************************************************/
 /* Get/Set Command Registers                                                    */
 /********************************************************************************/
-dc1394error_t
-GetCameraControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs);
+dc1394error_t dc1394_get_control_registers (dc1394camera_t *camera,
+    uint64_t offset, uint32_t *value, uint32_t num_regs);
 
-static inline dc1394error_t
-GetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+static inline dc1394error_t dc1394_get_control_register (dc1394camera_t *camera,
+    uint64_t offset, uint32_t *value)
 {
-  return GetCameraControlRegisters(camera, offset, value, 1);
+  return dc1394_get_control_registers (camera, offset, value, 1);
 }
 
-dc1394error_t
-SetCameraControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs);
+dc1394error_t dc1394_set_control_registers (dc1394camera_t *camera,
+        uint64_t offset, uint32_t *value, uint32_t num_regs);
 
-static inline dc1394error_t
-SetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+static inline dc1394error_t dc1394_set_control_register (dc1394camera_t *camera,
+    uint64_t offset, uint32_t value)
 {
-  return SetCameraControlRegisters(camera, offset, &value, 1);
+  return dc1394_set_control_registers (camera, offset, &value, 1);
 }
 
 
@@ -81,23 +82,22 @@ SetCameraControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value
 /* Get/Set Advanced Features Registers                                          */
 /********************************************************************************/
 dc1394error_t
-GetCameraAdvControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs);
+dc1394_get_adv_control_registers(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs);
 
 static inline dc1394error_t
-GetCameraAdvControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+dc1394_get_adv_control_register(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
-  return GetCameraAdvControlRegisters(camera, offset, value, 1);
+  return dc1394_get_adv_control_registers(camera, offset, value, 1);
 }
 
 dc1394error_t
-SetCameraAdvControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs);
+dc1394_set_adv_control_registers(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs);
 
 static inline dc1394error_t
-SetCameraAdvControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+dc1394_set_adv_control_register(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
-  return SetCameraAdvControlRegisters(camera, offset, &value, 1);
+  return dc1394_set_adv_control_registers(camera, offset, &value, 1);
 }
-
 /********************************************************************************/
 /* Get/Set Format_7 Registers                                                   */
 /********************************************************************************/
@@ -150,15 +150,6 @@ GetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t
 dc1394error_t
 SetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value);
 
-
-/********************************************************************************/
-/* Find a register with a specific tag                                          */
-/********************************************************************************/
-dc1394error_t
-GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint16_t instance_number, uint64_t *offset, uint32_t *value);
-
-dc1394error_t
-GetConfigROMTaggedRegisterCount(dc1394camera_t *camera, unsigned int tag, uint64_t *offset, uint32_t *count);
 
 #ifdef __cplusplus
 }

@@ -59,30 +59,30 @@ get_sff_address_from_csr_guid (dc1394camera_t* camera, const dc1394basler_sff_gu
    * 0x1C   <- D4[7] | D4[6] | D4[5] | D4[4]
    */
   data = feature_guid->d1;
-  err = SetCameraAdvControlRegister (camera, BASLER_ADDRESS_SFF_INQUIRY, data);
+  err = dc1394_set_adv_control_register (camera, BASLER_ADDRESS_SFF_INQUIRY, data);
   DC1394_ERR_RTN(err, "Could not write D1 to SFF inquiry register");
 
   data = ((uint32_t)feature_guid->d3) << 16 | feature_guid->d2;
-  err = SetCameraAdvControlRegister (camera, BASLER_ADDRESS_SFF_INQUIRY + 0x4U, data);
+  err = dc1394_set_adv_control_register (camera, BASLER_ADDRESS_SFF_INQUIRY + 0x4U, data);
   DC1394_ERR_RTN(err, "Could not write D3 | D2 to SFF inquiry register");
 
   data = ((uint32_t)feature_guid->d4[3] << 24) | ((uint32_t)feature_guid->d4[2] << 16) |
     ((uint32_t)feature_guid->d4[1] << 8) | feature_guid->d4[0];
-  err = SetCameraAdvControlRegister (camera, BASLER_ADDRESS_SFF_INQUIRY + 0x8U, data);
+  err = dc1394_set_adv_control_register (camera, BASLER_ADDRESS_SFF_INQUIRY + 0x8U, data);
   DC1394_ERR_RTN(err, "Could not write D4[3..0] to SFF inquiry register");
 
   data = ((uint32_t)feature_guid->d4[7] << 24) | ((uint32_t)feature_guid->d4[6] << 16) |
     ((uint32_t)feature_guid->d4[5] << 8) | feature_guid->d4[4];
-  err = SetCameraAdvControlRegister (camera, BASLER_ADDRESS_SFF_INQUIRY + 0xCU, data);
+  err = dc1394_set_adv_control_register (camera, BASLER_ADDRESS_SFF_INQUIRY + 0xCU, data);
   DC1394_ERR_RTN(err, "Could not write D4[7..4] to SFF inquiry register");
 
   /* read address */
-  err = GetCameraAdvControlRegister (camera, BASLER_ADDRESS_SFF_ADDRESS, &data);
+  err = dc1394_get_adv_control_register (camera, BASLER_ADDRESS_SFF_ADDRESS, &data);
   DC1394_ERR_RTN(err, "Could not read first quadlet of address from SFF address register");
 
   *address = data;
   
-  err = GetCameraAdvControlRegister (camera, BASLER_ADDRESS_SFF_ADDRESS + 0x4U, &data);
+  err = dc1394_get_adv_control_register (camera, BASLER_ADDRESS_SFF_ADDRESS + 0x4U, &data);
   DC1394_ERR_RTN(err, "Could not read second quadlet of address from SFF address register");
 
   *address |= ((uint64_t)data) << 32;
@@ -107,20 +107,20 @@ dc1394_basler_sff_is_available (dc1394camera_t* camera, dc1394bool_t *available)
   }
   *available = DC1394_FALSE;
 
-  err = SetCameraAdvControlRegister (camera, 0x0U, basler_feature_id_1);
+  err = dc1394_set_adv_control_register (camera, 0x0U, basler_feature_id_1);
   DC1394_ERR_RTN(err, "Could not write the first quadlet of Basler feature ID");
 
-  err = SetCameraAdvControlRegister (camera, 0x4U, basler_feature_id_2);
+  err = dc1394_set_adv_control_register (camera, 0x4U, basler_feature_id_2);
   DC1394_ERR_RTN(err, "Could not write the second quadlet of Basler feature ID");
 
-  err = GetCameraAdvControlRegister (camera, 0x0U, &data);
+  err = dc1394_get_adv_control_register (camera, 0x0U, &data);
   DC1394_ERR_RTN(err, "Could not read from the ACR");
   if (data != 0xffffffff) {
     *available = DC1394_TRUE;
     return DC1394_SUCCESS;
   }
 
-  err = GetCameraAdvControlRegister (camera, 0x4U, &data);
+  err = dc1394_get_adv_control_register (camera, 0x4U, &data);
   DC1394_ERR_RTN(err, "Could not read from ACR + 4");
   if (data != 0xffffffff) {
     *available = DC1394_TRUE;
@@ -212,7 +212,7 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
   if (feature_address == 0)
     return DC1394_FAILURE;
 
-  err = GetCameraROMValue (camera, feature_address, &data);
+  err = dc1394_get_register (camera, feature_address, &data);
   DC1394_ERR_RTN(err, "Cannot read SFF feature CSR register");
   fprintf (stderr, "%s: address = 0x%016llx read data = 0x%08x\n", __FUNCTION__, feature_address, data);
   
@@ -222,7 +222,7 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
   } else {
     data &= BASLER_SFF_CSR_BIT_ENABLE;
   }
-  err = SetCameraROMValue (camera, feature_address, data);
+  err = dc1394_set_register (camera, feature_address, data);
   DC1394_ERR_RTN(err, "cannot write to feature CSR");
   fprintf (stderr, "%s: address = 0x%016llx write data = 0x%08x\n", __FUNCTION__, feature_address, data);
 
@@ -274,7 +274,7 @@ dc1394_basler_sff_feature_is_enabled (dc1394camera_t* camera, dc1394basler_sff_f
   if (feature_address == 0)
     return DC1394_FAILURE;
 
-  err = GetCameraROMValue (camera, feature_address, &data);
+  err = dc1394_get_register (camera, feature_address, &data);
   DC1394_ERR_RTN(err, "Cannot read SFF feature CSR register");
   fprintf (stderr, "%s: address = 0x%016llx data = 0x%08x\n", __FUNCTION__, feature_address, data);
 

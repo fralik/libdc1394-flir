@@ -38,7 +38,6 @@ dc1394error_t dc1394_get_color_coding_from_video_mode(dc1394camera_t *camera, dc
 dc1394error_t dc1394_is_color(dc1394color_coding_t color_mode, dc1394bool_t *is_color);
 dc1394bool_t dc1394_is_video_mode_scalable(dc1394video_mode_t video_mode);
 dc1394bool_t dc1394_is_video_mode_still_image(dc1394video_mode_t video_mode);
-dc1394error_t dc1394_update_camera_info(dc1394camera_t *camera);
 dc1394bool_t dc1394_is_same_camera(dc1394camera_id_t id1, dc1394camera_id_t id2);
 
 #ifdef __cplusplus

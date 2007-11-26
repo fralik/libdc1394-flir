@@ -26,209 +26,185 @@
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/firewire/IOFireWireLib.h>
+
 #include "config.h"
+#include "platform.h"
 #include "internal.h"
-#include "register.h"
-#include "offsets.h"
-#include "macosx/macosx.h"
+#include "macosx.h"
 #include "utils.h"
 
-dc1394camera_t*
-dc1394_new_camera_platform (uint32_t port, uint16_t node)
+platform_t *
+platform_new (void)
 {
-  dc1394camera_macosx_t *cam;
-
-  cam=(dc1394camera_macosx_t *)malloc(sizeof(dc1394camera_macosx_t));
-  if (cam==NULL)
-    return NULL;
-
-  memset (&cam->capture, 0, sizeof (dc1394capture_t));
-
-  return (dc1394camera_t *) cam;
+  platform_t * p = calloc (1, sizeof (platform_t));
+  return p;
 }
-
 void
-dc1394_free_camera_platform (dc1394camera_t *camera)
+platform_free (platform_t * p)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  if (craw == NULL)
-    return;
-  
-  if (craw->iface) {
-    (*craw->iface)->Close (craw->iface);
-    (*craw->iface)->Release (craw->iface);
-  }
-
-  free(craw);
+  free (p);
 }
 
-dc1394error_t
-dc1394_print_camera_info_platform (dc1394camera_t *camera) 
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  printf("------ Camera platform-specific information ------\n");
-  printf("Interface                       :     0x%x\n", (uint32_t)craw->iface);
-  printf("Generation                      :     %lu\n", craw->generation);
-  return DC1394_SUCCESS;
-}
+struct _platform_device_t {
+  io_object_t node;
+};
 
-dc1394error_t
-dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras)
+platform_device_list_t *
+platform_get_device_list (platform_t * p)
 {
+  platform_device_list_t * list;
+  uint32_t allocated_size = 64;
   kern_return_t res;
   mach_port_t master_port;
   io_iterator_t iterator;
   io_object_t node;
   CFMutableDictionaryRef dict;
-  UInt32 spec_id;
-  CFNumberRef spec_id_ref;
-  dc1394camera_t **cameras;
-  int numCam;
-  uint32_t allocated_size;
+
+  list = calloc (1, sizeof (platform_device_list_t));
+  if (!list)
+    return NULL;
+  list->devices = malloc(allocated_size * sizeof(platform_device_t *));
+  if (!list->devices) {
+    free (list);
+    return NULL;
+  }
 
   res = IOMasterPort (MACH_PORT_NULL, &master_port);
-  if (res != KERN_SUCCESS) {
-    return DC1394_FAILURE;
-  }
+  if (res != KERN_SUCCESS)
+    return NULL;
 
-  dict = IOServiceMatching ("IOFireWireUnit");
-  if (!dict) {
-    return DC1394_FAILURE;
-  }
-
-  spec_id = 0xA02D;
-  spec_id_ref = CFNumberCreate (kCFAllocatorDefault,
-      kCFNumberSInt32Type, &spec_id);
-  CFDictionaryAddValue (dict, CFSTR ("Unit_Spec_ID"), spec_id_ref);
-  CFRelease (spec_id_ref);
+  dict = IOServiceMatching ("IOFireWireDevice");
+  if (!dict)
+    return NULL;
 
   res = IOServiceGetMatchingServices (master_port, dict, &iterator);
-  allocated_size=64; // initial allocation, will be reallocated if necessary
-  cameras=(dc1394camera_t**)malloc(allocated_size*sizeof(dc1394camera_t*));
-  if (!cameras)
-    return DC1394_MEMORY_ALLOCATION_FAILURE;
-  numCam=0;
 
   while ((node = IOIteratorNext (iterator))) {
-    IOCFPlugInInterface ** plugin_interface = NULL;
-    SInt32 score;
-    dc1394camera_macosx_t * craw;
-    dc1394camera_t * camera;
-    uint32_t err;
-
-    camera = dc1394_new_camera (0, 0, 0); // FIXME: the last zero forces the unit value to zero. Hence no multi-unit cameras on OSX at this time.
-    if (!camera) {
+    platform_device_t * device = malloc (sizeof (platform_device_t));
+    if (!device) {
       IOObjectRelease (node);
       continue;
     }
-    craw = (dc1394camera_macosx_t *) camera;
+    
+    device->node = node;
+    list->devices[list->num_devices] = device;
+    list->num_devices++;
 
-    res = IOCreatePlugInInterfaceForService (node, kIOFireWireLibTypeID,
-        kIOCFPlugInInterfaceID, &plugin_interface, &score);
-    IOObjectRelease (node);
-    if (res != KERN_SUCCESS) {
-      fprintf (stderr, "Failed to get plugin interface\n");
-      dc1394_free_camera (camera);
-      continue;
+    if (list->num_devices >= allocated_size) {
+      allocated_size += 64;
+      list->devices = realloc (list->devices,
+          allocated_size * sizeof (platform_device_t *));
+      if (!list->devices)
+        return NULL;
     }
-
-    /* TODO: error check here */
-    craw->iface = NULL;
-    (*plugin_interface)->QueryInterface (plugin_interface,
-                                         CFUUIDGetUUIDBytes (kIOFireWireDeviceInterfaceID),
-                                         (void**) &(craw->iface));
-    IODestroyPlugInInterface (plugin_interface);
-
-    res = (*craw->iface)->Open (craw->iface);
-    if (res != kIOReturnSuccess) {
-      dc1394_free_camera (camera);
-      continue;
-    }
-
-    (*craw->iface)->GetBusGeneration (craw->iface,
-                                      &(craw->generation));
-    (*craw->iface)->GetRemoteNodeID (craw->iface,
-                                     craw->generation,
-                                     &(camera->node));
-//    fprintf (stderr, "Node ID is %x, Generation is %lu\n",
-//            camera->node, craw->generation);
-    err=dc1394_update_camera_info(camera);
-    if (err != DC1394_SUCCESS) {
-      dc1394_free_camera (camera);
-      continue;
-    }
-
-    if (numCam >= allocated_size) {
-      dc1394camera_t ** newcam;
-      allocated_size*=2;
-      newcam = realloc(cameras,allocated_size*sizeof(dc1394camera_t*));
-      if (newcam ==NULL) {
-        int i;
-        for (i=0;i<numCam;i++) {
-          dc1394_free_camera(cameras[i]);
-          cameras[i]=NULL;
-        }
-        free(cameras);
-
-        if (craw!=NULL) {
-          dc1394_free_camera(camera);
-          craw=NULL;
-        }
-
-        fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",
-            __FILE__, __FUNCTION__, __LINE__,
-            "Can't reallocate camera array");
-        return DC1394_MEMORY_ALLOCATION_FAILURE;
-      }
-      cameras = newcam;
-    }
-
-    cameras[numCam++] = camera;
   }
   IOObjectRelease (iterator);
 
-  *numCameras=numCam;
-  *cameras_ptr=cameras;
+  return list;
+}
 
-  if (numCam==0)
-    return DC1394_NO_CAMERA;
+void
+platform_free_device_list (platform_device_list_t * d)
+{
+  int i;
+  for (i = 0; i < d->num_devices; i++) {
+    IOObjectRelease (d->devices[i]->node);
+    free (d->devices[i]);
+  }
+  free (d->devices);
+  free (d);
+}
 
-  return DC1394_SUCCESS;
+int
+platform_device_get_config_rom (platform_device_t * device,
+    uint32_t * quads, int * num_quads)
+{
+  CFTypeRef prop;
+  prop = IORegistryEntryCreateCFProperty (device->node,
+      CFSTR ("FireWire Device ROM"), kCFAllocatorDefault, 0);
+  if (!prop)
+    return -1;
+  CFDataRef data = CFDictionaryGetValue (prop, CFSTR ("Offset 0"));
+  if (!data) {
+    CFRelease (prop);
+    return -1;
+  }
+
+  int nquads = CFDataGetLength (data) / 4;
+  if (*num_quads > nquads)
+    *num_quads = nquads;
+  const uint8_t * d = CFDataGetBytePtr (data);
+  int i;
+  for (i = 0; i < *num_quads; i++)
+    quads[i] = (d[4*i] << 24) | (d[4*i+1] << 16) | (d[4*i+2] << 8) | d[4*i+3];
+
+  CFRelease (prop);
+  return 0;
+}
+
+platform_camera_t *
+platform_camera_new (platform_t * p, platform_device_t * device,
+    uint32_t unit_directory_offset)
+{
+  kern_return_t res;
+  platform_camera_t * camera;
+  IOCFPlugInInterface ** plugin_interface = NULL;
+  SInt32 score;
+  IOFireWireLibDeviceRef iface = NULL;
+
+  res = IOCreatePlugInInterfaceForService (device->node, kIOFireWireLibTypeID,
+      kIOCFPlugInInterfaceID, &plugin_interface, &score);
+  if (res != KERN_SUCCESS) {
+    fprintf (stderr, "Failed to get plugin interface\n");
+    return NULL;
+  }
+
+  /* TODO: error check here */
+  (*plugin_interface)->QueryInterface (plugin_interface,
+                                       CFUUIDGetUUIDBytes (kIOFireWireDeviceInterfaceID),
+                                       (void**) &iface);
+  IODestroyPlugInInterface (plugin_interface);
+
+  res = (*iface)->Open (iface);
+  if (res != kIOReturnSuccess) {
+    (*iface)->Release (iface);
+    return NULL;
+  }
+
+  camera = calloc (1, sizeof (platform_camera_t));
+  camera->iface = iface;
+  (*camera->iface)->GetBusGeneration (camera->iface,
+                                      &(camera->generation));
+  return camera;
+}
+
+void platform_camera_free (platform_camera_t * cam)
+{
+  (*cam->iface)->Close (cam->iface);
+  (*cam->iface)->Release (cam->iface);
+  free (cam);
+}
+
+void
+platform_camera_set_parent (platform_camera_t * cam,
+        dc1394camera_t * parent)
+{
+  cam->camera = parent;
+}
+
+void
+platform_camera_print_info (platform_camera_t * camera)
+{
+  printf("------ Camera platform-specific information ------\n");
+  printf("Interface                       :     %p\n", camera->iface);
+  printf("Generation                      :     %lu\n", camera->generation);
 }
 
 dc1394error_t
-dc1394_reset_bus_platform (dc1394camera_t *camera)
+platform_camera_read (platform_camera_t * cam, uint64_t offset,
+    uint32_t * quads, int num_quads)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  IOFireWireLibDeviceRef d = craw->iface;
-
-  if ((*d)->BusReset (d) == 0)
-    return DC1394_SUCCESS;
-  else
-    return DC1394_FAILURE;
-}
-
-dc1394error_t
-dc1394_read_cycle_timer_platform (dc1394camera_t * camera,
-        uint32_t * cycle_timer, uint64_t * local_time)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  IOFireWireLibDeviceRef d = craw->iface;
-  struct timeval tv;
-
-  if ((*d)->GetCycleTime (d, (UInt32 *) cycle_timer) != 0)
-      return DC1394_FAILURE;
-
-  gettimeofday (&tv, NULL);
-  *local_time = (uint64_t)tv.tv_sec * 1000000ULL + tv.tv_usec;
-  return DC1394_SUCCESS;
-}
-
-dc1394error_t
-GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  IOFireWireLibDeviceRef d = craw->iface;
+  IOFireWireLibDeviceRef d = cam->iface;
   FWAddress full_addr;
   int i, retval;
   UInt32 length;
@@ -238,36 +214,45 @@ GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uin
   full_addr.addressLo = addr & 0xffffffff;
 
   length = 4 * num_quads;
-  retval = (*d)->Read (d, (*d)->GetDevice (d), &full_addr, value, &length,
-      true, craw->generation);
+  if (num_quads > 1)
+    retval = (*d)->Read (d, (*d)->GetDevice (d), &full_addr, quads, &length,
+        false, cam->generation);
+  else
+    retval = (*d)->ReadQuadlet (d, (*d)->GetDevice (d), &full_addr,
+        (UInt32 *) quads, false, cam->generation);
   if (retval != 0) {
     fprintf (stderr, "Error reading (%x)...\n", retval);
     return DC1394_FAILURE;
   }
   for (i = 0; i < num_quads; i++)
-  	value[i] = ntohl (value[i]);
+    quads[i] = ntohl (quads[i]);
   return DC1394_SUCCESS;
 }
 
 dc1394error_t
-SetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
+platform_camera_write (platform_camera_t * cam, uint64_t offset,
+    const uint32_t * quads, int num_quads)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  IOFireWireLibDeviceRef d = craw->iface;
+  IOFireWireLibDeviceRef d = cam->iface;
   FWAddress full_addr;
   int i, retval;
   UInt32 length;
   UInt64 addr = CONFIG_ROM_BASE + offset;
+  uint32_t values[num_quads];
 
   full_addr.addressHi = addr >> 32;
   full_addr.addressLo = addr & 0xffffffff;
 
   for (i = 0; i < num_quads; i++)
-  	value[i] = htonl (value[i]);
+    values[i] = htonl (quads[i]);
 
   length = 4 * num_quads;
-  retval = (*d)->Write (d, (*d)->GetDevice (d), &full_addr, value, &length,
-      true, craw->generation);
+  if (num_quads > 1)
+    retval = (*d)->Write (d, (*d)->GetDevice (d), &full_addr, values, &length,
+        false, cam->generation);
+  else
+    retval = (*d)->WriteQuadlet (d, (*d)->GetDevice (d), &full_addr, values[0],
+        false, cam->generation);
   if (retval != 0) {
     fprintf (stderr, "Error writing (%x)...\n", retval);
     return DC1394_FAILURE;
@@ -276,21 +261,28 @@ SetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uin
 }
 
 dc1394error_t
-dc1394_allocate_iso_channel_and_bandwidth(dc1394camera_t *camera)
+platform_reset_bus (platform_camera_t * cam)
 {
-  return DC1394_SUCCESS;
+  IOFireWireLibDeviceRef d = cam->iface;
+
+  if ((*d)->BusReset (d) == 0)
+    return DC1394_SUCCESS;
+  else
+    return DC1394_FAILURE;
 }
 
 dc1394error_t
-dc1394_free_iso_channel_and_bandwidth(dc1394camera_t *camera)
+platform_read_cycle_timer (platform_camera_t * cam,
+        uint32_t * cycle_timer, uint64_t * local_time)
 {
-  return DC1394_SUCCESS;
-} 
+  IOFireWireLibDeviceRef d = cam->iface;
+  struct timeval tv;
 
-dc1394error_t
-dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
-{
-  //dc1394camera_macosx_t * craw = (dc1394camera_macosx_t *) camera;
-  return DC1394_FAILURE;
+  if ((*d)->GetCycleTime (d, (UInt32 *) cycle_timer) != 0)
+      return DC1394_FAILURE;
+
+  gettimeofday (&tv, NULL);
+  *local_time = (uint64_t)tv.tv_sec * 1000000ULL + tv.tv_usec;
+  return DC1394_SUCCESS;
 }
 

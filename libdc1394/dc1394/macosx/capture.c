@@ -48,8 +48,8 @@ static IOReturn
 supported_channels (IOFireWireLibIsochPortRef rem_port, IOFWSpeed * maxSpeed,
   UInt64 * chanSupported)
 {
-  dc1394camera_t * camera = (*rem_port)->GetRefCon (rem_port);
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  platform_camera_t * craw = (*rem_port)->GetRefCon (rem_port);
+  dc1394camera_t * camera = craw->camera;
   dc1394capture_t * capture = &(craw->capture);
   dc1394speed_t iso_speed;
   uint32_t channel;
@@ -91,7 +91,8 @@ static IOReturn
 allocate_port (IOFireWireLibIsochPortRef rem_port,
         IOFWSpeed speed, UInt32 chan)
 {
-  dc1394camera_t * camera = (*rem_port)->GetRefCon (rem_port);
+  platform_camera_t * craw = (*rem_port)->GetRefCon (rem_port);
+  dc1394camera_t * camera = craw->camera;
   //printf ("Allocate channel %lu %p\n", chan, camera);
   camera->iso_channel_is_set = 1;
   camera->iso_channel = chan;
@@ -112,7 +113,7 @@ finalize_callback (dc1394capture_t * capture)
 static void
 callback (buffer_info * buffer, NuDCLRef dcl)
 {
-  dc1394camera_macosx_t * craw;
+  platform_camera_t * craw;
   dc1394capture_t * capture;
   UInt32 bus, dma_time, sec, cycle, bus_time;
   int usec;
@@ -123,7 +124,7 @@ callback (buffer_info * buffer, NuDCLRef dcl)
     return;
   }
 
-  craw = (dc1394camera_macosx_t *) buffer->camera;
+  craw = buffer->craw;
   capture = &(craw->capture);
 
   if (buffer->status != BUFFER_EMPTY)
@@ -180,18 +181,16 @@ static void
 socket_callback (CFSocketRef s, CFSocketCallBackType type,
         CFDataRef address, const void * data, void * info)
 {
-  dc1394camera_t * camera = (dc1394camera_t *) info;
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  platform_camera_t * craw = info;
   dc1394capture_t * capture = &(craw->capture);
   if (capture->callback) {
-    capture->callback (camera, capture->callback_user_data);
+    capture->callback (craw->camera, capture->callback_user_data);
   }
 }
 
 DCLCommand *
-CreateDCLProgram (dc1394camera_t * camera)
+CreateDCLProgram (platform_camera_t * craw)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   IOVirtualRange * databuf = &(capture->databuf);
   NuDCLRef dcl = NULL;
@@ -234,7 +233,7 @@ CreateDCLProgram (dc1394camera_t * camera)
     frame->image = (unsigned char *) frame_address;
     frame->id = i;
 
-    buffer->camera = camera;
+    buffer->craw = craw;
     buffer->i = i;
     buffer->status = BUFFER_EMPTY;
     buffer->num_dcls = num_dcls;
@@ -264,8 +263,7 @@ CreateDCLProgram (dc1394camera_t * camera)
 OSStatus
 servicing_thread (void * cam_ptr)
 {
-  dc1394camera_t * camera = (dc1394camera_t *) cam_ptr;
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  platform_camera_t * craw = cam_ptr;
   IOFireWireLibDeviceRef d = craw->iface;
 
   (*d)->AddCallbackDispatcherToRunLoopForMode (d, CFRunLoopGetCurrent (),
@@ -283,12 +281,12 @@ servicing_thread (void * cam_ptr)
 /*************************************************************
  CAPTURE SETUP
 **************************************************************/
-dc1394error_t 
-dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
-        uint32_t flags)
+dc1394error_t
+platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
+		     uint32_t flags)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
+  dc1394camera_t * camera = craw->camera;
   dc1394error_t err;
   IOFireWireLibDeviceRef d = craw->iface;
   IOFWSpeed speed;
@@ -299,7 +297,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   DCLCommand * dcl_program;
   int frame_size;
   int numdcls;
-  CFSocketContext socket_context = { 0, camera, NULL, NULL, NULL };
+  CFSocketContext socket_context = { 0, craw, NULL, NULL, NULL };
   
   craw->capture.flags=flags;
   if (((flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) &&
@@ -340,7 +338,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
 
   MPCreateQueue (&capture->termination_queue);
   MPCreateSemaphore (1, 0, &capture->thread_init_semaphore);
-  MPCreateTask (&servicing_thread, camera, 0, capture->termination_queue,
+  MPCreateTask (&servicing_thread, craw, 0, capture->termination_queue,
           NULL, NULL, 0, &capture->task);
 
   /* wait for thread to start */
@@ -355,7 +353,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
       capture->frames[0].bytes_per_packet, speed,
       CFUUIDGetUUIDBytes (kIOFireWireIsochChannelInterfaceID));
   if (!chan) {
-    dc1394_capture_stop (camera);
+    platform_capture_stop (craw);
     fprintf (stderr, "Could not create IsochChannelInterface\n");
     return DC1394_FAILURE;
   }
@@ -364,14 +362,14 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   rem_port = (*d)->CreateRemoteIsochPort (d, true,
       CFUUIDGetUUIDBytes (kIOFireWireRemoteIsochPortInterfaceID));
   if (!rem_port) {
-    dc1394_capture_stop (camera);
+    platform_capture_stop (craw);
     fprintf (stderr, "Could not create RemoteIsochPortInterface\n");
     return DC1394_FAILURE;
   }
   capture->rem_port = rem_port;
   (*rem_port)->SetAllocatePortHandler (rem_port, &allocate_port);
   (*rem_port)->SetGetSupportedHandler (rem_port, &supported_channels);
-  (*rem_port)->SetRefCon ((IOFireWireLibIsochPortRef)rem_port, camera);
+  (*rem_port)->SetRefCon ((IOFireWireLibIsochPortRef)rem_port, craw);
 
   capture->buffers = malloc (capture->num_frames * sizeof (buffer_info));
   capture->current = -1;
@@ -383,15 +381,15 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   dcl_pool = (*d)->CreateNuDCLPool (d, numdcls,
       CFUUIDGetUUIDBytes (kIOFireWireNuDCLPoolInterfaceID));
   if (!dcl_pool) {
-    dc1394_capture_stop (camera);
+    platform_capture_stop (craw);
     fprintf (stderr, "Could not create NuDCLPoolInterface\n");
     return DC1394_FAILURE;
   }
   capture->dcl_pool = dcl_pool;
 
-  dcl_program = CreateDCLProgram (camera);
+  dcl_program = CreateDCLProgram (craw);
   if (!dcl_program) {
-    dc1394_capture_stop (camera);
+    platform_capture_stop (craw);
     fprintf (stderr, "Could not create DCL Program\n");
     return DC1394_FAILURE;
   }
@@ -400,7 +398,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
       kFWDCLSyBitsEvent, 1, 1, nil, 0, &(capture->databuf), 1,
       CFUUIDGetUUIDBytes (kIOFireWireLocalIsochPortInterfaceID));
   if (!loc_port) {
-    dc1394_capture_stop (camera);
+    platform_capture_stop (craw);
     fprintf (stderr, "Could not create LocalIsochPortInterface\n");
     return DC1394_FAILURE;
   }
@@ -414,14 +412,14 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   (*chan)->SetTalker (chan, (IOFireWireLibIsochPortRef) rem_port);
 
   if ((*chan)->AllocateChannel (chan) != kIOReturnSuccess) {
-    dc1394_capture_stop (camera);
+    platform_capture_stop (craw);
     fprintf (stderr, "Could not allocate channel\n");
     return DC1394_FAILURE;
   }
   capture->iso_is_allocated = 1;
 
   if ((*chan)->Start (chan) != kIOReturnSuccess) {
-    dc1394_capture_stop (camera);
+    platform_capture_stop (craw);
     fprintf (stderr, "Could not start channel\n");
     return DC1394_FAILURE;
   }
@@ -437,10 +435,10 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
  CAPTURE_STOP
 *****************************************************/
 
-dc1394error_t 
-dc1394_capture_stop(dc1394camera_t *camera) 
+dc1394error_t
+platform_capture_stop(platform_camera_t *craw)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  dc1394camera_t * camera = craw->camera;
   dc1394capture_t * capture = &(craw->capture);
   IOVirtualRange * databuf = &(capture->databuf);
 
@@ -532,10 +530,10 @@ dc1394_capture_stop(dc1394camera_t *camera)
 #define PREV_BUFFER(c,i) (((i) == 0) ? (c)->num_frames-1 : ((i)-1))
 
 dc1394error_t
-dc1394_capture_dequeue (dc1394camera_t * camera,
-    dc1394capture_policy_t policy, dc1394video_frame_t **frame)
+platform_capture_dequeue (platform_camera_t * craw,
+			dc1394capture_policy_t policy,
+			dc1394video_frame_t **frame)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
   int next = NEXT_BUFFER (capture, capture->current);
   buffer_info * buffer = capture->buffers + next;
@@ -575,11 +573,11 @@ dc1394_capture_dequeue (dc1394camera_t * camera,
 
 
 dc1394error_t
-dc1394_capture_enqueue (dc1394camera_t * camera,
-    dc1394video_frame_t * frame)
+platform_capture_enqueue (platform_camera_t * craw,
+			dc1394video_frame_t * frame)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
   dc1394capture_t * capture = &(craw->capture);
+  dc1394camera_t * camera = craw->camera;
   int prev = PREV_BUFFER (capture, frame->id);
   buffer_info * buffer = capture->buffers + frame->id;
   buffer_info * prev_buffer = capture->buffers + prev;
@@ -607,10 +605,22 @@ dc1394_capture_enqueue (dc1394camera_t * camera,
 }
 
 int
+platform_capture_get_fileno (platform_camera_t * craw)
+{
+  dc1394capture_t * capture = &(craw->capture);
+
+  if (capture->notify_pipe[0] == 0 && capture->notify_pipe[1] == 0)
+      return -1;
+
+  return capture->notify_pipe[0];
+}
+
+int
 dc1394_capture_schedule_with_runloop (dc1394camera_t * camera,
         CFRunLoopRef run_loop, CFStringRef run_loop_mode)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+  platform_camera_t * craw = cpriv->pcam;
   dc1394capture_t * capture = &(craw->capture);
 
   if (camera->capture_is_set) {
@@ -627,22 +637,11 @@ void
 dc1394_capture_set_callback (dc1394camera_t * camera,
         dc1394capture_callback_t callback, void * user_data)
 {
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
+  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+  platform_camera_t * craw = cpriv->pcam;
   dc1394capture_t * capture = &(craw->capture);
 
   capture->callback = callback;
   capture->callback_user_data = user_data;
-}
-
-int
-dc1394_capture_get_fileno (dc1394camera_t * camera)
-{
-  DC1394_CAST_CAMERA_TO_MACOSX(craw, camera);
-  dc1394capture_t * capture = &(craw->capture);
-
-  if (capture->notify_pipe[0] == 0 && capture->notify_pipe[1] == 0)
-      return -1;
-
-  return capture->notify_pipe[0];
 }
 

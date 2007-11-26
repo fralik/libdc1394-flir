@@ -10,6 +10,9 @@ libdc1394_la_LDFLAGS = $(platform_LDFLAGS) -version-info @lt_major@:@lt_revision
 libdc1394_la_SOURCES =  \
 	control.c 	\
 	control.h	\
+	enumeration.c \
+	platform.h \
+	capture.c \
 	offsets.h	\
 	format7.c        \
 	register.c       \

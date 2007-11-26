@@ -34,9 +34,8 @@
 #define u64_to_ptr(p) ((void *)(unsigned long)(p))
 
 static dc1394error_t
-init_frame(dc1394camera_t *camera, int index, dc1394video_frame_t *proto)
+init_frame(platform_camera_t *craw, int index, dc1394video_frame_t *proto)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
   const int N = 8;	/* Number of iso packets per fw_cdev_iso_packet. */
   struct juju_frame *f = craw->frames + index;
   size_t total, payload_length;
@@ -70,18 +69,16 @@ init_frame(dc1394camera_t *camera, int index, dc1394video_frame_t *proto)
 }
 
 static void
-release_frame(dc1394camera_t *camera, int index)
+release_frame(platform_camera_t *craw, int index)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
   struct juju_frame *f = craw->frames + index;
   
   free(f->packets);
 }
 
 dc1394error_t
-queue_frame (dc1394camera_t *camera, int index)
+queue_frame (platform_camera_t *craw, int index)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
   struct juju_frame *f = craw->frames + index;
   struct fw_cdev_queue_iso queue;
   int retval;
@@ -101,15 +98,15 @@ queue_frame (dc1394camera_t *camera, int index)
 }
 
 dc1394error_t
-dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
+platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 		     uint32_t flags)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
   struct fw_cdev_create_iso_context create;
   struct fw_cdev_start_iso start_iso;
   dc1394error_t err;
   dc1394video_frame_t proto;
   int i, j, retval;
+  dc1394camera_t * camera = craw->camera;
 
   if (flags & DC1394_CAPTURE_FLAGS_DEFAULT)
     flags = DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC |
@@ -132,22 +129,28 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
 
   err = DC1394_FAILURE;
   craw->iso_fd = open(craw->filename, O_RDWR);
-  if (craw->iso_fd < 0)
+  if (craw->iso_fd < 0) {
+    fprintf (stderr, "open: %s\n", strerror (errno));
     goto error_bandwidth;
+  }
 
   create.type = FW_CDEV_ISO_CONTEXT_RECEIVE;
   create.header_size = 4;
   create.channel = camera->iso_channel;
   create.speed = SCODE_400;
   err = DC1394_IOCTL_FAILURE;
-  if (ioctl(craw->iso_fd, FW_CDEV_IOC_CREATE_ISO_CONTEXT, &create) < 0)
+  if (ioctl(craw->iso_fd, FW_CDEV_IOC_CREATE_ISO_CONTEXT, &create) < 0) {
+    fprintf (stderr, "failed to create iso context\n");
     goto error_fd;
+  }
 
   craw->iso_handle = create.handle;
 
   err = _dc1394_capture_basic_setup(camera, &proto);
-  if (err != DC1394_SUCCESS)
+  if (err != DC1394_SUCCESS) {
+    fprintf (stderr, "basic setup failed\n");
     goto error_fd;
+  }
 
   craw->num_frames = num_dma_buffers;
   craw->current = -1;
@@ -165,20 +168,24 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
     goto error_mmap;
 
   for (i = 0; i < num_dma_buffers; i++) {
-    err = init_frame(camera, i, &proto);
-    if (err != DC1394_SUCCESS)
+    err = init_frame(craw, i, &proto);
+    if (err != DC1394_SUCCESS) {
+      fprintf (stderr, "error initing frames\n");
       break;
+    }
   }
   if (err != DC1394_SUCCESS) {
     for (j = 0; j < i; j++)
-      release_frame(camera, j);
+      release_frame(craw, j);
     goto error_mmap;
   }
 
   for (i = 0; i < num_dma_buffers; i++) {
-    err = queue_frame(camera, i);
-    if (err != DC1394_SUCCESS)
+    err = queue_frame(craw, i);
+    if (err != DC1394_SUCCESS) {
+      fprintf (stderr, "error queuing\n");
       goto error_frames;
+    }
   }
 	
   // starting from here we use the ISO channel so we set the flag in
@@ -191,14 +198,16 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
   start_iso.handle = craw->iso_handle;
   retval = ioctl(craw->iso_fd, FW_CDEV_IOC_START_ISO, &start_iso);
   err = DC1394_IOCTL_FAILURE;
-  if (retval < 0)
+  if (retval < 0) {
+    fprintf (stderr, "Error starting iso\n");
     goto error_frames;
+  }
 
   return DC1394_SUCCESS;
 
  error_frames:
   for (i = 0; i < num_dma_buffers; i++)
-    release_frame(camera, i);
+    release_frame(craw, i);
  error_mmap:
   munmap(craw->buffer, craw->buffer_size);
  error_fd:
@@ -214,14 +223,16 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers,
 }
 
 dc1394error_t
-dc1394_capture_stop(dc1394camera_t *camera)
+platform_capture_stop(platform_camera_t *craw)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
+  dc1394camera_t * camera = craw->camera;
+  struct fw_cdev_stop_iso stop;
 
   if (camera->capture_is_set == 0)
     return DC1394_CAPTURE_IS_NOT_SET;
 
-  if (ioctl(craw->iso_fd, FW_CDEV_IOC_STOP_ISO) < 0) 
+  stop.handle = craw->iso_handle;
+  if (ioctl(craw->iso_fd, FW_CDEV_IOC_STOP_ISO, &stop) < 0) 
     return DC1394_IOCTL_FAILURE;
 
   munmap(craw->buffer, craw->buffer_size);
@@ -235,11 +246,10 @@ dc1394_capture_stop(dc1394camera_t *camera)
 
 
 dc1394error_t
-dc1394_capture_dequeue (dc1394camera_t * camera,
+platform_capture_dequeue (platform_camera_t * craw,
 			dc1394capture_policy_t policy,
 			dc1394video_frame_t **frame_return)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
   struct pollfd fds[1];
   struct juju_frame *f;
   int err, timeout, len;
@@ -293,9 +303,10 @@ dc1394_capture_dequeue (dc1394camera_t * camera,
 }
 
 dc1394error_t
-dc1394_capture_enqueue (dc1394camera_t * camera,
+platform_capture_enqueue (platform_camera_t * craw,
 			dc1394video_frame_t * frame)
 {
+  dc1394camera_t * camera = craw->camera;
   int err; 
 
   err = DC1394_INVALID_ARGUMENT_VALUE;
@@ -304,16 +315,14 @@ dc1394_capture_enqueue (dc1394camera_t * camera,
 		   "(%s) dc1394_capture_enqueue_dma: "
 		   "camera does not match frame's camera\n", __FILE__);
 
-  err = queue_frame (camera, frame->id);
+  err = queue_frame (craw, frame->id);
   DC1394_ERR_RTN(err, "Failed to queue frame");
 
   return DC1394_SUCCESS;
 }
 
 int
-dc1394_capture_get_fileno (dc1394camera_t * camera)
+platform_capture_get_fileno (platform_camera_t * craw)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
-
   return craw->iso_fd;
 }

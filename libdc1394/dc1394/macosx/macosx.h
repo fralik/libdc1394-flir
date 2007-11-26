@@ -29,7 +29,7 @@
 #include <IOKit/firewire/IOFireWireLib.h>
 #include <CoreServices/CoreServices.h>
 
-#define DC1394_CAST_CAMERA_TO_MACOSX(camosx, camera) dc1394camera_macosx_t * camosx = (dc1394camera_macosx_t *) camera
+#include "platform.h"
 
 typedef enum {
   BUFFER_EMPTY = 0,
@@ -37,13 +37,17 @@ typedef enum {
 } buffer_status;
 
 typedef struct _buffer_info {
-  dc1394camera_t * camera;
+  platform_camera_t * craw;
   int              i;
   buffer_status    status;
   struct timeval   filltime;
   int              num_dcls;
   NuDCLRef *       dcl_list;
 } buffer_info;
+
+struct _platform_t {
+  int dummy;
+};
 
 typedef struct __dc1394_capture
 {
@@ -78,12 +82,14 @@ typedef struct __dc1394_capture
   dc1394video_frame_t     *frames;
 } dc1394capture_t;
 
-typedef struct __dc1394_camera_macosx
-{
-  dc1394camera_t          camera;
+struct _platform_camera_t {
   IOFireWireLibDeviceRef  iface;
   UInt32                  generation;
+
+  dc1394camera_t * camera;
+
   dc1394capture_t         capture;
-} dc1394camera_macosx_t;
+};
+
 
 #endif

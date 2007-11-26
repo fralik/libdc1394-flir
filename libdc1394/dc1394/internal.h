@@ -22,6 +22,39 @@
 #include "control.h"
 #include "offsets.h"
 #include "config.h"
+#include "platform.h"
+
+typedef struct _dc1394camera_priv_t {
+    dc1394camera_t camera;
+
+    platform_camera_t * pcam;
+} dc1394camera_priv_t;
+
+#define DC1394_CAMERA_PRIV(c) ((dc1394camera_priv_t *)c)
+
+typedef struct _camera_info_t {
+    uint64_t guid;
+    int unit;
+    uint32_t unit_dependent_directory;
+    uint32_t unit_spec_ID;
+    uint32_t unit_sw_version;
+    char * vendor;
+    char * model;
+    uint32_t vendor_id;
+    uint32_t model_id;
+    platform_device_t * device;
+} camera_info_t;
+
+struct __dc1394_t {
+    platform_t  * platform;
+    platform_device_list_t * device_list;
+
+    int num_cameras;
+    camera_info_t * cameras;
+};
+
+void free_enumeration (dc1394_t * d);
+int refresh_enumeration (dc1394_t * d);
 
 /* Definitions which application developers shouldn't care about */
 #define CONFIG_ROM_BASE             0xFFFFF0000000ULL
@@ -133,21 +166,6 @@ dc1394_free_bandwidth(dc1394camera_t *camera);
 dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);
 */
-dc1394camera_t*
-dc1394_new_camera (uint32_t port, uint16_t node, uint16_t unit);
-dc1394camera_t*
-dc1394_new_camera_platform (uint32_t port, uint16_t node);
-void
-dc1394_free_camera_platform (dc1394camera_t *camera);
-dc1394error_t
-dc1394_print_camera_info_platform (dc1394camera_t *camera);
-dc1394error_t
-dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras);
-dc1394error_t
-dc1394_reset_bus_platform(dc1394camera_t *camera);
-dc1394error_t
-dc1394_read_cycle_timer_platform (dc1394camera_t * camera,
-        uint32_t * cycle_timer, uint64_t * local_time);
 dc1394error_t _dc1394_capture_basic_setup (dc1394camera_t * camera,
     dc1394video_frame_t * frame);
 

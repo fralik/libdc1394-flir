@@ -16,86 +16,71 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <dirent.h>
 #include <stdio.h>
-#include "config.h"
+#include <dirent.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include "juju/juju.h"
+#include <linux/firewire-cdev.h>
+#include <inttypes.h>
+
+#include "config.h"
+#include "platform.h"
 #include "utils.h"
+#include "internal.h"
+#include "juju.h"
 
 #define ptr_to_u64(p) ((__u64)(unsigned long)(p))
 #define u64_to_ptr(p) ((void *)(unsigned long)(p))
 
-dc1394camera_t*
-dc1394_new_camera_platform (uint32_t port, uint16_t node)
+
+platform_t *
+platform_new (void)
 {
-  dc1394camera_juju_t *craw;
-
-  craw = (dc1394camera_juju_t *) malloc(sizeof *craw);
-  if (craw == NULL)
-    return NULL;
-
-  memset (craw, 0, sizeof (*craw));
-
-  return &craw->camera;
+  platform_t * p = calloc (1, sizeof (platform_t));
+  return p;
 }
-
 void
-dc1394_free_camera_platform (dc1394camera_t *camera)
+platform_free (platform_t * p)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
-
-  if (craw == NULL)
-    return;
-
-  free(craw->filename);
-  close(craw->fd);
-  free(craw);
+  free (p);
 }
 
-dc1394error_t
-dc1394_print_camera_info_platform (dc1394camera_t *camera)
-{
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
-
-  printf("------ Camera platform-specific information ------\n");
-  printf("Device filename                   :     %s\n", craw->filename);
-
-  return DC1394_SUCCESS;
-}
-
-dc1394error_t
-dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr,
-			     uint32_t* numCameras)
-{
-  dc1394camera_t **cameras;
-  DIR *dir;
-  struct dirent *de;
-  char filename[32];
-  struct fw_cdev_get_info get_info;
-  struct fw_cdev_event_bus_reset reset;
+struct _platform_device_t {
   uint32_t config_rom[256];
-  int fd, numCam;
-  uint32_t allocated_size;
+  char filename[32];
+};
 
-  allocated_size = 64; // initial allocation, will be reallocated if necessary
-  cameras = malloc(allocated_size * sizeof(*cameras));
-  if (!cameras)
-    return DC1394_MEMORY_ALLOCATION_FAILURE;
-  numCam = 0;
+platform_device_list_t *
+platform_get_device_list (platform_t * p)
+{
+  DIR * dir;
+  struct dirent * de;
+  platform_device_list_t * list;
+  uint32_t allocated_size = 64;
+
+  list = calloc (1, sizeof (platform_device_list_t));
+  if (!list)
+    return NULL;
+  list->devices = malloc(allocated_size * sizeof(platform_device_t *));
+  if (!list->devices) {
+    free (list);
+    return NULL;
+  }
 
   dir = opendir("/dev");
   if (dir == NULL) {
     fprintf(stderr, "opendir: %m\n");
-    free(cameras);
-    return DC1394_FAILURE;
+    free (list->devices);
+    free (list);
+    return NULL;
   }
 
-  while (de = readdir(dir), de != NULL) {
-    dc1394camera_juju_t *craw;
-    dc1394camera_t *camera;
-    uint32_t err;
+  while ((de = readdir(dir))) {
+    char filename[32];
+    int fd;
+    platform_device_t * device;
+    struct fw_cdev_get_info get_info;
+    struct fw_cdev_event_bus_reset reset;
 
     if (strncmp(de->d_name, "fw", 2) != 0)
       continue;
@@ -107,150 +92,213 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr,
       continue;
     }
 
+    device = malloc (sizeof (platform_device_t));
+    if (!device) {
+      close (fd);
+      continue;
+    }
+
     get_info.version = FW_CDEV_VERSION;
-    get_info.rom = ptr_to_u64(&config_rom);
-    get_info.rom_length = sizeof config_rom;
+    get_info.rom = ptr_to_u64(&device->config_rom);
+    get_info.rom_length = 1024;
     get_info.bus_reset = ptr_to_u64(&reset);
     if (ioctl(fd, FW_CDEV_IOC_GET_INFO, &get_info) < 0) {
       fprintf(stderr, "GET_CONFIG_ROM failed for %s: %m\n", filename);
+      free (device);
       close(fd);
       continue;
     }
+    close (fd);
 
-    camera = dc1394_new_camera (0, 0, 0);
-    if (!camera) {
-      close(fd);
-      continue;
+    strcpy (device->filename, filename);
+    list->devices[list->num_devices] = device;
+    list->num_devices++;
+
+    if (list->num_devices >= allocated_size) {
+      allocated_size += 64;
+      list->devices = realloc (list->devices,
+          allocated_size * sizeof (platform_device_t *));
+      if (!list->devices)
+        return NULL;
     }
-
-    craw = (dc1394camera_juju_t *) camera;
-    craw->async.generation = reset.generation;
-    craw->filename = strdup(filename);
-    memcpy(craw->config_rom, config_rom, sizeof craw->config_rom);
-    craw->fd = fd;
-    err = dc1394_update_camera_info(camera);
-    if (craw->filename == NULL || err != DC1394_SUCCESS) {
-      dc1394_free_camera (camera);
-      continue;
-    }
-
-    if (numCam >= allocated_size) {
-      dc1394camera_t **newcam;
-      allocated_size *= 2;
-      newcam = realloc(cameras, allocated_size * sizeof(*newcam));
-      if (newcam == NULL)
-	continue;
-      cameras = newcam;
-    }
-
-    cameras[numCam++] = camera;
   }
   closedir(dir);
 
-  *numCameras = numCam;
-  *cameras_ptr = cameras;
-
-  if (numCam==0)
-    return DC1394_NO_CAMERA;
-
-  return DC1394_SUCCESS;
+  return list;
 }
 
-dc1394error_t
-_juju_iterate(dc1394camera_t *camera)
+void
+platform_free_device_list (platform_device_list_t * d)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
+  int i;
+  for (i = 0; i < d->num_devices; i++)
+    free (d->devices[i]);
+  free (d->devices);
+  free (d);
+}
+
+int
+platform_device_get_config_rom (platform_device_t * device,
+    uint32_t * quads, int * num_quads)
+{
+  if (*num_quads > 256)
+    *num_quads = 256;
+
+  memcpy (quads, device->config_rom, *num_quads * sizeof (uint32_t));
+  return 0;
+}
+
+platform_camera_t *
+platform_camera_new (platform_t * p, platform_device_t * device,
+    uint32_t unit_directory_offset)
+{
+  int fd;
+  platform_camera_t * camera;
+  struct fw_cdev_get_info get_info;
+  struct fw_cdev_event_bus_reset reset;
+
+  fd = open(device->filename, O_RDWR);
+  if (fd < 0) {
+    fprintf(stderr, "could not open %s: %m\n", device->filename);
+    return NULL;
+  }
+
+  get_info.version = FW_CDEV_VERSION;
+  get_info.rom = 0;
+  get_info.rom_length = 0;
+  get_info.bus_reset = ptr_to_u64(&reset);
+  if (ioctl(fd, FW_CDEV_IOC_GET_INFO, &get_info) < 0) {
+    fprintf(stderr, "IOC_GET_INFO failed for %s: %m\n", device->filename);
+    close(fd);
+    return NULL;
+  }
+
+  camera = calloc (1, sizeof (platform_camera_t));
+  camera->fd = fd;
+  camera->generation = reset.generation;
+  strcpy (camera->filename, device->filename);
+  return camera;
+}
+
+void platform_camera_free (platform_camera_t * cam)
+{
+  close (cam->fd);
+  free (cam);
+}
+
+void
+platform_camera_set_parent (platform_camera_t * cam,
+        dc1394camera_t * parent)
+{
+  cam->camera = parent;
+}
+
+void
+platform_camera_print_info (platform_camera_t * camera)
+{
+  printf ("------ Camera platform-specific information ------\n");
+  printf ("Device filename                   :     %s\n", camera->filename);
+}
+
+int
+_juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
+{
   union {
     struct {
       struct fw_cdev_event_response r;
-      __u32 buffer[128];
+      __u32 buffer[out ? num_quads : 0];
     } response;
     struct fw_cdev_event_bus_reset reset;
-    struct {
-      struct fw_cdev_event_iso_interrupt i;
-      __u32 headers[256];
-    } iso;
   } u;
-  int len;
+  int len, i;
 
-  len = read (craw->fd, &u, sizeof u);
+  len = read (cam->fd, &u, sizeof u);
   if (len < 0) {
     fprintf (stderr, "failed to read response: %m\n");
-    return DC1394_FAILURE;
+    return -1;
   }
 
   switch (u.reset.type) {
-  case FW_CDEV_EVENT_BUS_RESET:
-    craw->async.generation = u.reset.generation;
-    break;
+    case FW_CDEV_EVENT_BUS_RESET:
+      cam->generation = u.reset.generation;
+      break;
 
-  case FW_CDEV_EVENT_RESPONSE:
-    memcpy(craw->async.buffer, u.response.buffer, u.response.r.length);
-    craw->async.done = 1;
-    break;
+    case FW_CDEV_EVENT_RESPONSE:
+#if 0
+      printf ("type %d rcode %d length %d\n", u.response.r.type,
+              u.response.r.rcode, u.response.r.length);
+#endif
+      if (u.response.r.rcode == 4)
+          return -2; // retry if we get "resp_conflict_error"
+      if (u.response.r.rcode != 0)
+          return -1;
+      for (i = 0; i < u.response.r.length/4 && i < num_quads && out; i++)
+        out[i] = ntohl (u.response.buffer[i]);
+      return 1;
   }
 
-  return DC1394_SUCCESS;
+  return 0;
 }
 
 static dc1394error_t
-do_transaction(dc1394camera_t *camera, int tcode, uint64_t offset,
-	       uint32_t *in, uint32_t *out, uint32_t num_quads)
+do_transaction(platform_camera_t * cam, int tcode, uint64_t offset,
+	       const uint32_t * in, uint32_t * out, uint32_t num_quads)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
   struct fw_cdev_send_request request;
   int i, len;
+  uint32_t in_buffer[in ? num_quads : 0];
+  int retry = 300;
 
-  if (in)
-    for (i = 0; i < num_quads; i++)
-      craw->async.buffer[i] = htonl (in[i]);
+  for (i = 0; in && i < num_quads; i++)
+    in_buffer[i] = htonl (in[i]);
 
   request.offset = CONFIG_ROM_BASE + offset;
-  request.data = ptr_to_u64(craw->async.buffer);
+  request.data = ptr_to_u64(in_buffer);
   request.length = num_quads * 4;
   request.tcode = tcode;
-  request.generation = craw->async.generation;
+  request.generation = cam->generation;
 
-  len = ioctl (craw->fd, FW_CDEV_IOC_SEND_REQUEST, &request);
-  if (len < 0) {
-    fprintf (stderr, "failed to write request: %m\n");
-    return DC1394_FAILURE;
+  while (retry > 0) {
+    int retval;
+    len = ioctl (cam->fd, FW_CDEV_IOC_SEND_REQUEST, &request);
+    if (len < 0) {
+      fprintf (stderr, "failed to write request: %m\n");
+      return DC1394_FAILURE;
+    }
+
+    while ((retval = _juju_await_response (cam, out, num_quads)) == 0);
+    if (retval > 0)
+      break;
+    if (retval == -1)
+      return DC1394_FAILURE;
+
+    /* retry if we get "resp_conflict_error" */
+    retry--;
   }
-
-  craw->async.done = 0;
-  while (!craw->async.done)
-    _juju_iterate(camera);
-
-  if (out)
-    for (i = 0; i < num_quads; i++)
-      out[i] = ntohl (craw->async.buffer[i]);
 
   return DC1394_SUCCESS;
 }
 
 dc1394error_t
-GetCameraROMValues(dc1394camera_t *camera,
-		   uint64_t offset, uint32_t *value, uint32_t num_quads)
+platform_camera_read (platform_camera_t * cam, uint64_t offset,
+    uint32_t * quads, int num_quads)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
   int tcode;
-
-  if (0x400 <= offset && offset < 0x800) {
-    memcpy(value, (void *) craw->config_rom + offset - 0x400, num_quads * 4);
-    return DC1394_SUCCESS;
-  }
 
   if (num_quads > 1)
     tcode = TCODE_READ_BLOCK_REQUEST;
   else
     tcode = TCODE_READ_QUADLET_REQUEST;
 
-  return do_transaction(camera, tcode, offset, NULL, value, num_quads);
+  //printf ("reading %"PRIx64", len %d\n", offset, num_quads);
+  dc1394error_t err = do_transaction(cam, tcode, offset, NULL, quads, num_quads);
+  //printf ("got %x\n", quads[0]);
+  return err;
 }
 
 dc1394error_t
-SetCameraROMValues(dc1394camera_t *camera,
-		   uint64_t offset, uint32_t *value, uint32_t num_quads)
+platform_camera_write (platform_camera_t * cam, uint64_t offset,
+    const uint32_t * quads, int num_quads)
 {
   int tcode;
 
@@ -259,28 +307,26 @@ SetCameraROMValues(dc1394camera_t *camera,
   else
     tcode = TCODE_WRITE_QUADLET_REQUEST;
 
-  return do_transaction(camera, tcode, offset, value, NULL, num_quads);
+  //printf ("writing %"PRIx64", data %x\n", offset, quads[0]);
+  return do_transaction(cam, tcode, offset, quads, NULL, num_quads);
 }
 
 dc1394error_t
-dc1394_reset_bus_platform (dc1394camera_t * camera)
+platform_reset_bus (platform_camera_t * cam)
 {
-  DC1394_CAST_CAMERA_TO_JUJU(craw, camera);
   struct fw_cdev_initiate_bus_reset initiate;
 
   initiate.type = FW_CDEV_SHORT_RESET;
-  if (ioctl(craw->fd, FW_CDEV_IOC_INITIATE_BUS_RESET, &initiate) == 0)
+  if (ioctl (cam->fd, FW_CDEV_IOC_INITIATE_BUS_RESET, &initiate) == 0)
     return DC1394_SUCCESS;
   else
     return DC1394_FAILURE;
 }
 
 dc1394error_t
-dc1394_read_cycle_timer_platform (dc1394camera_t * camera,
+platform_read_cycle_timer (platform_camera_t * cam,
         uint32_t * cycle_timer, uint64_t * local_time)
 {
-  /* FIXME: implement this ioctl */
-
   return DC1394_FUNCTION_NOT_SUPPORTED;
 }
 
@@ -313,9 +359,10 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
   return DC1394_SUCCESS;
 }
 
+#if 0
 dc1394error_t
 dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
 {
   return DC1394_FAILURE;
 }
-
+#endif

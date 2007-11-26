@@ -101,13 +101,13 @@ dc1394_avt_get_version(dc1394camera_t *camera,
   uint32_t value;
   
   /* Retrieve uC */
-  *UCType =GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_VERSION_INFO1,&value);
+  *UCType =dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_VERSION_INFO1,&value);
 
   /* uC Version : Bits 16..31 */
   *Version =(uint32_t)(value & 0xFFFFUL );
   
   /*  Retrieve Camera ID and FPGA_Version */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_VERSION_INFO3, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_VERSION_INFO3, &value);
   DC1394_ERR_RTN(err,"Could not get AVT version info 3");
     
   /* Camera_ID : bit 0-15 */
@@ -131,7 +131,7 @@ dc1394_avt_get_advanced_feature_inquiry(dc1394camera_t *camera,
   uint32_t value;
   
   /* Retrieve first group of features presence */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_ADV_INQ_1, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_ADV_INQ_1, &value);
   DC1394_ERR_RTN(err,"Could not get AVT advanced features INQ 1");
   
   adv_feature->MaxResolution=		(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -166,7 +166,7 @@ dc1394_avt_get_advanced_feature_inquiry(dc1394camera_t *camera,
   adv_feature->features_requested = DC1394_TRUE;                     
 
   /* Retrieve second group of features presence */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_ADV_INQ_2, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_ADV_INQ_2, &value);
   DC1394_ERR_RTN(err,"Could not get AVT advanced features INQ 2");
   
   adv_feature->Input_1 =			(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -181,7 +181,7 @@ dc1394_avt_get_advanced_feature_inquiry(dc1394camera_t *camera,
   adv_feature->IncDecoder=			(value & 0x00004000UL) ? DC1394_TRUE : DC1394_FALSE;     
   //ADV_INQ_2 18-31
   
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_ADV_INQ_3, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_ADV_INQ_3, &value);
   DC1394_ERR_RTN(err,"Could not get AVT advanced features INQ 3");
 
   adv_feature->CameraStatus=		(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -191,7 +191,7 @@ dc1394_avt_get_advanced_feature_inquiry(dc1394camera_t *camera,
   adv_feature->AutoFunctionAOI=		(value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
   //ADV_INQ_3 7-31
 
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_ADV_INQ_4, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_ADV_INQ_4, &value);
   DC1394_ERR_RTN(err,"Could not get AVT advanced features INQ 4");
 
   adv_feature->HDRPike=		(value & 0x80000000UL) ? DC1394_TRUE : DC1394_FALSE;
@@ -276,7 +276,7 @@ dc1394_avt_get_shading(dc1394camera_t *camera,
   uint32_t value;
   
   /* Retrieve shading properties */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SHDG_CTRL, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_SHDG_CTRL, &value);
   DC1394_ERR_RTN(err,"Could not get AVT shading control reg");
 
   /* Shading ON / OFF : Bit 6 */
@@ -312,7 +312,7 @@ dc1394_avt_set_shading(dc1394camera_t *camera,
   uint32_t curval;
   
   /* Retrieve current shading properties */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SHDG_CTRL, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_SHDG_CTRL, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT shading control reg");
   
   /* Shading ON / OFF : Bit 6 */
@@ -328,7 +328,7 @@ dc1394_avt_set_shading(dc1394camera_t *camera,
   curval = (curval & 0xFFFFFF00UL) | ((frame_nb & 0xFFUL ));   
   
   /* Set new parameters */    
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SHDG_CTRL, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_SHDG_CTRL, curval);
   DC1394_ERR_RTN(err,"Could not set AVT shading control reg");
  
   return DC1394_SUCCESS;
@@ -347,7 +347,7 @@ dc1394_avt_get_shading_mem_ctrl(dc1394camera_t *camera, dc1394bool_t *en_write,
   uint32_t value;
   
   /* Retrieve current memory shading properties */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SHDG_MEM_CTRL, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_SHDG_MEM_CTRL, &value);
   DC1394_ERR_RTN(err,"Could not get AVT shading memory control");
   
   /* Enable write access : Bit 5 */
@@ -377,7 +377,7 @@ dc1394_avt_set_shading_mem_ctrl(dc1394camera_t *camera,
   uint32_t curval;
   
   /* Retrieve current shading properties */        
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SHDG_MEM_CTRL, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_SHDG_MEM_CTRL, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT shading memory control");
   
   /* read access enable : Bit 6 */
@@ -390,7 +390,7 @@ dc1394_avt_set_shading_mem_ctrl(dc1394camera_t *camera,
   curval = (curval & 0xFF000000UL) | ((addroffset & 0xFFFFFFUL ));   
   
   /* Set new parameters */ 
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SHDG_MEM_CTRL, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_SHDG_MEM_CTRL, curval);
   DC1394_ERR_RTN(err,"Could not get AVT LUT memory control");
   
   return DC1394_SUCCESS;
@@ -406,7 +406,7 @@ dc1394_avt_get_shading_info(dc1394camera_t *camera, uint32_t *MaxImageSize)
   uint32_t value;
   
   /* Retrieve shading info */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SHDG_INFO, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_SHDG_INFO, &value);
   DC1394_ERR_RTN(err,"Could not get AVT shading info");
 
   /* Max Shading Image size(byte) : Bits 8..31 */
@@ -429,7 +429,7 @@ dc1394_avt_get_multiple_slope(dc1394camera_t *camera,
   uint32_t value;
   
   /* Retrieve current hdr parameters */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_HDR_CONTROL, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_HDR_CONTROL, &value);
   DC1394_ERR_RTN(err,"Could not get AVT HDR control register");
   
   /* Multiple slope ON / OFF : Bit 6 */
@@ -439,11 +439,11 @@ dc1394_avt_get_multiple_slope(dc1394camera_t *camera,
   *points_nb =(uint32_t)((value & 0xFUL));
   
   /* kneepoints */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_KNEEPOINT_1, kneepoint1); 
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_KNEEPOINT_1, kneepoint1); 
   DC1394_ERR_RTN(err,"Could not get AVT kneepoint 1");
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_KNEEPOINT_2, kneepoint2);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_KNEEPOINT_2, kneepoint2);
   DC1394_ERR_RTN(err,"Could not get AVT kneepoint 2");
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_KNEEPOINT_3, kneepoint3);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_KNEEPOINT_3, kneepoint3);
   DC1394_ERR_RTN(err,"Could not get AVT kneepoint 3");
       
   return DC1394_SUCCESS;
@@ -463,7 +463,7 @@ dc1394_avt_set_multiple_slope(dc1394camera_t *camera,
   uint32_t curval;
   
   /* Retrieve current hdr parameters */        
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_HDR_CONTROL, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_HDR_CONTROL, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT HDR control reg");
   
   /* Shading ON / OFF : Bit 6 */
@@ -473,15 +473,15 @@ dc1394_avt_set_multiple_slope(dc1394camera_t *camera,
   curval = (curval & 0xFFFFFFF0UL) | ((points_nb & 0xFUL ));   
   
   /* Set new hdr parameters */ 
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_HDR_CONTROL, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_HDR_CONTROL, curval);
   DC1394_ERR_RTN(err,"Could not set AVT HDR control reg");
   
   /* kneepoints */
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_KNEEPOINT_1, kneepoint1);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_KNEEPOINT_1, kneepoint1);
   DC1394_ERR_RTN(err,"Could not set AVT kneepoint 1");
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_KNEEPOINT_2, kneepoint2);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_KNEEPOINT_2, kneepoint2);
   DC1394_ERR_RTN(err,"Could not set AVT kneepoint 2");   
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_KNEEPOINT_3, kneepoint3);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_KNEEPOINT_3, kneepoint3);
   DC1394_ERR_RTN(err,"Could not set AVT kneepoint 3");
   
   return DC1394_SUCCESS;
@@ -498,7 +498,7 @@ dc1394_avt_get_timebase(dc1394camera_t *camera, uint32_t *timebase_id)
   uint32_t value;
         
   /* Retrieve current timebase */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TIMEBASE, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_TIMEBASE, &value);
   DC1394_ERR_RTN(err,"Could not get AVT timebase");
 
   /* Time base ID : Bits 29..31 */
@@ -518,13 +518,13 @@ dc1394_avt_set_timebase(dc1394camera_t *camera, uint32_t timebase_id)
   uint32_t curval;
   
   /* Retrieve current timebase */        
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TIMEBASE, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_TIMEBASE, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT timebase");
   
   curval = (curval & 0xFFFFFFF0UL) | ((timebase_id & 0xFUL ));   
   
   /* Set new timebase */     
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TIMEBASE, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_TIMEBASE, curval);
   DC1394_ERR_RTN(err,"Could not set AVT timebase");
   
   return DC1394_SUCCESS;
@@ -541,7 +541,7 @@ dc1394_avt_get_extented_shutter(dc1394camera_t *camera, uint32_t *timebase_id)
   uint32_t value;
     
   /* Retrieve current extented shutter value */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_EXTD_SHUTTER, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_EXTD_SHUTTER, &value);
   DC1394_ERR_RTN(err,"Could not get AVT extended shutter reg");
   
   /* Exposure Time in us: Bits 6..31 */
@@ -562,14 +562,14 @@ dc1394_avt_set_extented_shutter(dc1394camera_t *camera, uint32_t timebase_id)
   uint32_t curval;
   
   /* Retrieve current extented shutter value */        
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_EXTD_SHUTTER, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_EXTD_SHUTTER, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT extended shutter reg");
   
   /* Time base ID : Bits 6..31 */
   curval = (curval & 0xF0000000UL) | ((timebase_id & 0x0FFFFFFFUL ));   
   
   /* Set new extented shutter value */    
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_EXTD_SHUTTER, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_EXTD_SHUTTER, curval);
   DC1394_ERR_RTN(err,"Could not set AVT extended shutter reg");
   
   return DC1394_SUCCESS;
@@ -586,7 +586,7 @@ dc1394_avt_get_MaxResolution(dc1394camera_t *camera, uint32_t *MaxHeight, uint32
   uint32_t value;
   
   /* Retrieve the maximum resolution */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_MAX_RESOLUTION, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_MAX_RESOLUTION, &value);
   DC1394_ERR_RTN(err,"Could not get AVT max resolution");
   
   /* MaxHeight : Bits 0..15 */
@@ -608,13 +608,13 @@ dc1394_avt_get_auto_shutter(dc1394camera_t *camera, uint32_t *MinValue, uint32_t
   uint32_t value;
   
   /* Retrieve current min auto shutter value */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AUTOSHUTTER_LO, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_AUTOSHUTTER_LO, &value);
   DC1394_ERR_RTN(err,"Could not get AVT autoshutter LSB");
   
   *MinValue =(uint32_t)value;
   
   /* Retrieve current max auto shutter value */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AUTOSHUTTER_HI, &value); 
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_AUTOSHUTTER_HI, &value); 
   DC1394_ERR_RTN(err,"Could not get AVT autoshutter MSB");
   
   *MaxValue =(uint32_t)value;
@@ -631,11 +631,11 @@ dc1394_avt_set_auto_shutter(dc1394camera_t *camera, uint32_t MinValue, uint32_t 
 {
   dc1394error_t err;
   /* Set min auto shutter value */    
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AUTOSHUTTER_LO, MinValue);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_AUTOSHUTTER_LO, MinValue);
   DC1394_ERR_RTN(err,"Could not set AVT autoshutter LSB");
 
   /* Set max auto shutter value */  
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AUTOSHUTTER_HI, MaxValue); 
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_AUTOSHUTTER_HI, MaxValue); 
   DC1394_ERR_RTN(err,"Could not set AVT autoshutter MSB");
   
   return DC1394_SUCCESS;
@@ -652,7 +652,7 @@ dc1394_avt_get_auto_gain(dc1394camera_t *camera, uint32_t *MinValue, uint32_t *M
   uint32_t value;
     
   /* Retrieve auto gain values */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AUTOGAIN_CTRL, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_AUTOGAIN_CTRL, &value);
   DC1394_ERR_RTN(err,"Could not get AVT autogain");
   
   /* Min : bits 20..31 */
@@ -677,7 +677,7 @@ dc1394_avt_set_auto_gain(dc1394camera_t *camera, uint32_t MinValue, uint32_t Max
   value = ( MaxValue <<16 ) | ( MinValue );
   
   /* Set new parameters */    
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AUTOGAIN_CTRL,value);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_AUTOGAIN_CTRL,value);
   DC1394_ERR_RTN(err,"Could not set AVT autogain");
 
   return DC1394_SUCCESS;
@@ -694,7 +694,7 @@ dc1394_avt_get_trigger_delay(dc1394camera_t *camera, dc1394bool_t *on_off, uint3
   uint32_t value;
   
   /* Retrieve trigger delay */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TRIGGER_DELAY, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_TRIGGER_DELAY, &value);
   DC1394_ERR_RTN(err,"Could not get AVT trigger delay");
   
   /* trigger_delay ON / OFF : Bit 6 */
@@ -717,7 +717,7 @@ dc1394_avt_set_trigger_delay(dc1394camera_t *camera, dc1394bool_t on_off, uint32
   uint32_t curval;
   
   /* Retrieve trigger delay */       
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TRIGGER_DELAY, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_TRIGGER_DELAY, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT trigger delay");
   
   /* trigger_delay ON / OFF : Bit 6 */
@@ -727,7 +727,7 @@ dc1394_avt_set_trigger_delay(dc1394camera_t *camera, dc1394bool_t on_off, uint32
   curval = (curval & 0xFFF00000UL) | DelayTime;   
   
   /* Set new parameters */     
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TRIGGER_DELAY, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_TRIGGER_DELAY, curval);
   DC1394_ERR_RTN(err,"Could not set AVT trigger delay");
   
   return DC1394_SUCCESS;
@@ -744,7 +744,7 @@ dc1394_avt_get_mirror(dc1394camera_t *camera, dc1394bool_t *on_off)
   uint32_t value;
 
   /* Retrieve Mirror mode */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_MIRROR_IMAGE, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_MIRROR_IMAGE, &value);
   DC1394_ERR_RTN(err,"Could not get AVT mirror image");
   
   /* mirror ON / OFF : Bit 6 */
@@ -766,7 +766,7 @@ dc1394_avt_set_mirror(dc1394camera_t *camera, dc1394bool_t on_off)
   curval = on_off << 25; 
   
   /* Set mirror mode */     
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_MIRROR_IMAGE, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_MIRROR_IMAGE, curval);
   DC1394_ERR_RTN(err,"Could not set AVT mirror image");
   
   return DC1394_SUCCESS;
@@ -781,7 +781,7 @@ dc1394_avt_get_dsnu(dc1394camera_t *camera, dc1394bool_t *on_off,uint32_t *frame
   dc1394error_t err;
   uint32_t value;
   /* Retrieve dsnu parameters */        
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DSNU_CONTROL, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_DSNU_CONTROL, &value);
   DC1394_ERR_RTN(err,"Could not get AVT DSNU control");
   
   /* ON / OFF : Bit 6 */
@@ -804,7 +804,7 @@ dc1394_avt_set_dsnu(dc1394camera_t *camera,
   uint32_t curval;
 
   /* Retrieve current dsnu parameters */            
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DSNU_CONTROL, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_DSNU_CONTROL, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT DSNU control");
   
   /* Compute : Bit 5 */
@@ -817,13 +817,13 @@ dc1394_avt_set_dsnu(dc1394camera_t *camera,
   curval = (curval & 0xFFFFFF00UL) | ((frame_nb & 0xFFUL ));   
   
   /* Set new dsnu parameters */        
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DSNU_CONTROL, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_DSNU_CONTROL, curval);
   DC1394_ERR_RTN(err,"Could not set AVT DSNU control");
 
   int cont=1;
   while (cont) {
     usleep(50000);
-    err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DSNU_CONTROL, &curval);
+    err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_DSNU_CONTROL, &curval);
     DC1394_ERR_RTN(err,"Could not get AVT DSNU control");
     if ((curval & 0x01000000UL)==0)
       cont=0;
@@ -840,7 +840,7 @@ dc1394_avt_get_blemish(dc1394camera_t *camera, dc1394bool_t *on_off, uint32_t *f
   dc1394error_t err;
   uint32_t value;
   
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, &value);
   DC1394_ERR_RTN(err,"Could not get AVT blemish control");
   
   /* ON / OFF : Bit 6 */
@@ -863,7 +863,7 @@ dc1394_avt_set_blemish(dc1394camera_t *camera,
   uint32_t curval;
   
   /* Retrieve current blemish parameters */        
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT blemish control");
   
   /* Compute : Bit 5 */
@@ -876,13 +876,13 @@ dc1394_avt_set_blemish(dc1394camera_t *camera,
   curval = (curval & 0xFFFFFF00UL) | ((frame_nb & 0xFFUL ));   
   
   /* Set new blemish parameters */         
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, curval);
   DC1394_ERR_RTN(err,"Could not set AVT blemish control");
   
   int cont=1;
   while (cont) {
     usleep(50000);
-    err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, &curval);
+    err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_BLEMISH_CONTROL, &curval);
     DC1394_ERR_RTN(err,"Could not get AVT DSNU control");
     if ((curval & 0x01000000UL)==0)
       cont=0;
@@ -904,7 +904,7 @@ dc1394_avt_get_io(dc1394camera_t *camera, uint32_t IO,
   uint32_t value;
   
   /* Retrieve IO parameters */        
-  err=GetCameraAdvControlRegister(camera,IO, &value);
+  err=dc1394_get_adv_control_register(camera,IO, &value);
   DC1394_ERR_RTN(err,"Could not get AVT IO register");
  
   /* polarity : Bit 7 */
@@ -930,7 +930,7 @@ dc1394_avt_set_io(dc1394camera_t *camera,uint32_t IO,
   uint32_t curval;
   
   /* Retrieve current IO parameters */            
-  err=GetCameraAdvControlRegister(camera,IO, &curval);
+  err=dc1394_get_adv_control_register(camera,IO, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT IO register");
   
   /* polarity : Bit 7 */
@@ -944,7 +944,7 @@ dc1394_avt_set_io(dc1394camera_t *camera,uint32_t IO,
     curval = (curval & 0xFFFFFFFEUL) | pinstate;
 
   /* Set  new IO parameters */            
-  err=SetCameraAdvControlRegister(camera,IO, curval);
+  err=dc1394_set_adv_control_register(camera,IO, curval);
   DC1394_ERR_RTN(err,"Could not set AVT IO register");
   
   return DC1394_SUCCESS;
@@ -961,7 +961,7 @@ dc1394_avt_reset(dc1394camera_t *camera)
   /* ON / OFF : Bit 6 */
   value= (1<<25) + 200; /*2sec*/
   /* Reset */                    
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_SOFT_RESET,value); 
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_SOFT_RESET,value); 
   DC1394_ERR_RTN(err,"Could not set AVT soft reset");
 
   return DC1394_SUCCESS;
@@ -978,7 +978,7 @@ dc1394_avt_get_lut(dc1394camera_t *camera, dc1394bool_t *on_off, uint32_t *lutnb
   uint32_t value;
   
   /* Retrieve current luts parameters */            
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_LUT_CTRL, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_LUT_CTRL, &value);
   DC1394_ERR_RTN(err,"Could not get AVT LUT control");
   
   /* Shading ON / OFF : Bit 6 */
@@ -1001,7 +1001,7 @@ dc1394_avt_set_lut(dc1394camera_t *camera, dc1394bool_t on_off, uint32_t lutnb)
   uint32_t curval;
   
   /* Retrieve current luts parameters */                
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_LUT_CTRL, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_LUT_CTRL, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT LUT control");
   
   /* Shading ON / OFF : Bit 6 */
@@ -1011,7 +1011,7 @@ dc1394_avt_set_lut(dc1394camera_t *camera, dc1394bool_t on_off, uint32_t lutnb)
   curval = (curval & 0xFFFFFFB0UL) | ((lutnb & 0x3FUL ));   
   
   /* Set new luts parameters */            
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_LUT_CTRL, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_LUT_CTRL, curval);
   DC1394_ERR_RTN(err,"Could not set AVT LUT control");
 
   return DC1394_SUCCESS;
@@ -1029,7 +1029,7 @@ dc1394_avt_get_lut_mem_ctrl(dc1394camera_t *camera, dc1394bool_t *en_write,
   uint32_t value;
   
   /* Retrieve current memory luts parameters */                
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_LUT_MEM_CTRL, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_LUT_MEM_CTRL, &value);
   DC1394_ERR_RTN(err,"Could not get AVT LUT memory control");
  
   /* Enable write access : Bit 5 */
@@ -1056,7 +1056,7 @@ dc1394_avt_set_lut_mem_ctrl(dc1394camera_t *camera,
   uint32_t curval;
   
   /* Retrieve current memory luts parameters */                    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_LUT_MEM_CTRL, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_LUT_MEM_CTRL, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT LUT memory control");
   
   /* write access enable : Bit 5 */
@@ -1069,7 +1069,7 @@ dc1394_avt_set_lut_mem_ctrl(dc1394camera_t *camera,
   curval = (curval & 0xFFFF0000UL) | ((addroffset & 0xFFFFUL ));   
   
   /* Set new parameters */     
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_LUT_MEM_CTRL, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_LUT_MEM_CTRL, curval);
   DC1394_ERR_RTN(err,"Could not set AVT LUT memory control");
   
   return DC1394_SUCCESS;
@@ -1085,7 +1085,7 @@ dc1394_avt_get_lut_info(dc1394camera_t *camera, uint32_t *NumOfLuts, uint32_t *M
   dc1394error_t err;
   uint32_t value;
   /* Retrieve luts info */                
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_LUT_INFO, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_LUT_INFO, &value);
   DC1394_ERR_RTN(err,"Could not get AVT LUT info");
 
   /* NumOfLuts : Bits 8..15 */
@@ -1110,14 +1110,14 @@ dc1394_avt_get_aoi(dc1394camera_t *camera,
   uint32_t value;
   
   /* Retrieve current mode*/                
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AUTOFNC_AOI, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_AUTOFNC_AOI, &value);
   DC1394_ERR_RTN(err,"Could not get AVT autofocus AOI");
   
   /*  ON / OFF : Bit 6 */
   *on_off = (uint32_t)((value & 0x2000000UL) >> 25); 
   
   /* Retrieve current size of area*/                      
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AF_AREA_SIZE, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_AF_AREA_SIZE, &value);
   DC1394_ERR_RTN(err,"Could not get AVT AF area size");
     
   /* width : Bits 0..15 */
@@ -1126,7 +1126,7 @@ dc1394_avt_get_aoi(dc1394camera_t *camera,
   *height =(uint32_t)(value & 0xFFFFUL );
   
   /* Retrieve current position of area*/                      	
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AF_AREA_POSITION, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_AF_AREA_POSITION, &value);
   DC1394_ERR_RTN(err,"Could not get AVT AF area position");
 
   /* left : Bits 0..15 */
@@ -1151,15 +1151,15 @@ dc1394_avt_set_aoi(dc1394camera_t *camera,
   curval = on_off << 25; 
   
   /* Set feature on off */
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AUTOFNC_AOI, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_AUTOFNC_AOI, curval);
   DC1394_ERR_RTN(err,"Could not set AVT autofocus AOI");
   
   /* Set size */
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AF_AREA_SIZE, (width << 16) | height);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_AF_AREA_SIZE, (width << 16) | height);
   DC1394_ERR_RTN(err,"Could not set AVT AF area size");
   
   /* Set position */  
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_AF_AREA_POSITION,(left << 16) | top );
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_AF_AREA_POSITION,(left << 16) | top );
   DC1394_ERR_RTN(err,"Could not set AVT AF area position");
   
   return DC1394_SUCCESS;
@@ -1175,7 +1175,7 @@ dc1394_avt_get_test_images(dc1394camera_t *camera, uint32_t *image_no)
   uint32_t value;
   
   /* Retrieve test image number */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TEST_IMAGE, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_TEST_IMAGE, &value);
   DC1394_ERR_RTN(err,"Could not get AVT test image");
   
   /* Numero Image : Bits 28..31 */
@@ -1195,14 +1195,14 @@ dc1394_avt_set_test_images(dc1394camera_t *camera, uint32_t image_no)
   uint32_t curval;
 
   /* Retrieve current test image */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TEST_IMAGE, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_TEST_IMAGE, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT test image");
   
   /* Numero Image : Bits 28..31 */
   curval = (curval & 0xFFFFFFF0UL) | ((image_no & 0xFUL ));   
   
   /* Set new test image */
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_TEST_IMAGE,curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_TEST_IMAGE,curval);
   DC1394_ERR_RTN(err,"Could not set AVT test image");
   
   return DC1394_SUCCESS;
@@ -1219,7 +1219,7 @@ dc1394_avt_get_frame_info(dc1394camera_t *camera, uint32_t *framecounter)
   uint32_t value;
   
   /* Retrieve frame info */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_FRAMECOUNTER, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_FRAMECOUNTER, &value);
   DC1394_ERR_RTN(err,"Could not get AVT framecounter");
   
   /* framecounter : Bits 0..31 */
@@ -1237,7 +1237,7 @@ dc1394_avt_reset_frame_info(dc1394camera_t *camera)
 {
   dc1394error_t err;
   /* Reset counter */
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_FRAMEINFO,1 << 30);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_FRAMEINFO,1 << 30);
   DC1394_ERR_RTN(err,"Could not get AVT frame info");
 
   return DC1394_SUCCESS;
@@ -1255,7 +1255,7 @@ dc1394_avt_get_deferred_trans(dc1394camera_t *camera,
   uint32_t value;
   
   /* Retrieve Deferred image transport mode */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DEFERRED_TRANS, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_DEFERRED_TRANS, &value);
   DC1394_ERR_RTN(err,"Could not get AVT deferred transfer info");
   
   /* enable/disable deferred transport mode : Bit 6 */
@@ -1287,7 +1287,7 @@ dc1394_avt_set_deferred_trans(dc1394camera_t *camera,
   uint32_t curval;
   
   /* Retrieve current image transport mode */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DEFERRED_TRANS, &curval);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_DEFERRED_TRANS, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT deferred transfer info");
   
   /* Send NumOfImages now : Bit 5 */
@@ -1306,7 +1306,7 @@ dc1394_avt_set_deferred_trans(dc1394camera_t *camera,
   curval = (curval & 0xFFFFFF00UL) | ((NumOfImages & 0xFFUL ));   
   
   /* Set new parameters */    
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_DEFERRED_TRANS, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_DEFERRED_TRANS, curval);
   DC1394_ERR_RTN(err,"Could not set AVT deferred transfer info");
 
   return DC1394_SUCCESS;
@@ -1323,7 +1323,7 @@ dc1394_avt_get_gpdata_info(dc1394camera_t *camera, uint32_t *BufferSize)
   dc1394error_t err;
   uint32_t value;
   /* Retrieve info on the general purpose buffer */
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_GPDATA_INFO, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_GPDATA_INFO, &value);
   DC1394_ERR_RTN(err,"Could not get AVT GP data info");
   
   /* BufferSize : Bits 16..31 */
@@ -1395,7 +1395,7 @@ dc1394_avt_read_gpdata(dc1394camera_t *camera, unsigned char *buf, uint32_t size
     gpdata_io_common(buf_local, gpdata_numquads, &nextIndex, index, size, &newBufferSize, &nQuadReadSize, &finish);
 
     /* read block */
-    err = GetCameraAdvControlRegisters(camera, REG_CAMERA_AVT_GPDATA_BUFFER,
+    err = dc1394_get_adv_control_registers(camera, REG_CAMERA_AVT_GPDATA_BUFFER,
 		     buf_local, nQuadReadSize);
     if (err != DC1394_SUCCESS) {
   	  free(buf_local);
@@ -1451,7 +1451,7 @@ dc1394_avt_write_gpdata(dc1394camera_t *camera, unsigned char *buf, uint32_t siz
       memcpy(&buf_local[i], buf + index + (i * 4), sizeof(uint32_t));
 
     /* write block */
-    err = SetCameraAdvControlRegisters(camera, REG_CAMERA_AVT_GPDATA_BUFFER,
+    err = dc1394_set_adv_control_registers(camera, REG_CAMERA_AVT_GPDATA_BUFFER,
                                        buf_local, nQuadWriteSize);
     if (err != DC1394_SUCCESS) {
       free(buf_local);
@@ -1538,7 +1538,7 @@ dc1394error_t dc1394_avt_get_channel_adjust(dc1394camera_t *camera, int16_t *cha
   uint32_t value;
 
   /* Retrieve current channel adjust */    
-  err=GetCameraAdvControlRegister(camera,REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE, &value);
+  err=dc1394_get_adv_control_register(camera,REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE, &value);
   DC1394_ERR_RTN(err,"Could not get AVT channel adjust");
  
   /* channel adjust: Bits 16..31 */
@@ -1555,7 +1555,7 @@ dc1394error_t dc1394_avt_set_channel_adjust(dc1394camera_t *camera, int16_t chan
   dc1394error_t err;
    
   /* Set new channel adjust */
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE, (uint32_t)channel_adjust);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_CHANNEL_ADJUST_VALUE, (uint32_t)channel_adjust);
   DC1394_ERR_RTN(err,"Could not set AVT channel adjust");
 
   return DC1394_SUCCESS;
@@ -1571,7 +1571,7 @@ dc1394error_t dc1394_avt_set_color_corr(dc1394camera_t *camera, dc1394bool_t on_
   uint32_t curval;
     
   //retrieve color correction
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR, &curval);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT color correction");
   
   //ON / OFF : Bit 6
@@ -1581,39 +1581,39 @@ dc1394error_t dc1394_avt_set_color_corr(dc1394camera_t *camera, dc1394bool_t on_
   curval = (curval & 0xFEFFFFFFUL) | ((reset) << 24); 
 
   //set new parameters
-  err=SetCameraAdvControlRegister(camera,REG_CAMERA_AVT_COLOR_CORR, curval);
+  err=dc1394_set_adv_control_register(camera,REG_CAMERA_AVT_COLOR_CORR, curval);
   DC1394_ERR_RTN(err,"Could not set AVT color correction");
 
   if (!reset)
   {
 	  //red channel coefficients
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRR, Crr);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CRR, Crr);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Crr");
 
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGR, Cgr);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CGR, Cgr);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cgr");
 
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBR, Cbr);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CBR, Cbr);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cbr");
 	  
 	  //green channel coefficients
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRG, Crg);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CRG, Crg);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Crg");
 
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGG, Cgg);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CGG, Cgg);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cgg");
 
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBG, Cbg);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CBG, Cbg);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cbg");
 	  
 	  //blue channel coefficients
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRB, Crb);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CRB, Crb);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Crb");
 
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGB, Cgb);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CGB, Cgb);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cgb");
 
-	  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBB, Cbb);
+	  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CBB, Cbb);
 	  DC1394_ERR_RTN(err,"Could not set AVT color correction coefficient Cbb");
   }
   
@@ -1631,40 +1631,40 @@ dc1394error_t dc1394_avt_get_color_corr(dc1394camera_t *camera, dc1394bool_t *on
   uint32_t value;
     
   //retrieve color correction
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR, &value);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR, &value);
   DC1394_ERR_RTN(err,"Could not get AVT color correction");
   
   //ON / OFF : Bit 6
   *on_off = (uint32_t)((value & 0x2000000UL) >> 25); 
 
   //red channel coefficients
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRR, (uint32_t *)Crr);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CRR, (uint32_t *)Crr);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Crr");
 
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGR, (uint32_t *)Cgr);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CGR, (uint32_t *)Cgr);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cgr");
 
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBR, (uint32_t *)Cbr);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CBR, (uint32_t *)Cbr);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cbr");
   
   //green channel coefficients
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRG, (uint32_t *)Crg);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CRG, (uint32_t *)Crg);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Crg");
 
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGG, (uint32_t *)Cgg);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CGG, (uint32_t *)Cgg);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cgg");
 
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBG, (uint32_t *)Cbg);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CBG, (uint32_t *)Cbg);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cbg");
   
   //blue channel coefficients
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CRB, (uint32_t *)Crb);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CRB, (uint32_t *)Crb);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Crb");
 
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CGB, (uint32_t *)Cgb);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CGB, (uint32_t *)Cgb);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cgb");
 
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_COLOR_CORR_CBB, (uint32_t *)Cbb);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_COLOR_CORR_CBB, (uint32_t *)Cbb);
   DC1394_ERR_RTN(err,"Could not get AVT color correction coefficient Cbb");
   
   return DC1394_SUCCESS;  
@@ -1680,7 +1680,7 @@ dc1394error_t dc1394_avt_get_hsnr(dc1394camera_t *camera, dc1394bool_t *on_off, 
   uint32_t value;
     
   /* Retrieve HSNRR */    
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_HSNRR, &value);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_HSNRR, &value);
   DC1394_ERR_RTN(err,"Could not get AVT HSNRR");
   
   /*ON / OFF : Bit 6 */
@@ -1703,7 +1703,7 @@ dc1394error_t dc1394_avt_set_hsnr(dc1394camera_t *camera, dc1394bool_t on_off, u
   uint32_t curval;
   
   /* Retrieve HSNR */       
-  err=GetCameraAdvControlRegister(camera, REG_CAMERA_AVT_HSNRR, &curval);
+  err=dc1394_get_adv_control_register(camera, REG_CAMERA_AVT_HSNRR, &curval);
   DC1394_ERR_RTN(err,"Could not get AVT HSNRR");
   
   /*ON / OFF : Bit 6 */
@@ -1713,7 +1713,7 @@ dc1394error_t dc1394_avt_set_hsnr(dc1394camera_t *camera, dc1394bool_t on_off, u
   curval = (curval & 0xFFFFFE00UL) | grabCount;   
   
   /* Set new parameters */     
-  err=SetCameraAdvControlRegister(camera, REG_CAMERA_AVT_HSNRR, curval);
+  err=dc1394_set_adv_control_register(camera, REG_CAMERA_AVT_HSNRR, curval);
   DC1394_ERR_RTN(err,"Could not set AVT HSNRR");
   
   return DC1394_SUCCESS;

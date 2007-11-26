@@ -19,6 +19,7 @@
 #include <dc1394/control.h>
 #include <stdlib.h>
 #include <time.h>
+#include <inttypes.h>
 
 #ifdef _WIN32
 #define times 0**(int*)
@@ -30,8 +31,7 @@ struct tms {int a;};
 int main(int argc, char *argv[]) 
 {
   FILE* imagefile;
-  dc1394camera_t *camera, **cameras=NULL;
-  uint32_t numCameras;
+  dc1394camera_t *camera;
   int grab_n_frames = 10;
   struct tms tms_buf;
   clock_t start_time;
@@ -39,35 +39,34 @@ int main(int argc, char *argv[])
   int i;
   unsigned int min_bytes, max_bytes;
   unsigned int actual_bytes;
-  unsigned long long int total_bytes = 0;
+  uint64_t total_bytes = 0;
   unsigned int width, height;
   dc1394video_frame_t *frame=NULL;
+  dc1394_t * d;
+  dc1394camera_list_t * list;
+  int err;
 
-  int err=dc1394_find_cameras(&cameras, &numCameras);
-
-  if (err!=DC1394_SUCCESS && err != DC1394_NO_CAMERA) {
-    fprintf( stderr, "Unable to look for cameras\n\n"
-             "On Linux, please check \n"
-	     "  - if the kernel modules `ieee1394',`raw1394' and `ohci1394' are loaded \n"
-	     "  - if you have read/write access to /dev/raw1394\n\n");
-    exit(1);
+  d = dc1394_new ();
+  if (dc1394_enumerate_cameras (d, &list) != DC1394_SUCCESS) {
+    fprintf (stderr, "Failed to enumerate cameras\n");
+    return 1;
   }
 
-  /*-----------------------------------------------------------------------
-   *  get the camera nodes and describe them as we find them
-   *-----------------------------------------------------------------------*/
-  if (numCameras<1) {
-    fprintf(stderr, "no cameras found :(\n");
-    exit(1);
+  if (list->num == 0) {
+    fprintf (stderr, "No cameras found\n");
+    return 1;
   }
-  camera=cameras[0];
-  printf("working with the first camera on the bus\n");
   
-  // free the other cameras
-  for (i=1;i<numCameras;i++)
-    dc1394_free_camera(cameras[i]);
-  free(cameras);
-  
+  camera = dc1394_camera_new (d, list->ids[0].guid);
+  if (!camera) {
+    fprintf (stderr, "Failed to initialize camera with guid %"PRIx64"\n",
+        list->ids[0].guid);
+    return 1;
+  }
+  dc1394_free_camera_list (list);
+
+  printf("Using camera with GUID %"PRIx64"\n", camera->guid);
+
   //fprintf(stderr,"handle: 0x%x, node: 0x%x\n",camera->handle,camera->node);
 
   /*-----------------------------------------------------------------------
@@ -78,7 +77,7 @@ int main(int argc, char *argv[])
 
   dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
   dc1394_video_set_mode(camera, DC1394_VIDEO_MODE_FORMAT7_0);
-  dc1394_format7_set_roi(camera, DC1394_VIDEO_MODE_FORMAT7_0,
+  err = dc1394_format7_set_roi(camera, DC1394_VIDEO_MODE_FORMAT7_0,
 			 DC1394_COLOR_CODING_MONO8,
 			 DC1394_USE_MAX_AVAIL, // use max packet size
 			 0, 0, // left, top
@@ -86,7 +85,7 @@ int main(int argc, char *argv[])
   DC1394_ERR_RTN(err,"Unable to set Format7 mode 0.\nEdit the example file manually to fit your camera capabilities\n");
 
   err=dc1394_capture_setup(camera, 4, DC1394_CAPTURE_FLAGS_DEFAULT);
-  DC1394_ERR_CLN_RTN(err, dc1394_free_camera(camera), "Error capturing\n");
+  DC1394_ERR_CLN_RTN(err, dc1394_camera_free(camera), "Error capturing\n");
 
   //fprintf(stderr,"handle: 0x%x\n",capture.handle);
 
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
     printf("dc1394_query_format7_total_bytes error\n");
     return DC1394_FAILURE;
   }
-  printf( "camera reports total bytes per frame = %lld bytes\n", total_bytes);
+  printf( "camera reports total bytes per frame = %"PRIx64" bytes\n", total_bytes);
 
   //fprintf(stderr,"handle: 0x%x\n",capture.handle);
   
@@ -133,7 +132,7 @@ int main(int argc, char *argv[])
   if (dc1394_video_set_transmission(camera,DC1394_ON) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to start camera iso transmission\n");
     dc1394_capture_stop(camera);
-    dc1394_free_camera(camera);
+    dc1394_camera_free(camera);
     exit(1);
   }
   //usleep(5000000);
@@ -154,7 +153,7 @@ int main(int argc, char *argv[])
       dc1394_capture_stop(camera);
       //fprintf(stderr,"Error 2\n");
       //fprintf(stderr,"handle: 0x%x\n",capture.handle);
-      dc1394_free_camera(camera);
+      dc1394_camera_free(camera);
       //fprintf(stderr,"Error 3\n");
       exit(1);
     }
@@ -193,6 +192,7 @@ int main(int argc, char *argv[])
    *-----------------------------------------------------------------------*/
   dc1394_capture_stop(camera);
   dc1394_video_set_transmission(camera, DC1394_OFF);
-  dc1394_free_camera(camera);
+  dc1394_camera_free(camera);
+  dc1394_free (d);
   return 0;
 }

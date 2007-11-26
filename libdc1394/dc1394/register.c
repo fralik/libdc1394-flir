@@ -17,6 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <inttypes.h>
 #include "control.h"
 #include "internal.h"
 #include "offsets.h"
@@ -56,80 +57,87 @@
     }
 
 
+dc1394error_t
+dc1394_get_registers (dc1394camera_t *camera, uint64_t offset,
+    uint32_t *value, uint32_t num_regs)
+{
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
+
+  if (camera == NULL)
+    return DC1394_FAILURE;
+
+  return platform_camera_read (cp->pcam, offset, value, num_regs);
+}
+
+dc1394error_t
+dc1394_set_registers (dc1394camera_t *camera, uint64_t offset,
+    uint32_t *value, uint32_t num_regs)
+{
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
+
+  if (camera == NULL)
+    return DC1394_FAILURE;
+
+  return platform_camera_write (cp->pcam, offset, value, num_regs);
+}
+
 
 /********************************************************************************/
 /* Get/Set Command Registers                                                    */
 /********************************************************************************/
 dc1394error_t
-GetCameraControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs)
+dc1394_get_control_registers (dc1394camera_t *camera, uint64_t offset,
+    uint32_t *value, uint32_t num_regs)
 {
-  int retval;
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
 
   if (camera == NULL)
     return DC1394_FAILURE;
-  /*
-  if (camera->command_registers_base == 0) {
-    fprintf(stderr,"this should not happen\n");
-    if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
-      return DC1394_FAILURE;
-  }
-  */
-  //fprintf(stderr,"trying to get 0x%llx",camera->command_registers_base+offset);
-  retval = GetCameraROMValues(camera, camera->command_registers_base+offset, value, num_regs);
 
-  //fprintf(stderr,"retval = %d",retval);
-
-  return retval;
+  return platform_camera_read (cp->pcam,
+      camera->command_registers_base + offset, value, num_regs);
 }
 
 dc1394error_t
-SetCameraControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs)
+dc1394_set_control_registers (dc1394camera_t *camera, uint64_t offset,
+    uint32_t *value, uint32_t num_regs)
 {
-  int retval;
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
 
   if (camera == NULL)
     return DC1394_FAILURE;
-  /*
-  if (camera->command_registers_base == 0) {
-    if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
-      return DC1394_FAILURE;
-  }
-  */
-  //fprintf(stderr,"trying to set 0x%llx\n",camera->command_registers_base+offset);
-  retval= SetCameraROMValues(camera, camera->command_registers_base+offset, value, num_regs);
 
-  return retval;
+  return platform_camera_write (cp->pcam,
+      camera->command_registers_base + offset, value, num_regs);
 }
 
 /********************************************************************************/
 /* Get/Set Advanced Features Registers                                          */
 /********************************************************************************/
 dc1394error_t
-GetCameraAdvControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs)
+dc1394_get_adv_control_registers (dc1394camera_t *camera, uint64_t offset,
+    uint32_t *value, uint32_t num_regs)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
+
   if (camera == NULL)
     return DC1394_FAILURE;
-  /*
-  if (camera->advanced_features_csr == 0) {
-    if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
-      return DC1394_FAILURE;
-  }
-  */
-  return GetCameraROMValues(camera, camera->advanced_features_csr+offset, value, num_regs);
+
+  return platform_camera_read (cp->pcam,
+      camera->advanced_features_csr + offset, value, num_regs);
 }
 
 dc1394error_t
-SetCameraAdvControlRegisters(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs)
+dc1394_set_adv_control_registers (dc1394camera_t *camera, uint64_t offset,
+    uint32_t *value, uint32_t num_regs)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
+
   if (camera == NULL)
     return DC1394_FAILURE;
-  /*
-  if (camera->advanced_features_csr == 0) {
-    if (dc1394_get_camera_info(camera) != DC1394_SUCCESS)
-      return DC1394_FAILURE;
-  }
-  */
-  return SetCameraROMValues(camera, camera->advanced_features_csr+offset, value, num_regs);
+
+  return platform_camera_write (cp->pcam,
+      camera->advanced_features_csr + offset, value, num_regs);
 }
 
 /********************************************************************************/
@@ -149,9 +157,7 @@ QueryFormat7CSROffset(dc1394camera_t *camera, dc1394video_mode_t mode, uint64_t 
   if (!dc1394_is_video_mode_scalable(mode))
     return DC1394_FAILURE;
   
-  retval=GetCameraControlRegister(camera, REG_CAMERA_V_CSR_INQ_BASE + ((mode - DC1394_VIDEO_MODE_FORMAT7_MIN) * 0x04U), &temp);
-  //fprintf(stderr,"got register 0x%llx : 0x%x, err=%d\n",
-  //	  CONFIG_ROM_BASE + REG_CAMERA_V_CSR_INQ_BASE + ((mode - MODE_FORMAT7_MIN) * 0x04U),temp,retval);
+  retval=dc1394_get_control_register(camera, REG_CAMERA_V_CSR_INQ_BASE + ((mode - DC1394_VIDEO_MODE_FORMAT7_MIN) * 0x04U), &temp);
   *offset=temp*4;
   return retval;
 }
@@ -159,6 +165,7 @@ QueryFormat7CSROffset(dc1394camera_t *camera, dc1394video_mode_t mode, uint64_t 
 dc1394error_t
 GetCameraFormat7Register(dc1394camera_t *camera, dc1394video_mode_t mode, uint64_t offset, uint32_t *value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   if (camera == NULL) {
     return DC1394_FAILURE;
   }
@@ -167,23 +174,19 @@ GetCameraFormat7Register(dc1394camera_t *camera, dc1394video_mode_t mode, uint64
     return DC1394_FAILURE;
 
   if (camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]==0) {
-    //fprintf(stderr,"getting offset for mode %d: ",mode);
     if (QueryFormat7CSROffset(camera, mode, &camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]) != DC1394_SUCCESS) {
-      //fprintf(stderr,"Error getting F7 CSR offset\n");
       return DC1394_FAILURE;
     }
-      
-    //fprintf(stderr,"0x%llx\n",camera->format7_csr[mode-MODE_FORMAT7_MIN]);
   }
 
-  return GetCameraROMValue(camera, camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset, value);
-
-  //fprintf(stderr,"got register 0x%llx : 0x%x, err=%d\n",CONFIG_ROM_BASE + camera->format7_csr[mode-MODE_FORMAT7_MIN]+offset, *value,retval);
+  return platform_camera_read_quad(cp->pcam,
+      camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset, value);
 }
 
 dc1394error_t
 SetCameraFormat7Register(dc1394camera_t *camera, dc1394video_mode_t mode, uint64_t offset, uint32_t value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   if (camera == NULL) {
     return DC1394_FAILURE;
   }
@@ -196,7 +199,8 @@ SetCameraFormat7Register(dc1394camera_t *camera, dc1394video_mode_t mode, uint64
   }
 
   //fprintf(stderr,"trying to set F7 0x%llx\n",camera->format7_csr[mode-MODE_FORMAT7_MIN]+offset);
-  return SetCameraROMValue(camera, camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset, value);
+  return platform_camera_write_quad(cp->pcam,
+      camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset, value);
 }
 
 /********************************************************************************/
@@ -215,7 +219,7 @@ QueryAbsoluteCSROffset(dc1394camera_t *camera, dc1394feature_t feature, uint64_t
 
   FEATURE_TO_ABS_VALUE_OFFSET(feature, absoffset);
   
-  retval=GetCameraControlRegister(camera, absoffset, &quadlet);
+  retval=dc1394_get_control_register(camera, absoffset, &quadlet);
   
   *offset=quadlet * 0x04;
 
@@ -226,6 +230,7 @@ QueryAbsoluteCSROffset(dc1394camera_t *camera, dc1394feature_t feature, uint64_t
 dc1394error_t
 GetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, uint64_t offset, uint32_t *value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   uint64_t absoffset;
 
   if (camera == NULL) {
@@ -234,13 +239,14 @@ GetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, uint6
 
   QueryAbsoluteCSROffset(camera, feature, &absoffset);
 
-  return GetCameraROMValue(camera, absoffset+offset, value);
+  return platform_camera_read_quad(cp->pcam, absoffset+offset, value);
 
 }
 
 dc1394error_t
 SetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, uint64_t offset, uint32_t value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   uint64_t absoffset;
 
   if (camera == NULL) {
@@ -249,8 +255,7 @@ SetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, uint6
 
   QueryAbsoluteCSROffset(camera, feature, &absoffset);
 
-  return SetCameraROMValue(camera, absoffset+offset, value);
-
+  return platform_camera_write_quad(cp->pcam, absoffset+offset, value);
 }
 
 /********************************************************************************/
@@ -259,19 +264,23 @@ SetCameraAbsoluteRegister(dc1394camera_t *camera, dc1394feature_t feature, uint6
 dc1394error_t
 GetCameraPIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   if (camera == NULL)
     return DC1394_FAILURE;
 
-  return GetCameraROMValue(camera, camera->PIO_control_csr+offset, value);
+  return platform_camera_read_quad(cp->pcam, camera->PIO_control_csr+offset,
+      value);
 }
 
 dc1394error_t
 SetCameraPIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   if (camera == NULL)
     return DC1394_FAILURE;
 
-  return SetCameraROMValue(camera, camera->PIO_control_csr+offset, value);
+  return platform_camera_write_quad(cp->pcam, camera->PIO_control_csr+offset,
+      value);
 }
 
 /********************************************************************************/
@@ -280,19 +289,22 @@ SetCameraPIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t va
 dc1394error_t
 GetCameraSIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   if (camera == NULL)
     return DC1394_FAILURE;
 
-  return GetCameraROMValue(camera, camera->SIO_control_csr+offset, value);
+  return platform_camera_read_quad(cp->pcam, camera->SIO_control_csr+offset,
+      value);
 }
 
 dc1394error_t
 SetCameraSIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   if (camera == NULL)
     return DC1394_FAILURE;
 
-  return SetCameraROMValue(camera, camera->SIO_control_csr+offset, value);
+  return platform_camera_write_quad(cp->pcam, camera->SIO_control_csr+offset, value);
 }
 
 /********************************************************************************/
@@ -301,147 +313,20 @@ SetCameraSIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t va
 dc1394error_t
 GetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   if (camera == NULL)
     return DC1394_FAILURE;
 
-  return GetCameraROMValue(camera, camera->strobe_control_csr+offset, value);
+  return platform_camera_read_quad(cp->pcam, camera->strobe_control_csr+offset, value);
 }
 
 dc1394error_t
 SetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
+  dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
   if (camera == NULL)
     return DC1394_FAILURE;
 
-  return SetCameraROMValue(camera, camera->strobe_control_csr+offset, value);
-}
-
-/********************************************************************************/
-/* Find a register with a specific tag                                          */
-/********************************************************************************/
-
-#ifdef DC1394_DEBUG_TAGGED_REGISTER_ACCESS
-
-// Don Murray's debug version
-int
-GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint16_t instance_number, uint64_t *offset, uint32_t *value)
-{
-  unsigned int block_length;
-  int i;
-  // get the block length
-  fprintf(stderr,"Getting register tag 0x%x starting at offset 0x%llx\n",tag,*offset);
-  if (GetCameraROMValue(camera, *offset, value)!=DC1394_SUCCESS) {
-    fprintf(stderr,"Failed to get the block length\n" );
-    return DC1394_FAILURE;
-  }
-  block_length=*value>>16;
-  fprintf(stderr,"The block length is %d quadlets\n",block_length);
-  if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
-    block_length=(CSR_CONFIG_ROM_END-*offset)/4;   }
-  
-  // find the tag and return the result
-  for (i=0;i<block_length;i++) {
-    *offset+=4;
-    if (GetCameraROMValue(camera,*offset,value)!=DC1394_SUCCESS) {
-      fprintf(stderr,"GetCameraROMValue() failed\n" );
-      return DC1394_FAILURE;
-    }
-    if ((*value>>24)==tag) {
-      fprintf(stderr,"found tag 0x%x, waiting for next instance\n", tag );
-      if (instance_number == 0) {
-	fprintf(stderr,"found tag 0x%x!!\n", tag );
-	return DC1394_SUCCESS;
-      }
-      instance_number--;
-    }
-    else {
-      fprintf(stderr,"found tag 0x%x (value 0x%x) - continue \n",
-	      *value>>24,
-	      *value & 0xFFFFFF);
-    }
-  }
-  
-  fprintf(stderr,"Tag not found :-(\n");
-  return DC1394_TAGGED_REGISTER_NOT_FOUND;
-}
-
-
-#else
-
-dc1394error_t
-GetConfigROMTaggedRegister(dc1394camera_t *camera, unsigned int tag, uint16_t instance_number, uint64_t *offset, uint32_t *value)
-{
-  unsigned int block_length;
-  int i;
-  
-  // This function returns the InstanceNumber instance of a tagged
-  //  register in a directory.  The first instance of a tag is 
-  //  instance_number = 0.
-  
-  // get the block length
-  //  fprintf(stderr,"Getting block size...\n",tag,*offset);
-  if (GetCameraROMValue(camera, *offset, value)!=DC1394_SUCCESS) {
-    return DC1394_FAILURE;
-  }
-  
-  block_length=*value>>16;
-  //fprintf(stderr,"  block length = %d\n",block_length);
-  if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
-    block_length=(CSR_CONFIG_ROM_END-*offset)/4;
-  }
-
-  // find the tag and return the result
-  for (i=0;i<block_length;i++) {
-    *offset+=4;
-    if (GetCameraROMValue(camera,*offset,value)!=DC1394_SUCCESS) {
-      return DC1394_FAILURE;
-    }
-    if ((*value>>24)==tag) {
-      if (instance_number == 0)
-	return DC1394_SUCCESS;
-      instance_number--;
-    }
-  }
-
-  return DC1394_TAGGED_REGISTER_NOT_FOUND;
-}
-
-#endif
-
-dc1394error_t
-GetConfigROMTaggedRegisterCount(dc1394camera_t *camera, unsigned int tag, uint64_t *offset, uint32_t *count)
-{
-  unsigned int block_length;
-  int i;
-  uint32_t value;
-
-  // This function returns the number of directory entries
-  //  with the matching tag
-  
-  // get the block length
-  //fprintf(stderr,"GetConfigROMTaggedRegisterCount enter...\n");
-  if (GetCameraROMValue(camera, *offset, &value)!=DC1394_SUCCESS) {
-    return DC1394_FAILURE;
-  }
-  
-  block_length=value>>16;
-  //fprintf(stderr,"  block length = %d\n",block_length);
-  if (*offset+block_length*4>CSR_CONFIG_ROM_END) {
-    block_length=(CSR_CONFIG_ROM_END-*offset)/4;
-  }
-
-  // count the matching tags and return the result
-  count = 0;
-  for (i=0;i<block_length;i++) {
-    *offset+=4;
-    if (GetCameraROMValue(camera,*offset,&value)!=DC1394_SUCCESS) {
-      return DC1394_FAILURE;
-    }
-    if ((value>>24)==tag) {
-      count++;
-    }
-  }
-
-  return DC1394_SUCCESS;
+  return platform_camera_write_quad(cp->pcam, camera->strobe_control_csr+offset, value);
 }
 

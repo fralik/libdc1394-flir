@@ -1,3 +1,15 @@
+2007-11-26 David Moore  <dcm@acm.org>
+	* SVN 447: Massive update of the platform specific API to support
+		   the new enumeration API.  The new platform API is defined
+		   in platform.h and is private to libdc1394.  Enumeration
+		   functionality has split off into enumeration.c.  Some
+		   naming inconsistencies of public functions have also been
+		   addressed -- mostly functions in register.h.
+		   dc1394_find_cameras() is now officially gone.  The examples
+		   have been updated to reflect the new method of camera
+		   enumeration.  Platform code for Linux, Juju, and Mac OS X
+		   has been updated for the new enumeration API.
+
 2007-11-14 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 446: Add the unit argument to the call to dc1394_new_camera
 	           in juju/control.c. The argument is hardcoded to zero, so
