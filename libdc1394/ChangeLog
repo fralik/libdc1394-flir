@@ -1,4 +1,6 @@
 2007-11-27 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 451: Rename register access functions to dc1394_*.
+	           Move the camera detection API earlier in control.h
         * SVN 450: Fix missing Basler error strings in internal.c
 
 2007-11-26 David Moore  <dcm@acm.org>

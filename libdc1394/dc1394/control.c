@@ -1870,9 +1870,9 @@ dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, dc1394feature_t f
     return DC1394_INVALID_FEATURE;
   }
 
-  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MAX, (uint32_t*)max);
+  err=dc1394_get_absolute_register(camera, feature, REG_CAMERA_ABS_MAX, (uint32_t*)max);
   DC1394_ERR_RTN(err,"Could not get maximal absolute value");
-  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_MIN, (uint32_t*)min);
+  err=dc1394_get_absolute_register(camera, feature, REG_CAMERA_ABS_MIN, (uint32_t*)min);
   DC1394_ERR_RTN(err,"Could not get minimal absolute value");
 
   return err;
@@ -1887,7 +1887,7 @@ dc1394_feature_get_absolute_value(dc1394camera_t *camera, dc1394feature_t featur
   if ( (feature > DC1394_FEATURE_MAX) || (feature < DC1394_FEATURE_MIN) ) {
     return DC1394_INVALID_FEATURE;
   }
-  err=GetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, (uint32_t*)value);
+  err=dc1394_get_absolute_register(camera, feature, REG_CAMERA_ABS_VALUE, (uint32_t*)value);
   DC1394_ERR_RTN(err,"Could not get current absolute value");
 
   return err;
@@ -1906,7 +1906,7 @@ dc1394_feature_set_absolute_value(dc1394camera_t *camera, dc1394feature_t featur
     return DC1394_INVALID_FEATURE;
   }
 
-  SetCameraAbsoluteRegister(camera, feature, REG_CAMERA_ABS_VALUE, tempq);
+  dc1394_set_absolute_register(camera, feature, REG_CAMERA_ABS_VALUE, tempq);
   DC1394_ERR_RTN(err,"Could not get current absolute value");
 
   return err;
@@ -1918,7 +1918,7 @@ dc1394_pio_set(dc1394camera_t *camera, uint32_t value)
 {
   dc1394error_t err=DC1394_SUCCESS;
 
-  err=SetCameraPIOControlRegister(camera, REG_CAMERA_PIO_OUT, value);
+  err=dc1394_set_PIO_register(camera, REG_CAMERA_PIO_OUT, value);
   DC1394_ERR_RTN(err,"Could not set PIO value");
 
   return err;
@@ -1930,7 +1930,7 @@ dc1394_pio_get(dc1394camera_t *camera, uint32_t *value)
 {
   dc1394error_t err=DC1394_SUCCESS;
 
-  err=GetCameraPIOControlRegister(camera, REG_CAMERA_PIO_IN, value);
+  err=dc1394_get_PIO_register(camera, REG_CAMERA_PIO_IN, value);
   DC1394_ERR_RTN(err,"Could not get PIO value");
 
   return err;

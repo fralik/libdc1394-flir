@@ -98,57 +98,56 @@ dc1394_set_adv_control_register(dc1394camera_t *camera, uint64_t offset, uint32_
 {
   return dc1394_set_adv_control_registers(camera, offset, &value, 1);
 }
+
+
 /********************************************************************************/
 /* Get/Set Format_7 Registers                                                   */
 /********************************************************************************/
 dc1394error_t
-GetCameraFormat7Register(dc1394camera_t *camera, unsigned int mode, uint64_t offset, uint32_t *value);
+dc1394_get_format7_register(dc1394camera_t *camera, unsigned int mode, uint64_t offset, uint32_t *value);
 
 dc1394error_t
-SetCameraFormat7Register(dc1394camera_t *camera, unsigned int mode, uint64_t offset, uint32_t value);
-
-dc1394error_t
-QueryFormat7CSROffset(dc1394camera_t *camera, unsigned int mode, uint64_t *offset);
+dc1394_set_format7_register(dc1394camera_t *camera, unsigned int mode, uint64_t offset, uint32_t value);
 
 
 /********************************************************************************/
 /* Get/Set Absolute Control Registers                                           */
 /********************************************************************************/
 dc1394error_t
-GetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, uint64_t offset, uint32_t *value);
+dc1394_get_absolute_register(dc1394camera_t *camera, unsigned int feature, uint64_t offset, uint32_t *value);
 
 dc1394error_t
-SetCameraAbsoluteRegister(dc1394camera_t *camera, unsigned int feature, uint64_t offset, uint32_t value);
+dc1394_set_absolute_register(dc1394camera_t *camera, unsigned int feature, uint64_t offset, uint32_t value);
 
 
 /********************************************************************************/
 /* Get/Set PIO Feature Registers                                                */
 /********************************************************************************/
 dc1394error_t
-GetCameraPIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value);
+dc1394_get_PIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t *value);
 
 dc1394error_t
-SetCameraPIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value);
+dc1394_set_PIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t value);
 
 
 /********************************************************************************/
 /* Get/Set SIO Feature Registers                                                */
 /********************************************************************************/
 dc1394error_t
-GetCameraSIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value);
+dc1394_get_SIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t *value);
 
 dc1394error_t
-SetCameraSIOControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value);
+dc1394_set_SIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t value);
 
 
 /********************************************************************************/
-/* Get/Set Strobe Feature Registers                                                */
+/* Get/Set Strobe Feature Registers                                             */
 /********************************************************************************/
 dc1394error_t
-GetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t *value);
+dc1394_get_strobe_register(dc1394camera_t *camera, uint64_t offset, uint32_t *value);
 
 dc1394error_t
-SetCameraStrobeControlRegister(dc1394camera_t *camera, uint64_t offset, uint32_t value);
+dc1394_set_strobe_register(dc1394camera_t *camera, uint64_t offset, uint32_t value);
 
 
 #ifdef __cplusplus
