@@ -1,3 +1,6 @@
+2007-11-27  David Moore  <dcm@acm.org>
+	* SVN 453: Reinstate the "unit_directory" field of dc1394camera_t
+
 2007-11-27 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 452: Initialize dc1394_camera_t.flags to zero when a new
 	           camera is created.

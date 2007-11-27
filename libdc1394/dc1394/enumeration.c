@@ -59,6 +59,7 @@ identify_unit (dc1394_t * d, platform_device_t * dev, uint64_t guid,
     info.unit = unit_num;
     info.device = dev;
     info.vendor_id = vendor_id;
+    info.unit_directory = offset;
 
     uint32_t * dquads = quads + offset + 1;
     int i;
@@ -122,6 +123,7 @@ identify_unit (dc1394_t * d, platform_device_t * dev, uint64_t guid,
                     quads, num_quads);
     }
 done:
+    info.unit_directory = info.unit_directory * 4 + 0x400;
     info.unit_dependent_directory = info.unit_dependent_directory * 4 + 0x400;
     return add_camera (d, &info);
 }

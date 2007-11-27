@@ -35,6 +35,7 @@ typedef struct _dc1394camera_priv_t {
 typedef struct _camera_info_t {
     uint64_t guid;
     int unit;
+    uint32_t unit_directory;
     uint32_t unit_dependent_directory;
     uint32_t unit_spec_ID;
     uint32_t unit_sw_version;

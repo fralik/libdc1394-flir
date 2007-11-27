@@ -425,6 +425,7 @@ typedef struct __dc1394_camera
   uint32_t             unit_sw_version;
   uint32_t             unit_sub_sw_version;
   uint32_t             command_registers_base;
+  uint32_t             unit_directory;
   uint32_t             unit_dependent_directory;
   uint64_t             advanced_features_csr;
   uint64_t             PIO_control_csr;

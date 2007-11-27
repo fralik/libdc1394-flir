@@ -130,6 +130,8 @@ dc1394_print_camera_info(dc1394camera_t *camera)
           camera->unit_sw_version);
   printf ("IIDC version code                 :     %d\n",
           camera->iidc_version);
+  printf ("Unit directory offset             :     0x%x\n",
+          camera->unit_directory);
   printf ("Unit dependent directory offset   :     0x%x\n",
           camera->unit_dependent_directory);
   printf ("Commands registers base           :     0x%x\n",
@@ -2065,6 +2067,7 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
   camera->unit_spec_ID = info->unit_spec_ID;
   camera->unit_sw_version = info->unit_sw_version;
   camera->unit_sub_sw_version = unit_sub_sw_version;
+  camera->unit_directory = info->unit_directory;
   camera->unit_dependent_directory = info->unit_dependent_directory;
   camera->command_registers_base = command_regs_base * 4;
   camera->vendor_id = info->vendor_id;
