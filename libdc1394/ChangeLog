@@ -1,3 +1,6 @@
+2007-11-27 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 450: Fix missing Basler error strings in internal.c
+
 2007-11-26 David Moore  <dcm@acm.org>
 	* SVN 449: Fix dc1394_multiview and dc1394_vloopback for new API
 	* SVN 448: Update svn:ignore
