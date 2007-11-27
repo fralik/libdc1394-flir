@@ -1,4 +1,6 @@
 2007-11-27 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 452: Initialize dc1394_camera_t.flags to zero when a new
+	           camera is created.
         * SVN 451: Rename register access functions to dc1394_*.
 	           Move the camera detection API earlier in control.h
         * SVN 450: Fix missing Basler error strings in internal.c

@@ -2069,6 +2069,7 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
   camera->command_registers_base = command_regs_base * 4;
   camera->vendor_id = info->vendor_id;
   camera->model_id = info->model_id;
+  camera->flags=0;
 
   camera->vendor = get_leaf_string (pcam, vendor_name_offset);
   camera->model = get_leaf_string (pcam, model_name_offset);
