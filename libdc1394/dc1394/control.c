@@ -109,6 +109,39 @@ update_camera_info (dc1394camera_t *camera)
         camera->strobe_control_csr = (uint64_t) quadval * 4;
   }
 
+  // verify that the iso speed, the video mode and the framerates are OK
+  // at boot time
+
+  /* get the current ISO speed, and verify it*/
+  dc1394error_t err;
+  err=dc1394_video_get_iso_speed(camera, &camera->iso_speed);
+  if (err==DC1394_INVALID_ISO_SPEED) {
+    // default to the most probable speed: 400 Mbps
+    dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+  }
+
+  /* get the current video mode, and verify it*/
+  dc1394video_modes_t modes;
+  dc1394video_mode_t video_mode;
+  err=dc1394_video_get_mode(camera, &video_mode);
+  if (err==DC1394_INVALID_VIDEO_FORMAT) {
+    // a proper video mode may not be present. Try to set a default video mode
+    dc1394_video_get_supported_modes(camera,&modes);
+
+    dc1394_video_set_mode(camera,modes.modes[0]);
+  }
+
+  /* get the current framerate, and verify it*/
+  dc1394framerate_t framerate;
+  dc1394framerates_t framerates;
+  err=dc1394_video_get_framerate(camera, &framerate);
+  if (err==DC1394_INVALID_FRAMERATE) {
+    // a proper framerate may not be present. Try to set a default framerate
+    dc1394_video_get_supported_framerates(camera,video_mode,&framerates);
+
+    dc1394_video_set_framerate(camera,framerates.framerates[0]);
+  }
+
   return DC1394_SUCCESS;
 }
 

@@ -1,4 +1,6 @@
 2007-11-28 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 455: reinstate the verification code for video mode, format and
+	           iso status
         * SVN 454: - temporarily remove the definition of the broadcast function
 	             in control.h, since it's code has been commented-out in
 		     control.c.
