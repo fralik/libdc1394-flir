@@ -1,4 +1,5 @@
 2007-11-28 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 458: update of the README (Frederic Vernier)
 	* SVN 457: fix color converion in grab_color_image2 (Frederic Vernier)
 	* SVN 456: rename long function name dc1394_memory_is_save_in_operation
 	           to shorter dc1394_memory_busy.

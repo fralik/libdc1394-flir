@@ -12,8 +12,7 @@ communicate with the camera. Libdc1394 also uses the video1394 kernel module
 for the DMA capture of the video flow.
 
 The library is originally designed to work on Linux and was ported to OSX by
-David Moore in 2006. We hope that one day we'll have a version for Windows
-too. 
+David Moore in 2006. A Windows version is in the works too.
 
 2. Copyleft
 
@@ -60,7 +59,7 @@ make install
 Details on getting a source tree from the SVN repository is beyond the scope of
 this small readme but the following command should give you the latest trunk:
 
-svn co https://svn.sourceforge.net/svnroot/libdc1394/trunk/libdc1394/
+svn co https://svn.sourceforge.net/svnroot/libdc1394/trunk/ libdc1394
 
 
 --
