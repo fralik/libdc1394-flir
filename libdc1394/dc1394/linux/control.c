@@ -400,6 +400,7 @@ dc1394_free_iso_channel(dc1394camera_t *camera)
   dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
   platform_camera_t * craw = cpriv->pcam;
   dc1394error_t err;
+  dc1394switch_t is_iso_on;
 #ifdef DEBUG
   fprintf(stderr,"capture: %d ISO: %d\n",camera->capture_is_set,camera->is_iso_on);
 #endif
@@ -408,7 +409,10 @@ dc1394_free_iso_channel(dc1394camera_t *camera)
     return DC1394_FAILURE;
   }
 
-  if (camera->is_iso_on) {
+  err=dc1394_video_get_transmission(camera, &is_iso_on);
+  DC1394_ERR_RTN(err, "Could not get ISO transmission status");
+
+  if (is_iso_on) {
     fprintf (stderr, "Warning: stopping transmission in order to free ISO channel\n");
     err=dc1394_video_set_transmission(camera, DC1394_OFF);
     DC1394_ERR_RTN(err, "Could not stop ISO transmission");
@@ -440,15 +444,20 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
   dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
   platform_camera_t * craw = cpriv->pcam;
   dc1394error_t err;
+  dc1394switch_t is_iso_on;
+
+  err=dc1394_video_get_transmission(camera, &is_iso_on);
+  DC1394_ERR_RTN(err, "Could not get ISO transmission status");
+
 #ifdef DEBUG
-  fprintf(stderr,"capture: %d ISO: %d\n",camera->capture_is_set,camera->is_iso_on);
+  fprintf(stderr,"capture: %d ISO: %d\n",camera->capture_is_set, is_iso_on);
 #endif
   if (camera->capture_is_set) {
     fprintf (stderr, "Error: capturing in progress, cannot free ISO bandwidth\n");
     return DC1394_FAILURE;
   }
 
-  if (camera->is_iso_on) {
+  if (is_iso_on) {
     fprintf (stderr, "Warning: stopping transmission in order to free ISO bandwidth\n");
     err=dc1394_video_set_transmission(camera, DC1394_OFF);
     DC1394_ERR_RTN(err, "Could not stop ISO transmission");

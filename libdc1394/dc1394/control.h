@@ -446,9 +446,6 @@ typedef struct __dc1394_camera
   int                  max_mem_channel;
 
   /* some current values */
-  dc1394video_mode_t   video_mode;
-  dc1394framerate_t    framerate;
-  dc1394switch_t       is_iso_on;
   int                  iso_channel; /* this variable contains the iso channel requests or the current iso channel */
   int                  iso_channel_is_set; /* >0 if the iso_channel above has been allocated within libraw1394 */
   uint32_t             iso_bandwidth;
@@ -693,6 +690,7 @@ void dc1394_camera_free(dc1394camera_t *camera);
 /* print the camera information */
 dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
 
+#if 0
 /* Sets and resets the broadcast flag of a camera. If the broadcast flag is set,
    all devices on the bus will execute the command. Useful to sync ISO start
    commands or setting a bunch of cameras at the same time. Broadcast only works
@@ -700,6 +698,7 @@ dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
    mileage may vary. Some cameras may not answer broadcast commands at all. Also,
    this only works with cameras on the SAME bus (IOW, the same port).*/
 dc1394error_t dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr);
+#endif
 
 /* Resets the IEEE1394 bus which camera is attached to.  Calling this function is
    "rude" to other devices because it causes them to re-enumerate on the bus and

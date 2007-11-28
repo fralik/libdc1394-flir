@@ -1,3 +1,10 @@
+2007-11-28 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 454: - temporarily remove the definition of the broadcast function
+	             in control.h, since it's code has been commented-out in
+		     control.c.
+		   - remove video_mode, framerate and is_iso_on from
+		     dc1394camera_t. 
+	
 2007-11-27  David Moore  <dcm@acm.org>
 	* SVN 453: Reinstate the "unit_directory" field of dc1394camera_t
 

@@ -9,7 +9,7 @@
 **    Get one image using libdc1394 using the DMA interface (viedo1394).
 **    Nothing is done with the image. There's a bunch of comments and
 **    error handling included but the actual useful program consists in
-**    _seven_ lines of code.
+**    a little over ten lines of code.
 **
 **    WARNING: This is a minimalist program that doesn't do everything
 **             you should do, like cleaning up in case of failure. The

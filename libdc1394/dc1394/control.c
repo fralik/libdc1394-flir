@@ -946,19 +946,11 @@ dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr)
     // DC1394_ERR_RTN(err, "Could not allocate ISO channel and bandwidth");
     // then we start ISO
     err=dc1394_set_control_register(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_ON);
-    if (err==DC1394_SUCCESS)
-      camera->is_iso_on=1;
     DC1394_ERR_RTN(err, "Could not start ISO transmission");
   }
   else {
     // first we stop ISO
     err=dc1394_set_control_register(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_OFF);
-    if (err==DC1394_SUCCESS) {
-      camera->is_iso_on=0;
-      // then we free iso bandwidth and iso channels
-      // err=dc1394_free_iso_channel_and_bandwidth(camera);
-      // DC1394_ERR_RTN(err, "Could not free ISO channel and bandwidth");
-    }
     DC1394_ERR_RTN(err, "Could not stop ISO transmission");
   }
 
@@ -2072,7 +2064,6 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
   camera->command_registers_base = command_regs_base * 4;
   camera->vendor_id = info->vendor_id;
   camera->model_id = info->model_id;
-  camera->flags=0;
 
   camera->vendor = get_leaf_string (pcam, vendor_name_offset);
   camera->model = get_leaf_string (pcam, model_name_offset);
@@ -2084,7 +2075,10 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
       camera->iidc_version = DC1394_IIDC_VERSION_1_20;
     else if (info->unit_sw_version == 0x102) {
       camera->iidc_version = DC1394_IIDC_VERSION_1_30;
-      camera->iidc_version += unit_sub_sw_version >> 4;
+      // only add sub_sw_version if it is valid. Otherwise
+      // consider that it's IIDC 1.30 (hence add nothing)
+      if ((unit_sub_sw_version >> 4)<=9)
+	camera->iidc_version += unit_sub_sw_version >> 4;
     }
   }
   else
