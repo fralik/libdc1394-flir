@@ -1,4 +1,6 @@
 2007-11-28 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 466: rename long function name dc1394_memory_is_save_in_operation
+	           to shorter dc1394_memory_busy.
 	* SVN 455: reinstate the verification code for video mode, format and
 	           iso status
         * SVN 454: - temporarily remove the definition of the broadcast function

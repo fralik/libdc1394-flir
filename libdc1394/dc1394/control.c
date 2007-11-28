@@ -1608,7 +1608,7 @@ dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, u
  */
 
 dc1394error_t
-dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value)
+dc1394_memory_busy(dc1394camera_t *camera, dc1394bool_t *value)
 {
   uint32_t quadlet;
   dc1394error_t err= dc1394_get_control_register(camera, REG_CAMERA_MEMORY_SAVE, &quadlet);

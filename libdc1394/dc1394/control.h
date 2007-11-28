@@ -722,7 +722,7 @@ dc1394error_t dc1394_reset_camera(dc1394camera_t *camera);
 dc1394error_t dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr);
 
 /* functions to read and write camera setups in memory channels */
-dc1394error_t dc1394_memory_is_save_in_operation(dc1394camera_t *camera, dc1394bool_t *value);
+dc1394error_t dc1394_memory_busy(dc1394camera_t *camera, dc1394bool_t *value);
 dc1394error_t dc1394_memory_save(dc1394camera_t *camera, uint32_t channel);
 dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint32_t channel);
 
