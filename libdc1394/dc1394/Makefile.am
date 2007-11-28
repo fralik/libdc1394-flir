@@ -10,20 +10,22 @@ libdc1394_la_LDFLAGS = $(platform_LDFLAGS) -version-info @lt_major@:@lt_revision
 libdc1394_la_SOURCES =  \
 	control.c 	\
 	control.h	\
-	enumeration.c \
-	platform.h \
-	capture.c \
+	enumeration.c   \
+	platform.h      \
+	capture.c       \
 	offsets.h	\
-	format7.c        \
-	register.c       \
-	register.h       \
-	utils.c          \
-	utils.h          \
-	internal.c       \
-	internal.h       \
-	conversions.c    \
-	conversions.h    \
-	bayer.c          \
+	format7.c       \
+	register.c      \
+	register.h      \
+	utils.c         \
+	utils.h         \
+	internal.c      \
+	internal.h      \
+	conversions.c   \
+	conversions.h   \
+	bayer.c         \
+	log.c		\
+	log.h		\
 	checksum.c
 
 libdc1394_la_LIBADD = \
@@ -31,9 +33,9 @@ libdc1394_la_LIBADD = \
 	vendor/libdc1394-vendor.la
 
 # headers to be installed
-pkginclude_HEADERS = \
-	control.h \
-	utils.h \
+pkginclude_HEADERS =  \
+	control.h     \
+	utils.h       \
 	conversions.h \
-	register.h \
+	register.h    \
 	checksum.h
