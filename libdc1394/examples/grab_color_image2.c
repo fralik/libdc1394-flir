@@ -307,10 +307,9 @@ int main(int argc, char *argv[])
           &width, &height);
   uint64_t numPixels = height*width;
 
-  uint8_t *rgb_image = (uint8_t *)malloc(3*numPixels);
-
-  dc1394_convert_to_RGB8(frame->image,
-          rgb_image, width, height, DC1394_BYTE_ORDER_YUYV, selected_mode, 16);
+  dc1394video_frame_t *new_frame=calloc(1,sizeof(dc1394video_frame_t));
+  new_frame->color_coding=DC1394_COLOR_CODING_RGB8;
+  dc1394_convert_frames(frame, new_frame);
 
   /*-----------------------------------------------------------------------
    *  save image as 'Image.pgm'
@@ -324,13 +323,15 @@ int main(int argc, char *argv[])
   
     
   fprintf(imagefile,"P6\n%u %u\n255\n", width, height);
-  fwrite((const char *)rgb_image, 1,numPixels*3, imagefile);
+  fwrite((const char *)new_frame->image, 1,numPixels*3, imagefile);
   fclose(imagefile);
   printf("wrote: " IMAGE_FILE_NAME "\n");
 
   /*-----------------------------------------------------------------------
    *  Close camera
    *-----------------------------------------------------------------------*/
+  free(new_frame->image);
+  free(new_frame);
   dc1394_video_set_transmission(camera, DC1394_OFF);
   dc1394_capture_stop(camera);
   dc1394_camera_free(camera);
