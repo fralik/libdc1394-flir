@@ -212,6 +212,9 @@ typedef enum {
   DC1394_OPERATION_MODE_LEGACY = 480,
   DC1394_OPERATION_MODE_1394B
 } dc1394operation_mode_t;
+#define DC1394_OPERATION_MODE_MIN    DC1394_OPERATION_MODE_LEGACY
+#define DC1394_OPERATION_MODE_MAX    DC1394_OPERATION_MODE_1394B
+#define DC1394_OPERATION_MODE_NUM   (DC1394_OPERATION_MODE_MAX - DC1394_OPERATION_MODE_MIN + 1)
 
 /* Format 7 sensor layouts*/
 typedef enum {
@@ -267,9 +270,9 @@ typedef enum {
   DC1394_POWER_CLASS_USES_MAX_6W,
   DC1394_POWER_CLASS_USES_MAX_10W
 } dc1394power_class_t;
-#define DC1394_POWER_CLASS_MIN         DC1394_POWER_CLASS_NONE
-#define DC1394_POWER_CLASS_MAX         DC1394_POWER_CLASS_USES_MAX_10W
-#define DC1394_POWER_CLASS_NUM        (DC1394_POWER_CLASS_MAX - DC1394_POWER_CLASS_MIN + 1)
+#define DC1394_POWER_CLASS_MIN       DC1394_POWER_CLASS_NONE
+#define DC1394_POWER_CLASS_MAX       DC1394_POWER_CLASS_USES_MAX_10W
+#define DC1394_POWER_CLASS_NUM      (DC1394_POWER_CLASS_MAX - DC1394_POWER_CLASS_MIN + 1)
 
 /* Enumeration of PHY delays */
 typedef enum {
@@ -278,12 +281,69 @@ typedef enum {
   DC1394_PHY_DELAY_UNKNOWN_1,
   DC1394_PHY_DELAY_UNKNOWN_2
 } dc1394phy_delay_t;
-#define DC1394_PHY_DELAY_MIN           DC1394_PHY_DELAY_MAX_144_NS
-#define DC1394_PHY_DELAY_MAX           DC1394_PHY_DELAY_UNKNOWN_0
-#define DC1394_PHY_DELAY_NUM          (DC1394_PHY_DELAY_MAX - DC1394_PHY_DELAY_MIN + 1)
+#define DC1394_PHY_DELAY_MIN         DC1394_PHY_DELAY_MAX_144_NS
+#define DC1394_PHY_DELAY_MAX         DC1394_PHY_DELAY_UNKNOWN_0
+#define DC1394_PHY_DELAY_NUM        (DC1394_PHY_DELAY_MAX - DC1394_PHY_DELAY_MIN + 1)
 
-/* Maximum number of characters in vendor and model strings */
-#define MAX_CHARS                      256
+/* The video1394 policy: blocking (wait for a frame forever)
+   or polling (returns if no frames in buffer) */
+typedef enum { 
+  DC1394_CAPTURE_POLICY_WAIT=672,
+  DC1394_CAPTURE_POLICY_POLL
+} dc1394capture_policy_t;
+#define DC1394_CAPTURE_POLICY_MIN    DC1394_CAPTURE_POLICY_WAIT
+#define DC1394_CAPTURE_POLICY_MAX    DC1394_CAPTURE_POLICY_POLL
+#define DC1394_CAPTURE_POLICY_NUM   (DC1394_CAPTURE_POLICY_MAX - DC1394_CAPTURE_POLICY_MIN + 1)
+
+/* External trigger polarity */
+typedef enum {
+  DC1394_TRIGGER_ACTIVE_LOW= 704,
+  DC1394_TRIGGER_ACTIVE_HIGH
+} dc1394trigger_polarity_t;
+#define DC1394_TRIGGER_ACTIVE_MIN    DC1394_TRIGGER_ACTIVE_LOW
+#define DC1394_TRIGGER_ACTIVE_MAX    DC1394_TRIGGER_ACTIVE_HIGH
+#define DC1394_TRIGGER_ACTIVE_NUM   (DC1394_TRIGGER_ACTIVE_MAX - DC1394_TRIGGER_ACTIVE_MIN + 1)
+
+/* Control modes for a feature (excl. absolute control) */
+typedef enum {
+  DC1394_FEATURE_MODE_MANUAL= 736,
+  DC1394_FEATURE_MODE_AUTO,
+  DC1394_FEATURE_MODE_ONE_PUSH_AUTO
+} dc1394feature_mode_t;
+#define DC1394_FEATURE_MODE_MIN      DC1394_FEATURE_MODE_MANUAL
+#define DC1394_FEATURE_MODE_MAX      DC1394_FEATURE_MODE_ONE_PUSH_AUTO
+#define DC1394_FEATURE_MODE_NUM     (DC1394_FEATURE_MODE_MAX - DC1394_FEATURE_MODE_MIN + 1)
+
+/* Types of logging messages */
+typedef enum {
+  DC1394_LOG_ERROR=768,
+  DC1394_LOG_WARNING,
+  DC1394_LOG_DEBUG
+} dc1394log_t;
+#define DC1394_LOG_MIN               DC1394_LOG_ERROR
+#define DC1394_LOG_MAX               DC1394_LOG_DEBUG
+#define DC1394_LOG_NUM              (DC1394_LOG_MAX - DC1394_LOG_MIN + 1)
+
+/* Byte order for YUV formats (may be expanded to RGB in the future) */
+typedef enum {
+  DC1394_BYTE_ORDER_UYVY=800,
+  DC1394_BYTE_ORDER_YUYV
+} dc1394byte_order_t;
+#define DC1394_BYTE_ORDER_MIN        DC1394_BYTE_ORDER_UYVY
+#define DC1394_BYTE_ORDER_MAX        DC1394_BYTE_ORDER_YUYV
+#define DC1394_BYTE_ORDER_NUM       (DC1394_BYTE_ORDER_MAX - DC1394_BYTE_ORDER_MIN + 1)
+
+/* Yet another boolean data type */
+typedef enum {
+  DC1394_FALSE= 0,
+  DC1394_TRUE
+} dc1394bool_t;
+
+/* Yet another boolean data type */
+typedef enum {
+  DC1394_OFF= 0,
+  DC1394_ON
+} dc1394switch_t;
 
 /* Return values for visible functions*/
 typedef enum {
@@ -326,47 +386,20 @@ typedef enum {
 } dc1394error_t;
 #define DC1394_ERROR_NUM DC1394_BASLER_UNKNOWN_SFF_CHUNK+1
 
+/* Capture flags */
+#define DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC   0x00000001U
+#define DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC 0x00000002U
+
+/* a reasonable default value: do alloc of bandwidth and channel */
+#define DC1394_CAPTURE_FLAGS_DEFAULT         0x00000004U
+
+/* Maximum number of characters in vendor and model strings */
+#define MAX_CHARS                      256
+
 /* Parameter flags for dc1394_setup_format7_capture() */
 #define DC1394_QUERY_FROM_CAMERA -1
 #define DC1394_USE_MAX_AVAIL     -2
 #define DC1394_USE_RECOMMENDED   -3
-
-/* The video1394 policy: blocking (wait for a frame forever)
-   or polling (returns if no frames in buffer) */
-typedef enum { 
-  DC1394_CAPTURE_POLICY_WAIT=0,
-  DC1394_CAPTURE_POLICY_POLL
-} dc1394capture_policy_t;
-
-/* Yet another boolean data type */
-typedef enum {
-  DC1394_FALSE= 0,
-  DC1394_TRUE
-} dc1394bool_t;
-
-/* Yet another boolean data type */
-typedef enum {
-  DC1394_OFF= 0,
-  DC1394_ON
-} dc1394switch_t;
-
-typedef enum {
-  DC1394_TRIGGER_ACTIVE_LOW= 0,
-  DC1394_TRIGGER_ACTIVE_HIGH
-} dc1394trigger_polarity_t;
-
-typedef enum {
-  DC1394_FEATURE_MODE_MANUAL= 0,
-  DC1394_FEATURE_MODE_AUTO,
-  DC1394_FEATURE_MODE_ONE_PUSH_AUTO
-} dc1394feature_mode_t;
-
-
-/* Capture flags */
-#define DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC   0x00000001U
-#define DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC 0x00000002U
-/* a reasonable default value: do alloc of bandwidth and channel */
-#define DC1394_CAPTURE_FLAGS_DEFAULT         0x00000004U
 
 /* Camera capture structure. Do not access directly from your application.
    Use dc1394_video_get_buffer and dc1394_video_get_fill_time instead. */
@@ -574,11 +607,6 @@ typedef struct __dc1394_video_frame
 						   * of libdc1394? (this would avoid confusion between 'no allocated
 						   * memory' and 'don't touch this buffer' -> signed int?? */ 
 } dc1394video_frame_t;
-
-enum {
-  DC1394_BYTE_ORDER_UYVY=0,
-  DC1394_BYTE_ORDER_YUYV
-};
 
 /* Feature descriptions */
 extern const char *dc1394_feature_desc[DC1394_FEATURE_NUM];
@@ -912,6 +940,70 @@ dc1394error_t dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera);
 dc1394error_t dc1394_pio_set(dc1394camera_t *camera, uint32_t value);
 dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
 
+
+
+/***************************************************************************
+ * logging facility for libdc1394
+ *
+ * These functions provide the logging of error, warning and debug messages
+ * They allow registering of custom logging functions or the use
+ * of the builtin loggers which redirect the output to stderr.
+ * Three log levels are supported:
+ * error:   Indicates that an error has been detected which mandates
+ *          shutdown of the program as soon as feasible
+ * warning: Indicates that something happened which prevents libdc1394
+ *          from working but which could possibly be resolved by the
+ *          application or the user: plugging in a camera, resetting the
+ *          firewire bus, ....
+ * debug:   A sort of way point for the library. This log level is supposed
+ *          to report that a specific function has been entered or has 
+ *          passed a certain stage. This log level is turned off by default
+ *          and may produce a lot of output during regular operation.
+ *          The main purpose for this log level is for debugging libdc1394
+ *          and for generating meaningful problem reports.
+ ***************************************************************************/
+
+/**
+ * dc1394_log_register_handler: register log handler for reporting error, warning or debug statements
+ * Passing NULL as argument turns off this log level.
+ * @param [in] log_handler: pointer to a function which takes a character string as argument
+ *             type: the type of log
+ */
+void dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message));
+
+/**
+ * dc1394_log_set_default_handler: set the log handler to the default handler
+ * At boot time, debug logging is OFF (handler is NULL). Using this function for the debug statements
+ * will start logging of debug statements usng the default handler.
+ */
+void dc1394_log_set_default_handler(dc1394log_t type);
+
+/**
+ * dc1394_log_error: logs a fatal error condition to the registered facility
+ * This function shall be invoked if a fatal error condition is encountered.
+ * The message passed as argument is delivered to the registered error reporting
+ * function registered before.
+ * @param [in] message: error message to be logged
+ */
+void dc1394_log_error(const char *message);
+
+/**
+ * dc1394_log_warning: logs a nonfatal error condition to the registered facility
+ * This function shall be invoked if a nonfatal error condition is encountered.
+ * The message passed as argument is delivered to the registered warning reporting
+ * function registered before.
+ * @param [in] message: error message to be logged
+ */
+void dc1394_log_warning(const char *message);
+
+/**
+ * dc1394_log_debug: logs a debug statement to the registered facility
+ * This function shall be invoked if a debug statement is to be logged.
+ * The message passed as argument is delivered to the registered debug reporting
+ * function registered before.
+ * @param [in] message: debug statement to be logged
+ */
+void dc1394_log_debug(const char *message);
 
 
 #ifdef __cplusplus

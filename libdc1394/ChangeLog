@@ -1,3 +1,9 @@
+2007-11-29 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 460: - slightly different interface for message logging
+	           - enum types should have mutually exclusive values
+		   - add min/max/num values for several enum types
+		   - merge log.h in control.h
+
 2007-11-28 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 459: added new error API, beta (Rudolf Leitgeb)
 	* SVN 458: update of the README (Frederic Vernier)
@@ -11,8 +17,8 @@
 		     control.c.
 		   - remove video_mode, framerate and is_iso_on from
 		     dc1394camera_t. 
-	
-2007-11-27  David Moore  <dcm@acm.org>
+
+2007-11-27 David Moore  <dcm@acm.org>
 	* SVN 453: Reinstate the "unit_directory" field of dc1394camera_t
 
 2007-11-27 Damien Douxchamps http://damien.douxchamps.net/
