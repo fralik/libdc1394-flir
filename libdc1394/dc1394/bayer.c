@@ -2523,9 +2523,10 @@ dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb,
   case DC1394_BAYER_METHOD_AHD:
     dc1394_bayer_AHD(bayer, rgb, sx, sy, tile);
     return DC1394_SUCCESS;
+  default:
+    return DC1394_INVALID_BAYER_METHOD;
   }
 
-  return DC1394_INVALID_BAYER_METHOD;
 }
 
 dc1394error_t
@@ -2556,9 +2557,10 @@ dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict r
   case DC1394_BAYER_METHOD_AHD:
     dc1394_bayer_AHD_uint16(bayer, rgb, sx, sy, tile, bits);
     return DC1394_SUCCESS;
+  default:
+    return DC1394_INVALID_BAYER_METHOD;
   }
 
-  return DC1394_INVALID_BAYER_METHOD;
 }
 
 void
@@ -2720,8 +2722,7 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
     }
     break;
   default:
-    fprintf(stderr,"Conversion between these two formats (0x%x -> 0x%x) is not supported (yet)\n", in->color_coding, out->color_coding);
-    return DC1394_FAILURE;
+    return DC1394_FUNCTION_NOT_SUPPORTED;
   }
 
   return DC1394_SUCCESS;

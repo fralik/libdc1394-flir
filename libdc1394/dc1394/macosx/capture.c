@@ -540,6 +540,9 @@ platform_capture_dequeue (platform_camera_t * craw,
   dc1394video_frame_t * frame_tmp = capture->frames + next;
   char ch;
 
+  if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
+    return DC1394_INVALID_CAPTURE_POLICY;
+
   if (policy == DC1394_CAPTURE_POLICY_POLL) {
     int status;
     MPEnterCriticalRegion (capture->mutex, kDurationForever);

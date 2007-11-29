@@ -353,6 +353,18 @@ typedef enum {
   DC1394_NOT_A_CAMERA = 3,
   DC1394_FUNCTION_NOT_SUPPORTED,
   DC1394_CAMERA_NOT_INITIALIZED,
+  DC1394_MEMORY_ALLOCATION_FAILURE,
+  DC1394_TAGGED_REGISTER_NOT_FOUND,
+  DC1394_NO_ISO_CHANNEL,
+  DC1394_NO_BANDWIDTH,
+  DC1394_IOCTL_FAILURE,
+  DC1394_CAPTURE_IS_NOT_SET = -11, /* FIXME: negative errors to be removed once the new logging API is approved */
+  DC1394_CAPTURE_IS_RUNNING = 12,
+  DC1394_RAW1394_FAILURE,
+  DC1394_FORMAT7_ERROR_FLAG_1,
+  DC1394_FORMAT7_ERROR_FLAG_2,
+  DC1394_INVALID_ARGUMENT_VALUE,
+  DC1394_REQ_VALUE_OUTSIDE_RANGE,
   DC1394_INVALID_FEATURE,
   DC1394_INVALID_VIDEO_FORMAT,
   DC1394_INVALID_VIDEO_MODE,
@@ -363,22 +375,16 @@ typedef enum {
   DC1394_INVALID_IIDC_VERSION,
   DC1394_INVALID_COLOR_CODING,
   DC1394_INVALID_COLOR_FILTER,
-  DC1394_INVALID_CAPTURE_MODE,
-  DC1394_REQ_VALUE_OUTSIDE_RANGE,
+  DC1394_INVALID_CAPTURE_POLICY,
   DC1394_INVALID_ERROR_CODE,
-  DC1394_MEMORY_ALLOCATION_FAILURE,
-  DC1394_TAGGED_REGISTER_NOT_FOUND,
-  DC1394_FORMAT7_ERROR_FLAG_1,
-  DC1394_FORMAT7_ERROR_FLAG_2,
   DC1394_INVALID_BAYER_METHOD,
-  DC1394_INVALID_ARGUMENT_VALUE,
   DC1394_INVALID_VIDEO1394_DEVICE,
-  DC1394_NO_ISO_CHANNEL,
-  DC1394_NO_BANDWIDTH,
-  DC1394_IOCTL_FAILURE,
-  DC1394_CAPTURE_IS_NOT_SET = -29,
-  DC1394_CAPTURE_IS_RUNNING = 30,
-  DC1394_RAW1394_FAILURE,
+  DC1394_INVALID_OPERATION_MODE,
+  DC1394_INVALID_TRIGGER_POLARITY,
+  DC1394_INVALID_FEATURE_MODE,
+  DC1394_INVALID_LOG_TYPE,
+  DC1394_INVALID_BYTE_ORDER,
+  DC1394_INVALID_STEREO_METHOD,
   DC1394_BASLER_NO_MORE_SFF_CHUNKS,
   DC1394_BASLER_CORRUPTED_SFF_CHUNK,
   DC1394_BASLER_UNKNOWN_SFF_CHUNK
@@ -447,7 +453,7 @@ typedef struct
 
 typedef struct __dc1394camera_list_t
 {
-  uint32_t      num;
+  uint32_t             num;
   dc1394camera_id_t    *ids;
 } dc1394camera_list_t;
 
@@ -488,7 +494,7 @@ typedef struct __dc1394_camera
   int                  iso_channel_is_set; /* >0 if the iso_channel above has been allocated within libraw1394 */
   uint32_t             iso_bandwidth;
   dc1394speed_t        iso_speed;
-  int                  capture_is_set; /* 0 for not set, 1 for RAW1394 and 2 for DMA */
+  dc1394bool_t         capture_is_set;
 
   /* for broadcast: */
   dc1394bool_t         broadcast;
@@ -969,14 +975,16 @@ dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
  * @param [in] log_handler: pointer to a function which takes a character string as argument
  *             type: the type of log
  */
-void dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message));
+dc1394error_t
+dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message));
 
 /**
  * dc1394_log_set_default_handler: set the log handler to the default handler
  * At boot time, debug logging is OFF (handler is NULL). Using this function for the debug statements
  * will start logging of debug statements usng the default handler.
  */
-void dc1394_log_set_default_handler(dc1394log_t type);
+dc1394error_t
+dc1394_log_set_default_handler(dc1394log_t type);
 
 /**
  * dc1394_log_error: logs a fatal error condition to the registered facility

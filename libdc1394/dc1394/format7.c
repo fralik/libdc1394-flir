@@ -187,6 +187,9 @@ _dc1394_format7_set_color_coding(dc1394camera_t *camera,
   dc1394error_t err;
   dc1394video_mode_t mode;
 
+  if ( (color_coding<DC1394_COLOR_CODING_MIN) || (color_coding>DC1394_COLOR_CODING_MAX) )
+    return DC1394_INVALID_COLOR_CODING;
+
   err=dc1394_video_get_mode(camera,&mode);
   DC1394_ERR_RTN(err,"Could not get current video mode");
 

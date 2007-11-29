@@ -668,6 +668,10 @@ dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, d
   DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
   msw1394error_t err1394;
   sCYCLE_TIME* ct;
+
+  if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
+    return DC1394_INVALID_CAPTURE_POLICY;
+
   int wait = policy != DC1394_CAPTURE_POLICY_POLL;
   ULONG idx = cmsw->ISO.nNumberOfBuffers;
   

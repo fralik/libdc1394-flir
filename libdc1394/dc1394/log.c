@@ -21,31 +21,37 @@ static void(*system_errorlog_handler)(const char *message) = default_errorlog_ha
 static void(*system_warninglog_handler)(const char *message) = default_warninglog_handler;
 static void(*system_debuglog_handler)(const char *message) = NULL;
 
-void dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message)) {
+dc1394error_t
+dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message)) {
   switch (type) {
     case DC1394_LOG_ERROR:
       system_errorlog_handler = log_handler;
-      return;
+      return DC1394_SUCCESS;
     case DC1394_LOG_WARNING:
       system_warninglog_handler = log_handler;
-      return;
+      return DC1394_SUCCESS;
     case DC1394_LOG_DEBUG:
       system_debuglog_handler = log_handler;
-      return;
+      return DC1394_SUCCESS;
+    default:
+      return DC1394_INVALID_LOG_TYPE;
   }
 }
 
-void dc1394_log_set_default_handler(dc1394log_t type) {
+dc1394error_t
+dc1394_log_set_default_handler(dc1394log_t type) {
   switch (type) {
     case DC1394_LOG_ERROR:
       system_errorlog_handler = default_errorlog_handler;
-      return;
+      return DC1394_SUCCESS;
     case DC1394_LOG_WARNING:
       system_warninglog_handler = default_warninglog_handler;
-      return;
+      return DC1394_SUCCESS;
     case DC1394_LOG_DEBUG:
       system_debuglog_handler = default_debuglog_handler;
-      return;
+      return DC1394_SUCCESS;
+    default:
+      return DC1394_INVALID_LOG_TYPE;
   }
 }
 

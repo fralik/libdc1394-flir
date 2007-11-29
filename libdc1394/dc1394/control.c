@@ -707,11 +707,11 @@ dc1394_video_set_mode(dc1394camera_t *camera, dc1394video_mode_t  mode)
   uint32_t format, min;
   dc1394error_t err;
   
+  if ( (mode<DC1394_VIDEO_MODE_MIN) || (mode>DC1394_VIDEO_MODE_MAX) )
+    return DC1394_INVALID_VIDEO_MODE;
+
   if (camera->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
-
-  if ((mode<DC1394_VIDEO_MODE_MIN)||(mode>DC1394_VIDEO_MODE_MAX))
-    return DC1394_INVALID_VIDEO_MODE;
 
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_RTN(err, "Invalid video mode code");
@@ -786,6 +786,9 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
   dc1394error_t err;
   uint32_t value=0;
   int channel;
+
+  if ((speed>DC1394_ISO_SPEED_MAX) || (speed<DC1394_ISO_SPEED_MIN))
+    return DC1394_INVALID_ISO_SPEED;
 
   if (camera->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
@@ -917,6 +920,9 @@ dc1394_video_set_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t  
 {
   dc1394error_t err;
   uint32_t value;
+
+  if ( (mode<DC1394_OPERATION_MODE_MIN) || (mode>DC1394_OPERATION_MODE_MAX) )
+    return DC1394_INVALID_OPERATION_MODE;
 
   if (camera->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
@@ -1252,6 +1258,9 @@ dc1394_feature_get_value(dc1394camera_t *camera, dc1394feature_t feature, uint32
   uint64_t offset;
   dc1394error_t err;
 
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   if ((feature==DC1394_FEATURE_WHITE_BALANCE)||
       (feature==DC1394_FEATURE_WHITE_SHADING)||
       (feature==DC1394_FEATURE_TEMPERATURE)) {
@@ -1275,6 +1284,9 @@ dc1394_feature_set_value(dc1394camera_t *camera, dc1394feature_t feature, uint32
   uint64_t offset;
   dc1394error_t err;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   if ((feature==DC1394_FEATURE_WHITE_BALANCE)||
       (feature==DC1394_FEATURE_WHITE_SHADING)||
       (feature==DC1394_FEATURE_TEMPERATURE)) {
@@ -1385,6 +1397,9 @@ dc1394_feature_is_readable(dc1394camera_t *camera, dc1394feature_t feature, dc13
   uint64_t offset;
   uint32_t quadval;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
@@ -1402,6 +1417,9 @@ dc1394_feature_is_switchable(dc1394camera_t *camera, dc1394feature_t feature, dc
   uint64_t offset;
   uint32_t quadval;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
@@ -1419,6 +1437,9 @@ dc1394_feature_get_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394
   uint64_t offset;
   uint32_t quadval;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
@@ -1435,6 +1456,9 @@ dc1394_feature_set_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394
   dc1394error_t err;
   uint64_t offset;
   uint32_t curval;
+
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
 
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
@@ -1465,6 +1489,9 @@ dc1394_feature_get_modes(dc1394camera_t *camera, dc1394feature_t feature, dc1394
 
   modes->num=0;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   if (feature == DC1394_FEATURE_TRIGGER) {
     return DC1394_SUCCESS; // success, but no mode is available.
   }
@@ -1498,6 +1525,9 @@ dc1394_feature_get_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394f
   uint64_t offset;
   uint32_t quadval;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   if ((feature == DC1394_FEATURE_TRIGGER)||
       (feature == DC1394_FEATURE_TRIGGER_DELAY)) {
     *mode=DC1394_FEATURE_MODE_MANUAL;
@@ -1527,6 +1557,12 @@ dc1394_feature_set_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394f
   dc1394error_t err;
   uint64_t offset;
   uint32_t curval;
+
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
+  if ( (mode<DC1394_FEATURE_MODE_MIN) || (mode>DC1394_FEATURE_MODE_MAX) )
+    return DC1394_INVALID_FEATURE_MODE;
 
   if (feature == DC1394_FEATURE_TRIGGER) {
     return DC1394_INVALID_FEATURE;
@@ -1563,6 +1599,9 @@ dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, u
   uint64_t offset;
   uint32_t quadval;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   if (feature == DC1394_FEATURE_TRIGGER) {
     return DC1394_INVALID_FEATURE;
   }
@@ -1622,6 +1661,9 @@ dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polar
   dc1394error_t err;
   uint32_t curval;
   
+  if ( (polarity<DC1394_TRIGGER_ACTIVE_MIN) || (polarity>DC1394_TRIGGER_ACTIVE_MAX) )
+    return DC1394_INVALID_TRIGGER_POLARITY;
+
   err=dc1394_get_control_register(camera, REG_CAMERA_TRIGGER_MODE, &curval);
   DC1394_ERR_RTN(err, "Could not get trigger register");
   
@@ -1745,6 +1787,9 @@ dc1394_feature_get_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   uint64_t offset;
   uint32_t quadval;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
@@ -1762,6 +1807,9 @@ dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   uint64_t offset;
   uint32_t curval;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &curval);
@@ -1789,6 +1837,9 @@ dc1394_feature_has_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   uint64_t offset;
   uint32_t quadval;
   
+  if ( (feature<DC1394_FEATURE_MIN) || (feature>DC1394_FEATURE_MAX) )
+    return DC1394_INVALID_FEATURE;
+
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);

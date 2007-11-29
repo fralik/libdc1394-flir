@@ -258,6 +258,9 @@ platform_capture_dequeue (platform_camera_t * craw,
     __u32 headers[256];
   } iso;
 
+  if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
+    return DC1394_INVALID_CAPTURE_POLICY;
+
   fds[0].fd = craw->iso_fd;
   fds[0].events = POLLIN;
 

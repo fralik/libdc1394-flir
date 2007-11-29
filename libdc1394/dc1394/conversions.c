@@ -31,23 +31,22 @@ extern void swab();
  *
  **********************************************************************/
 
-void
+dc1394error_t
 dc1394_YUV422_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order)
 {
   switch (byte_order) {
   case DC1394_BYTE_ORDER_YUYV:
     swab(src, dest, (width*height) << 1);
-    break;
+    return DC1394_SUCCESS;
   case DC1394_BYTE_ORDER_UYVY:
     memcpy(dest,src, (width*height)<<1);
-    break;
+    return DC1394_SUCCESS;
   default:
-    fprintf(stderr,"Invalid overlay byte order\n");
-    break;
+    return DC1394_INVALID_BYTE_ORDER;
   }
 }
 
-void
+dc1394error_t
 dc1394_YUV411_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order)
 {
   register int i=(width*height) + ((width*height) >> 1) -1;
@@ -74,7 +73,7 @@ dc1394_YUV411_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t 
       dest[j--] = u;
       dest[j--] = y0;
     }
-    break;
+    return DC1394_SUCCESS;
   case DC1394_BYTE_ORDER_UYVY:
     while (i >= 0) {
       y3 = src[i--];
@@ -94,15 +93,14 @@ dc1394_YUV411_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t 
       dest[j--] = y0;
       dest[j--] = u;
     }
-    break;
+    return DC1394_SUCCESS;
   default:
-    fprintf(stderr,"Invalid overlay byte order\n");
-    break;
+    return DC1394_INVALID_BYTE_ORDER;
   }
 
 }
 
-void
+dc1394error_t
 dc1394_YUV444_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order)
 {
   register int i = (width*height) + ((width*height) << 1)-1;
@@ -124,7 +122,7 @@ dc1394_YUV444_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t 
       dest[j--] = (u0+u1) >> 1;
       dest[j--] = y0;
     }
-    break;
+    return DC1394_SUCCESS;
   case DC1394_BYTE_ORDER_UYVY:
     while (i >= 0) {
       v1 = src[i--];
@@ -139,14 +137,13 @@ dc1394_YUV444_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t 
       dest[j--] = y0;
       dest[j--] = (u0+u1) >> 1;
     }
-    break;
+    return DC1394_SUCCESS;
   default:
-    fprintf(stderr,"Invalid overlay byte order\n");
-    break;
+    return DC1394_INVALID_BYTE_ORDER;
   }
 }
 
-void
+dc1394error_t
 dc1394_MONO8_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order)
 {
   if ((width%2)==0) {
@@ -165,7 +162,7 @@ dc1394_MONO8_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
 	dest[j--] = 128;
 	dest[j--] = y0;
       }
-      break;
+      return DC1394_SUCCESS;
     case DC1394_BYTE_ORDER_UYVY:
       while (i >= 0) {
 	y1 = src[i--];
@@ -175,10 +172,9 @@ dc1394_MONO8_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
 	dest[j--] = y0;
 	dest[j--] = 128;
       }
-      break;
+      return DC1394_SUCCESS;
     default:
-      fprintf(stderr,"Invalid overlay byte order\n");
-      break;
+      return DC1394_INVALID_BYTE_ORDER;
     }
   } else { // width*2 != dest_pitch
     register int x, y;
@@ -198,7 +194,7 @@ dc1394_MONO8_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
 	*dest++ = *(src-1);
 	*dest++ = 128;
       }
-      break;
+      return DC1394_SUCCESS;
     case DC1394_BYTE_ORDER_UYVY:
       y=height;
       while (y--) {
@@ -211,15 +207,14 @@ dc1394_MONO8_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
 	*dest++ = 128;
 	*dest++ = *(src-1);
       }
-      break;
+      return DC1394_SUCCESS;
     default:
-      fprintf(stderr,"Invalid overlay byte order\n");
-      break;
+      return DC1394_INVALID_BYTE_ORDER;
     }
   }
 }
 
-void
+dc1394error_t
 dc1394_MONO16_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order, uint32_t bits)
 {
   register int i = ((width*height) << 1)-1;
@@ -238,7 +233,7 @@ dc1394_MONO16_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t 
       dest[j--] = 128;
       dest[j--] = y0;
     }
-    break;
+    return DC1394_SUCCESS;
   case DC1394_BYTE_ORDER_UYVY:
     while (i >= 0) {
       y1 = src[i--];
@@ -250,15 +245,14 @@ dc1394_MONO16_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t 
       dest[j--] = y0;
       dest[j--] = 128;
     }
-    break;
+    return DC1394_SUCCESS;
   default:
-    fprintf(stderr,"Invalid overlay byte order\n");
-    break;
+    return DC1394_INVALID_BYTE_ORDER;
   }
 
 }
 
-void
+dc1394error_t
 dc1394_MONO16_to_MONO8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t bits)
 {
   register int i = ((width*height)<<1)-1;
@@ -269,9 +263,10 @@ dc1394_MONO16_to_MONO8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
     y = src[i--];
     dest[j--] = (y + (src[i--]<<8))>>(bits-8);
   }
+  return DC1394_SUCCESS;
 }
 
-void
+dc1394error_t
 dc1394_RGB8_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order)
 {
   register int i = (width*height) + ( (width*height) << 1 )-1;
@@ -295,7 +290,7 @@ dc1394_RGB8_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wi
       dest[j--] = (u0+u1) >> 1;
       dest[j--] = y1;
     }
-    break;
+    return DC1394_SUCCESS;
   case DC1394_BYTE_ORDER_UYVY:
     while (i >= 0) {
       b = (uint8_t) src[i--];
@@ -311,14 +306,13 @@ dc1394_RGB8_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wi
       dest[j--] = y1;
       dest[j--] = (u0+u1) >> 1;
     }
-    break;
+    return DC1394_SUCCESS;
   default:
-    fprintf(stderr,"Invalid overlay byte order\n");
-    break;
+    return DC1394_INVALID_BYTE_ORDER;
   }
 }
 
-void
+dc1394error_t
 dc1394_RGB16_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order, uint32_t bits)
 {
   register int i = ( ((width*height) + ( (width*height) << 1 )) << 1 ) -1;
@@ -348,7 +342,7 @@ dc1394_RGB16_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
       dest[j--] = (u0+u1) >> 1;
       dest[j--] = y1;
     } 
-    break;
+    return DC1394_SUCCESS;
   case DC1394_BYTE_ORDER_UYVY:
     while (i >= 0) {
       t =src[i--]; 
@@ -370,10 +364,9 @@ dc1394_RGB16_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
       dest[j--] = y1;
       dest[j--] = (u0+u1) >> 1;
     }
-    break;
+    return DC1394_SUCCESS;
   default:
-    fprintf(stderr,"Invalid overlay byte order\n");
-    break;
+    return DC1394_INVALID_BYTE_ORDER;
   }
 }
 
@@ -383,7 +376,7 @@ dc1394_RGB16_to_YUV422(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
  *
  **********************************************************************/
 
-void
+dc1394error_t
 dc1394_RGB16_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t bits)
 {
   register int i = (((width*height) + ( (width*height) << 1 )) << 1)-1;
@@ -401,10 +394,11 @@ dc1394_RGB16_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wid
     t = (t + (src[i--]<<8))>>(bits-8);
     dest[j--]=t;
   }
+  return DC1394_SUCCESS;
 }
 
 
-void
+dc1394error_t
 dc1394_YUV444_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height)
 {
   register int i = (width*height) + ( (width*height) << 1 ) -1;
@@ -421,9 +415,10 @@ dc1394_YUV444_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wi
     dest[j--] = g;
     dest[j--] = r;  
   }
+  return DC1394_SUCCESS;
 }
 
-void
+dc1394error_t
 dc1394_YUV422_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order)
 {
   register int i = ((width*height) << 1)-1;
@@ -448,7 +443,7 @@ dc1394_YUV422_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wi
       dest[j--] = g;
       dest[j--] = r;
     }
-    break;
+    return DC1394_SUCCESS;
   case DC1394_BYTE_ORDER_UYVY:
     while (i >= 0) {
       y1 = (uint8_t) src[i--];
@@ -464,16 +459,15 @@ dc1394_YUV422_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wi
       dest[j--] = g;
       dest[j--] = r;
     }
-    break;
+    return DC1394_SUCCESS;
   default:
-    fprintf(stderr,"Invalid overlay byte order\n");
-    break;
+    return DC1394_INVALID_BYTE_ORDER;
   }
   
 }
 
 
-void
+dc1394error_t
 dc1394_YUV411_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height)
 {
   register int i = (width*height) + ( (width*height) >> 1 )-1;
@@ -505,9 +499,11 @@ dc1394_YUV411_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wi
     dest[j--] = g;
     dest[j--] = r;
   }
+  return DC1394_SUCCESS;
 }
 
-void
+
+dc1394error_t
 dc1394_MONO8_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height)
 {
   register int i = (width*height)-1;
@@ -520,9 +516,11 @@ dc1394_MONO8_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wid
     dest[j--] = y;
     dest[j--] = y;
   }
+  return DC1394_SUCCESS;
 }
 
-void
+
+dc1394error_t
 dc1394_MONO16_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t bits)
 {
   register int i = ((width*height) << 1)-1;
@@ -536,11 +534,13 @@ dc1394_MONO16_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t wi
     dest[j--] = y;
     dest[j--] = y;
   }
+  return DC1394_SUCCESS;
 }
+
 
 // change a 16bit stereo image (8bit/channel) into two 8bit images on top
 // of each other
-void
+dc1394error_t
 dc1394_deinterlace_stereo(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height)
 {
   register int i = (width*height)-1;
@@ -551,7 +551,9 @@ dc1394_deinterlace_stereo(uint8_t *restrict src, uint8_t *restrict dest, uint32_
     dest[k--] = src[i--];
     dest[j--] = src[i--];
   }
+  return DC1394_SUCCESS;
 }
+
 
 dc1394error_t
 dc1394_convert_to_YUV422(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
@@ -582,13 +584,13 @@ dc1394_convert_to_YUV422(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t h
     dc1394_RGB16_to_YUV422(src, dest, width, height, byte_order, bits);
     break;
   default:
-    fprintf(stderr,"Conversion to YUV422 from this color coding is not supported\n");
-    return DC1394_FAILURE;
+    return DC1394_FUNCTION_NOT_SUPPORTED;
   }
 
   return DC1394_SUCCESS;
 
 }
+
 
 dc1394error_t
 dc1394_convert_to_MONO8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order,
@@ -602,12 +604,12 @@ dc1394_convert_to_MONO8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t 
     memcpy(dest, src, width*height);
     break;
   default:
-    fprintf(stderr,"Conversion to MONO8 from this color coding is not supported\n");
-    return DC1394_FAILURE;
+    return DC1394_FUNCTION_NOT_SUPPORTED;
   }
 
   return DC1394_SUCCESS;
 }
+
 
 dc1394error_t
 dc1394_convert_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t width, uint32_t height, uint32_t byte_order,
@@ -638,8 +640,7 @@ dc1394_convert_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
     memcpy(dest, src, width*height*3);
     break;
   default:
-    fprintf(stderr,"Conversion to RGB8 from this color coding is not supported\n");
-    return DC1394_FAILURE;
+    return DC1394_FUNCTION_NOT_SUPPORTED;
   }
 
   return DC1394_SUCCESS;
@@ -745,8 +746,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
       dc1394_RGB16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->bit_depth);
     break;
     default:
-      fprintf(stderr,"Conversion to YUV422 from this color coding is not supported (yet)\n");
-      return DC1394_FAILURE;
+      return DC1394_FUNCTION_NOT_SUPPORTED;
     }
     break;
   case DC1394_COLOR_CODING_MONO8:
@@ -760,8 +760,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
       memcpy(out->image, in->image, in->size[0]*in->size[1]);
       break;
     default:
-      fprintf(stderr,"Conversion to MONO8 from this color coding is not supported (yet)\n");
-      return DC1394_FAILURE;
+      return DC1394_FUNCTION_NOT_SUPPORTED;
     }
     break;
   case DC1394_COLOR_CODING_RGB8:
@@ -797,17 +796,16 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
       memcpy(out->image, in->image, in->size[0]*in->size[1]*3);
       break;
     default:
-      fprintf(stderr,"Conversion to RGB8 from this color coding is not supported (yet)\n");
-      return DC1394_FAILURE;
+      return DC1394_FUNCTION_NOT_SUPPORTED;
     }
     break;
   default:
-    fprintf(stderr,"Conversion between these two formats (0x%x -> 0x%x) is not supported (yet)\n", in->color_coding, out->color_coding);
-    return DC1394_FAILURE;
+    return DC1394_FUNCTION_NOT_SUPPORTED;
   }
  
   return DC1394_SUCCESS;
 }
+
 
 dc1394error_t
 Adapt_buffer_stereo(dc1394video_frame_t *in, dc1394video_frame_t *out)
@@ -894,17 +892,15 @@ dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *o
     switch (method) {
     case DC1394_STEREO_METHOD_INTERLACED:
       err=Adapt_buffer_stereo(in,out);
-      DC1394_ERR_RTN(err, "This input color coding cannot stereo-decoded");
       dc1394_deinterlace_stereo(in->image, out->image, in->size[0], in->size[1]);
       break;
     case DC1394_STEREO_METHOD_FIELD:
       err=Adapt_buffer_stereo(in,out);
-      DC1394_ERR_RTN(err, "This input color coding cannot stereo-decoded");
       memcpy(out->image,in->image,out->image_bytes);
       break;
     }
-    return DC1394_SUCCESS;
+    return DC1394_INVALID_STEREO_METHOD;
   }
   else
-    return DC1394_FAILURE;
+    return DC1394_FUNCTION_NOT_SUPPORTED;
 }

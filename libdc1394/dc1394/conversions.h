@@ -104,7 +104,8 @@ dc1394_convert_to_RGB8(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t hei
  **********************************************************************/
 
 //changes a 16bit stereo image (8bit/channel) into two 8bit images on top of each other
-void dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height);
+dc1394error_t
+dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height);
 
 /************************************************************************************************
  *                                                                                              *

@@ -327,45 +327,36 @@ platform_capture_stop(platform_camera_t *craw)
   int err;
 
   if (camera->capture_is_set>0) {
-    switch (camera->capture_is_set) {
-      case 1: // RAW 1394 is obsolete
-	return DC1394_INVALID_CAPTURE_MODE;
-      case 2: // DMA (VIDEO1394)
-        // unlisten
-        if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL,
+    // unlisten
+    if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL,
               &(camera->iso_channel)) < 0) 
-          return DC1394_IOCTL_FAILURE;
-
-        // release
-        if (craw->capture.dma_ring_buffer) {
-          munmap((void*)craw->capture.dma_ring_buffer,craw->capture.dma_buffer_size);
-        }
-
-        _dc1394_num_using_fd[craw->port]--;
-
-        if (_dc1394_num_using_fd[craw->port] == 0) {
-
-          while (close(craw->capture.dma_fd) != 0) {
-            printf("(%s) waiting for dma_fd to close\n", __FILE__);
-            sleep (1);
-          }
-
-        }
-        free (craw->capture.frames);
-        craw->capture.frames = NULL;
-
-        // this dma_device file is allocated by the strdup() function and can be freed here without problems.
-        free(craw->capture.dma_device_file);
-        craw->capture.dma_device_file=NULL;
-        break;
-      default:
-        return DC1394_INVALID_CAPTURE_MODE;
-        break;
+      return DC1394_IOCTL_FAILURE;
+    
+    // release
+    if (craw->capture.dma_ring_buffer) {
+      munmap((void*)craw->capture.dma_ring_buffer,craw->capture.dma_buffer_size);
     }
+    
+    _dc1394_num_using_fd[craw->port]--;
+    
+    if (_dc1394_num_using_fd[craw->port] == 0) {
+      
+      while (close(craw->capture.dma_fd) != 0) {
+	printf("(%s) waiting for dma_fd to close\n", __FILE__);
+	sleep (1);
+      }
+      
+    }
+    free (craw->capture.frames);
+    craw->capture.frames = NULL;
+    
+    // this dma_device file is allocated by the strdup() function and can be freed here without problems.
+    free(craw->capture.dma_device_file);
+    craw->capture.dma_device_file=NULL;
     
     // capture is not set anymore
     camera->capture_is_set=0;
-
+    
     // free ressources if they were allocated
     if ((craw->capture.flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) >0) {
       err=dc1394_free_iso_channel(camera);
@@ -401,6 +392,9 @@ platform_capture_dequeue (platform_camera_t * craw,
   dc1394video_frame_t * frame_tmp;
   int cb;
   int result=-1;
+
+  if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
+    return DC1394_INVALID_CAPTURE_POLICY;
 
   memset(&vwait, 0, sizeof(vwait));
 
