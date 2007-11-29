@@ -52,7 +52,6 @@ const char *dc1394_error_strings[DC1394_ERROR_NUM] =
   "Success",
   "Generic failure",
   "No frame",
-  "No camera",
   "This node is not a camera",
   "Function not supported by this camera",
   "Camera not initialized",

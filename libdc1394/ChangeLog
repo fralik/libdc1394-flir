@@ -1,4 +1,5 @@
 2007-11-29 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 462: Remove the error DC1394_NO_CAMERA since it's not used anymore
 	* SVN 461: Merge three functions (feature mode capabilities) into a
 	           single one
 	* SVN 460: - slightly different interface for message logging
