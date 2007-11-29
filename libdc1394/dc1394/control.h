@@ -419,6 +419,12 @@ typedef struct
 typedef struct
 {
   uint32_t                num;
+  dc1394feature_mode_t    modes[DC1394_FEATURE_MODE_NUM];
+} dc1394feature_modes_t;
+
+typedef struct
+{
+  uint32_t                num;
   dc1394framerate_t       framerates[DC1394_FRAMERATE_NUM];
 } dc1394framerates_t;
 
@@ -430,8 +436,8 @@ typedef struct
 
 typedef struct
 {
-  uint32_t                  num;
-  dc1394trigger_source_t    sources[DC1394_TRIGGER_SOURCE_NUM];
+  uint32_t                num;
+  dc1394trigger_source_t  sources[DC1394_TRIGGER_SOURCE_NUM];
 } dc1394trigger_sources_t;
 
 typedef struct
@@ -506,16 +512,13 @@ typedef struct __dc1394feature_info_t_struct
 {
   dc1394feature_t    id;
   dc1394bool_t       available;
-  dc1394bool_t       one_push_capable;
   dc1394bool_t       absolute_capable;
   dc1394bool_t       readout_capable;
   dc1394bool_t       on_off_capable;
-  dc1394bool_t       auto_capable;
-  dc1394bool_t       manual_capable;
   dc1394bool_t       polarity_capable;
-  dc1394switch_t     one_push_active;
   dc1394switch_t     is_on;
-  dc1394bool_t       auto_active;
+  dc1394feature_mode_t     current_mode;
+  dc1394feature_modes_t    modes;
   dc1394trigger_modes_t    trigger_modes;
   dc1394trigger_mode_t     trigger_mode;
   dc1394trigger_polarity_t trigger_polarity;
@@ -808,9 +811,7 @@ dc1394error_t dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394featur
 dc1394error_t dc1394_feature_is_switchable(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
 dc1394error_t dc1394_feature_get_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t *pwr);
 dc1394error_t dc1394_feature_set_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t pwr);
-dc1394error_t dc1394_feature_has_auto_mode(dc1394camera_t *camera,  dc1394feature_t feature, dc1394bool_t *value);
-dc1394error_t dc1394_feature_has_manual_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
-dc1394error_t dc1394_feature_has_one_push_auto(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+dc1394error_t dc1394_feature_get_modes(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_modes_t *modes);
 dc1394error_t dc1394_feature_get_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_mode_t *mode);
 dc1394error_t dc1394_feature_set_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_mode_t mode);
 

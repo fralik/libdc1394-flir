@@ -1,4 +1,6 @@
 2007-11-29 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 461: Merge three functions (feature mode capabilities) into a
+	           single one
 	* SVN 460: - slightly different interface for message logging
 	           - enum types should have mutually exclusive values
 		   - add min/max/num values for several enum types

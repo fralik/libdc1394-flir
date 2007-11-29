@@ -233,9 +233,11 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   err=dc1394_get_control_register(camera, offset, &value);
   DC1394_ERR_RTN(err, "Could not check feature %d characteristics",feature->id);
 
+  dc1394_feature_get_modes(camera, feature->id, &feature->modes);
+  dc1394_feature_get_mode(camera, feature->id, &feature->current_mode);
+
   switch (feature->id) {
   case DC1394_FEATURE_TRIGGER:
-    feature->one_push_capable= DC1394_FALSE;
     feature->polarity_capable= (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
     int i, j;
     uint32_t value_tmp;
@@ -255,15 +257,10 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
     err=dc1394_external_trigger_get_supported_sources(camera,&feature->trigger_sources);
     DC1394_ERR_RTN(err, "Could not get supported trigger sources");
 
-    feature->auto_capable= DC1394_FALSE;
-    feature->manual_capable= DC1394_FALSE;
     break;
   default:
     feature->polarity_capable = 0;
     feature->trigger_mode     = 0;
-    feature->one_push_capable = (value & 0x10000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->auto_capable     = (value & 0x02000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->manual_capable   = (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
     
     feature->min= (value & 0xFFF000UL) >> 12;
     feature->max= (value & 0xFFFUL);
@@ -282,7 +279,6 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   
   switch (feature->id) {
   case DC1394_FEATURE_TRIGGER:
-    feature->one_push_active= DC1394_FALSE;
     feature->trigger_polarity=
       (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
     feature->trigger_mode= (uint32_t)((value >> 16) & 0xF);
@@ -294,17 +290,8 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
     if (feature->trigger_source > 3)
       feature->trigger_source -= 3;
     feature->trigger_source += DC1394_TRIGGER_SOURCE_MIN;
-    feature->auto_active= DC1394_FALSE;
     break;
-  case DC1394_FEATURE_TRIGGER_DELAY:
-    feature->one_push_active= DC1394_FALSE;
-    feature->auto_active=DC1394_FALSE;
   default:
-    feature->one_push_active=
-      (value & 0x04000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->auto_active=
-      (value & 0x01000000UL) ? DC1394_TRUE : DC1394_FALSE;
-    feature->trigger_polarity= DC1394_FALSE;
     break;
   }
   
@@ -363,16 +350,37 @@ dc1394_print_feature(dc1394feature_info_t *f)
     return DC1394_SUCCESS;
   }
   
-  if (f->one_push_capable) 
-    printf("OP  ");
   if (f->readout_capable)
     printf("RC  ");
   if (f->on_off_capable)
     printf("O/OC  ");
-  if (f->auto_capable)
-    printf("AC  ");
-  if (f->manual_capable)
-    printf("MC  ");
+  int i;
+  for (i=0;i<f->modes.num;i++) {
+    switch (f->modes.modes[i]) {
+      case DC1394_FEATURE_MODE_MANUAL:
+	printf("MC  ");
+	break;
+      case DC1394_FEATURE_MODE_AUTO:
+	printf("AC  ");
+	break;
+      case DC1394_FEATURE_MODE_ONE_PUSH_AUTO:
+	printf("OP  ");
+	break;
+    }
+    printf("(active is: ");
+    switch (f->current_mode) {
+      case DC1394_FEATURE_MODE_MANUAL:
+	printf("MAN)  ");
+	break;
+      case DC1394_FEATURE_MODE_AUTO:
+	printf("AUTO)  ");
+	break;
+      case DC1394_FEATURE_MODE_ONE_PUSH_AUTO:
+	printf("ONE PUSH)  ");
+	break;
+    }
+    
+  }
   if (f->absolute_capable)
     printf("ABS  ");
   printf("\n");
@@ -385,18 +393,6 @@ dc1394_print_feature(dc1394feature_info_t *f)
   }
   else
     printf("\t");
-
-  if (f->one_push_capable)  {
-    if (f->one_push_active)
-      printf("One push: ACTIVE  ");
-    else
-      printf("One push: INACTIVE  ");
-  }
-  
-  if (f->auto_active) 
-    printf("AUTO  ");
-  else
-    printf("MANUAL ");
 
   if (fid != DC1394_FEATURE_TRIGGER) 
     printf("min: %d max %d\n", f->min, f->max);
@@ -1383,23 +1379,6 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
 }
 
 dc1394error_t
-dc1394_feature_has_one_push_auto(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value)
-{
-  dc1394error_t err;
-  uint64_t offset;
-  uint32_t quadval;
-  
-  FEATURE_TO_INQUIRY_OFFSET(feature, offset);
-  
-  err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get one-push capability for feature %d",feature);
-  
-  *value = (quadval & 0x10000000UL) ? DC1394_TRUE: DC1394_FALSE;
-  
-  return err;
-}
-
-dc1394error_t
 dc1394_feature_is_readable(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value)
 {
   dc1394error_t err;
@@ -1476,47 +1455,41 @@ dc1394_feature_set_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394
   return err;
 }
 
+
 dc1394error_t
-dc1394_feature_has_auto_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value)
+dc1394_feature_get_modes(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_modes_t *modes)
 {
   dc1394error_t err;
   uint64_t offset;
   uint32_t quadval;
+
+  modes->num=0;
   
   if (feature == DC1394_FEATURE_TRIGGER) {
-    return DC1394_INVALID_FEATURE;
+    return DC1394_SUCCESS; // success, but no mode is available.
   }
   
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get automode capability for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get mode availability for feature %d",feature);
   
-  *value = (quadval & 0x02000000UL) ? DC1394_TRUE: DC1394_FALSE;
+  if (quadval & 0x01000000UL) {
+    modes->modes[modes->num]=DC1394_FEATURE_MODE_MANUAL;
+    modes->num++;
+  }
+  if (quadval & 0x02000000UL) {
+    modes->modes[modes->num]=DC1394_FEATURE_MODE_AUTO;
+    modes->num++;
+  }
+  if (quadval & 0x10000000UL) {
+    modes->modes[modes->num]=DC1394_FEATURE_MODE_ONE_PUSH_AUTO;
+    modes->num++;
+  }
   
   return err;
 }
 
-dc1394error_t
-dc1394_feature_has_manual_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value)
-{
-  dc1394error_t err;
-  uint64_t offset;
-  uint32_t quadval;
-  
-  if (feature == DC1394_FEATURE_TRIGGER) {
-    return DC1394_INVALID_FEATURE;
-  }
-  
-  FEATURE_TO_INQUIRY_OFFSET(feature, offset);
-  
-  err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get manual modecapability for feature %d",feature);
-  
-  *value = (quadval & 0x01000000UL) ? DC1394_TRUE: DC1394_FALSE;
-  
-  return err;
-}
 
 dc1394error_t
 dc1394_feature_get_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_mode_t *mode)
@@ -1525,8 +1498,9 @@ dc1394_feature_get_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394f
   uint64_t offset;
   uint32_t quadval;
   
-  if (feature == DC1394_FEATURE_TRIGGER) {
-    return DC1394_INVALID_FEATURE;
+  if ((feature == DC1394_FEATURE_TRIGGER)||
+      (feature == DC1394_FEATURE_TRIGGER_DELAY)) {
+    *mode=DC1394_FEATURE_MODE_MANUAL;
   }
   
   FEATURE_TO_VALUE_OFFSET(feature, offset);
