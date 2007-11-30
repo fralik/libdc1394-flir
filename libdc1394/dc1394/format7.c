@@ -129,11 +129,11 @@ _dc1394_v130_handshake(dc1394camera_t *camera, dc1394video_mode_t video_mode)
     // This seems to make problems. Remove for now.
     if (err_flag2>0) {
       err=DC1394_FORMAT7_ERROR_FLAG_2;
-      DC1394_ERR_RTN(err, "proposed bytes per packet is not a valid value");
+      DC1394_ERR_RTN(err, "proposed packet size is not a valid value");
     }
     */    
 
-    // bytes per packet... registers are ready for reading.
+    // packet size... registers are ready for reading.
   }
 
   return err;
@@ -212,9 +212,9 @@ _dc1394_format7_set_color_coding(dc1394camera_t *camera,
 }
 
 dc1394error_t
-_dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
- 				   dc1394video_mode_t video_mode,
-                                   uint32_t packet_bytes)
+_dc1394_format7_set_packet_size(dc1394camera_t *camera,
+				dc1394video_mode_t video_mode,
+				uint32_t packet_size)
 {
   dc1394error_t err;
   dc1394video_mode_t mode;
@@ -228,8 +228,8 @@ _dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_INVALID_VIDEO_MODE;
 
-  err=dc1394_set_format7_register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, (uint32_t)(packet_bytes) << 16 );
-  DC1394_ERR_RTN(err, "Format7 bytes-per-packet setting failure");
+  err=dc1394_set_format7_register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, (uint32_t)(packet_size) << 16 );
+  DC1394_ERR_RTN(err, "Format7 packet size setting failure");
 
   // IIDC v1.30 handshaking:
   //err=_dc1394_v130_handshake(camera, video_mode);
@@ -427,9 +427,9 @@ dc1394_format7_get_total_bytes(dc1394camera_t *camera,
 }
 
 dc1394error_t
-dc1394_format7_get_packet_para(dc1394camera_t *camera,
-			       dc1394video_mode_t video_mode, uint32_t *unit_bytes,
-			       uint32_t *max_bytes)
+dc1394_format7_get_packet_parameters(dc1394camera_t *camera,
+				     dc1394video_mode_t video_mode, uint32_t *unit_bytes,
+				     uint32_t *max_bytes)
 {
   dc1394error_t err;
   uint32_t value;
@@ -447,9 +447,9 @@ dc1394_format7_get_packet_para(dc1394camera_t *camera,
 }
 
 dc1394error_t
-dc1394_format7_get_byte_per_packet(dc1394camera_t *camera,
-				   dc1394video_mode_t video_mode,
-				   uint32_t *packet_bytes)
+dc1394_format7_get_packet_size(dc1394camera_t *camera,
+			       dc1394video_mode_t video_mode,
+			       uint32_t *packet_size)
 {
   dc1394error_t err;
   uint32_t value;
@@ -458,12 +458,12 @@ dc1394_format7_get_byte_per_packet(dc1394camera_t *camera,
     return DC1394_INVALID_VIDEO_MODE;
 
   err=dc1394_get_format7_register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
-  DC1394_ERR_RTN(err, "Could not get bytes per packet");
+  DC1394_ERR_RTN(err, "Could not get packet size");
 
-  *packet_bytes= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
+  *packet_size= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
   
-  if (*packet_bytes==0) {
-    printf("(%s): BYTES_PER_PACKET is zero. This should not happen.\n", __FILE__);
+  if (*packet_size==0) {
+    printf("(%s): packet size is zero. This should not happen.\n", __FILE__);
     return DC1394_FAILURE;
   }
   return err;
@@ -518,12 +518,12 @@ dc1394_format7_set_color_coding(dc1394camera_t *camera,
 
 
 dc1394error_t
-dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
-				   dc1394video_mode_t video_mode,
-				   uint32_t packet_bytes)
+dc1394_format7_set_packet_size(dc1394camera_t *camera,
+			       dc1394video_mode_t video_mode,
+			       uint32_t packet_bytes)
 {
-  dc1394error_t err=_dc1394_format7_set_byte_per_packet(camera, video_mode, packet_bytes);
-  DC1394_ERR_RTN(err, "Format7 bytes_per_packet setting failure");
+  dc1394error_t err=_dc1394_format7_set_packet_size(camera, video_mode, packet_bytes);
+  DC1394_ERR_RTN(err, "Format7 packet size setting failure");
 
   // IIDC v1.30 handshaking:
   err=_dc1394_v130_handshake(camera, video_mode);
@@ -533,8 +533,8 @@ dc1394_format7_set_byte_per_packet(dc1394camera_t *camera,
 }
 
 dc1394error_t
-dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera,
-					       dc1394video_mode_t video_mode, uint32_t *bpp)
+dc1394_format7_get_recommended_packet_size(dc1394camera_t *camera,
+					   dc1394video_mode_t video_mode, uint32_t *packet_size)
 {
   dc1394error_t err;
   uint32_t value;
@@ -545,18 +545,18 @@ dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera,
   err= dc1394_get_format7_register(camera, video_mode, REG_CAMERA_FORMAT7_BYTE_PER_PACKET, &value);
   DC1394_ERR_RTN(err, "Could not get recommended BPP");
 
-  *bpp= (uint32_t) ( value & 0x0000FFFFUL );
+  *packet_size= (uint32_t) ( value & 0x0000FFFFUL );
   
   return err;
 }
 
 dc1394error_t
-dc1394_format7_get_packet_per_frame(dc1394camera_t *camera,
-				    dc1394video_mode_t video_mode, uint32_t *ppf)
+dc1394_format7_get_packets_per_frame(dc1394camera_t *camera,
+				     dc1394video_mode_t video_mode, uint32_t *ppf)
 {
   dc1394error_t err;
   uint32_t value;
-  uint32_t packet_bytes;
+  uint32_t packet_size;
   uint64_t total_bytes;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
@@ -574,20 +574,20 @@ dc1394_format7_get_packet_per_frame(dc1394camera_t *camera,
    * not support PACKET_PER_FRAME_INQ */
   if (*ppf == 0) {
     // return an estimate, NOT TAKING ANY PADDING INTO ACCOUNT
-    err=dc1394_format7_get_byte_per_packet(camera, video_mode, &packet_bytes);
+    err=dc1394_format7_get_packet_size(camera, video_mode, &packet_size);
     DC1394_ERR_RTN(err, "Could not get BPP");
 
-    if (packet_bytes==0) {
+    if (packet_size==0) {
       return DC1394_FAILURE;
     }
 
     err=dc1394_format7_get_total_bytes(camera, video_mode, &total_bytes);
     DC1394_ERR_RTN(err, "Could not get total number of bytes");
 
-    if (total_bytes%packet_bytes!=0)
-      *ppf=total_bytes/packet_bytes+1;
+    if (total_bytes%packet_size!=0)
+      *ppf=total_bytes/packet_size+1;
     else
-      *ppf=total_bytes/packet_bytes;
+      *ppf=total_bytes/packet_size;
     
     return err;
   }
@@ -722,10 +722,10 @@ dc1394_format7_get_mode_info(dc1394camera_t *camera,
     DC1394_ERR_RTN(err,"Got a problem querying format7 image position");
     err=dc1394_format7_get_image_size(camera,video_mode,&f7_mode->size_x,&f7_mode->size_y);
     DC1394_ERR_RTN(err,"Got a problem querying format7 image size");
-    err=dc1394_format7_get_byte_per_packet(camera,video_mode,&f7_mode->bpp);
-    DC1394_ERR_RTN(err,"Got a problem querying format7 bytes per packet");
+    err=dc1394_format7_get_packet_size(camera,video_mode,&f7_mode->packet_size);
+    DC1394_ERR_RTN(err,"Got a problem querying format7 packet_size");
     
-    if (f7_mode->bpp==0) {
+    if (f7_mode->packet_size==0) {
       // sometimes a camera will not set the bpp register until a valid image size
       // has been set after boot. If BPP is zero, we therefor
       // try again after setting the image size to the maximum size.
@@ -734,11 +734,11 @@ dc1394_format7_get_mode_info(dc1394camera_t *camera,
       err=dc1394_format7_set_image_size(camera,video_mode,f7_mode->max_size_x,f7_mode->max_size_y);
       DC1394_ERR_RTN(err,"Got a problem setting format7 image size");
       // maybe we should also force a color coding here.
-      err=dc1394_format7_get_byte_per_packet(camera,video_mode,&f7_mode->bpp);
-      DC1394_ERR_RTN(err,"Got a problem querying format7 bytes per packet");
+      err=dc1394_format7_get_packet_size(camera,video_mode,&f7_mode->packet_size);
+      DC1394_ERR_RTN(err,"Got a problem querying format7 packet size");
     }
     
-    err=dc1394_format7_get_packet_para(camera,video_mode,&f7_mode->min_bpp,&f7_mode->max_bpp);
+    err=dc1394_format7_get_packet_parameters(camera,video_mode,&f7_mode->unit_packet_size,&f7_mode->max_packet_size);
     DC1394_ERR_RTN(err,"Got a problem querying format7 packet parameters");
     err=dc1394_format7_get_pixel_number(camera,video_mode,&f7_mode->pixnum);
     DC1394_ERR_RTN(err,"Got a problem querying format7 pixel number");
@@ -794,19 +794,19 @@ dc1394error_t
 dc1394_format7_set_roi(dc1394camera_t *camera,
 		       dc1394video_mode_t video_mode,
 		       dc1394color_coding_t color_coding,
-		       int bytes_per_packet,
-		       int left, int top,
-		       int width, int height)
+		       int32_t packet_size,
+		       int32_t left, int32_t top,
+		       int32_t width, int32_t height)
 {
   uint32_t unit_bytes, max_bytes;
-  uint32_t recom_bpp;
+  uint32_t recom_packet_size;
   uint32_t camera_left = 0;
   uint32_t camera_top = 0;
   uint32_t camera_width = 0;
   uint32_t camera_height = 0;
   uint32_t max_width = 0;
   uint32_t max_height = 0;
-  uint32_t uint_bpp=0;
+  uint32_t uint_packet_size=0;
   dc1394error_t err;
 
   if (camera->capture_is_set>0)
@@ -895,41 +895,41 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   DC1394_ERR_RTN(err, "Handshaking failed after setting size and position");
 
   // ===========================================================
-  // BYTES PER PACKET
+  // PACKET SIZE
   // ===========================================================
 
-  if (bytes_per_packet==DC1394_QUERY_FROM_CAMERA) {
-    err=dc1394_format7_get_byte_per_packet(camera, video_mode, &uint_bpp);
-    DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", video_mode);
-    bytes_per_packet=uint_bpp;
+  if (packet_size==DC1394_QUERY_FROM_CAMERA) {
+    err=dc1394_format7_get_packet_size(camera, video_mode, &uint_packet_size);
+    DC1394_ERR_RTN(err, "Unable to get F7 packet size for mode %d", video_mode);
+    packet_size=uint_packet_size;
   }
 
-  switch (bytes_per_packet) {
+  switch (packet_size) {
   case DC1394_USE_RECOMMENDED:
-    err=dc1394_format7_get_recommended_byte_per_packet(camera, video_mode, &recom_bpp);
-    DC1394_ERR_RTN(err, "Recommended byte-per-packet inq error");
-    if (recom_bpp>0) {
-      bytes_per_packet=recom_bpp;
+    err=dc1394_format7_get_recommended_packet_size(camera, video_mode, &recom_packet_size);
+    DC1394_ERR_RTN(err, "Recommended packet size inq error");
+    if (recom_packet_size>0) {
+      packet_size=recom_packet_size;
     }
     else { // recom. bpp asked, but register is 0. IGNORED
-      err=dc1394_format7_get_packet_para(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
+      err=dc1394_format7_get_packet_parameters(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
       DC1394_ERR_RTN(err, "Packet para inq error");
-      printf("(%s) Recommended bytes per packet asked, but register is zero. Falling back to MAX BPP for mode %d \n", __FILE__, video_mode);
-      bytes_per_packet=max_bytes;
+      printf("(%s) Recommended packet size asked, but register is zero. Falling back to MAX packet size for mode %d \n", __FILE__, video_mode);
+      packet_size=max_bytes;
     }
     break;
   case DC1394_USE_MAX_AVAIL:
-    err=dc1394_format7_get_packet_para(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
+    err=dc1394_format7_get_packet_parameters(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
     DC1394_ERR_RTN(err, "Packet para inq error");
-    bytes_per_packet = max_bytes;
+    packet_size = max_bytes;
     break;
   case DC1394_QUERY_FROM_CAMERA:
     // if we wanted QUERY_FROM_CAMERA, the QUERY_FROM_CAMERA value has been overwritten by
     // the current value at the beginning of the program. It is thus not possible to reach this code fragment.
-    printf("(%s:%d) Bytes_per_packet error: we should not reach this code region\n", __FILE__,__LINE__);
+    printf("(%s:%d) Packet size error: we should not reach this code region\n", __FILE__,__LINE__);
     break;
   default:
-    err=dc1394_format7_get_packet_para(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
+    err=dc1394_format7_get_packet_parameters(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
     DC1394_ERR_RTN(err, "Packet para inq error");
     // we have to take several tricks into account here:
     // 1) BPP could be zero, in which case it becomes MAX_BPP
@@ -939,21 +939,21 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
     if (unit_bytes==0) {
       unit_bytes=max_bytes;
     }
-    if (bytes_per_packet > max_bytes) {
-      bytes_per_packet = max_bytes;
+    if (packet_size > max_bytes) {
+      packet_size = max_bytes;
     }
     else {
-      if (bytes_per_packet < unit_bytes) {
-	bytes_per_packet = unit_bytes;
+      if (packet_size < unit_bytes) {
+	packet_size = unit_bytes;
       }
     }
-    bytes_per_packet-=bytes_per_packet % unit_bytes;
+    packet_size-=packet_size % unit_bytes;
     break;
   }
 
   // set bpp:
-  err=_dc1394_format7_set_byte_per_packet(camera, video_mode, bytes_per_packet);
-  DC1394_ERR_RTN(err, "Unable to set format 7 bytes per packet for mode %d", video_mode);
+  err=_dc1394_format7_set_packet_size(camera, video_mode, packet_size);
+  DC1394_ERR_RTN(err, "Unable to set format 7 packet_size for mode %d", video_mode);
 
   // IIDC v1.30 handshaking:
   err=_dc1394_v130_handshake(camera, video_mode);
@@ -967,7 +967,7 @@ dc1394error_t
 dc1394_format7_get_roi(dc1394camera_t *camera,
 		       dc1394video_mode_t video_mode,
 		       dc1394color_coding_t *color_coding,
-		       uint32_t *bytes_per_packet,
+		       uint32_t *packet_size,
 		       uint32_t *left,  uint32_t *top,
 		       uint32_t *width, uint32_t *height)
 {
@@ -976,7 +976,7 @@ dc1394_format7_get_roi(dc1394camera_t *camera,
   err=dc1394_format7_get_color_coding(camera, video_mode, color_coding);
   DC1394_ERR_RTN(err, "Unable to get color_coding %d", (int)color_coding);
 
-  err=dc1394_format7_get_byte_per_packet(camera, video_mode, bytes_per_packet);
+  err=dc1394_format7_get_packet_size(camera, video_mode, packet_size);
   DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", (int)video_mode);
 
   err=dc1394_format7_get_image_position(camera, video_mode, left, top);

@@ -1,5 +1,7 @@
 2007-11-30 Damien Douxchamps http://damien.douxchamps.net/
-	* SVN 467: Revert SVN 464 and harmonize #includes.
+	* SVN 469: Rename byte_per_packet to packet_size everywhere. Perform a
+	           few cleanups rearding that too.
+	* SVN 468: Revert SVN 464 and harmonize #includes.
 	* SVN 467: Minor changes in header files. 
 	* SVN 466: Add auto-iso stop in capture_stop functions 
 	* SVN 465: Implement auto-iso for capture setup (beta).

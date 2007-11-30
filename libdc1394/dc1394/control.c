@@ -1876,7 +1876,7 @@ dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t *bandwidth)
   
   if (format==DC1394_FORMAT7) {
     // use the bytes per packet value:
-    err=dc1394_format7_get_byte_per_packet(camera, video_mode, &qpp);
+    err=dc1394_format7_get_packet_size(camera, video_mode, &qpp);
     DC1394_ERR_RTN(err, "Could not get BPP");
     qpp=qpp/4;
   }

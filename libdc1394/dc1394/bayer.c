@@ -2618,7 +2618,7 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
   out->total_bytes = out->image_bytes + out->padding_bytes;
 
   // bytes-per-packet and packets_per_frame are internal data that can be kept as is.
-  out->bytes_per_packet  = in->bytes_per_packet;
+  out->packet_size  = in->packet_size;
   out->packets_per_frame = in->packets_per_frame;
 
   // timestamp, frame_behind, id and camera are copied too:

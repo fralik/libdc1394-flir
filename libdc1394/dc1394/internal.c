@@ -362,12 +362,12 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
 
   if (dc1394_is_video_mode_scalable(video_mode)==DC1394_TRUE) {
     //fprintf(stderr,"Scalable format detected\n");
-    err=dc1394_format7_get_byte_per_packet(camera, video_mode,
-        &frame->bytes_per_packet);
+    err=dc1394_format7_get_packet_size(camera, video_mode,
+        &frame->packet_size);
     DC1394_ERR_RTN(err, "Unable to get format 7 bytes per packet for mode %d",
         video_mode);
 
-    err=dc1394_format7_get_packet_per_frame(camera, video_mode,
+    err=dc1394_format7_get_packets_per_frame(camera, video_mode,
         &frame->packets_per_frame);
     DC1394_ERR_RTN(err, "Unable to get format 7 packets per frame %d",
         video_mode);
@@ -384,28 +384,28 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
     DC1394_ERR_RTN(err, "Unable to get current video framerate");
 
     err=_dc1394_get_quadlets_per_packet(video_mode, framerate,
-        &frame->bytes_per_packet);
+        &frame->packet_size);
     DC1394_ERR_RTN(err, "Unable to get quadlets per packet");
-    frame->bytes_per_packet *= 4;
+    frame->packet_size *= 4;
 
     err= _dc1394_quadlets_from_format(camera, video_mode,
         &frame->packets_per_frame);
     DC1394_ERR_RTN(err,"Could not get quadlets per frame");
-    frame->packets_per_frame /= frame->bytes_per_packet/4;
+    frame->packets_per_frame /= frame->packet_size/4;
 
     frame->position[0] = 0;
     frame->position[1] = 0;
     frame->color_filter = 0;
   }
 
-  if ((frame->bytes_per_packet <=0 )||
+  if ((frame->packet_size <=0 )||
       (frame->packets_per_frame <= 0)) {
     return DC1394_FAILURE;
   }
 
   frame->yuv_byte_order = DC1394_BYTE_ORDER_UYVY;
 
-  frame->total_bytes = frame->packets_per_frame * frame->bytes_per_packet;
+  frame->total_bytes = frame->packets_per_frame * frame->packet_size;
 
   err = dc1394_get_color_coding_from_video_mode (camera, video_mode,
       &frame->color_coding);

@@ -573,9 +573,9 @@ typedef struct __dc1394format7mode_t
 
   uint32_t pixnum;
 
-  uint32_t bpp; /* bpp is byte_per_packet, not bit per pixel. */
-  uint32_t min_bpp;
-  uint32_t max_bpp;
+  uint32_t packet_size; /* bpp is byte_per_packet, not bit per pixel. */
+  uint32_t unit_packet_size;
+  uint32_t max_packet_size;
 
   uint64_t total_bytes;
 
@@ -605,7 +605,7 @@ typedef struct __dc1394_video_frame
                                                    * multiple padding and intentional padding (vendor specific) */
   uint32_t                 image_bytes;           /* the number of bytes used for the image (image data only, no padding) */
   uint32_t                 padding_bytes;         /* the number of extra bytes, i.e. total_bytes-image_bytes.  */
-  uint32_t                 bytes_per_packet;      /* the number of bytes per packet. (IIDC data) */
+  uint32_t                 packet_size;           /* the size of a packet in bytes. (IIDC data) */
   uint32_t                 packets_per_frame;     /* the number of packets per frame. (IIDC data) */
   uint64_t                 timestamp;             /* the unix time [microseconds] at which the frame was captured in
 					 	   * the video1394 ringbuffer */
@@ -707,25 +707,14 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 extern "C" {
 #endif
 
-/***************************************************************************
-     Camera detection functions
- ***************************************************************************/
-
-dc1394_t* dc1394_new (void);
-void dc1394_free (dc1394_t *dc1394);
-dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list);
-void dc1394_free_camera_list(dc1394camera_list_t *list);
-dc1394camera_t * dc1394_camera_new(dc1394_t *dc1394, uint64_t guid);
-dc1394camera_t * dc1394_camera_new_unit(dc1394_t *dc1394, uint64_t guid, int unit);
-void dc1394_camera_free(dc1394camera_t *camera);
-
 
 /***************************************************************************
      General system functions
  ***************************************************************************/
 
-/* print the camera information */
-dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
+/* */
+dc1394_t* dc1394_new (void);
+void dc1394_free (dc1394_t *dc1394);
 
 #if 0
 /* Sets and resets the broadcast flag of a camera. If the broadcast flag is set,
@@ -748,16 +737,34 @@ dc1394error_t dc1394_read_cycle_timer (dc1394camera_t * camera,
         uint32_t * cycle_timer, uint64_t * local_time);
 
 /***************************************************************************
+     Camera functions
+ ***************************************************************************/
+
+/* Returns the list of cameras available on the computer. If present, multiple cards will be probed */
+dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list);
+/* Frees the memory allocated in dc1394_enumerate_cameras for the camera list*/
+void dc1394_free_camera_list(dc1394camera_list_t *list);
+/* Create a new camera based on a GUID (Global Unique IDentifier) */
+dc1394camera_t * dc1394_camera_new(dc1394_t *dc1394, uint64_t guid);
+/* Create a new camera based on a GUID and a unit number (for multi-unit cameras) */
+dc1394camera_t * dc1394_camera_new_unit(dc1394_t *dc1394, uint64_t guid, int unit);
+/* Frees a camera structure*/
+void dc1394_camera_free(dc1394camera_t *camera);
+/* Print various camera information, such as GUID, vendor, model, supported IIDC specs, etc... */
+dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
+
+/***************************************************************************
      Other functionalities
  ***************************************************************************/
 
-/* reset camera to factory default settings */
+/* reset a camera to factory default settings */
 dc1394error_t dc1394_reset_camera(dc1394camera_t *camera);
 
-/* turn camera on or off */
+/* turn a camera on or off */
 dc1394error_t dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr);
 
-/* functions to read and write camera setups in memory channels */
+/* functions to read and write camera setups in its memory channels. The _busy
+   function can be used to verify when a write operation is finished. */
 dc1394error_t dc1394_memory_busy(dc1394camera_t *camera, dc1394bool_t *value);
 dc1394error_t dc1394_memory_save(dc1394camera_t *camera, uint32_t channel);
 dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint32_t channel);
@@ -767,7 +774,6 @@ dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint32_t channel);
  ***************************************************************************/
 
 /* external trigger feature functions */
-/* change this name to EXTERNAL TRIGGER */
 dc1394error_t dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity);
 dc1394error_t dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity);
 dc1394error_t dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polarity_capable);
@@ -910,11 +916,11 @@ dc1394error_t dc1394_format7_set_color_coding(dc1394camera_t *camera, dc1394vide
 dc1394error_t dc1394_format7_get_color_filter(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_filter_t *color_filter);
 
 /* packet */
-dc1394error_t dc1394_format7_get_packet_para(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *unit_bytes, uint32_t *max_bytes);
-dc1394error_t dc1394_format7_get_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *packet_bytes);
-dc1394error_t dc1394_format7_set_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t packet_bytes);
-dc1394error_t dc1394_format7_get_recommended_byte_per_packet(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *bpp);
-dc1394error_t dc1394_format7_get_packet_per_frame(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *ppf);
+dc1394error_t dc1394_format7_get_packet_parameters(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *unit_bytes, uint32_t *max_bytes);
+dc1394error_t dc1394_format7_get_packet_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *packet_size);
+dc1394error_t dc1394_format7_set_packet_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t packet_size);
+dc1394error_t dc1394_format7_get_recommended_packet_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *packet_size);
+dc1394error_t dc1394_format7_get_packets_per_frame(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *ppf);
 
 /* other */
 dc1394error_t dc1394_format7_get_data_depth(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *data_depth);
@@ -929,10 +935,10 @@ dc1394error_t dc1394_format7_get_mode_info(dc1394camera_t *camera, dc1394video_m
 /* Joint function that fully sets a certain ROI taking all parameters into account
    Note that this function does not SWITCH to the video mode passed as argument, it mearly sets it */
 dc1394error_t dc1394_format7_set_roi(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t color_coding,
-				     int bytes_per_packet, int left, int top, int width, int height);
+				     int32_t packet_size, int32_t left, int32_t top, int32_t width, int32_t height);
 
 dc1394error_t dc1394_format7_get_roi(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding,
-				     uint32_t *bytes_per_packet, uint32_t *left, uint32_t *top, uint32_t *width, uint32_t *height);
+				     uint32_t *packet_size, uint32_t *left, uint32_t *top, uint32_t *width, uint32_t *height);
 
 /* This will have to be fixed or removed: it's ugly...*/
 dc1394error_t dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera);
