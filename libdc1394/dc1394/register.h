@@ -38,19 +38,19 @@ extern "C" {
 
 
 dc1394error_t dc1394_get_registers (dc1394camera_t *camera,
-    uint64_t offset, uint32_t *value, uint32_t num_regs);
+				    uint64_t offset, uint32_t *value, uint32_t num_regs);
 
 static inline dc1394error_t dc1394_get_register (dc1394camera_t *camera,
-    uint64_t offset, uint32_t *value)
+						 uint64_t offset, uint32_t *value)
 {
   return dc1394_get_registers (camera, offset, value, 1);
 }
 
 dc1394error_t dc1394_set_registers (dc1394camera_t *camera,
-        uint64_t offset, uint32_t *value, uint32_t num_regs);
+				    uint64_t offset, uint32_t *value, uint32_t num_regs);
 
 static inline dc1394error_t dc1394_set_register (dc1394camera_t *camera,
-    uint64_t offset, uint32_t value)
+						 uint64_t offset, uint32_t value)
 {
   return dc1394_set_registers (camera, offset, &value, 1);
 }

@@ -24,7 +24,7 @@
     More details soon
 */
 
-#include "control.h"
+#include <dc1394/control.h>
 
 #ifdef __cplusplus
 extern "C" {

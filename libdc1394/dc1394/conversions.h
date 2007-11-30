@@ -27,8 +27,8 @@
     More details soon
 */
 
-#include "control.h"
-#include "utils.h"
+#include <dc1394/control.h>
+#include <dc1394/utils.h>
 #define restrict __restrict
 
 typedef enum {
