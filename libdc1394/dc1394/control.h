@@ -588,7 +588,8 @@ typedef struct __dc1394format7modeset_t
   dc1394format7mode_t mode[DC1394_VIDEO_MODE_FORMAT7_NUM];
 } dc1394format7modeset_t;
 
-/* video frame structure */
+/* video frame structure. In general this structure should be calloc'ed so that members such as "allocated size"
+   are properly set to zero. Don't forget to free the "image" member before freeing the struct itself. */
 typedef struct __dc1394_video_frame
 {
   unsigned char          * image;                 /* the image. May contain padding data too (vendor specific) */
@@ -621,7 +622,7 @@ extern const char *dc1394_feature_desc[DC1394_FEATURE_NUM];
 extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 
 #if ! defined (_MSC_VER)
-/* Error checking function. displays an error string on stderr and exit current function
+/* Error checking macros. Logs an error string on stderr and exit current function
    if error is positive. Neg errors are messages and are thus ignored */
 
 #define DC1394_WRN(err,...)                                  \
@@ -743,7 +744,6 @@ dc1394error_t dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t p
    free leftover ISO channels or bandwidth.  A bus reset will free those things
    as a side effect. */
 dc1394error_t dc1394_reset_bus(dc1394camera_t *camera);
-
 dc1394error_t dc1394_read_cycle_timer (dc1394camera_t * camera,
         uint32_t * cycle_timer, uint64_t * local_time);
 
@@ -975,16 +975,14 @@ dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
  * @param [in] log_handler: pointer to a function which takes a character string as argument
  *             type: the type of log
  */
-dc1394error_t
-dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message));
+dc1394error_t dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message));
 
 /**
  * dc1394_log_set_default_handler: set the log handler to the default handler
  * At boot time, debug logging is OFF (handler is NULL). Using this function for the debug statements
  * will start logging of debug statements usng the default handler.
  */
-dc1394error_t
-dc1394_log_set_default_handler(dc1394log_t type);
+dc1394error_t dc1394_log_set_default_handler(dc1394log_t type);
 
 /**
  * dc1394_log_error: logs a fatal error condition to the registered facility

@@ -109,8 +109,8 @@ dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t 
 
 /************************************************************************************************
  *                                                                                              *
- *      Color conversion functions for cameras that can output raw Bayer pattern images, such   *
- *  as some Basler, AVT and Point Grey cameras.                                                 *
+ *      Color conversion functions for cameras that can output raw Bayer pattern images (color  *
+ *  codings DC1394_COLOR_CODING_RAW8 and DC1394_COLOR_CODING_RAW16).                            *
  *                                                                                              *
  *  Credits and sources:                                                                        *
  *  - Nearest Neighbor : OpenCV library                                                         *
@@ -131,6 +131,9 @@ dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t 
  *                       Sources import from DCRAW by Frederic Devernay. DCRAW is a RAW         *
  *                       converter program by Dave Coffin. URL:                                 *
  *                       http://www.cybercom.net/~dcoffin/dcraw/                                *
+ *  - AHD              : Adaptive Homogeneity-Directed Demosaicing Algorithm, by K. Hirakawa    *
+ *                       and T.W. Parks, IEEE Transactions on Image Processing, Vol. 14, Nr. 3, *
+ *                       March 2005, pp. 360 - 369.                                             *
  *                                                                                              *
  ************************************************************************************************/
 
