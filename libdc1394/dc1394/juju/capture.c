@@ -114,6 +114,10 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   craw->flags = flags;
 
+  // if capture is already set, abort
+  if (camera->capture_is_set>0)
+    return DC1394_CAPTURE_IS_RUNNING;
+
   // if auto iso is requested, stop ISO (if necessary)
   if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
     dc1394switch_t is_iso_on;
@@ -217,6 +221,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
     err=dc1394_video_set_transmission(camera, DC1394_ON);
     DC1394_ERR_RTN(err,"Could not start ISO!");
+    camera->iso_auto_started=1;
   }
 
   return DC1394_SUCCESS;
@@ -256,6 +261,13 @@ platform_capture_stop(platform_camera_t *craw)
   free (craw->frames);
   craw->frames = NULL;
   camera->capture_is_set = 0;
+
+  // stop ISO if it was started automatically
+  if (camera->iso_auto_started>0) {
+    err=dc1394_video_set_transmission(camera, DC1394_OFF);
+    DC1394_ERR_RTN(err,"Could not stop ISO!");
+    camera->iso_auto_started=0;
+  }
 
   return DC1394_SUCCESS;
 }

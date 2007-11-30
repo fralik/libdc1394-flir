@@ -544,6 +544,10 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
   uint32_t i;
   dc1394video_frame_t* f;
 
+  // if capture is already set, abort
+  if (camera->capture_is_set>0)
+    return DC1394_CAPTURE_IS_RUNNING;
+
   if (flags & DC1394_CAPTURE_FLAGS_DEFAULT)
     flags = DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC |
         DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC;
@@ -609,6 +613,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
   if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
     err=dc1394_video_set_transmission(camera, DC1394_ON);
     DC1394_ERR_RTN(err,"Could not start ISO!");
+    camera->iso_auto_started=1;
   }
 
   return DC1394_SUCCESS;
@@ -674,6 +679,13 @@ dc1394_capture_stop(dc1394camera_t *camera)
   }
   else {
     return DC1394_CAPTURE_IS_NOT_SET;
+  }
+
+  // stop ISO if it was started automatically
+  if (camera->iso_auto_started>0) {
+    err=dc1394_video_set_transmission(camera, DC1394_OFF);
+    DC1394_ERR_RTN(err,"Could not stop ISO!");
+    camera->iso_auto_started=0;
   }
   
   return DC1394_SUCCESS;

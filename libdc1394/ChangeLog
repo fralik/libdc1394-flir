@@ -1,4 +1,5 @@
 2007-11-30 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 466: Add auto-iso stop in capture_stop functions 
 	* SVN 465: Implement auto-iso for capture setup (beta).
 	* SVN 464: Fix #include in utils.h (Johann Schoonees)
 

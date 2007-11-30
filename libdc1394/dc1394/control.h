@@ -494,6 +494,7 @@ typedef struct __dc1394_camera
   uint32_t             iso_bandwidth;
   dc1394speed_t        iso_speed;
   dc1394bool_t         capture_is_set;
+  dc1394bool_t         iso_auto_started;
 
   /* for broadcast: */
   dc1394bool_t         broadcast;
