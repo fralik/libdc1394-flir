@@ -1,3 +1,6 @@
+2007-11-30 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 464: Fix #include in utils.h (Johann Schoonees)
+
 2007-11-29 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 463: Cleanup error codes, check enum types in *_set_* functions,
 	           remove error messages in conversion functions (replaced by
