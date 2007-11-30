@@ -309,8 +309,18 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     craw->capture.do_irm = false;
   else {
     err = DC1394_FAILURE;
-    DC1394_ERR_RTN (err, "Bandwidth and channel allocation must be enabled/disabled together\n");
+    DC1394_ERR_RTN (err, "Bandwidth and channel allocation must be enabled/disabled together in MacOSX\n");
   }
+
+  // if auto iso is requested, stop ISO (if necessary)
+  if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
+    dc1394switch_t is_iso_on;
+    dc1394_video_get_transmission(camera, &is_iso_on);
+    if (is_iso_on == DC1394_ON) {
+      err=dc1394_video_set_transmission(camera, DC1394_OFF);
+      DC1394_ERR_RTN(err,"Could not stop ISO!");
+    }
+  }   
 
   capture->frames = malloc (num_dma_buffers * sizeof (dc1394video_frame_t));
   err = _dc1394_capture_basic_setup(camera, capture->frames);
@@ -426,6 +436,12 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   capture->iso_is_started = 1;
 
   camera->capture_is_set=1;
+
+  // if auto iso is requested, start ISO
+  if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
+    err=dc1394_video_set_transmission(camera, DC1394_ON);
+    DC1394_ERR_RTN(err,"Could not start ISO!");
+  }
 
   return DC1394_SUCCESS;
 }

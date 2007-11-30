@@ -394,9 +394,8 @@ typedef enum {
 /* Capture flags */
 #define DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC   0x00000001U
 #define DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC 0x00000002U
-
-/* a reasonable default value: do alloc of bandwidth and channel */
-#define DC1394_CAPTURE_FLAGS_DEFAULT         0x00000004U
+#define DC1394_CAPTURE_FLAGS_DEFAULT         0x00000004U /* a reasonable default value: do bandwidth and channel allocation */
+#define DC1394_CAPTURE_FLAGS_AUTO_ISO        0x00000008U /* automatically start iso before capture and stop it after */
 
 /* Maximum number of characters in vendor and model strings */
 #define MAX_CHARS                      256

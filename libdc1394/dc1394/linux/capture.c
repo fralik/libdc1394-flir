@@ -170,7 +170,7 @@ _dc1394_capture_dma_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
     return DC1394_IOCTL_FAILURE;
   }
   // starting from here we use the ISO channel so we set the flag in the camera struct:
-  camera->capture_is_set=2;
+  camera->capture_is_set=1;
 
   //fprintf(stderr,"listening channel set\n");
   
@@ -275,6 +275,16 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   craw->capture.flags=flags;
 
+  // if auto iso is requested, stop ISO (if necessary)
+  if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
+    dc1394switch_t is_iso_on;
+    dc1394_video_get_transmission(camera, &is_iso_on);
+    if (is_iso_on == DC1394_ON) {
+      err=dc1394_video_set_transmission(camera, DC1394_OFF);
+      DC1394_ERR_RTN(err,"Could not stop ISO!");
+    }
+  }   
+
   // allocate channel/bandwidth if requested
   if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
     err=dc1394_allocate_iso_channel(camera);
@@ -295,6 +305,12 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   err=_dc1394_capture_dma_setup (craw, num_dma_buffers);
   if (err != DC1394_SUCCESS)
     goto fail;
+
+  // if auto iso is requested, start ISO
+  if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
+    err=dc1394_video_set_transmission(camera, DC1394_ON);
+    DC1394_ERR_RTN(err,"Could not start ISO!");
+  }
 
   return DC1394_SUCCESS;
 
