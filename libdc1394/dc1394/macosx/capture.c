@@ -195,7 +195,7 @@ CreateDCLProgram (platform_camera_t * craw)
   IOVirtualRange * databuf = &(capture->databuf);
   NuDCLRef dcl = NULL;
   IOFireWireLibNuDCLPoolRef dcl_pool = capture->dcl_pool;
-  int packet_size = capture->frames[0].bytes_per_packet;
+  int packet_size = capture->frames[0].packet_size;
   int bytesperframe = capture->frames[0].total_bytes;
   int i;
 
@@ -364,7 +364,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   (*d)->GetSpeedToNode (d, craw->generation, &speed);
   chan = (*d)->CreateIsochChannel (d, craw->capture.do_irm,
-      capture->frames[0].bytes_per_packet, speed,
+      capture->frames[0].packet_size, speed,
       CFUUIDGetUUIDBytes (kIOFireWireIsochChannelInterfaceID));
   if (!chan) {
     platform_capture_stop (craw);

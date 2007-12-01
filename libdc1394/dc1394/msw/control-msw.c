@@ -588,7 +588,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
   cmsw->ISO.Port = camera->port;
   cmsw->ISO.nChannel = camera->iso_channel;
   cmsw->ISO.Speed = dc1394_2_msw1394_speed(camera->iso_speed);
-  cmsw->ISO.nMaxBytesPerFrame = cmsw->frames[0].bytes_per_packet+4;
+  cmsw->ISO.nMaxBytesPerFrame = cmsw->frames[0].packet_size+4;
   cmsw->ISO.nNumberOfBuffers = num_dma_buffers;
   cmsw->ISO.nMaxBufferSize = cmsw->frames[0].total_bytes;
   cmsw->ISO.nQuadletsToStrip = 1;

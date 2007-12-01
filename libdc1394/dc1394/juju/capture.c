@@ -52,9 +52,9 @@ init_frame(platform_camera_t *craw, int index, dc1394video_frame_t *proto)
 
   memset(f->packets, 0, f->size);
 
-  total = proto->packets_per_frame * proto->bytes_per_packet;
+  total = proto->packets_per_frame * proto->packet_size;
   for (i = 0; i < count; i++) {
-    payload_length = proto->bytes_per_packet * N;
+    payload_length = proto->packet_size * N;
     if (payload_length < total)
       f->packets[i].control = FW_CDEV_ISO_PAYLOAD_LENGTH(payload_length);
     else

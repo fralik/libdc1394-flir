@@ -1,3 +1,7 @@
+2007-12-01 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 470: perform byte_per_packet name changes in juju, osx and msw
+	           too (thanks to Chris Rankin)
+	
 2007-11-30 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 469: Rename byte_per_packet to packet_size everywhere. Perform a
 	           few cleanups rearding that too.
@@ -11,7 +15,8 @@
 	* SVN 463: Cleanup error codes, check enum types in *_set_* functions,
 	           remove error messages in conversion functions (replaced by
 		   returning a proper error code)
-	* SVN 462: Remove the error DC1394_NO_CAMERA since it's not used anymore
+	* SVN 462: Remove the error DC1394_NO_CAMERA since it's not used
+	           anymore
 	* SVN 461: Merge three functions (feature mode capabilities) into a
 	           single one
 	* SVN 460: - slightly different interface for message logging
@@ -27,9 +32,9 @@
 	           to shorter dc1394_memory_busy.
 	* SVN 455: reinstate the verification code for video mode, format and
 	           iso status
-        * SVN 454: - temporarily remove the definition of the broadcast function
-	             in control.h, since it's code has been commented-out in
-		     control.c.
+        * SVN 454: - temporarily remove the definition of the broadcast
+	             function in control.h, since it's code has been
+	             commented-out in control.c.
 		   - remove video_mode, framerate and is_iso_on from
 		     dc1394camera_t. 
 

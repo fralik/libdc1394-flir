@@ -573,7 +573,7 @@ typedef struct __dc1394format7mode_t
 
   uint32_t pixnum;
 
-  uint32_t packet_size; /* bpp is byte_per_packet, not bit per pixel. */
+  uint32_t packet_size; /* in bytes */
   uint32_t unit_packet_size;
   uint32_t max_packet_size;
 
