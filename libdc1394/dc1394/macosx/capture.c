@@ -544,7 +544,7 @@ platform_capture_stop(platform_camera_t *craw)
 
   // stop ISO if it was started automatically
   if (camera->iso_auto_started>0) {
-    err=dc1394_video_set_transmission(camera, DC1394_OFF);
+    dc1394error_t err=dc1394_video_set_transmission(camera, DC1394_OFF);
     DC1394_ERR_RTN(err,"Could not stop ISO!");
     camera->iso_auto_started=0;
   }
