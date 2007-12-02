@@ -1,3 +1,6 @@
+2007-12-02 David Moore  <dcm@acm.org>
+	* SVN 475: configure.in: fix automake error
+
 2007-12-02 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 472-4: better error code returned by register access functions
 	
