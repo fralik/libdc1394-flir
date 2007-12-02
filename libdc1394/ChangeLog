@@ -1,5 +1,5 @@
 2007-12-02 Damien Douxchamps http://damien.douxchamps.net/
-	* SVN 472: better error code returned by register access functions
+	* SVN 472-4: better error code returned by register access functions
 	
 2007-12-01 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 471: fix missing declarations of "err" introduced in SVN 466
