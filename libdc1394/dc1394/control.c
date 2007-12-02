@@ -220,6 +220,10 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   uint32_t value;
   dc1394error_t err;
 
+  if ( (feature->id < DC1394_FEATURE_MIN) || (feature->id > DC1394_FEATURE_MAX) ) {
+    return DC1394_INVALID_FEATURE;
+  }
+
   // check presence
   err=dc1394_feature_is_present(camera, feature->id, &(feature->available));
   DC1394_ERR_RTN(err, "Could not check feature %d presence",feature->id);
@@ -339,7 +343,6 @@ dc1394_print_feature(dc1394feature_info_t *f)
   int fid= f->id;
   
   if ( (fid < DC1394_FEATURE_MIN) || (fid > DC1394_FEATURE_MAX) ) {
-    printf("Invalid feature code\n");
     return DC1394_INVALID_FEATURE;
   }
   
