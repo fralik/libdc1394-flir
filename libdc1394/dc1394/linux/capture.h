@@ -25,4 +25,8 @@
 #ifndef __DC1394_CAPTURE_LINUX_H__
 #define __DC1394_CAPTURE_LINUX_H__
 
+/* Set the DMA device filename manually. In most cases this is not necessary because the capture
+   functions probe common filenames such as /dev/video1394/x or /dev/video1394. */
+dc1394error_t dc1394_capture_set_device_filename(dc1394camera_t* camera, char *filename);
+
 #endif

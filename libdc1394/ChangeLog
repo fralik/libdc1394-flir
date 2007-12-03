@@ -1,4 +1,6 @@
 2007-12-02 David Moore  <dcm@acm.org>
+	* SVN 477: Move dc1394_capture_set_device_filename to linux-specific
+	           header.
 	* SVN 476: Remove volatile fields from the public dc1394camera_t
 	* SVN 475: configure.in: fix automake error
 
