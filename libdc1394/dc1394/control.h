@@ -347,48 +347,48 @@ typedef enum {
 
 /* Return values for visible functions*/
 typedef enum {
-  DC1394_SUCCESS = 0,   /* Success is zero */
-  DC1394_FAILURE,       /* Errors are positive numbers */
-  DC1394_NOT_A_CAMERA,
-  DC1394_FUNCTION_NOT_SUPPORTED,
-  DC1394_CAMERA_NOT_INITIALIZED,
-  DC1394_MEMORY_ALLOCATION_FAILURE,
-  DC1394_TAGGED_REGISTER_NOT_FOUND,
-  DC1394_NO_ISO_CHANNEL,
-  DC1394_NO_BANDWIDTH,
-  DC1394_IOCTL_FAILURE,
-  DC1394_CAPTURE_IS_NOT_SET,
-  DC1394_CAPTURE_IS_RUNNING,
-  DC1394_RAW1394_FAILURE,
-  DC1394_FORMAT7_ERROR_FLAG_1,
-  DC1394_FORMAT7_ERROR_FLAG_2,
-  DC1394_INVALID_ARGUMENT_VALUE,
-  DC1394_REQ_VALUE_OUTSIDE_RANGE,
-  DC1394_INVALID_FEATURE,
-  DC1394_INVALID_VIDEO_FORMAT,
-  DC1394_INVALID_VIDEO_MODE,
-  DC1394_INVALID_FRAMERATE,
-  DC1394_INVALID_TRIGGER_MODE,
-  DC1394_INVALID_TRIGGER_SOURCE,
-  DC1394_INVALID_ISO_SPEED,
-  DC1394_INVALID_IIDC_VERSION,
-  DC1394_INVALID_COLOR_CODING,
-  DC1394_INVALID_COLOR_FILTER,
-  DC1394_INVALID_CAPTURE_POLICY,
-  DC1394_INVALID_ERROR_CODE,
-  DC1394_INVALID_BAYER_METHOD,
-  DC1394_INVALID_VIDEO1394_DEVICE,
-  DC1394_INVALID_OPERATION_MODE,
-  DC1394_INVALID_TRIGGER_POLARITY,
-  DC1394_INVALID_FEATURE_MODE,
-  DC1394_INVALID_LOG_TYPE,
-  DC1394_INVALID_BYTE_ORDER,
-  DC1394_INVALID_STEREO_METHOD,
-  DC1394_BASLER_NO_MORE_SFF_CHUNKS,
-  DC1394_BASLER_CORRUPTED_SFF_CHUNK,
-  DC1394_BASLER_UNKNOWN_SFF_CHUNK
+  DC1394_SUCCESS                     =  0,
+  DC1394_FAILURE                     = -1,
+  DC1394_NOT_A_CAMERA                = -2,
+  DC1394_FUNCTION_NOT_SUPPORTED      = -3,
+  DC1394_CAMERA_NOT_INITIALIZED      = -4,
+  DC1394_MEMORY_ALLOCATION_FAILURE   = -5,
+  DC1394_TAGGED_REGISTER_NOT_FOUND   = -6,
+  DC1394_NO_ISO_CHANNEL              = -7,
+  DC1394_NO_BANDWIDTH                = -8,
+  DC1394_IOCTL_FAILURE               = -9,
+  DC1394_CAPTURE_IS_NOT_SET          = -10,
+  DC1394_CAPTURE_IS_RUNNING          = -11,
+  DC1394_RAW1394_FAILURE             = -12,
+  DC1394_FORMAT7_ERROR_FLAG_1        = -13,
+  DC1394_FORMAT7_ERROR_FLAG_2        = -14,
+  DC1394_INVALID_ARGUMENT_VALUE      = -15,
+  DC1394_REQ_VALUE_OUTSIDE_RANGE     = -16,
+  DC1394_INVALID_FEATURE             = -17,
+  DC1394_INVALID_VIDEO_FORMAT        = -18,
+  DC1394_INVALID_VIDEO_MODE          = -19,
+  DC1394_INVALID_FRAMERATE           = -20,
+  DC1394_INVALID_TRIGGER_MODE        = -21,
+  DC1394_INVALID_TRIGGER_SOURCE      = -22,
+  DC1394_INVALID_ISO_SPEED           = -23,
+  DC1394_INVALID_IIDC_VERSION        = -24,
+  DC1394_INVALID_COLOR_CODING        = -25,
+  DC1394_INVALID_COLOR_FILTER        = -26,
+  DC1394_INVALID_CAPTURE_POLICY      = -27,
+  DC1394_INVALID_ERROR_CODE          = -28,
+  DC1394_INVALID_BAYER_METHOD        = -29,
+  DC1394_INVALID_VIDEO1394_DEVICE    = -30,
+  DC1394_INVALID_OPERATION_MODE      = -31,
+  DC1394_INVALID_TRIGGER_POLARITY    = -32,
+  DC1394_INVALID_FEATURE_MODE        = -33,
+  DC1394_INVALID_LOG_TYPE            = -34,
+  DC1394_INVALID_BYTE_ORDER          = -35,
+  DC1394_INVALID_STEREO_METHOD       = -36,
+  DC1394_BASLER_NO_MORE_SFF_CHUNKS   = -37,
+  DC1394_BASLER_CORRUPTED_SFF_CHUNK  = -38,
+  DC1394_BASLER_UNKNOWN_SFF_CHUNK    = -39
 } dc1394error_t;
-#define DC1394_ERROR_NUM DC1394_BASLER_UNKNOWN_SFF_CHUNK+1
+#define DC1394_ERROR_NUM -DC1394_BASLER_UNKNOWN_SFF_CHUNK+1
 
 /* Capture flags */
 #define DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC   0x00000001U
@@ -606,13 +606,13 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 
 #define DC1394_WRN(err,...)                                  \
     {                                                        \
-    if ((err<0)||(err>DC1394_ERROR_NUM))                     \
+    if ((err>0)||(err<=-DC1394_ERROR_NUM))                   \
       err=DC1394_INVALID_ERROR_CODE;                         \
                                                              \
-    if (err>DC1394_SUCCESS) {                                \
+    if (err!=DC1394_SUCCESS) {                               \
       fprintf(stderr,"Libdc1394 warning (%s:%s:%d): %s : ",  \
 	      __FILE__, __FUNCTION__, __LINE__,              \
-	      dc1394_error_strings[err]);                    \
+	      dc1394_error_strings[-err]);                   \
       fprintf(stderr, __VA_ARGS__);                          \
       fprintf(stderr,"\n");                                  \
     }                                                        \
@@ -620,13 +620,13 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 
 #define DC1394_ERR(err,...)                                  \
     {                                                        \
-    if ((err<0)||(err>DC1394_ERROR_NUM))                     \
+    if ((err>0)||(err<=-DC1394_ERROR_NUM))                   \
       err=DC1394_INVALID_ERROR_CODE;                         \
                                                              \
-    if (err>DC1394_SUCCESS) {                                \
+    if (err!=DC1394_SUCCESS) {                               \
       fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
 	      __FILE__, __FUNCTION__, __LINE__,              \
-	      dc1394_error_strings[err]);                    \
+	      dc1394_error_strings[-err]);                   \
       fprintf(stderr, __VA_ARGS__);                          \
       fprintf(stderr,"\n");                                  \
       return;                                                \
@@ -635,13 +635,13 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 
 #define DC1394_ERR_RTN(err,...)                              \
     {                                                        \
-    if ((err<0)||(err>DC1394_ERROR_NUM))                     \
+    if ((err>0)||(err<=-DC1394_ERROR_NUM))                   \
       err=DC1394_INVALID_ERROR_CODE;                         \
                                                              \
-    if (err>DC1394_SUCCESS) {                                \
+    if (err!=DC1394_SUCCESS) {                               \
       fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
 	      __FILE__, __FUNCTION__, __LINE__,              \
-	      dc1394_error_strings[err]);                    \
+	      dc1394_error_strings[-err]);                   \
       fprintf(stderr, __VA_ARGS__);                          \
       fprintf(stderr,"\n");                                  \
       return err;                                            \
@@ -650,13 +650,13 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 
 #define DC1394_ERR_CLN(err, cleanup,...)                             \
     {                                                                \
-    if ((err<0)||(err>DC1394_ERROR_NUM))                             \
+    if ((err>0)||(err<=-DC1394_ERROR_NUM))                           \
       err=DC1394_INVALID_ERROR_CODE;                                 \
                                                                      \
-    if (err>DC1394_SUCCESS) {                                        \
+    if (err!=DC1394_SUCCESS) {                                       \
       fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
 	      __FILE__, __FUNCTION__, __LINE__,                      \
-	      dc1394_error_strings[err]);                            \
+	      dc1394_error_strings[-err]);                           \
       fprintf(stderr, __VA_ARGS__);                                  \
       fprintf(stderr,"\n");                                          \
       cleanup;                                                       \
@@ -666,13 +666,13 @@ extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
 
 #define DC1394_ERR_CLN_RTN(err, cleanup,...)                         \
     {                                                                \
-    if ((err<0)||(err>DC1394_ERROR_NUM))                             \
+    if ((err>0)||(err<=-DC1394_ERROR_NUM))                           \
       err=DC1394_INVALID_ERROR_CODE;                                 \
                                                                      \
-    if (err>DC1394_SUCCESS) {                                        \
+    if (err!=DC1394_SUCCESS) {                                       \
       fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
 	      __FILE__, __FUNCTION__, __LINE__,                      \
-	      dc1394_error_strings[err]);                            \
+	      dc1394_error_strings[-err]);                           \
       fprintf(stderr, __VA_ARGS__);                                  \
       fprintf(stderr,"\n");                                          \
       cleanup;                                                       \
