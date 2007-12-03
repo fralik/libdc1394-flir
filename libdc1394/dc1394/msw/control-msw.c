@@ -701,6 +701,9 @@ dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, d
   if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
     return DC1394_INVALID_CAPTURE_POLICY;
 
+  // default: return NULL in case of failures or lack of frames
+  *frame=NULL;
+
   int wait = policy != DC1394_CAPTURE_POLICY_POLL;
   ULONG idx = cmsw->ISO.nNumberOfBuffers;
   
@@ -708,7 +711,7 @@ dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_policy_t policy, d
   
   if (err1394 != MSW1394_SUCCESS) {
     if (err1394 == MSW1394_NO_DATA_AVAILABLE && (policy==DC1394_CAPTURE_POLICY_POLL))
-      return DC1394_NO_FRAME;
+      return DC1394_SUCCESS;
     else
       return ConvertError(err1394);
   }

@@ -572,6 +572,9 @@ platform_capture_dequeue (platform_camera_t * craw,
   if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
     return DC1394_INVALID_CAPTURE_POLICY;
 
+  // default: return NULL in case of failures or lack of frames
+  *frame=NULL;
+
   if (policy == DC1394_CAPTURE_POLICY_POLL) {
     int status;
     MPEnterCriticalRegion (capture->mutex, kDurationForever);
@@ -587,7 +590,7 @@ platform_capture_dequeue (platform_camera_t * craw,
   if (buffer->status != BUFFER_FILLED) {
     fprintf (stderr, "Error: expected filled buffer\n");
     MPExitCriticalRegion (capture->mutex);
-    return DC1394_NO_FRAME;
+    return DC1394_SUCCESS;
   }
   capture->frames_ready--;
   frame_tmp->frames_behind = capture->frames_ready;

@@ -349,8 +349,7 @@ typedef enum {
 typedef enum {
   DC1394_SUCCESS = 0,   /* Success is zero */
   DC1394_FAILURE,       /* Errors are positive numbers */
-  DC1394_NO_FRAME = -2, /* Warnings or info are negative numbers */
-  DC1394_NOT_A_CAMERA = 3,
+  DC1394_NOT_A_CAMERA,
   DC1394_FUNCTION_NOT_SUPPORTED,
   DC1394_CAMERA_NOT_INITIALIZED,
   DC1394_MEMORY_ALLOCATION_FAILURE,
@@ -358,8 +357,8 @@ typedef enum {
   DC1394_NO_ISO_CHANNEL,
   DC1394_NO_BANDWIDTH,
   DC1394_IOCTL_FAILURE,
-  DC1394_CAPTURE_IS_NOT_SET = -11, /* FIXME: negative errors to be removed once the new logging API is approved */
-  DC1394_CAPTURE_IS_RUNNING = 12,
+  DC1394_CAPTURE_IS_NOT_SET,
+  DC1394_CAPTURE_IS_RUNNING,
   DC1394_RAW1394_FAILURE,
   DC1394_FORMAT7_ERROR_FLAG_1,
   DC1394_FORMAT7_ERROR_FLAG_2,

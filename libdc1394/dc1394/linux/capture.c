@@ -422,6 +422,9 @@ platform_capture_dequeue (platform_camera_t * craw,
   if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
     return DC1394_INVALID_CAPTURE_POLICY;
 
+  // default: return NULL in case of failures or lack of frames
+  *frame=NULL;
+
   memset(&vwait, 0, sizeof(vwait));
 
   cb = (capture->dma_last_buffer + 1) % capture->num_dma_buffers;
@@ -440,8 +443,8 @@ platform_capture_dequeue (platform_camera_t * craw,
   }
   if ( result != 0) {       
     if ((policy==DC1394_CAPTURE_POLICY_POLL) && (errno == EINTR)) {                       
-      // when no frames is present, say so.
-      return DC1394_NO_FRAME;
+      // when no frames is present, just return
+      return DC1394_SUCCESS;
     }
     else {
       printf("(%s) VIDEO1394_IOC_LISTEN_WAIT/POLL_BUFFER ioctl failed!\n", __FILE__);

@@ -289,6 +289,9 @@ platform_capture_dequeue (platform_camera_t * craw,
   if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
     return DC1394_INVALID_CAPTURE_POLICY;
 
+  // default: return NULL in case of failures or lack of frames
+  *frame_return=NULL;
+
   fds[0].fd = craw->iso_fd;
   fds[0].events = POLLIN;
 
@@ -308,7 +311,7 @@ platform_capture_dequeue (platform_camera_t * craw,
       fprintf(stderr, "poll() failed for device %s\n", craw->filename);
       return DC1394_FAILURE;
     } else if (err == 0) {
-      return DC1394_NO_FRAME;
+      return DC1394_SUCCESS;
     }
 
     len = read (craw->iso_fd, &iso, sizeof iso);

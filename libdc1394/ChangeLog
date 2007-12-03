@@ -1,3 +1,7 @@
+2007-12-03 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 478: capture_dequeue returns success if no frame is available
+	           in POLL mode, but the frame will be NULL.
+
 2007-12-02 David Moore  <dcm@acm.org>
 	* SVN 477: Move dc1394_capture_set_device_filename to linux-specific
 	           header.

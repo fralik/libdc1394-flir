@@ -200,7 +200,7 @@ platform_camera_print_info (platform_camera_t * cam)
 
 dc1394error_t
 platform_camera_read (platform_camera_t * cam, uint64_t offset,
-    uint32_t * quads, int num_quads)
+		      uint32_t * quads, int num_quads)
 {
   int i, retval, retry = DC1394_MAX_RETRIES;
 

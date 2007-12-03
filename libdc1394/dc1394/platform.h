@@ -30,9 +30,9 @@ void platform_camera_print_info (platform_camera_t * cam);
 void platform_camera_set_parent (platform_camera_t * cam,
         dc1394camera_t * parent);
 
-int platform_camera_read (platform_camera_t * cam, uint64_t offset,
+dc1394error_t platform_camera_read (platform_camera_t * cam, uint64_t offset,
     uint32_t * quads, int num_quads);
-int platform_camera_write (platform_camera_t * cam, uint64_t offset,
+dc1394error_t platform_camera_write (platform_camera_t * cam, uint64_t offset,
     const uint32_t * quads, int num_quads);
 
 static inline dc1394error_t
