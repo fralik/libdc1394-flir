@@ -114,7 +114,8 @@ update_camera_info (dc1394camera_t *camera)
 
   /* get the current ISO speed, and verify it*/
   dc1394error_t err;
-  err=dc1394_video_get_iso_speed(camera, &camera->iso_speed);
+  dc1394speed_t iso_speed;
+  err=dc1394_video_get_iso_speed(camera, &iso_speed);
   if (err==DC1394_INVALID_ISO_SPEED) {
     // default to the most probable speed: 400 Mbps
     dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
@@ -650,9 +651,6 @@ dc1394_video_set_framerate(dc1394camera_t *camera, dc1394framerate_t framerate)
     return DC1394_INVALID_FRAMERATE;
   }
 
-  if (camera->capture_is_set>0)
-    return DC1394_CAPTURE_IS_RUNNING;
-  
   err=dc1394_set_control_register(camera, REG_CAMERA_FRAME_RATE,
 			       (uint32_t)(((framerate - DC1394_FRAMERATE_MIN) & 0x7UL) << 29));
   DC1394_ERR_RTN(err, "Could not set video framerate");
@@ -712,9 +710,6 @@ dc1394_video_set_mode(dc1394camera_t *camera, dc1394video_mode_t  mode)
   
   if ( (mode<DC1394_VIDEO_MODE_MIN) || (mode>DC1394_VIDEO_MODE_MAX) )
     return DC1394_INVALID_VIDEO_MODE;
-
-  if (camera->capture_is_set>0)
-    return DC1394_CAPTURE_IS_RUNNING;
 
   err=_dc1394_get_format_from_mode(mode, &format);
   DC1394_ERR_RTN(err, "Invalid video mode code");
@@ -793,9 +788,6 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
   if ((speed>DC1394_ISO_SPEED_MAX) || (speed<DC1394_ISO_SPEED_MIN))
     return DC1394_INVALID_ISO_SPEED;
 
-  if (camera->capture_is_set>0)
-    return DC1394_CAPTURE_IS_RUNNING;
-  
   err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
 
@@ -809,7 +801,6 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
 					       (speed & 0x7UL) |
 					       (0x1 << 15) ));
     DC1394_ERR_RTN(err, "oops");
-    camera->iso_speed=speed;
   }
   else { // fallback to legacy
     if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
@@ -825,7 +816,6 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
 				 (uint32_t) (((channel & 0xFUL) << 28) |
 					      ((speed & 0x3UL) << 24) ));
     DC1394_ERR_RTN(err, "Could not set ISO data register");
-    camera->iso_speed=speed;
   }
   
   return err;;
@@ -927,9 +917,6 @@ dc1394_video_set_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t  
   if ( (mode<DC1394_OPERATION_MODE_MIN) || (mode>DC1394_OPERATION_MODE_MAX) )
     return DC1394_INVALID_OPERATION_MODE;
 
-  if (camera->capture_is_set>0)
-    return DC1394_CAPTURE_IS_RUNNING;
-  
   err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
   DC1394_ERR_RTN(err, "Could not get ISO data");
   
@@ -1903,17 +1890,6 @@ dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t *bandwidth)
     *bandwidth = qpp << (DC1394_ISO_SPEED_1600-speed);
 
   return err;
-}
-
-dc1394error_t
-dc1394_video_specify_iso_channel(dc1394camera_t *camera, int iso_channel)
-{
-  if (camera->capture_is_set>0)
-    return DC1394_CAPTURE_IS_RUNNING;
-  
-  camera->iso_channel=iso_channel;
-
-  return DC1394_SUCCESS;
 }
 
 dc1394error_t

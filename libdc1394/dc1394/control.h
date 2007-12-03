@@ -488,26 +488,6 @@ typedef struct __dc1394_camera
   dc1394bool_t         has_feature_error_status;
   int                  max_mem_channel;
 
-  /* some current values */
-  int                  iso_channel; /* this variable contains the iso channel requests or the current iso channel */
-  int                  iso_channel_is_set; /* >0 if the iso_channel above has been allocated within libraw1394 */
-  uint32_t             iso_bandwidth;
-  dc1394speed_t        iso_speed;
-  dc1394bool_t         capture_is_set;
-  dc1394bool_t         iso_auto_started;
-
-  /* for broadcast: */
-  dc1394bool_t         broadcast;
-  uint16_t             node_id_backup;
-
-  /* 1394 PHY interface data: */
-  dc1394speed_t        phy_speed;
-  dc1394power_class_t  power_class;
-  dc1394phy_delay_t    phy_delay;
-  
-  /* for Basler SFF */
-  dc1394bool_t         sff_has_extended_data_stream;
-
   /* not used, for future use: */
   uint32_t             flags;
 
@@ -859,9 +839,6 @@ dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *dept
 /* start/stop isochronous data transmission */
 dc1394error_t dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr);
 dc1394error_t dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch_t *pwr);
-/* The following function is not necessary in general. You should only use it if you
-   want a specific ISO channel. Usage: Call it before setting up capture and transmission */
-dc1394error_t dc1394_video_specify_iso_channel(dc1394camera_t *camera, int iso_channel);
 
 /* turn one shot mode on or off */
 dc1394error_t dc1394_video_set_one_shot(dc1394camera_t *camera, dc1394switch_t pwr);

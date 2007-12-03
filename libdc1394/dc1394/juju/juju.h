@@ -46,6 +46,11 @@ struct _platform_camera_t {
   unsigned int num_frames;
   int current;
   int ready_frames;
+
+  int iso_channel;
+  int iso_channel_is_set;
+  int capture_is_set;
+  int iso_auto_started;
 };
 
 

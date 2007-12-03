@@ -333,10 +333,12 @@ platform_read_cycle_timer (platform_camera_t * cam,
 dc1394error_t
 dc1394_allocate_iso_channel(dc1394camera_t *camera)
 {
+  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+  platform_camera_t * cam = cpriv->pcam;
   /* FIXME: do this right */
 
-  camera->iso_channel = 0;
-  camera->iso_channel_is_set = 1;
+  cam->iso_channel = 0;
+  cam->iso_channel_is_set = 1;
 
   return DC1394_SUCCESS;
 }

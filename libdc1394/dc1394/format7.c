@@ -168,9 +168,6 @@ _dc1394_format7_set_image_size(dc1394camera_t *camera,
   err=dc1394_video_get_mode(camera,&mode);
   DC1394_ERR_RTN(err,"Could not get current video mode");
 
-  if ((camera->capture_is_set>0)&&(video_mode==mode))
-    return DC1394_CAPTURE_IS_RUNNING;
-
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_INVALID_VIDEO_MODE;
 
@@ -192,9 +189,6 @@ _dc1394_format7_set_color_coding(dc1394camera_t *camera,
 
   err=dc1394_video_get_mode(camera,&mode);
   DC1394_ERR_RTN(err,"Could not get current video mode");
-
-  if ((camera->capture_is_set>0)&&(video_mode==mode))
-    return DC1394_CAPTURE_IS_RUNNING;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_INVALID_VIDEO_MODE;
@@ -221,9 +215,6 @@ _dc1394_format7_set_packet_size(dc1394camera_t *camera,
 
   err=dc1394_video_get_mode(camera,&mode);
   DC1394_ERR_RTN(err,"Could not get current video mode");
-
-  if ((camera->capture_is_set>0)&&(video_mode==mode))
-    return DC1394_CAPTURE_IS_RUNNING;
 
   if (!dc1394_is_video_mode_scalable(video_mode))
     return DC1394_INVALID_VIDEO_MODE;
@@ -809,9 +800,6 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   uint32_t uint_packet_size=0;
   dc1394error_t err;
 
-  if (camera->capture_is_set>0)
-    return DC1394_CAPTURE_IS_RUNNING;
-
   // ===========================================================
   // COLOR CODING
   // ===========================================================
@@ -974,7 +962,7 @@ dc1394_format7_get_roi(dc1394camera_t *camera,
   dc1394error_t err;
 
   err=dc1394_format7_get_color_coding(camera, video_mode, color_coding);
-  DC1394_ERR_RTN(err, "Unable to get color_coding %d", (int)color_coding);
+  DC1394_ERR_RTN(err, "Unable to get color_coding for mode %d", video_mode);
 
   err=dc1394_format7_get_packet_size(camera, video_mode, packet_size);
   DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", (int)video_mode);

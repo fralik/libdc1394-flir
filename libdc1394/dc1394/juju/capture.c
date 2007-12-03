@@ -115,7 +115,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   craw->flags = flags;
 
   // if capture is already set, abort
-  if (camera->capture_is_set>0)
+  if (craw->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
 
   // if auto iso is requested, stop ISO (if necessary)
@@ -150,7 +150,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   create.type = FW_CDEV_ISO_CONTEXT_RECEIVE;
   create.header_size = 4;
-  create.channel = camera->iso_channel;
+  create.channel = craw->iso_channel;
   create.speed = SCODE_400;
   err = DC1394_IOCTL_FAILURE;
   if (ioctl(craw->iso_fd, FW_CDEV_IOC_CREATE_ISO_CONTEXT, &create) < 0) {
@@ -204,7 +204,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 	
   // starting from here we use the ISO channel so we set the flag in
   // the camera struct:
-  camera->capture_is_set = 1;
+  craw->capture_is_set = 1;
 
   start_iso.cycle   = -1;
   start_iso.tags = FW_CDEV_ISO_CONTEXT_MATCH_ALL_TAGS;
@@ -221,7 +221,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
     err=dc1394_video_set_transmission(camera, DC1394_ON);
     DC1394_ERR_RTN(err,"Could not start ISO!");
-    camera->iso_auto_started=1;
+    craw->iso_auto_started=1;
   }
 
   return DC1394_SUCCESS;
@@ -249,7 +249,7 @@ platform_capture_stop(platform_camera_t *craw)
   dc1394camera_t * camera = craw->camera;
   struct fw_cdev_stop_iso stop;
 
-  if (camera->capture_is_set == 0)
+  if (craw->capture_is_set == 0)
     return DC1394_CAPTURE_IS_NOT_SET;
 
   stop.handle = craw->iso_handle;
@@ -260,13 +260,13 @@ platform_capture_stop(platform_camera_t *craw)
   close(craw->iso_fd);
   free (craw->frames);
   craw->frames = NULL;
-  camera->capture_is_set = 0;
+  craw->capture_is_set = 0;
 
   // stop ISO if it was started automatically
-  if (camera->iso_auto_started>0) {
+  if (craw->iso_auto_started>0) {
     dc1394error_t err=dc1394_video_set_transmission(camera, DC1394_OFF);
     DC1394_ERR_RTN(err,"Could not stop ISO!");
-    camera->iso_auto_started=0;
+    craw->iso_auto_started=0;
   }
 
   return DC1394_SUCCESS;

@@ -56,6 +56,12 @@ struct _platform_camera_t {
   dc1394camera_t * camera;
 
   dc1394capture_t capture;
+  
+  int                      capture_is_set;
+  int                      iso_channel_is_set;
+  int                      iso_channel;
+  unsigned int             iso_bandwidth;
+  int                      iso_auto_started;
 };
 
 #endif

@@ -94,9 +94,9 @@ allocate_port (IOFireWireLibIsochPortRef rem_port,
   platform_camera_t * craw = (*rem_port)->GetRefCon (rem_port);
   dc1394camera_t * camera = craw->camera;
   //printf ("Allocate channel %lu %p\n", chan, camera);
-  camera->iso_channel_is_set = 1;
-  camera->iso_channel = chan;
-  dc1394_video_set_iso_channel(camera, camera->iso_channel);
+  craw->iso_channel_is_set = 1;
+  craw->iso_channel = chan;
+  dc1394_video_set_iso_channel(camera, craw->iso_channel);
   return kIOReturnSuccess;
 }
 
@@ -300,7 +300,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   CFSocketContext socket_context = { 0, craw, NULL, NULL, NULL };
   
   // if capture is already set, abort
-  if (camera->capture_is_set>0)
+  if (craw->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
 
   craw->capture.flags=flags;
@@ -439,13 +439,13 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   }
   capture->iso_is_started = 1;
 
-  camera->capture_is_set=1;
+  craw->capture_is_set=1;
 
   // if auto iso is requested, start ISO
   if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
     err=dc1394_video_set_transmission(camera, DC1394_ON);
     DC1394_ERR_RTN(err,"Could not start ISO!");
-    camera->iso_auto_started=1;
+    craw->iso_auto_started=1;
   }
 
   return DC1394_SUCCESS;
@@ -540,13 +540,13 @@ platform_capture_stop(platform_camera_t *craw)
     free (capture->frames);
   capture->frames = NULL;
 
-  camera->capture_is_set=0;
+  craw->capture_is_set=0;
 
   // stop ISO if it was started automatically
-  if (camera->iso_auto_started>0) {
+  if (craw->iso_auto_started>0) {
     dc1394error_t err=dc1394_video_set_transmission(camera, DC1394_OFF);
     DC1394_ERR_RTN(err,"Could not stop ISO!");
-    camera->iso_auto_started=0;
+    craw->iso_auto_started=0;
   }
 
   return DC1394_SUCCESS;
@@ -655,7 +655,7 @@ dc1394_capture_schedule_with_runloop (dc1394camera_t * camera,
   platform_camera_t * craw = cpriv->pcam;
   dc1394capture_t * capture = &(craw->capture);
 
-  if (camera->capture_is_set) {
+  if (craw->capture_is_set) {
     fprintf (stderr, "Warning: schedule_with_runloop must be called before capture_setup\n");
     return -1;
   }

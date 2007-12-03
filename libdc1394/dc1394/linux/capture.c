@@ -135,7 +135,6 @@ _dc1394_open_dma_device(platform_camera_t * craw)
 dc1394error_t
 _dc1394_capture_dma_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
 {
-  dc1394camera_t * camera = craw->camera;
   struct video1394_mmap vmmap;
   struct video1394_wait vwait;
   uint32_t i;
@@ -160,7 +159,7 @@ _dc1394_capture_dma_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
   vmmap.nb_buffers= num_dma_buffers;
   vmmap.flags= VIDEO1394_SYNC_FRAMES;
   vmmap.buf_size= craw->capture.frames[0].total_bytes; //number of bytes needed
-  vmmap.channel= camera->iso_channel;
+  vmmap.channel= craw->iso_channel;
   
   /* tell the video1394 system that we want to listen to the given channel */
   if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_LISTEN_CHANNEL, &vmmap) < 0) {
@@ -170,14 +169,14 @@ _dc1394_capture_dma_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
     return DC1394_IOCTL_FAILURE;
   }
   // starting from here we use the ISO channel so we set the flag in the camera struct:
-  camera->capture_is_set=1;
+  craw->capture_is_set=1;
 
   //fprintf(stderr,"listening channel set\n");
   
   craw->capture.dma_frame_size= vmmap.buf_size;
   craw->capture.num_dma_buffers= vmmap.nb_buffers;
   craw->capture.dma_last_buffer= -1;
-  vwait.channel= camera->iso_channel;
+  vwait.channel= craw->iso_channel;
   
   /* QUEUE the buffers */
   for (i= 0; i < vmmap.nb_buffers; i++) {
@@ -186,7 +185,7 @@ _dc1394_capture_dma_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
     if (ioctl(craw->capture.dma_fd,VIDEO1394_IOC_LISTEN_QUEUE_BUFFER,&vwait) < 0) {
       printf("(%s) VIDEO1394_IOC_LISTEN_QUEUE_BUFFER ioctl failed!\n", __FILE__);
       ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(vwait.channel));
-      camera->capture_is_set=0;
+      craw->capture_is_set=0;
       _dc1394_capture_cleanup_alloc(); // free allocated memory if necessary
       return DC1394_IOCTL_FAILURE;
     }
@@ -200,7 +199,7 @@ _dc1394_capture_dma_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
   if (craw->capture.dma_ring_buffer == (uint8_t*)(-1)) {
     printf("(%s) mmap failed!\n", __FILE__);
     ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
-    camera->capture_is_set=0;
+    craw->capture_is_set=0;
     _dc1394_capture_cleanup_alloc(); // free allocated memory if necessary
 
     // This should be display if the user has low memory
@@ -276,7 +275,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   craw->capture.flags=flags;
 
   // if capture is already set, abort
-  if (camera->capture_is_set>0)
+  if (craw->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
 
   // if auto iso is requested, stop ISO (if necessary)
@@ -314,7 +313,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
     err=dc1394_video_set_transmission(camera, DC1394_ON);
     DC1394_ERR_RTN(err,"Could not start ISO!");
-    camera->iso_auto_started=1;
+    craw->iso_auto_started=1;
   }
 
   return DC1394_SUCCESS;
@@ -347,10 +346,10 @@ platform_capture_stop(platform_camera_t *craw)
   dc1394camera_t * camera = craw->camera;
   int err;
 
-  if (camera->capture_is_set>0) {
+  if (craw->capture_is_set>0) {
     // unlisten
     if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL,
-              &(camera->iso_channel)) < 0) 
+              &(craw->iso_channel)) < 0) 
       return DC1394_IOCTL_FAILURE;
     
     // release
@@ -376,7 +375,7 @@ platform_capture_stop(platform_camera_t *craw)
     craw->capture.dma_device_file=NULL;
     
     // capture is not set anymore
-    camera->capture_is_set=0;
+    craw->capture_is_set=0;
     
     // free ressources if they were allocated
     if ((craw->capture.flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) >0) {
@@ -389,10 +388,10 @@ platform_capture_stop(platform_camera_t *craw)
     }
     
     // stop ISO if it was started automatically
-    if (camera->iso_auto_started>0) {
+    if (craw->iso_auto_started>0) {
       err=dc1394_video_set_transmission(camera, DC1394_OFF);
       DC1394_ERR_RTN(err,"Could not stop ISO!");
-      camera->iso_auto_started=0;
+      craw->iso_auto_started=0;
     }
       
     // free the additional capture handle
@@ -414,7 +413,6 @@ platform_capture_dequeue (platform_camera_t * craw,
 			dc1394capture_policy_t policy,
 			dc1394video_frame_t **frame)
 {
-  dc1394camera_t * camera = craw->camera;
   dc1394capture_t * capture = &(craw->capture);
   struct video1394_wait vwait;
   dc1394video_frame_t * frame_tmp;
@@ -429,7 +427,7 @@ platform_capture_dequeue (platform_camera_t * craw,
   cb = (capture->dma_last_buffer + 1) % capture->num_dma_buffers;
   frame_tmp = capture->frames + cb;
 
-  vwait.channel = camera->iso_channel;
+  vwait.channel = craw->iso_channel;
   vwait.buffer = cb;
   switch (policy) {
     case DC1394_CAPTURE_POLICY_POLL:
@@ -476,7 +474,7 @@ platform_capture_enqueue (platform_camera_t * craw,
     return DC1394_INVALID_ARGUMENT_VALUE;
   }
   
-  vwait.channel = camera->iso_channel;
+  vwait.channel = craw->iso_channel;
   vwait.buffer = frame->id;
   
   if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_LISTEN_QUEUE_BUFFER, &vwait) < 0)  {

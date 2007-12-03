@@ -21,6 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <inttypes.h>
+
 #include "../internal.h"
 #include "../register.h"
 #include "../checksum.h"
@@ -200,7 +202,10 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
   
   /* we need to enable the extended data stream first if this chunk has image data */
   if (feature_desc->has_chunk && feature_id != DC1394_BASLER_SFF_EXTENDED_DATA_STREAM) {
-    if (!camera->sff_has_extended_data_stream) {
+    err = dc1394_basler_sff_feature_is_enabled (camera,
+        DC1394_BASLER_SFF_EXTENDED_DATA_STREAM, &is_enabled);
+    DC1394_ERR_RTN (err, "Failed to get extended_data_stream status");
+    if (!is_enabled) {
       err = dc1394_basler_sff_feature_enable (camera, DC1394_BASLER_SFF_EXTENDED_DATA_STREAM, DC1394_ON);
       DC1394_ERR_RTN(err, "cannot enable Extended_Data_Stream feature prior to enabling feature '%s'", feature_desc->name);
     } 
@@ -214,7 +219,7 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
 
   err = dc1394_get_register (camera, feature_address, &data);
   DC1394_ERR_RTN(err, "Cannot read SFF feature CSR register");
-  fprintf (stderr, "%s: address = 0x%016llx read data = 0x%08x\n", __FUNCTION__, feature_address, data);
+  fprintf (stderr, "%s: address = 0x%016"PRIx64" read data = 0x%08x\n", __FUNCTION__, feature_address, data);
   
   /* enable or disable */
   if (on_off) {
@@ -224,7 +229,7 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
   }
   err = dc1394_set_register (camera, feature_address, data);
   DC1394_ERR_RTN(err, "cannot write to feature CSR");
-  fprintf (stderr, "%s: address = 0x%016llx write data = 0x%08x\n", __FUNCTION__, feature_address, data);
+  fprintf (stderr, "%s: address = 0x%016"PRIx64" write data = 0x%08x\n", __FUNCTION__, feature_address, data);
 
   /* check if it was enabled or disabled correctly */
   err = dc1394_basler_sff_feature_is_enabled (camera, feature_id, &is_enabled);
@@ -234,10 +239,6 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
     err = DC1394_FAILURE;
     DC1394_ERR_RTN(err, "camera reported that the feature was not %s", on_off ? "enabled" : "disabled");
   }
-
-  /* set flags in the camera struct */
-  if (feature_id == DC1394_BASLER_SFF_EXTENDED_DATA_STREAM)
-    camera->sff_has_extended_data_stream = on_off;
 
   return DC1394_SUCCESS;
 }
@@ -276,7 +277,7 @@ dc1394_basler_sff_feature_is_enabled (dc1394camera_t* camera, dc1394basler_sff_f
 
   err = dc1394_get_register (camera, feature_address, &data);
   DC1394_ERR_RTN(err, "Cannot read SFF feature CSR register");
-  fprintf (stderr, "%s: address = 0x%016llx data = 0x%08x\n", __FUNCTION__, feature_address, data);
+  fprintf (stderr, "%s: address = 0x%016"PRIx64" data = 0x%08x\n", __FUNCTION__, feature_address, data);
 
   if (data & BASLER_SFF_CSR_BIT_ENABLE) {
     *is_enabled = DC1394_TRUE;
@@ -346,7 +347,7 @@ dc1394_basler_sff_feature_print (dc1394camera_t* camera, dc1394basler_sff_featur
     
     err = get_sff_address_from_csr_guid (camera, &(feature_desc->csr_guid), &feature_address);
     if (err == DC1394_SUCCESS) {
-      printf ("Address   : 0x%016llx\n", feature_address);
+      printf ("Address   : 0x%016"PRIx64"\n", feature_address);
     } else {
       printf ("Address   : unavailable\n");
     }
