@@ -116,8 +116,8 @@ AC_SUBST(lt_revision)
 AC_SUBST(lt_age)
 
 dnl AX_CFLAGS_WARN_ALL(CFLAGS)
-CFLAGS="$CFLAGS -Wall -Wunused"
-dnl for pedantic compilation, try to add "-std=c99 -pedantic" to the above string
+CFLAGS="$CFLAGS -Wall -Wunused -std=gnu99"
+dnl for pedantic compilation, try to add "-pedantic" to the above string
 
 AC_CONFIG_FILES([ \
     Makefile \
