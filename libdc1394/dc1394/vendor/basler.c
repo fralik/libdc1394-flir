@@ -151,7 +151,7 @@ dc1394_basler_sff_feature_is_available (dc1394camera_t* camera, dc1394basler_sff
   feature_desc = basler_sff_registry_find_by_id (feature_id);
   if (feature_desc == NULL) {
     err = DC1394_FAILURE;
-    DC1394_ERR_RTN(err, "unknown feature: %d", feature_id);
+    DC1394_ERR_RTN(err, "unknown feature");
   }
 
   /* if this feature uses has an image chunk, only allow it if the
@@ -197,7 +197,7 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
   /* check if this feature can be enabled by the generic function */
   if (!feature_desc->generic) {
     err = DC1394_FUNCTION_NOT_SUPPORTED;
-    DC1394_ERR_RTN(err, "cannot enable feature '%s' with the generic enable function", feature_desc->name);
+    DC1394_ERR_RTN(err, "cannot enable feature with the generic enable function");
   }
   
   /* we need to enable the extended data stream first if this chunk has image data */
@@ -207,7 +207,7 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
     DC1394_ERR_RTN (err, "Failed to get extended_data_stream status");
     if (!is_enabled) {
       err = dc1394_basler_sff_feature_enable (camera, DC1394_BASLER_SFF_EXTENDED_DATA_STREAM, DC1394_ON);
-      DC1394_ERR_RTN(err, "cannot enable Extended_Data_Stream feature prior to enabling feature '%s'", feature_desc->name);
+      DC1394_ERR_RTN(err, "cannot enable Extended_Data_Stream feature prior to enabling feature");
     } 
   }
 
@@ -237,7 +237,7 @@ dc1394_basler_sff_feature_enable (dc1394camera_t* camera, dc1394basler_sff_featu
 
   if (on_off != is_enabled) {
     err = DC1394_FAILURE;
-    DC1394_ERR_RTN(err, "camera reported that the feature was not %s", on_off ? "enabled" : "disabled");
+    DC1394_ERR_RTN(err, "camera reported that the feature was not in the proper state (enabled or disabled)");
   }
 
   return DC1394_SUCCESS;
@@ -266,7 +266,7 @@ dc1394_basler_sff_feature_is_enabled (dc1394camera_t* camera, dc1394basler_sff_f
   /* check if this feature can be enabled by the generic function */
   if (!feature_desc->generic) {
     err = DC1394_FUNCTION_NOT_SUPPORTED;
-    DC1394_ERR_RTN(err, "cannot check feature '%s' with the generic enable function", feature_desc->name);
+    DC1394_ERR_RTN(err, "cannot check feature with the generic enable function");
   }
   
   err = get_sff_address_from_csr_guid (camera, &(feature_desc->csr_guid), &feature_address);

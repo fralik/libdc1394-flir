@@ -37,6 +37,7 @@
 #include "internal.h"
 #include "control.h"
 #include "utils.h"
+#include "log.h"
 #include "macosx/macosx.h"
 #include "macosx/capture.h"
 

@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <dc1394/utils.h>
+#include <dc1394/log.h>
 #include <dc1394/control.h>
 #include <dc1394/conversions.h>
 #include <stdlib.h>
@@ -115,6 +116,7 @@ void print_color_coding( uint32_t color_id )
     break;
 
   default:
+    dc1394_log_error("Unknown color coding",NULL);
     fprintf(stderr,"Unknown color coding = %d\n",color_id);
     exit(1);
   }

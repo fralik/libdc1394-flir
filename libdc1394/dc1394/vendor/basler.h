@@ -23,9 +23,10 @@
 #ifndef __DC1394_VENDOR_BASLER_H__
 #define __DC1394_VENDOR_BASLER_H__
 
-#include "dc1394/control.h"
+#include <dc1394/control.h>
 #include "basler_sff.h"
 #include <string.h>
+#include <dc1394/log.h>
 
 #ifdef __cplusplus
 extern "C" {

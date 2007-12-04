@@ -29,6 +29,7 @@
 #include "offsets.h"
 #include "utils.h"
 #include "config.h"
+#include "log.h"
 
 /**********************/ 
 /* Internal functions */
@@ -806,7 +807,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   // deal with color coding early as it may have an effect on max bpp, sizes, etc...
   if (color_coding==DC1394_QUERY_FROM_CAMERA) {
     err=dc1394_format7_get_color_coding(camera, video_mode, &color_coding);
-    DC1394_ERR_RTN(err, "Unable to get color_coding %d", color_coding);
+    DC1394_ERR_RTN(err, "Unable to get color_coding");
   }
   else {
     if (color_coding<0) {
@@ -815,11 +816,11 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
     }
     // set color coding
     err=_dc1394_format7_set_color_coding(camera, video_mode, color_coding);
-    DC1394_ERR_RTN(err, "Unable to set color_coding %d", color_coding);
+    DC1394_ERR_RTN(err, "Unable to set color_coding");
 
     // do handshaking to be sure that the value is now effective
     err=_dc1394_v130_handshake(camera, video_mode);
-    DC1394_ERR_RTN(err, "Handshaking failed after setting color_coding %d", color_coding);
+    DC1394_ERR_RTN(err, "Handshaking failed after setting color_coding");
   }
 
   // ===========================================================
@@ -875,9 +876,9 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   err=_dc1394_format7_set_image_position(camera, video_mode, 0,0);
   DC1394_ERR_RTN(err, "Unable to set image position");
   err=_dc1394_format7_set_image_size(camera, video_mode, width, height);
-  DC1394_ERR_RTN(err, "Unable to set format 7 image size to [%d %d]",width, height);
+  DC1394_ERR_RTN(err, "Unable to set format 7 image size");
   err=_dc1394_format7_set_image_position(camera, video_mode, left, top);
-  DC1394_ERR_RTN(err, "Unable to set format 7 image position to [%d %d]",left, top);
+  DC1394_ERR_RTN(err, "Unable to set format 7 image position");
   // do handshaking to be sure that the value is now effective
   err=_dc1394_v130_handshake(camera, video_mode);
   DC1394_ERR_RTN(err, "Handshaking failed after setting size and position");
@@ -888,7 +889,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
 
   if (packet_size==DC1394_QUERY_FROM_CAMERA) {
     err=dc1394_format7_get_packet_size(camera, video_mode, &uint_packet_size);
-    DC1394_ERR_RTN(err, "Unable to get F7 packet size for mode %d", video_mode);
+    DC1394_ERR_RTN(err, "Unable to get F7 packet size");
     packet_size=uint_packet_size;
   }
 
@@ -941,7 +942,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
 
   // set bpp:
   err=_dc1394_format7_set_packet_size(camera, video_mode, packet_size);
-  DC1394_ERR_RTN(err, "Unable to set format 7 packet_size for mode %d", video_mode);
+  DC1394_ERR_RTN(err, "Unable to set format 7 packet_size");
 
   // IIDC v1.30 handshaking:
   err=_dc1394_v130_handshake(camera, video_mode);
@@ -962,10 +963,10 @@ dc1394_format7_get_roi(dc1394camera_t *camera,
   dc1394error_t err;
 
   err=dc1394_format7_get_color_coding(camera, video_mode, color_coding);
-  DC1394_ERR_RTN(err, "Unable to get color_coding for mode %d", video_mode);
+  DC1394_ERR_RTN(err, "Unable to get color_coding");
 
   err=dc1394_format7_get_packet_size(camera, video_mode, packet_size);
-  DC1394_ERR_RTN(err, "Unable to get F7 bpp for mode %d", (int)video_mode);
+  DC1394_ERR_RTN(err, "Unable to get F7 bpp");
 
   err=dc1394_format7_get_image_position(camera, video_mode, left, top);
   DC1394_ERR_RTN(err, "Unable to get image position");

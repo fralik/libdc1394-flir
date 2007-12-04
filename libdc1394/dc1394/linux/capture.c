@@ -37,6 +37,7 @@
 #include "control.h"
 #include "kernel-video1394.h"
 #include "utils.h"
+#include "log.h"
 #include "linux/linux.h"
 #include "linux/capture.h"
 

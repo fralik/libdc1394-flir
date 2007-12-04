@@ -32,6 +32,7 @@
 #include "internal.h"
 #include "linux.h"
 #include "utils.h"
+#include "log.h"
 
 
 platform_t *
@@ -159,7 +160,7 @@ platform_camera_new (platform_t * p, platform_device_t * device,
     return NULL;
 
   if (device->generation != raw1394_get_generation (handle)) {
-    fprintf (stderr, "Error: generation has changed since bus was scanned\n");
+    dc1394_log_error("generation has changed since bus was scanned\n",NULL);
     raw1394_destroy_handle (handle);
     return NULL;
   }

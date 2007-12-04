@@ -29,6 +29,7 @@
 #include <poll.h>
 
 #include "juju/juju.h"
+#include "log.h"
 
 #define ptr_to_u64(p) ((__u64)(unsigned long)(p))
 #define u64_to_ptr(p) ((void *)(unsigned long)(p))
@@ -345,9 +346,7 @@ platform_capture_enqueue (platform_camera_t * craw,
 
   err = DC1394_INVALID_ARGUMENT_VALUE;
   if (frame->camera != camera)
-    DC1394_ERR_RTN(err, 
-		   "(%s) dc1394_capture_enqueue_dma: "
-		   "camera does not match frame's camera\n", __FILE__);
+    DC1394_ERR_RTN(err, "camera does not match frame's camera\n");
 
   err = queue_frame (craw, frame->id);
   DC1394_ERR_RTN(err, "Failed to queue frame");

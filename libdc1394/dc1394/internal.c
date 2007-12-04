@@ -19,77 +19,8 @@
 
 #include "internal.h"
 #include "utils.h"
+#include "log.h"
 #include "register.h"
-
-const char *dc1394_feature_desc[DC1394_FEATURE_NUM] =
-{
-  "Brightness",
-  "Exposure",
-  "Sharpness",
-  "White Balance",
-  "Hue",
-  "Saturation",
-  "Gamma",
-  "Shutter",
-  "Gain",
-  "Iris",
-  "Focus",
-  "Temperature",
-  "Trigger",
-  "Trigger Delay",
-  "White Shading",
-  "Frame Rate",
-  "Zoom",
-  "Pan",
-  "Tilt",
-  "Optical Filter",
-  "Capture Size",
-  "Capture Quality"
-};
-
-const char *dc1394_error_strings[DC1394_ERROR_NUM] =
-{
-  "Success",
-  "Generic failure",
-  "This node is not a camera",
-  "Function not supported by this camera",
-  "Camera not initialized",
-  "Memory allocation failure",
-  "Tagged register not found",
-  "Could not allocate an ISO channel",
-  "Could not allocate bandwidth",
-  "IOCTL failure",
-  "Capture is not set",
-  "Capture is running",
-  "RAW1394 failure",
-  "Format_7 Error_flag_1 is set",
-  "Format_7 Error_flag_2 is set",
-  "Invalid argument value",
-  "Requested value is out of range",
-  "Invalid feature",
-  "Invalid video format",
-  "Invalid video mode",
-  "Invalid framerate",
-  "Invalid trigger mode",
-  "Invalid trigger source",
-  "Invalid ISO speed",
-  "Invalid IIDC version",
-  "Invalid Format_7 color coding",
-  "Invalid Format_7 elementary Bayer tile",
-  "Invalid capture mode",
-  "Invalid error code",
-  "Invalid Bayer method",
-  "Invalid video1394 device",
-  "Invalid operation mode",
-  "Invalid trigger polarity",
-  "Invalid feature mode",
-  "Invalid log type",
-  "Invalid byte order",
-  "Invalid stereo method",
-  "Basler error: no more SFF chunks",
-  "Basler error: corrupted SFF chunk",
-  "Basler error: unknown SFF chunk"
-};
 
 /*
   These arrays define how many image quadlets there
@@ -160,7 +91,7 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
     }
     else {
       err=DC1394_INVALID_VIDEO_MODE;
-      DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+      DC1394_ERR_RTN(err,"Invalid framerate or mode");
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT1:
@@ -172,7 +103,7 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
     }
     else {
       err=DC1394_INVALID_VIDEO_MODE;
-      DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+      DC1394_ERR_RTN(err,"Invalid framerate or mode");
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT2:
@@ -184,7 +115,7 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
     }
     else {
       err=DC1394_INVALID_VIDEO_MODE;
-      DC1394_ERR_RTN(err,"Invalid framerate (%d) or mode (%d)", frame_rate, mode);
+      DC1394_ERR_RTN(err,"Invalid framerate or mode");
     }
     return DC1394_SUCCESS;
   case DC1394_FORMAT6:
@@ -363,13 +294,11 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
     //fprintf(stderr,"Scalable format detected\n");
     err=dc1394_format7_get_packet_size(camera, video_mode,
         &frame->packet_size);
-    DC1394_ERR_RTN(err, "Unable to get format 7 bytes per packet for mode %d",
-        video_mode);
+    DC1394_ERR_RTN(err, "Unable to get format 7 bytes per packet");
 
     err=dc1394_format7_get_packets_per_frame(camera, video_mode,
         &frame->packets_per_frame);
-    DC1394_ERR_RTN(err, "Unable to get format 7 packets per frame %d",
-        video_mode);
+    DC1394_ERR_RTN(err, "Unable to get format 7 packets per frame");
 
     err = dc1394_format7_get_image_position (camera, video_mode,
         frame->position, frame->position + 1);

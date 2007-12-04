@@ -20,6 +20,76 @@
 #include "internal.h"
 #include "utils.h"
 
+const char *dc1394_feature_desc[DC1394_FEATURE_NUM] =
+{
+  "Brightness",
+  "Exposure",
+  "Sharpness",
+  "White Balance",
+  "Hue",
+  "Saturation",
+  "Gamma",
+  "Shutter",
+  "Gain",
+  "Iris",
+  "Focus",
+  "Temperature",
+  "Trigger",
+  "Trigger Delay",
+  "White Shading",
+  "Frame Rate",
+  "Zoom",
+  "Pan",
+  "Tilt",
+  "Optical Filter",
+  "Capture Size",
+  "Capture Quality"
+};
+
+const char *dc1394_error_strings[DC1394_ERROR_NUM] =
+{
+  "Success",
+  "Generic failure",
+  "This node is not a camera",
+  "Function not supported by this camera",
+  "Camera not initialized",
+  "Memory allocation failure",
+  "Tagged register not found",
+  "Could not allocate an ISO channel",
+  "Could not allocate bandwidth",
+  "IOCTL failure",
+  "Capture is not set",
+  "Capture is running",
+  "RAW1394 failure",
+  "Format_7 Error_flag_1 is set",
+  "Format_7 Error_flag_2 is set",
+  "Invalid argument value",
+  "Requested value is out of range",
+  "Invalid feature",
+  "Invalid video format",
+  "Invalid video mode",
+  "Invalid framerate",
+  "Invalid trigger mode",
+  "Invalid trigger source",
+  "Invalid ISO speed",
+  "Invalid IIDC version",
+  "Invalid Format_7 color coding",
+  "Invalid Format_7 elementary Bayer tile",
+  "Invalid capture mode",
+  "Invalid error code",
+  "Invalid Bayer method",
+  "Invalid video1394 device",
+  "Invalid operation mode",
+  "Invalid trigger polarity",
+  "Invalid feature mode",
+  "Invalid log type",
+  "Invalid byte order",
+  "Invalid stereo method",
+  "Basler error: no more SFF chunks",
+  "Basler error: corrupted SFF chunk",
+  "Basler error: unknown SFF chunk"
+};
+
 dc1394error_t
 dc1394_get_image_size_from_video_mode(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *w, uint32_t *h) 
 {
@@ -280,4 +350,28 @@ dc1394bool_t
 dc1394_is_same_camera(dc1394camera_id_t id1, dc1394camera_id_t id2)
 {
   return ((id1.guid==id2.guid)&&(id1.unit==id2.unit));
+}
+
+dc1394error_t
+dc1394_feature_get_string(dc1394feature_t feature, const char *string)
+{
+  if ((feature>DC1394_FEATURE_MAX)||(feature<DC1394_FEATURE_MIN))
+    return DC1394_INVALID_FEATURE;
+
+  string=dc1394_feature_desc[feature-DC1394_FEATURE_MIN];
+
+  return DC1394_SUCCESS;
+}
+
+
+dc1394error_t
+dc1394_error_get_string(dc1394error_t error, const char *string)
+{
+
+  if ((error>DC1394_ERROR_MAX)||(error<DC1394_ERROR_MIN))
+    return DC1394_INVALID_ERROR_CODE;
+
+  string=dc1394_error_strings[error-DC1394_ERROR_MIN];
+
+  return DC1394_SUCCESS;
 }

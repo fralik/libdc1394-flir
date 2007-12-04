@@ -25,6 +25,7 @@ libdc1394_la_SOURCES =  \
 	conversions.h   \
 	bayer.c         \
 	log.c		\
+	log.h		\
 	checksum.c
 
 libdc1394_la_LIBADD = \
@@ -37,4 +38,5 @@ pkginclude_HEADERS =  \
 	utils.h       \
 	conversions.h \
 	register.h    \
+	log.h	      \
 	checksum.h

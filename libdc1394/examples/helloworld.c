@@ -7,9 +7,7 @@
 ** Description:
 **
 **    Get one image using libdc1394 using the DMA interface (viedo1394).
-**    Nothing is done with the image. There's a bunch of comments and
-**    error handling included but the actual useful program consists in
-**    a little over ten lines of code.
+**    Nothing is done with the image.
 **
 **    WARNING: This is a minimalist program that doesn't do everything
 **             you should do, like cleaning up in case of failure. The
@@ -32,7 +30,10 @@ int main(int argc, char *argv[])
   dc1394_t * d;
   dc1394camera_list_t * list;
 
+  /* Initialize libdc1394 */
   d = dc1394_new ();
+
+  /* Find cameras, work with first one */
   if (dc1394_enumerate_cameras (d, &list) != DC1394_SUCCESS) {
     fprintf (stderr, "Failed to enumerate cameras\n");
     return 1;
@@ -55,11 +56,9 @@ int main(int argc, char *argv[])
 
   /* Setup capture with VIDEO1394 */
   err=dc1394_capture_setup(camera, 4, DC1394_CAPTURE_FLAGS_DEFAULT);
-  DC1394_ERR_RTN(err,"Problem setting capture");
   
   /* Start transmission */
   err=dc1394_video_set_transmission(camera, DC1394_ON);
-  DC1394_ERR_RTN(err,"Problem starting transmission");
 
   /* Capture */
   err=dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &frame);
@@ -70,19 +69,17 @@ int main(int argc, char *argv[])
   
   /* Release the buffer */
   err=dc1394_capture_enqueue(camera, frame);
-  DC1394_ERR_RTN(err,"Could not release buffer");
 
   /* Stop transmission */
   err=dc1394_video_set_transmission(camera, DC1394_OFF);
-  DC1394_ERR_RTN(err,"Problem stopping transmission");
   
   /* Stop capture */
   err=dc1394_capture_stop(camera);
-  DC1394_ERR_RTN(err,"Could not stop capture");
 
   /* Hey, this is a HELLO WORLD program!! */
   printf("Hello World\n");
 
+  /* cleanup and exit */
   dc1394_camera_free (camera);
   dc1394_free (d);
   return 0;

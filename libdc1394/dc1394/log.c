@@ -1,28 +1,29 @@
-#include "control.h"
-#include <stdio.h>
-#include <stdlib.h>
 
-static void default_errorlog_handler(const char *message) {
-  fprintf(stderr, "ERROR: %s\n", message);
+#include "log.h"
+
+static void default_errorlog_handler(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) {
+  fprintf(stderr, "libdc1394 error in %s (%s, line %d): %s\n", function, file, line, message);
   return;
 }
 
-static void default_warninglog_handler(const char *message) {
-  fprintf(stderr, "WARNING: %s\n", message);
+static void default_warninglog_handler(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) {
+  fprintf(stderr, "libdc1394 warning in %s (%s, line %d): %s\n", function, file, line, message);
   return;
 }
 
-static void default_debuglog_handler(const char *message) {
-  fprintf(stderr, "DEBUG: %s\n", message);
+static void default_debuglog_handler(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) {
+#ifdef DC1394_DBG
+  fprintf(stderr, "libdc1394 debug in %s (%s, line %d): %s\n", function, file, line, message);
+#endif
   return;
 }
 
-static void(*system_errorlog_handler)(const char *message) = default_errorlog_handler;
-static void(*system_warninglog_handler)(const char *message) = default_warninglog_handler;
-static void(*system_debuglog_handler)(const char *message) = NULL;
+void(*system_errorlog_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) = default_errorlog_handler;
+void(*system_warninglog_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) = default_warninglog_handler;
+void(*system_debuglog_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) = NULL;
 
 dc1394error_t
-dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message)) {
+dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user)) {
   switch (type) {
     case DC1394_LOG_ERROR:
       system_errorlog_handler = log_handler;
@@ -55,6 +56,7 @@ dc1394_log_set_default_handler(dc1394log_t type) {
   }
 }
 
+/*
 void dc1394_log_error(const char *message) {
   if (system_errorlog_handler != NULL) {
 	system_errorlog_handler(message);
@@ -75,3 +77,4 @@ void dc1394_log_debug(const char *message) {
   }
   return;
 }
+*/

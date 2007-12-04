@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <dc1394/utils.h>
+#include <dc1394/log.h>
 #include <dc1394/control.h>
 #include <stdlib.h>
 #include <inttypes.h>

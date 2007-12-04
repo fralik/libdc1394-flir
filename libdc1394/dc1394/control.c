@@ -29,6 +29,7 @@
 #include "register.h"
 #include "offsets.h"
 #include "utils.h"
+#include "log.h"
  
 
 #if 0
@@ -202,7 +203,7 @@ dc1394_get_camera_feature_set(dc1394camera_t *camera, dc1394featureset_t *featur
   for (i= DC1394_FEATURE_MIN, j= 0; i <= DC1394_FEATURE_MAX; i++, j++)  {
     features->feature[j].id= i;
     err=dc1394_get_camera_feature(camera, &features->feature[j]);
-    DC1394_ERR_RTN(err, "Could not get camera feature %d",i);
+    DC1394_ERR_RTN(err, "Could not get camera feature");
   }
 
   return err;
@@ -227,7 +228,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
 
   // check presence
   err=dc1394_feature_is_present(camera, feature->id, &(feature->available));
-  DC1394_ERR_RTN(err, "Could not check feature %d presence",feature->id);
+  DC1394_ERR_RTN(err, "Could not check feature presence");
   
   if (feature->available == DC1394_FALSE) {
     return DC1394_SUCCESS;
@@ -236,7 +237,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   // get capabilities
   FEATURE_TO_INQUIRY_OFFSET(feature->id, offset);
   err=dc1394_get_control_register(camera, offset, &value);
-  DC1394_ERR_RTN(err, "Could not check feature %d characteristics",feature->id);
+  DC1394_ERR_RTN(err, "Could not check feature characteristics");
 
   dc1394_feature_get_modes(camera, feature->id, &feature->modes);
   dc1394_feature_get_mode(camera, feature->id, &feature->current_mode);
@@ -323,11 +324,11 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
   
   if (feature->absolute_capable>0) {
     err=dc1394_feature_get_absolute_boundaries(camera, feature->id, &feature->abs_min, &feature->abs_max);
-    DC1394_ERR_RTN(err, "Could not get feature %d absolute min/max",feature->id);
+    DC1394_ERR_RTN(err, "Could not get feature absolute min/max");
     err=dc1394_feature_get_absolute_value(camera, feature->id, &feature->abs_value);
-    DC1394_ERR_RTN(err, "Could not get feature %d absolute value",feature->id);
+    DC1394_ERR_RTN(err, "Could not get feature absolute value");
     err=dc1394_feature_get_absolute_control(camera, feature->id, &feature->abs_control);
-    DC1394_ERR_RTN(err, "Could not get feature %d absolute control",feature->id);
+    DC1394_ERR_RTN(err, "Could not get feature absolute control");
   }
   
   return err;
@@ -346,8 +347,9 @@ dc1394_print_feature(dc1394feature_info_t *f)
   if ( (fid < DC1394_FEATURE_MIN) || (fid > DC1394_FEATURE_MAX) ) {
     return DC1394_INVALID_FEATURE;
   }
-  
-  printf("%s:\n\t", dc1394_feature_desc[fid - DC1394_FEATURE_MIN]);
+  char *feature_string=NULL;
+  dc1394_feature_get_string(fid,feature_string);
+  printf("%s:\n\t", feature_string);
   
   if (!f->available) {
     printf("NOT AVAILABLE\n");
@@ -485,7 +487,7 @@ dc1394_print_feature_set(dc1394featureset_t *features)
   
   for (i= DC1394_FEATURE_MIN, j= 0; i <= DC1394_FEATURE_MAX; i++, j++)  {
     err=dc1394_print_feature(&features->feature[j]);
-    DC1394_ERR_RTN(err, "Could not print feature %d",i);
+    DC1394_ERR_RTN(err, "Could not print feature");
   }
   
   return err;
@@ -871,9 +873,7 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
     DC1394_ERR_RTN(err, "oops");
     speed=(value >> 24) & 0x3UL;
     if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
-      fprintf(stderr,"(%s) line %d: an ISO speed >400Mbps was requested while the camera is in LEGACY mode\n",__FILE__,__LINE__);
-      fprintf(stderr,"              Please set the operation mode to OPERATION_MODE_1394B before asking for\n");
-      fprintf(stderr,"              1394b ISO speeds\n");
+      dc1394_log_error("an ISO speed >400Mbps was requested while the camera is in LEGACY mode              Please set the operation mode to OPERATION_MODE_1394B before asking for\n              1394b ISO speeds\n", NULL);
       return DC1394_FAILURE;
     }
     err=dc1394_set_control_register(camera, REG_CAMERA_ISO_DATA,
@@ -1261,7 +1261,7 @@ dc1394_feature_get_value(dc1394camera_t *camera, dc1394feature_t feature, uint32
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get feature %d value",feature);
+  DC1394_ERR_RTN(err, "Could not get feature value");
   *value= (uint32_t)(quadval & 0xFFFUL);
   
   return err;
@@ -1287,10 +1287,10 @@ dc1394_feature_set_value(dc1394camera_t *camera, dc1394feature_t feature, uint32
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get feature %d value",feature);
+  DC1394_ERR_RTN(err, "Could not get feature value");
   
   err=dc1394_set_control_register(camera, offset, (quadval & 0xFFFFF000UL) | (value & 0xFFFUL));
-  DC1394_ERR_RTN(err, "Could not set feature %d value",feature);
+  DC1394_ERR_RTN(err, "Could not set feature value");
   return err;
 }
 
@@ -1342,7 +1342,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
 
   // check feature presence in 0x40x
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get register for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get register for feature");
   
   if (IsFeatureBitSet(quadval, feature)!=DC1394_TRUE) {
     *value=DC1394_FALSE;
@@ -1353,7 +1353,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get register for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get register for feature");
   
   if (quadval & 0x80000000UL) {
     *value= DC1394_TRUE;
@@ -1367,7 +1367,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get register for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get register for feature");
 
   if (quadval & 0x80000000UL) {
     *value= DC1394_TRUE;
@@ -1393,7 +1393,7 @@ dc1394_feature_is_readable(dc1394camera_t *camera, dc1394feature_t feature, dc13
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get read-out capability for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get read-out capability for feature");
   
   *value = (quadval & 0x08000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
@@ -1413,7 +1413,7 @@ dc1394_feature_is_switchable(dc1394camera_t *camera, dc1394feature_t feature, dc
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get power capability for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get power capability for feature");
   
   *value = (quadval & 0x04000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
@@ -1433,7 +1433,7 @@ dc1394_feature_get_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get feature %d status",feature);
+  DC1394_ERR_RTN(err, "Could not get feature status");
   
   *value = (quadval & 0x02000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
@@ -1453,17 +1453,17 @@ dc1394_feature_set_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &curval);
-  DC1394_ERR_RTN(err, "Could not get feature %d register",feature);
+  DC1394_ERR_RTN(err, "Could not get feature register");
   
   if (value && !(curval & 0x02000000UL)) {    
     curval|= 0x02000000UL;
     err=dc1394_set_control_register(camera, offset, curval);
-    DC1394_ERR_RTN(err, "Could not set feature %d power",feature);
+    DC1394_ERR_RTN(err, "Could not set feature power");
   }
   else if (!value && (curval & 0x02000000UL)) {
     curval&= 0xFDFFFFFFUL;
     err=dc1394_set_control_register(camera, offset, curval);
-    DC1394_ERR_RTN(err, "Could not set feature %d power",feature);
+    DC1394_ERR_RTN(err, "Could not set feature power");
   }
   
   return err;
@@ -1489,7 +1489,7 @@ dc1394_feature_get_modes(dc1394camera_t *camera, dc1394feature_t feature, dc1394
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get mode availability for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get mode availability for feature");
   
   if (quadval & 0x01000000UL) {
     modes->modes[modes->num]=DC1394_FEATURE_MODE_MANUAL;
@@ -1526,7 +1526,7 @@ dc1394_feature_get_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394f
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get feature %d auto status",feature);
+  DC1394_ERR_RTN(err, "Could not get feature auto status");
   
   if (quadval & 0x04000000UL) {
     *mode= DC1394_FEATURE_MODE_ONE_PUSH_AUTO;
@@ -1561,22 +1561,22 @@ dc1394_feature_set_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394f
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &curval);
-  DC1394_ERR_RTN(err, "Could not get feature %d register",feature);
+  DC1394_ERR_RTN(err, "Could not get feature register");
   
   if ((mode==DC1394_FEATURE_MODE_AUTO) && !(curval & 0x01000000UL)) {
     curval|= 0x01000000UL;
     err=dc1394_set_control_register(camera, offset, curval);
-    DC1394_ERR_RTN(err, "Could not set auto mode for feature %d",feature);
+    DC1394_ERR_RTN(err, "Could not set auto mode for feature");
   }
   else if ((mode==DC1394_FEATURE_MODE_MANUAL) && (curval & 0x01000000UL)) {
     curval&= 0xFEFFFFFFUL;
     err=dc1394_set_control_register(camera, offset, curval);
-    DC1394_ERR_RTN(err, "Could not set auto mode for feature %d",feature);
+    DC1394_ERR_RTN(err, "Could not set auto mode for feature");
   }
   else if ((mode==DC1394_FEATURE_MODE_ONE_PUSH_AUTO)&& !(curval & 0x04000000UL)) {
     curval|= 0x04000000UL;
     err=dc1394_set_control_register(camera, offset, curval);
-    DC1394_ERR_RTN(err, "Could not sart one-push capability for feature %d",feature);
+    DC1394_ERR_RTN(err, "Could not sart one-push capability for feature");
   }
   
   return err;
@@ -1599,7 +1599,7 @@ dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, u
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get feature %d min value",feature);
+  DC1394_ERR_RTN(err, "Could not get feature min value");
   
   *min= (uint32_t)((quadval & 0xFFF000UL) >> 12);
   *max= (uint32_t)(quadval & 0xFFFUL);
@@ -1783,7 +1783,7 @@ dc1394_feature_get_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get get abs control for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get get abs control for feature");
   
   *pwr = (quadval & 0x40000000UL) ? DC1394_TRUE: DC1394_FALSE;
   
@@ -1803,17 +1803,17 @@ dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   FEATURE_TO_VALUE_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &curval);
-  DC1394_ERR_RTN(err, "Could not get abs setting status for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get abs setting status for feature");
   
   if (pwr && !(curval & 0x40000000UL)) {
     curval|= 0x40000000UL;
     err=dc1394_set_control_register(camera, offset, curval);
-    DC1394_ERR_RTN(err, "Could not set absolute control for feature %d",feature);
+    DC1394_ERR_RTN(err, "Could not set absolute control for feature");
   }
   else if (!pwr && (curval & 0x40000000UL)) {
     curval&= 0xBFFFFFFFUL;
     err=dc1394_set_control_register(camera, offset, curval);
-    DC1394_ERR_RTN(err, "Could not set absolute control for feature %d",feature);
+    DC1394_ERR_RTN(err, "Could not set absolute control for feature");
   }
   
   return err;
@@ -1833,7 +1833,7 @@ dc1394_feature_has_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
   FEATURE_TO_INQUIRY_OFFSET(feature, offset);
   
   err=dc1394_get_control_register(camera, offset, &quadval);
-  DC1394_ERR_RTN(err, "Could not get absolute control register for feature %d",feature);
+  DC1394_ERR_RTN(err, "Could not get absolute control register for feature");
   
   *value = (quadval & 0x40000000UL) ? DC1394_TRUE: DC1394_FALSE;
 

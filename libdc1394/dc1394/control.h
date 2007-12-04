@@ -21,8 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __DC1394_CAMERA_CONTROL_H__
-#define __DC1394_CAMERA_CONTROL_H__
+#ifndef __DC1394_CONTROL_H__
+#define __DC1394_CONTROL_H__
 
 #include <string.h>
 #include <unistd.h>
@@ -388,7 +388,9 @@ typedef enum {
   DC1394_BASLER_CORRUPTED_SFF_CHUNK  = -38,
   DC1394_BASLER_UNKNOWN_SFF_CHUNK    = -39
 } dc1394error_t;
-#define DC1394_ERROR_NUM -DC1394_BASLER_UNKNOWN_SFF_CHUNK+1
+#define DC1394_ERROR_MIN  DC1394_BASLER_UNKNOWN_SFF_CHUNK
+#define DC1394_ERROR_MAX  DC1394_SUCCESS
+#define DC1394_ERROR_NUM (DC1394_ERROR_MAX-DC1394_ERROR_MIN+1)
 
 /* Capture flags */
 #define DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC   0x00000001U
@@ -595,92 +597,6 @@ typedef struct __dc1394_video_frame
 						   * of libdc1394? (this would avoid confusion between 'no allocated
 						   * memory' and 'don't touch this buffer' -> signed int?? */ 
 } dc1394video_frame_t;
-
-/* Feature descriptions */
-extern const char *dc1394_feature_desc[DC1394_FEATURE_NUM];
-extern const char *dc1394_error_strings[DC1394_ERROR_NUM];
-
-#if ! defined (_MSC_VER)
-/* Error checking macros. Logs an error string on stderr and exit current function
-   if error is positive. Neg errors are messages and are thus ignored */
-
-#define DC1394_WRN(err,...)                                  \
-    {                                                        \
-    if ((err>0)||(err<=-DC1394_ERROR_NUM))                   \
-      err=DC1394_INVALID_ERROR_CODE;                         \
-                                                             \
-    if (err!=DC1394_SUCCESS) {                               \
-      fprintf(stderr,"Libdc1394 warning (%s:%s:%d): %s : ",  \
-	      __FILE__, __FUNCTION__, __LINE__,              \
-	      dc1394_error_strings[-err]);                   \
-      fprintf(stderr, __VA_ARGS__);                          \
-      fprintf(stderr,"\n");                                  \
-    }                                                        \
-    }
-
-#define DC1394_ERR(err,...)                                  \
-    {                                                        \
-    if ((err>0)||(err<=-DC1394_ERROR_NUM))                   \
-      err=DC1394_INVALID_ERROR_CODE;                         \
-                                                             \
-    if (err!=DC1394_SUCCESS) {                               \
-      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
-	      __FILE__, __FUNCTION__, __LINE__,              \
-	      dc1394_error_strings[-err]);                   \
-      fprintf(stderr, __VA_ARGS__);                          \
-      fprintf(stderr,"\n");                                  \
-      return;                                                \
-    }                                                        \
-    }
-
-#define DC1394_ERR_RTN(err,...)                              \
-    {                                                        \
-    if ((err>0)||(err<=-DC1394_ERROR_NUM))                   \
-      err=DC1394_INVALID_ERROR_CODE;                         \
-                                                             \
-    if (err!=DC1394_SUCCESS) {                               \
-      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",    \
-	      __FILE__, __FUNCTION__, __LINE__,              \
-	      dc1394_error_strings[-err]);                   \
-      fprintf(stderr, __VA_ARGS__);                          \
-      fprintf(stderr,"\n");                                  \
-      return err;                                            \
-    }                                                        \
-    }
-
-#define DC1394_ERR_CLN(err, cleanup,...)                             \
-    {                                                                \
-    if ((err>0)||(err<=-DC1394_ERROR_NUM))                           \
-      err=DC1394_INVALID_ERROR_CODE;                                 \
-                                                                     \
-    if (err!=DC1394_SUCCESS) {                                       \
-      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
-	      __FILE__, __FUNCTION__, __LINE__,                      \
-	      dc1394_error_strings[-err]);                           \
-      fprintf(stderr, __VA_ARGS__);                                  \
-      fprintf(stderr,"\n");                                          \
-      cleanup;                                                       \
-      return;                                                        \
-    }                                                                \
-    }
-
-#define DC1394_ERR_CLN_RTN(err, cleanup,...)                         \
-    {                                                                \
-    if ((err>0)||(err<=-DC1394_ERROR_NUM))                           \
-      err=DC1394_INVALID_ERROR_CODE;                                 \
-                                                                     \
-    if (err!=DC1394_SUCCESS) {                                       \
-      fprintf(stderr,"Libdc1394 error (%s:%s:%d): %s : ",            \
-	      __FILE__, __FUNCTION__, __LINE__,                      \
-	      dc1394_error_strings[-err]);                           \
-      fprintf(stderr, __VA_ARGS__);                                  \
-      fprintf(stderr,"\n");                                          \
-      cleanup;                                                       \
-      return err;                                                    \
-    }                                                                \
-    }
-
-#endif /* _MSC_VER */
 
 #ifdef __cplusplus
 extern "C" {
@@ -925,73 +841,8 @@ dc1394error_t dc1394_pio_set(dc1394camera_t *camera, uint32_t value);
 dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
 
 
-
-/***************************************************************************
- * logging facility for libdc1394
- *
- * These functions provide the logging of error, warning and debug messages
- * They allow registering of custom logging functions or the use
- * of the builtin loggers which redirect the output to stderr.
- * Three log levels are supported:
- * error:   Indicates that an error has been detected which mandates
- *          shutdown of the program as soon as feasible
- * warning: Indicates that something happened which prevents libdc1394
- *          from working but which could possibly be resolved by the
- *          application or the user: plugging in a camera, resetting the
- *          firewire bus, ....
- * debug:   A sort of way point for the library. This log level is supposed
- *          to report that a specific function has been entered or has 
- *          passed a certain stage. This log level is turned off by default
- *          and may produce a lot of output during regular operation.
- *          The main purpose for this log level is for debugging libdc1394
- *          and for generating meaningful problem reports.
- ***************************************************************************/
-
-/**
- * dc1394_log_register_handler: register log handler for reporting error, warning or debug statements
- * Passing NULL as argument turns off this log level.
- * @param [in] log_handler: pointer to a function which takes a character string as argument
- *             type: the type of log
- */
-dc1394error_t dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(const char *message));
-
-/**
- * dc1394_log_set_default_handler: set the log handler to the default handler
- * At boot time, debug logging is OFF (handler is NULL). Using this function for the debug statements
- * will start logging of debug statements usng the default handler.
- */
-dc1394error_t dc1394_log_set_default_handler(dc1394log_t type);
-
-/**
- * dc1394_log_error: logs a fatal error condition to the registered facility
- * This function shall be invoked if a fatal error condition is encountered.
- * The message passed as argument is delivered to the registered error reporting
- * function registered before.
- * @param [in] message: error message to be logged
- */
-void dc1394_log_error(const char *message);
-
-/**
- * dc1394_log_warning: logs a nonfatal error condition to the registered facility
- * This function shall be invoked if a nonfatal error condition is encountered.
- * The message passed as argument is delivered to the registered warning reporting
- * function registered before.
- * @param [in] message: error message to be logged
- */
-void dc1394_log_warning(const char *message);
-
-/**
- * dc1394_log_debug: logs a debug statement to the registered facility
- * This function shall be invoked if a debug statement is to be logged.
- * The message passed as argument is delivered to the registered debug reporting
- * function registered before.
- * @param [in] message: debug statement to be logged
- */
-void dc1394_log_debug(const char *message);
-
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __DC1394_CAMERA_CONTROL_H__ */
+#endif /* __DC1394_CONTROL_H__ */

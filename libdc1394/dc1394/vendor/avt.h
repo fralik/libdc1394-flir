@@ -25,6 +25,7 @@
 
 #include <dc1394/internal.h>
 #include <dc1394/register.h>
+#include <dc1394/log.h>
 
 typedef struct __dc1394_avt_adv_feature_info_struct 
 {

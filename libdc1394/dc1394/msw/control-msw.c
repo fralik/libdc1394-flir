@@ -24,6 +24,7 @@
 #include "register.h"
 #include "offsets.h"
 #include "utils.h"
+#include "log.h"
 #include "control.h"
 
 #include "msw1394.h"
