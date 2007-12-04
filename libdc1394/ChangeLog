@@ -1,4 +1,5 @@
 2007-12-04 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 482: add log.h.
 	* SVN 481: Updated logging mechanism to auto-print __LINE__, __FILE__
 	           and __FUNCTION__. log.h was re-created for that purpose.
 	* SVN 480: Fix leftover DC1394_NO_FRAME in OSX (Josh Rooke-Ley)
