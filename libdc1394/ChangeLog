@@ -1,3 +1,6 @@
+2007-12-04 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 480: Fix leftover DC1394_NO_FRAME in OSX (Josh Rooke-Ley)
+	
 2007-12-03 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 479: Error codes are now negative.
         * SVN 478: capture_dequeue returns success if no frame is available

@@ -581,7 +581,7 @@ platform_capture_dequeue (platform_camera_t * craw,
     status = buffer->status;
     MPExitCriticalRegion (capture->mutex);
     if (status != BUFFER_FILLED)
-      return DC1394_NO_FRAME;
+      return DC1394_SUCCESS;
   }
 
   read (capture->notify_pipe[0], &ch, 1);
