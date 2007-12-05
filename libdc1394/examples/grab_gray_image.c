@@ -39,12 +39,12 @@ int main(int argc, char *argv[])
 {
   FILE* imagefile;
   dc1394camera_t *camera;
-  uint32_t i;
+  int i;
   dc1394featureset_t features;
   dc1394framerates_t framerates;
   dc1394video_modes_t video_modes;
   dc1394framerate_t framerate;
-  dc1394video_mode_t video_mode;
+  dc1394video_mode_t video_mode = 0;
   dc1394color_coding_t coding;
   unsigned int width, height;
   dc1394video_frame_t *frame;
@@ -92,11 +92,14 @@ int main(int argc, char *argv[])
       }
     }
   }
-  //fprintf(stderr,"Hello\n");
-  dc1394_get_color_coding_from_video_mode(camera,video_modes.modes[i], &coding);
-  if ((dc1394_is_video_mode_scalable(video_modes.modes[i]))||
-      (coding!=DC1394_COLOR_CODING_MONO8)) {
+  if (i < 0) {
     fprintf(stderr,"Could not get a valid MONO8 mode\n");
+    cleanup_and_exit(camera);
+  }
+
+  if (dc1394_get_color_coding_from_video_mode(camera, video_mode,
+        &coding) != DC1394_SUCCESS) {
+    fprintf (stderr, "Can't get color coding\n");
     cleanup_and_exit(camera);
   }
 
