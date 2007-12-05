@@ -1,4 +1,6 @@
 2007-12-05 David Moore  <dcm@acm.org>
+	* SVN 485: fix broken _get_string functions, which weren't actually
+		   returning any data.
 	* SVN 484: clean up error handling in grab_gray_image
 
 2007-12-04 Damien Douxchamps http://damien.douxchamps.net/

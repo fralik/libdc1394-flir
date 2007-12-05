@@ -39,8 +39,8 @@ dc1394error_t dc1394_is_color(dc1394color_coding_t color_mode, dc1394bool_t *is_
 dc1394bool_t dc1394_is_video_mode_scalable(dc1394video_mode_t video_mode);
 dc1394bool_t dc1394_is_video_mode_still_image(dc1394video_mode_t video_mode);
 dc1394bool_t dc1394_is_same_camera(dc1394camera_id_t id1, dc1394camera_id_t id2);
-dc1394error_t dc1394_feature_get_string(dc1394feature_t feature, const char *string);
-dc1394error_t dc1394_error_get_string(dc1394error_t error, const char *string);
+const char * dc1394_feature_get_string(dc1394feature_t feature);
+const char * dc1394_error_get_string(dc1394error_t error);
 
 #ifdef __cplusplus
 }

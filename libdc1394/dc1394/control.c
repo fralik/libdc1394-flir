@@ -347,8 +347,7 @@ dc1394_print_feature(dc1394feature_info_t *f)
   if ( (fid < DC1394_FEATURE_MIN) || (fid > DC1394_FEATURE_MAX) ) {
     return DC1394_INVALID_FEATURE;
   }
-  char *feature_string=NULL;
-  dc1394_feature_get_string(fid,feature_string);
+  const char *feature_string = dc1394_feature_get_string (fid);
   printf("%s:\n\t", feature_string);
   
   if (!f->available) {

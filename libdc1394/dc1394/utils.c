@@ -352,26 +352,21 @@ dc1394_is_same_camera(dc1394camera_id_t id1, dc1394camera_id_t id2)
   return ((id1.guid==id2.guid)&&(id1.unit==id2.unit));
 }
 
-dc1394error_t
-dc1394_feature_get_string(dc1394feature_t feature, const char *string)
+const char *
+dc1394_feature_get_string(dc1394feature_t feature)
 {
   if ((feature>DC1394_FEATURE_MAX)||(feature<DC1394_FEATURE_MIN))
-    return DC1394_INVALID_FEATURE;
+    return NULL;
 
-  string=dc1394_feature_desc[feature-DC1394_FEATURE_MIN];
-
-  return DC1394_SUCCESS;
+  return dc1394_feature_desc[feature-DC1394_FEATURE_MIN];
 }
 
-
-dc1394error_t
-dc1394_error_get_string(dc1394error_t error, const char *string)
+const char *
+dc1394_error_get_string(dc1394error_t error)
 {
 
   if ((error>DC1394_ERROR_MAX)||(error<DC1394_ERROR_MIN))
-    return DC1394_INVALID_ERROR_CODE;
+    return NULL;
 
-  string=dc1394_error_strings[error-DC1394_ERROR_MIN];
-
-  return DC1394_SUCCESS;
+  return dc1394_error_strings[error-DC1394_ERROR_MIN];
 }

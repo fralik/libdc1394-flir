@@ -99,8 +99,7 @@ extern void(*system_debuglog_handler)(dc1394log_t type, const char *message, con
       err=DC1394_INVALID_ERROR_CODE;                      \
                                                           \
     if (err!=DC1394_SUCCESS) {                            \
-      char *macro_error_string=NULL;                      \
-      dc1394_error_get_string(err,macro_error_string);    \
+      const char *macro_error_string=dc1394_error_get_string(err);    \
       dc1394_log_warning(macro_error_string,NULL);        \
     }                                                     \
   } while (0);
@@ -111,8 +110,7 @@ extern void(*system_debuglog_handler)(dc1394log_t type, const char *message, con
       err=DC1394_INVALID_ERROR_CODE;                      \
                                                           \
     if (err!=DC1394_SUCCESS) {                            \
-      char *macro_error_string=NULL;                      \
-      dc1394_error_get_string(err,macro_error_string);    \
+      const char *macro_error_string=dc1394_error_get_string(err);    \
       dc1394_log_error(macro_error_string,NULL);          \
       return;                                             \
     }                                                     \
@@ -124,8 +122,7 @@ extern void(*system_debuglog_handler)(dc1394log_t type, const char *message, con
       err=DC1394_INVALID_ERROR_CODE;                      \
                                                           \
     if (err!=DC1394_SUCCESS) {                            \
-      char *macro_error_string=NULL;                      \
-      dc1394_error_get_string(err,macro_error_string);    \
+      const char *macro_error_string=dc1394_error_get_string(err);    \
       dc1394_log_error(macro_error_string,NULL);          \
       return err;                                         \
     }                                                     \
@@ -137,8 +134,7 @@ extern void(*system_debuglog_handler)(dc1394log_t type, const char *message, con
       err=DC1394_INVALID_ERROR_CODE;                      \
                                                           \
     if (err!=DC1394_SUCCESS) {                            \
-      char *macro_error_string=NULL;                      \
-      dc1394_error_get_string(err,macro_error_string);    \
+      const char *macro_error_string=dc1394_error_get_string(err);    \
       dc1394_log_error(macro_error_string,NULL);          \
       cleanup;                                            \
       return;                                             \
@@ -151,8 +147,7 @@ extern void(*system_debuglog_handler)(dc1394log_t type, const char *message, con
       err=DC1394_INVALID_ERROR_CODE;                      \
                                                           \
     if (err!=DC1394_SUCCESS) {                            \
-      char *macro_error_string=NULL;                      \
-      dc1394_error_get_string(err,macro_error_string);    \
+      const char *macro_error_string=dc1394_error_get_string(err);    \
       dc1394_log_error(macro_error_string,NULL);          \
       cleanup;                                            \
       return err;                                         \
