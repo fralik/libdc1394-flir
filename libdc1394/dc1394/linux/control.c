@@ -53,6 +53,23 @@ struct _platform_device_t {
   int port, node, generation;
 };
 
+static int
+read_retry (struct raw1394_handle * handle, nodeid_t node, nodeaddr_t addr,
+        size_t length, quadlet_t * buffer)
+{
+  int retry = DC1394_MAX_RETRIES;
+  while (retry > 0) {
+    if (raw1394_read (handle, node, addr, length, buffer) == 0)
+      return 0;
+    if (errno != EAGAIN)
+      return -1;
+
+    usleep (100);
+    retry--;
+  }
+  return -1;
+}
+
 platform_device_list_t *
 platform_get_device_list (platform_t * p)
 {
@@ -90,7 +107,7 @@ platform_get_device_list (platform_t * p)
       uint32_t quad;
       int k;
 
-      if (raw1394_read (handle, 0xFFC0 | j, CONFIG_ROM_BASE + 0x400,
+      if (read_retry (handle, 0xFFC0 | j, CONFIG_ROM_BASE + 0x400,
             4, &quad) < 0)
         continue;
 
@@ -103,7 +120,7 @@ platform_get_device_list (platform_t * p)
       device->node = j;
       device->generation = raw1394_get_generation (handle);
       for (k = 1; k < 256; k++) {
-        if (raw1394_read (handle, 0xFFC0 | j, CONFIG_ROM_BASE + 0x400 + 4*k,
+        if (read_retry (handle, 0xFFC0 | j, CONFIG_ROM_BASE + 0x400 + 4*k,
               4, &quad) < 0)
           break;
         device->config_rom[k] = ntohl (quad);
