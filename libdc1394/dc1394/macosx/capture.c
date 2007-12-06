@@ -328,7 +328,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   }   
 
   capture->frames = malloc (num_dma_buffers * sizeof (dc1394video_frame_t));
-  err = _dc1394_capture_basic_setup(camera, capture->frames);
+  err = capture_basic_setup(camera, capture->frames);
   if (err != DC1394_SUCCESS)
     dc1394_capture_stop (camera);
   DC1394_ERR_RTN (err,"Could not setup capture");

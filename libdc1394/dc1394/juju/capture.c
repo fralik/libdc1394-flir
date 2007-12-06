@@ -161,7 +161,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   craw->iso_handle = create.handle;
 
-  err = _dc1394_capture_basic_setup(camera, &proto);
+  err = capture_basic_setup(camera, &proto);
   if (err != DC1394_SUCCESS) {
     fprintf (stderr, "basic setup failed\n");
     goto error_fd;

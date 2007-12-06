@@ -31,10 +31,6 @@
 #include "config.h"
 #include "log.h"
 
-/**********************/ 
-/* Internal functions */
-/**********************/
-
 /*==========================================================================
  * This function implements the handshaking available (and sometimes required)
  * on some cameras that comply with the IIDC specs v1.30. Thanks to Yasutoshi

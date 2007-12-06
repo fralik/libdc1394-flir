@@ -143,16 +143,16 @@ enum {
 /* Internal functions required by two different source files */
 
 dc1394error_t 
-_dc1394_get_quadlets_per_packet(uint32_t mode, uint32_t frame_rate, uint32_t *qpp);
+get_quadlets_per_packet(uint32_t mode, uint32_t frame_rate, uint32_t *qpp);
 
 dc1394error_t
-_dc1394_quadlets_from_format(dc1394camera_t *camera, uint32_t mode, uint32_t *quads);
+get_quadlets_from_format(dc1394camera_t *camera, uint32_t mode, uint32_t *quads);
 
 dc1394error_t
-_dc1394_get_format_from_mode(uint32_t mode, uint32_t *format);
+get_format_from_mode(uint32_t mode, uint32_t *format);
 		
 dc1394bool_t
-IsFeatureBitSet(uint32_t value, uint32_t feature);
+is_feature_bit_set(uint32_t value, uint32_t feature);
 
 dc1394error_t
 dc1394_allocate_iso_channel(dc1394camera_t *camera);
@@ -167,7 +167,7 @@ dc1394_free_bandwidth(dc1394camera_t *camera);
 dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);
 */
-dc1394error_t _dc1394_capture_basic_setup (dc1394camera_t * camera,
+dc1394error_t capture_basic_setup (dc1394camera_t * camera,
     dc1394video_frame_t * frame);
 
 #endif /* _DC1394_INTERNAL_H */

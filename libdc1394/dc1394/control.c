@@ -593,7 +593,7 @@ dc1394_video_get_supported_framerates(dc1394camera_t *camera, dc1394video_mode_t
   uint32_t format;
   uint32_t value;
 
-  err=_dc1394_get_format_from_mode(video_mode, &format);
+  err=get_format_from_mode(video_mode, &format);
   DC1394_ERR_RTN(err, "Invalid mode code");
 
   if ((format==DC1394_FORMAT6)||(format==DC1394_FORMAT7)) {
@@ -712,7 +712,7 @@ dc1394_video_set_mode(dc1394camera_t *camera, dc1394video_mode_t  mode)
   if ( (mode<DC1394_VIDEO_MODE_MIN) || (mode>DC1394_VIDEO_MODE_MAX) )
     return DC1394_INVALID_VIDEO_MODE;
 
-  err=_dc1394_get_format_from_mode(mode, &format);
+  err=get_format_from_mode(mode, &format);
   DC1394_ERR_RTN(err, "Invalid video mode code");
   
   switch(format) {
@@ -1343,7 +1343,7 @@ dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc139
   err=dc1394_get_control_register(camera, offset, &quadval);
   DC1394_ERR_RTN(err, "Could not get register for feature");
   
-  if (IsFeatureBitSet(quadval, feature)!=DC1394_TRUE) {
+  if (is_feature_bit_set(quadval, feature)!=DC1394_TRUE) {
     *value=DC1394_FALSE;
     return DC1394_SUCCESS;
   }
@@ -1860,7 +1860,7 @@ dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t *bandwidth)
   err=dc1394_video_get_mode(camera, &video_mode);
   DC1394_ERR_RTN(err, "Could not get video mode");
   
-  err=_dc1394_get_format_from_mode(video_mode, &format);
+  err=get_format_from_mode(video_mode, &format);
   DC1394_ERR_RTN(err, "Invalid mode ID");
   
   if (format==DC1394_FORMAT7) {
@@ -1873,7 +1873,7 @@ dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t *bandwidth)
     // get the framerate:
     err=dc1394_video_get_framerate(camera, &framerate);
     DC1394_ERR_RTN(err, "Could not get framerate");
-    err=_dc1394_get_quadlets_per_packet(video_mode, framerate, &qpp); 
+    err=get_quadlets_per_packet(video_mode, framerate, &qpp); 
   }
   // add the ISO header and footer:
   qpp+=3;

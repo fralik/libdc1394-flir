@@ -127,14 +127,14 @@ _dc1394_open_dma_device(platform_camera_t * craw)
 }
 
 /*****************************************************
- _ dc1394_dma_basic_setup
+ capture_linux_setup
 
  This sets up the dma for the given camera. 
- _dc1394_capture_basic_setup must be called before
+ capture_basic_setup must be called before
 
 ******************************************************/
 dc1394error_t
-_dc1394_capture_dma_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
+capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
 {
   struct video1394_mmap vmmap;
   struct video1394_wait vwait;
@@ -301,12 +301,12 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   craw->capture.frames = malloc (num_dma_buffers * sizeof (dc1394video_frame_t));
 
-  err=_dc1394_capture_basic_setup(camera, craw->capture.frames);
+  err=capture_basic_setup(camera, craw->capture.frames);
   if (err != DC1394_SUCCESS)
     goto fail;
   
   // the capture_is_set flag is set inside this function:
-  err=_dc1394_capture_dma_setup (craw, num_dma_buffers);
+  err=capture_linux_setup (craw, num_dma_buffers);
   if (err != DC1394_SUCCESS)
     goto fail;
 

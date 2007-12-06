@@ -581,7 +581,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
     goto fail;
   }
 
-  err=_dc1394_capture_basic_setup(camera, cmsw->frames);
+  err=capture_basic_setup(camera, cmsw->frames);
   if (err != DC1394_SUCCESS)
     goto fail;
   

@@ -63,20 +63,20 @@ const int quadlets_per_packet_format_2[64] =
 };
 
 /********************************************************
- _dc1394_get_quadlets_per_packet
+ get_quadlets_per_packet
 
  This routine reports the number of useful image quadlets 
  per packet
 *********************************************************/
 dc1394error_t
-_dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame_rate, uint32_t *qpp) // ERROR handling to be updated
+get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame_rate, uint32_t *qpp) // ERROR handling to be updated
 {
   uint32_t mode_index;
   uint32_t frame_rate_index= frame_rate - DC1394_FRAMERATE_MIN;
   uint32_t format;
   dc1394error_t err;
 
-  err=_dc1394_get_format_from_mode(mode, &format);
+  err=get_format_from_mode(mode, &format);
   DC1394_ERR_RTN(err,"Invalid mode ID");
   
   //fprintf(stderr,"format: %d\n",format);
@@ -129,13 +129,13 @@ _dc1394_get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame
 }
 
 /**********************************************************
- _dc1394_quadlets_from_format
+ get_quadlets_from_format
 
  This routine reports the number of quadlets that make up a 
  frame given the format and mode
 ***********************************************************/
 dc1394error_t
-_dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *quads) 
+get_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *quads) 
 {
 
   uint32_t w, h, color_coding;
@@ -157,7 +157,7 @@ _dc1394_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mo
 }
 
 dc1394bool_t
-IsFeatureBitSet(uint32_t value, dc1394feature_t feature)
+is_feature_bit_set(uint32_t value, dc1394feature_t feature)
 {
 
   if (feature >= DC1394_FEATURE_ZOOM) {
@@ -179,7 +179,7 @@ IsFeatureBitSet(uint32_t value, dc1394feature_t feature)
 }
 
 dc1394error_t
-_dc1394_get_format_from_mode(dc1394video_mode_t mode, uint32_t *format)
+get_format_from_mode(dc1394video_mode_t mode, uint32_t *format)
 {
   dc1394error_t err=DC1394_SUCCESS;
 
@@ -272,7 +272,7 @@ _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
 */
 
 dc1394error_t
-_dc1394_capture_basic_setup (dc1394camera_t * camera,
+capture_basic_setup (dc1394camera_t * camera,
     dc1394video_frame_t * frame)
 {
   dc1394error_t err;
@@ -311,12 +311,12 @@ _dc1394_capture_basic_setup (dc1394camera_t * camera,
     err=dc1394_video_get_framerate(camera,&framerate);
     DC1394_ERR_RTN(err, "Unable to get current video framerate");
 
-    err=_dc1394_get_quadlets_per_packet(video_mode, framerate,
+    err=get_quadlets_per_packet(video_mode, framerate,
         &frame->packet_size);
     DC1394_ERR_RTN(err, "Unable to get quadlets per packet");
     frame->packet_size *= 4;
 
-    err= _dc1394_quadlets_from_format(camera, video_mode,
+    err= get_quadlets_from_format(camera, video_mode,
         &frame->packets_per_frame);
     DC1394_ERR_RTN(err,"Could not get quadlets per frame");
     frame->packets_per_frame /= frame->packet_size/4;

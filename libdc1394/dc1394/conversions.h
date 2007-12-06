@@ -137,12 +137,14 @@ dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t 
  *                                                                                              *
  ************************************************************************************************/
 
-dc1394error_t dc1394_bayer_decoding_8bit(const uint8_t *bayer, uint8_t *rgb,
-					 uint32_t width, uint32_t height, dc1394color_filter_t tile,
-					 dc1394bayer_method_t method);
-dc1394error_t dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
-					  uint32_t width, uint32_t height, dc1394color_filter_t tile,
-					  dc1394bayer_method_t method, uint32_t bits);
+dc1394error_t
+dc1394_bayer_decoding_8bit(const uint8_t *bayer, uint8_t *rgb,
+			   uint32_t width, uint32_t height, dc1394color_filter_t tile,
+			   dc1394bayer_method_t method);
+dc1394error_t
+dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
+			    uint32_t width, uint32_t height, dc1394color_filter_t tile,
+			    dc1394bayer_method_t method, uint32_t bits);
 
 
 /**********************************************************************************
