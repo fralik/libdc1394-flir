@@ -200,7 +200,6 @@ dc1394_set_format7_register(dc1394camera_t *camera, unsigned int mode, uint64_t 
     QueryFormat7CSROffset(camera, mode, &camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]);
   }
 
-  //fprintf(stderr,"trying to set F7 0x%llx\n",camera->format7_csr[mode-MODE_FORMAT7_MIN]+offset);
   return platform_camera_write_quad(cp->pcam,
       camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset, value);
 }

@@ -175,8 +175,8 @@ BusResetThread(LPVOID lpParameter) {
         if (res) {
           gDevice[port].gen = GenerationCount;
         }
-        
-        printf("Bus Reset, gen: %ld, wait res %lX!\n", gDevice[port].gen, dwRet); fflush(stdout);
+        dc1394_log_warning("Bus Reset\n",NULL);
+        //printf("Bus Reset, gen: %ld, wait res %lX!\n", gDevice[port].gen, dwRet); fflush(stdout);
         
         WaitForSingleObject(gBusResetMx,INFINITE);
         n = gBusResetHandlersNum;
@@ -190,10 +190,12 @@ BusResetThread(LPVOID lpParameter) {
         }
       } else {
         dwRet = GetLastError();
-        printf("Error %ld in Bus reset thread for port %d\n",dwRet,port); fflush(stdout);
+	dc1394_log_error("Error in Bus reset thread\n",NULL);
+        //printf("Error %ld in Bus reset thread for port %d\n",dwRet,port); fflush(stdout);
       }
     } else {
-      printf("Error from IOCTL_BUS_RESET_NOTIFY: %d\n",(int)dwRet); fflush(stdout);
+      dc1394log_error("Error from IOCTL_BUS_RESET_NOTIFY\n",NULL);
+      fflush(stdout);
     }
   }
 
@@ -215,12 +217,12 @@ DWORD StartBusResetThread(int iPort) {
 
   if (gDevice[iPort].BusResetThread == NULL) {
     dwRet = GetLastError();
-    printf("Failed to start bus reset thread for port %d, error %ld\n",iPort,dwRet);fflush(stdout);
+    dc1394_log_error("Failed to start bus reset thread\n",NULL);
     return dwRet;
   }
   if (!SetThreadPriority(gDevice[iPort].BusResetThread,THREAD_PRIORITY_HIGHEST)) {
     dwRet = GetLastError();
-    printf("Failed to increase reset thread priority, error %ld\n",dwRet); fflush(stdout);
+    dc1394_log_error("Failed to increase reset thread priority\n",NULL);
   }
   return 0;
 }
@@ -872,12 +874,12 @@ static void ISORecCleanup(msw1394_ISO* ioISO) {
           if (!dwRet) {
             dwRet = GetLastError();
             char* msg = GetErrorText(dwRet);
-            printf("GetOverlappedResult failed: %s\n",msg);
+            dc1394_log_warning("GetOverlappedResult failed\n");
             LocalFree(msg);
           }
         } else {
           char* msg = GetErrorText(dwRet);
-          printf("IOCTL_ISOCH_FREE_RESOURCES failed: Error %d -- %s\n", (int)dwRet, msg); fflush(stdout);
+          dc1394_log_error("IOCTL_ISOCH_FREE_RESOURCES failed\n",NULL);
           LocalFree(msg);
         }
       }
@@ -1147,7 +1149,7 @@ msw1394error_t msw1394_ISOCaptureStop(msw1394_ISO* ioISO) {
   dwRet = CancelIo(ioISO->hDevice);
   if (!dwRet) {
     dwRet = GetLastError();
-    printf("CancelIo failed, err: 0x%lx\n", dwRet); fflush(stdout);
+    dc1394_log_error("CancelIo failed\n",NULL);
   }
 
   StopOverlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);

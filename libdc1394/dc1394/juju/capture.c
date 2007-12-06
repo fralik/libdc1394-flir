@@ -91,7 +91,7 @@ queue_frame (platform_camera_t *craw, int index)
 
   retval = ioctl(craw->iso_fd, FW_CDEV_IOC_QUEUE_ISO, &queue);
   if (retval < 0) {
-    fprintf(stderr, "queue_iso failed; %m\n");
+    dc1394_log_error("queue_iso failed; %m\n",NULL);
     return DC1394_IOCTL_FAILURE;
   }
 
@@ -145,7 +145,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   err = DC1394_FAILURE;
   craw->iso_fd = open(craw->filename, O_RDWR);
   if (craw->iso_fd < 0) {
-    fprintf (stderr, "open: %s\n", strerror (errno));
+    dc1394_log_error("error opening file\n",NULL);
     goto error_bandwidth;
   }
 
@@ -155,7 +155,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   create.speed = SCODE_400;
   err = DC1394_IOCTL_FAILURE;
   if (ioctl(craw->iso_fd, FW_CDEV_IOC_CREATE_ISO_CONTEXT, &create) < 0) {
-    fprintf (stderr, "failed to create iso context\n");
+    dc1394_log_error("failed to create iso context\n",NULL);
     goto error_fd;
   }
 
@@ -163,7 +163,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   err = capture_basic_setup(camera, &proto);
   if (err != DC1394_SUCCESS) {
-    fprintf (stderr, "basic setup failed\n");
+    dc1394_log_error("basic setup failed\n",NULL);
     goto error_fd;
   }
 
@@ -185,7 +185,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   for (i = 0; i < num_dma_buffers; i++) {
     err = init_frame(craw, i, &proto);
     if (err != DC1394_SUCCESS) {
-      fprintf (stderr, "error initing frames\n");
+      dc1394_log_error("error initing frames\n",NULL);
       break;
     }
   }
@@ -198,7 +198,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   for (i = 0; i < num_dma_buffers; i++) {
     err = queue_frame(craw, i);
     if (err != DC1394_SUCCESS) {
-      fprintf (stderr, "error queuing\n");
+      dc1394_log_error("error queuing\n",NULL);
       goto error_frames;
     }
   }
@@ -214,7 +214,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   retval = ioctl(craw->iso_fd, FW_CDEV_IOC_START_ISO, &start_iso);
   err = DC1394_IOCTL_FAILURE;
   if (retval < 0) {
-    fprintf (stderr, "Error starting iso\n");
+      dc1394_log_error("error starting iso\n",NULL);
     goto error_frames;
   }
 
@@ -309,7 +309,7 @@ platform_capture_dequeue (platform_camera_t * craw,
   while (craw->ready_frames == 0) {
     err = poll(fds, 1, timeout);
     if (err < 0) {
-      fprintf(stderr, "poll() failed for device %s\n", craw->filename);
+      dc1394_log_error("poll() failed for a device",NULL);
       return DC1394_FAILURE;
     } else if (err == 0) {
       return DC1394_SUCCESS;
@@ -317,7 +317,7 @@ platform_capture_dequeue (platform_camera_t * craw,
 
     len = read (craw->iso_fd, &iso, sizeof iso);
     if (len < 0) {
-      fprintf (stderr, "failed to read response: %m\n");
+      dc1394_log_error("failed to read a response\n",NULL);
       return DC1394_FAILURE;
     }
 

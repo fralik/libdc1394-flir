@@ -506,9 +506,7 @@ dc1394_bayer_EdgeSense(const uint8_t *restrict bayer, uint8_t *restrict rgb, int
 	outB = &rgb[0];
 	break;
     default:
-	fprintf(stderr, "Bad bayer pattern ID: %d\n", tile);
 	return;
-	break;
     }
 
     switch (tile) {
@@ -749,9 +747,7 @@ dc1394_bayer_EdgeSense(const uint8_t *restrict bayer, uint8_t *restrict rgb, int
       }
       break;
     default:			//---------------------------------------------------------
-      fprintf(stderr, "Bad bayer pattern ID: %d\n", tile);
       return;
-      break;
     }
     
     ClearBorders(rgb, sx, sy, 3);
@@ -779,9 +775,7 @@ dc1394_bayer_Downsample(const uint8_t *restrict bayer, uint8_t *restrict rgb, in
 	outB = &rgb[0];
 	break;
     default:
-	fprintf(stderr, "Bad Bayer pattern ID: %d\n", tile);
 	return;
-	break;
     }
 
     switch (tile) {
@@ -812,9 +806,7 @@ dc1394_bayer_Downsample(const uint8_t *restrict bayer, uint8_t *restrict rgb, in
 	}
 	break;
     default:			//---------------------------------------------------------
-	fprintf(stderr, "Bad Bayer pattern ID: %d\n", tile);
 	return;
-	break;
     }
 
 }
@@ -1302,9 +1294,7 @@ dc1394_bayer_EdgeSense_uint16(const uint16_t *restrict bayer, uint16_t *restrict
 	outB = &rgb[0];
 	break;
     default:
-	fprintf(stderr, "Bad bayer pattern ID: %d\n", tile);
 	return;
-	break;
     }
 
     switch (tile) {
@@ -1567,9 +1557,7 @@ dc1394_bayer_EdgeSense_uint16(const uint16_t *restrict bayer, uint16_t *restrict
       }
       break;
     default:			//---------------------------------------------------------
-      fprintf(stderr, "Bad bayer pattern ID: %d\n", tile);
       return;
-      break;
     }
    
     ClearBorders_uint16(rgb, sx, sy, 3);
@@ -1597,9 +1585,7 @@ dc1394_bayer_Downsample_uint16(const uint16_t *restrict bayer, uint16_t *restric
 	outB = &rgb[0];
 	break;
     default:
-	fprintf(stderr, "Bad Bayer pattern ID: %d\n", tile);
 	return;
-	break;
     }
 
     switch (tile) {
@@ -1632,9 +1618,7 @@ dc1394_bayer_Downsample_uint16(const uint16_t *restrict bayer, uint16_t *restric
 	}
 	break;
     default:			//---------------------------------------------------------
-	fprintf(stderr, "Bad Bayer pattern ID: %d\n", tile);
 	return;
-	break;
     }
 
 }
@@ -1662,9 +1646,7 @@ dc1394_bayer_Simple_uint16(const uint16_t *restrict bayer, uint16_t *restrict rg
 	outB = &rgb[0];
 	break;
     default:
-	fprintf(stderr, "Bad bayer pattern ID: %d\n", tile);
 	return;
-	break;
     }
 
     switch (tile) {
@@ -1783,9 +1765,7 @@ dc1394_bayer_Simple_uint16(const uint16_t *restrict bayer, uint16_t *restrict rg
 	}
 	break;
     default:			//---------------------------------------------------------
-	fprintf(stderr, "Bad bayer pattern ID: %d\n", tile);
 	return;
-	break;
     }
 
     /* add black border */

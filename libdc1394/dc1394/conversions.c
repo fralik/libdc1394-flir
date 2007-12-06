@@ -704,8 +704,6 @@ Adapt_buffer_convert(dc1394video_frame_t *in, dc1394video_frame_t *out)
 
   // Copy padding bytes:
   memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
-
-  //fprintf(stderr,"in: %d out: %d\n",in->color_coding, out->color_coding);
 }
 
 dc1394error_t

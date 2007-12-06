@@ -250,7 +250,6 @@ dc1394_feature_get(dc1394camera_t *camera, dc1394feature_info_t *feature)
     
     feature->trigger_modes.num=0;
     value_tmp= (value & (0xFFFF));
-    //fprintf(stderr,"value: %x\n",value_tmp);
     
     for (i=DC1394_TRIGGER_MODE_MIN;i<=DC1394_TRIGGER_MODE_MAX;i++) {
       j = i - DC1394_TRIGGER_MODE_MIN;
@@ -512,21 +511,15 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
   err=dc1394_get_control_register(camera, REG_CAMERA_V_FORMAT_INQ, &sup_formats);
   DC1394_ERR_RTN(err, "Could not get supported formats");
 
-  //fprintf(stderr,"supoerted formats: 0x%x\n",sup_formats);
-
   // for each format check supported modes and add them as we find them.
 
   modes->num=0;
   // Format_0
-  //fprintf(stderr,"shiftval=%d, mask=0x%x\n",31-(FORMAT0-FORMAT_MIN),0x1 << (31-(FORMAT0-FORMAT_MIN)));
   if ((sup_formats & (0x1 << (31-(DC1394_FORMAT0-DC1394_FORMAT_MIN)))) > 0) {
-    //fprintf(stderr,"F0 available\n");
     err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT0-DC1394_FORMAT_MIN) * 0x04U), &value);
     DC1394_ERR_RTN(err, "Could not get supported modes for Format_0");
     
-    //fprintf(stderr,"modes 0: 0x%x\n",value);
     for (mode=DC1394_VIDEO_MODE_FORMAT0_MIN;mode<=DC1394_VIDEO_MODE_FORMAT0_MAX;mode++) {
-      //fprintf(stderr,"mask=0x%x, cond=0x%x\n", 0x1 << (31-(mode-MODE_FORMAT0_MIN)),(value && (0x1<<(31-(mode-MODE_FORMAT0_MIN)))));
       if ((value & (0x1<<(31-(mode-DC1394_VIDEO_MODE_FORMAT0_MIN)))) > 0) {
 	modes->modes[modes->num]=mode;
 	modes->num++;
@@ -670,11 +663,6 @@ dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *mode)
   DC1394_ERR_RTN(err, "Could not get video format");
 
   format= (uint32_t)((value >> 29) & 0x7UL) + DC1394_FORMAT_MIN;
-  
-  //if (format>FORMAT2)
-  //format-=3;
-
-  //fprintf(stderr,"format: %d\n",format);
 
   err= dc1394_get_control_register(camera, REG_CAMERA_VIDEO_MODE, &value);
   DC1394_ERR_RTN(err, "Could not get video mode");
@@ -805,9 +793,7 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
   }
   else { // fallback to legacy
     if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
-      fprintf(stderr,"(%s) line %d: an ISO speed >400Mbps was requested while the camera is in LEGACY mode\n",__FILE__,__LINE__);
-      fprintf(stderr,"              Please set the operation mode to OPERATION_MODE_1394B before asking for\n");
-      fprintf(stderr,"              1394b ISO speeds\n");
+      dc1394_log_error("An ISO speed >400Mbps was requested while the camera is in LEGACY mode. Please set the operation mode to OPERATION_MODE_1394B before asking for 1394b ISO speeds\n",NULL);
       return DC1394_INVALID_ISO_SPEED;
     }
     err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);

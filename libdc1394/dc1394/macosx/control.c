@@ -155,7 +155,7 @@ platform_camera_new (platform_t * p, platform_device_t * device,
   res = IOCreatePlugInInterfaceForService (device->node, kIOFireWireLibTypeID,
       kIOCFPlugInInterfaceID, &plugin_interface, &score);
   if (res != KERN_SUCCESS) {
-    fprintf (stderr, "Failed to get plugin interface\n");
+    dc1394_log_error("Failed to get plugin interface\n",NULL);
     return NULL;
   }
 
@@ -221,7 +221,7 @@ platform_camera_read (platform_camera_t * cam, uint64_t offset,
     retval = (*d)->ReadQuadlet (d, (*d)->GetDevice (d), &full_addr,
         (UInt32 *) quads, false, cam->generation);
   if (retval != 0) {
-    fprintf (stderr, "Error reading (%x)...\n", retval);
+    dc1394_log_error("Error reading camera register...\n", NULL);
     return DC1394_FAILURE;
   }
   for (i = 0; i < num_quads; i++)
@@ -254,7 +254,7 @@ platform_camera_write (platform_camera_t * cam, uint64_t offset,
     retval = (*d)->WriteQuadlet (d, (*d)->GetDevice (d), &full_addr, values[0],
         false, cam->generation);
   if (retval != 0) {
-    fprintf (stderr, "Error writing (%x)...\n", retval);
+    dc1394_log_error("Error writing camera register...\n", NULL);
     return DC1394_FAILURE;
   }
   return DC1394_SUCCESS;

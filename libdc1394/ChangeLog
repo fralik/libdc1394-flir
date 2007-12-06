@@ -1,4 +1,8 @@
 2007-12-06 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 490: Replace all fprintf errors by logging. Some lowest level
+	           errors using fprintf remain. Definitely needs testing on
+		   other platforms than Linux. 2-3 more internal functions had
+		   their dc1394_ prefix removed.
 	* SVN 489: Retire dc1394_cleanup_iso_channel_and_bandwidth.
 	* SVN 488: reserve dc1394_ prefix for exported functions.
 	           channel/bandwidth functions still have the prefix since

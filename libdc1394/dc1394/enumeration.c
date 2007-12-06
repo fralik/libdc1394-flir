@@ -5,6 +5,7 @@
 #include <dc1394/control.h>
 #include "internal.h"
 #include "platform.h"
+#include "log.h"
 
 static int
 add_camera (dc1394_t * d, camera_info_t * info)
@@ -25,13 +26,11 @@ parse_leaf (uint32_t offset, uint32_t * quads, int num_quads)
     if (offset + num_entries >= num_quads)
         return NULL;
 
-    //printf ("leaf %d\n", num_entries);
     uint32_t * dquads = quads + offset + 1;
     char * str = malloc ((num_entries - 1) * 4 + 1);
     int i;
     for (i = 0; i < num_entries - 2; i++) {
         uint32_t q = dquads[i+2];
-        //printf ("l %x\n", q);
         str[4*i+0] = q >> 24;
         str[4*i+1] = (q >> 16) & 0xff;
         str[4*i+2] = (q >> 8) & 0xff;
@@ -74,7 +73,6 @@ identify_unit (dc1394_t * d, platform_device_t * dev, uint64_t guid,
         if ((q >> 24) == 0x17)
             info.model_id = q & 0xffffff;
     }
-    //printf ("%x %x %x\n", info.unit_spec_ID, info.unit_sw_version, info.unit_dependent_directory);
 
   /*
      Note on Point Grey (PG) cameras:
@@ -112,7 +110,6 @@ identify_unit (dc1394_t * d, platform_device_t * dev, uint64_t guid,
     dquads = quads + info.unit_dependent_directory + 1;
     for (i = 0; i < num_entries; i++) {
         uint32_t q = dquads[i];
-        //printf ("q %x\n", q);
         if ((q >> 24) == 0x81)
             info.vendor = parse_leaf ((q & 0xffffff) +
                     info.unit_dependent_directory + 1 + i,
@@ -140,7 +137,6 @@ identify_camera (dc1394_t * d, platform_device_t * dev)
     if (num_quads < 7)
         return -1;
 
-    //printf ("%x %x\n", quads[0], quads[1]);
     /* Require 4 quadlets in the bus info block */
     if ((quads[0] >> 24) != 0x4)
         return -1;
@@ -150,10 +146,8 @@ identify_camera (dc1394_t * d, platform_device_t * dev)
         return -1;
 
     guid = ((uint64_t)quads[3] << 32) | quads[4];
-    //printf ("guid %"PRIx64"\n", guid);
 
     int num_entries = quads[5] >> 16;
-    //printf ("%d\n", num_entries);
     if (num_quads < num_entries + 6)
         return -1;
     int unit = 0;
@@ -161,7 +155,6 @@ identify_camera (dc1394_t * d, platform_device_t * dev)
     int i;
     for (i = 0; i < num_entries; i++) {
         uint32_t q = quads[6+i];
-        //printf ("%x\n", q);
         if ((q >> 24) == 0x03)
             vendor_id = q & 0xffffff;
         if ((q >> 24) == 0xD1) {
@@ -202,7 +195,7 @@ refresh_enumeration (dc1394_t * d)
 
     d->device_list = platform_get_device_list (d->platform);
     if (!d->device_list) {
-        fprintf (stderr, "Platform failed to get device list\n");
+      dc1394_log_error("Platform failed to get device list\n",NULL);
         return -1;
     }
 

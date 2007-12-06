@@ -78,8 +78,6 @@ get_quadlets_per_packet(dc1394video_mode_t mode, dc1394framerate_t frame_rate, u
 
   err=get_format_from_mode(mode, &format);
   DC1394_ERR_RTN(err,"Invalid mode ID");
-  
-  //fprintf(stderr,"format: %d\n",format);
 
   switch(format) {
   case DC1394_FORMAT0:
@@ -291,7 +289,7 @@ capture_basic_setup (dc1394camera_t * camera,
   DC1394_ERR_RTN(err,"Could not get width/height from format/mode");
 
   if (dc1394_is_video_mode_scalable(video_mode)==DC1394_TRUE) {
-    //fprintf(stderr,"Scalable format detected\n");
+
     err=dc1394_format7_get_packet_size(camera, video_mode,
         &frame->packet_size);
     DC1394_ERR_RTN(err, "Unable to get format 7 bytes per packet");

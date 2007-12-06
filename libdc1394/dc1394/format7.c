@@ -104,7 +104,6 @@ _dc1394_v130_handshake(dc1394camera_t *camera, dc1394video_mode_t video_mode)
   
   if (v130handshake==1) {
     // we should use advanced IIDC v1.30 handshaking.
-    //fprintf(stderr,"using handshaking\n");
     // set value setting to 1
     err=dc1394_format7_set_value_setting(camera, video_mode);
     DC1394_ERR_RTN(err, "Unable to set value setting register");
@@ -247,8 +246,6 @@ dc1394_format7_get_max_image_size(dc1394camera_t *camera,
 
   *horizontal_size  = (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
   *vertical_size= (uint32_t) ( value & 0x0000FFFFUL );
-  
-  //fprintf(stderr,"got size: %d %d\n", *horizontal_size, *vertical_size);
 
   return err;
 }
@@ -352,19 +349,14 @@ dc1394_format7_get_color_codings(dc1394camera_t *camera,
   err=dc1394_get_format7_register(camera, video_mode, REG_CAMERA_FORMAT7_COLOR_CODING_INQ, &value);
   DC1394_ERR_RTN(err, "Could not get available color codings");
 
-  //fprintf(stderr,"codings reg: 0x%x\n",value);
-
   color_codings->num=0;
   for (i=0;i<DC1394_COLOR_CODING_NUM;i++) {
-    //fprintf(stderr,"test: 0x%x\n",(value & (0x1 << (31-i))));
     if ((value & (0x1 << (31-i))) > 0) {
-      //fprintf(stderr,"got one coding\n");
       color_codings->codings[color_codings->num]=i+DC1394_COLOR_CODING_MIN;
       color_codings->num++;
     }
   }
   
-  //fprintf(stderr,"number of modes: %d\n",modes->num);
   return err;
 }
  
@@ -451,7 +443,7 @@ dc1394_format7_get_packet_size(dc1394camera_t *camera,
   *packet_size= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
   
   if (*packet_size==0) {
-    printf("(%s): packet size is zero. This should not happen.\n", __FILE__);
+    dc1394_log_error("packet size is zero. This should not happen.\n",NULL);
     return DC1394_FAILURE;
   }
   return err;
@@ -644,7 +636,7 @@ dc1394_format7_get_data_depth(dc1394camera_t *camera,
   if (camera->iidc_version >= DC1394_IIDC_VERSION_1_31) {
     err=dc1394_get_format7_register(camera, video_mode,
         REG_CAMERA_FORMAT7_DATA_DEPTH_INQ, &value);
-    //printf ("format7 raw depth %08x\n", value);
+
     DC1394_ERR_RTN(err, "Could not get format7 data depth");
     *data_depth=value >> 24;
   }
@@ -746,7 +738,6 @@ dc1394_format7_get_mode_info(dc1394camera_t *camera,
       f7_mode->color_filter = 0;
     }
 
-    //fprintf(stderr,"# color codings for mode %d: %d\n", video_mode, mode->color_codings.num);
   }
 
   return err;
@@ -771,7 +762,6 @@ dc1394_format7_get_modeset(dc1394camera_t *camera, dc1394format7modeset_t *info)
     if (dc1394_is_video_mode_scalable(modes.modes[i])) {
       info->mode[modes.modes[i]-DC1394_VIDEO_MODE_FORMAT7_MIN].present= 1;
       dc1394_format7_get_mode_info(camera, modes.modes[i], &info->mode[modes.modes[i]-DC1394_VIDEO_MODE_FORMAT7_MIN]);
-      //fprintf(stderr,"# color codings for mode %d: %d\n", modes.modes[i], info->mode[modes.modes[i]-DC1394_VIDEO_MODE_FORMAT7_MIN].color_codings.num);
     }
   }
 
@@ -899,7 +889,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
     else { // recom. bpp asked, but register is 0. IGNORED
       err=dc1394_format7_get_packet_parameters(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
       DC1394_ERR_RTN(err, "Packet para inq error");
-      printf("(%s) Recommended packet size asked, but register is zero. Falling back to MAX packet size for mode %d \n", __FILE__, video_mode);
+      dc1394_log_warning("Recommended packet size asked, but register is zero. Falling back to MAX packet size\n",NULL);
       packet_size=max_bytes;
     }
     break;
@@ -911,7 +901,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   case DC1394_QUERY_FROM_CAMERA:
     // if we wanted QUERY_FROM_CAMERA, the QUERY_FROM_CAMERA value has been overwritten by
     // the current value at the beginning of the program. It is thus not possible to reach this code fragment.
-    printf("(%s:%d) Packet size error: we should not reach this code region\n", __FILE__,__LINE__);
+    dc1394_log_error("Packet size error: we should not reach this code region\n", NULL);
     break;
   default:
     err=dc1394_format7_get_packet_parameters(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
