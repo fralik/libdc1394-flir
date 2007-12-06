@@ -446,7 +446,7 @@ int dc_init()
 
   printf("Using camera with GUID %"PRIx64"\n", camera->guid);
 
-  dc1394_camera_print_info(camera);
+  dc1394_camera_print_info(camera, stdout);
 
   return 1;
 }

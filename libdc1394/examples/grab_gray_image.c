@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
     fprintf( stderr, "unable to get feature set\n");
   }
   else {
-    dc1394_feature_print_all(&features);
+    dc1394_feature_print_all(&features, stdout);
   }
     
 

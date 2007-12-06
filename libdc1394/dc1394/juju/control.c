@@ -194,10 +194,10 @@ platform_camera_set_parent (platform_camera_t * cam,
 }
 
 void
-platform_camera_print_info (platform_camera_t * camera)
+platform_camera_print_info (platform_camera_t * camera, FILE *fd)
 {
-  printf ("------ Camera platform-specific information ------\n");
-  printf ("Device filename                   :     %s\n", camera->filename);
+  fprintf(fd,"------ Camera platform-specific information ------\n");
+  fprintf(fd,"Device filename                   :     %s\n", camera->filename);
 }
 
 int

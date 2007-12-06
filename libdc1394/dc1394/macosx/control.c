@@ -193,11 +193,11 @@ platform_camera_set_parent (platform_camera_t * cam,
 }
 
 void
-platform_camera_print_info (platform_camera_t * camera)
+platform_camera_print_info (platform_camera_t * camera, FILE *fd)
 {
-  printf("------ Camera platform-specific information ------\n");
-  printf("Interface                       :     %p\n", camera->iface);
-  printf("Generation                      :     %lu\n", camera->generation);
+  fprintf(fd,"------ Camera platform-specific information ------\n");
+  fprintf(fd,"Interface                       :     %p\n", camera->iface);
+  fprintf(fd,"Generation                      :     %lu\n", camera->generation);
 }
 
 dc1394error_t

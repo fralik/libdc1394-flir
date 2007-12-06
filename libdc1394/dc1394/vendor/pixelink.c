@@ -455,22 +455,22 @@ dc1394_pxl_set_gpo_config(dc1394camera_t *camera, uint32_t gpio_id, uint32_t gpi
  * It can be used to test many functions in this file.
  */
 dc1394error_t
-dc1394_pxl_print_camera_info(dc1394camera_t *camera) {
+dc1394_pxl_print_camera_info(dc1394camera_t *camera, FILE *fd) {
   dc1394_pxl_camera_info_t camera_info;
   dc1394_pxl_get_camera_info(camera, &camera_info);
 
-  printf("Camera information.\n");
-  printf("  %-16s: %08x\n", "FPGA Version", camera_info.fpga_version);
-  printf("  %-16s: %08x\n", "FW Version", camera_info.fw_version);
-  printf("  %-16s: %s\n", "Serial Number", camera_info.serial_number);
-  printf("  %-16s: %s\n", "Description", camera_info.description);
+  fprintf(fd,"Camera information.\n");
+  fprintf(fd,"  %-16s: %08x\n", "FPGA Version", camera_info.fpga_version);
+  fprintf(fd,"  %-16s: %08x\n", "FW Version", camera_info.fw_version);
+  fprintf(fd,"  %-16s: %s\n", "Serial Number", camera_info.serial_number);
+  fprintf(fd,"  %-16s: %s\n", "Description", camera_info.description);
 
   dc1394_pxl_adv_feature_info_t adv_info;
   dc1394_pxl_get_adv_feature_info(camera, &adv_info);
 
-  printf("Advanced Feature Information.\n");
-  printf("  %-16s: %s\n", "Name", adv_info.name);
-  printf("\n");
+  fprintf(fd,"Advanced Feature Information.\n");
+  fprintf(fd,"  %-16s: %s\n", "Name", adv_info.name);
+  fprintf(fd,"\n");
 
   return DC1394_SUCCESS;
 }

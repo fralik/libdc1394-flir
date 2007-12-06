@@ -143,10 +143,10 @@ dc1394_free_camera_platform (dc1394camera_t *camera)
 }
 
 dc1394error_t
-dc1394_print_camera_info_platform (dc1394camera_t *camera) 
+dc1394_print_camera_info_platform (dc1394camera_t *camera, FILE *fd) 
 {
   // DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
-  printf("------ Camera platform-specific information ------\n");
+  fprintf(fd,"------ No camera platform-specific information ------\n");
   return DC1394_SUCCESS;
 }
 

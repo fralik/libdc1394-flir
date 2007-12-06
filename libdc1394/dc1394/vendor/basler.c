@@ -291,7 +291,7 @@ dc1394_basler_sff_feature_is_enabled (dc1394camera_t* camera, dc1394basler_sff_f
  * print a feature
  */
 dc1394error_t
-dc1394_basler_sff_feature_print (dc1394camera_t* camera, dc1394basler_sff_feature_t feature_id)
+dc1394_basler_sff_feature_print (dc1394camera_t* camera, dc1394basler_sff_feature_t feature_id, FILE *fd)
 {
   dc1394error_t err;
   dc1394bool_t available;
@@ -304,20 +304,20 @@ dc1394_basler_sff_feature_print (dc1394camera_t* camera, dc1394basler_sff_featur
 
   if (camera == NULL) {
   offline:
-    printf ("Name      : %s\n"
+    fprintf (fd,"Name      : %s\n"
             "CSR guid  : %08x-%04x-%04x-%02x%02x%02x%02x%02x%02x%02x%02x\n",
             feature_desc->name,
             feature_desc->csr_guid.d1, feature_desc->csr_guid.d2, feature_desc->csr_guid.d3,
             feature_desc->csr_guid.d4[0], feature_desc->csr_guid.d4[1], feature_desc->csr_guid.d4[2], feature_desc->csr_guid.d4[3],
             feature_desc->csr_guid.d4[4], feature_desc->csr_guid.d4[5], feature_desc->csr_guid.d4[6], feature_desc->csr_guid.d4[7]);
     if (feature_desc->has_chunk) {
-      printf ("Has chunk : false\n"
+      fprintf (fd,"Has chunk : false\n"
               "CHUNK guid: %08x-%04x-%04x-%02x%02x%02x%02x%02x%02x%02x%02x\n",
               feature_desc->chunk_guid.d1, feature_desc->chunk_guid.d2, feature_desc->chunk_guid.d3,
               feature_desc->chunk_guid.d4[0], feature_desc->chunk_guid.d4[1], feature_desc->chunk_guid.d4[2], feature_desc->chunk_guid.d4[3],
               feature_desc->chunk_guid.d4[4], feature_desc->chunk_guid.d4[5], feature_desc->chunk_guid.d4[6], feature_desc->chunk_guid.d4[7]);
     } else {
-      printf ("Has chunk : false\n");
+      fprintf (fd,"Has chunk : false\n");
     }
     return DC1394_SUCCESS;
   } else {
@@ -328,39 +328,39 @@ dc1394_basler_sff_feature_print (dc1394camera_t* camera, dc1394basler_sff_featur
     if (!available)
       goto offline;
 
-    printf ("Name      : %s\n"
+    fprintf (fd,"Name      : %s\n"
             "CSR guid  : %08x-%04x-%04x-%02x%02x%02x%02x%02x%02x%02x%02x\n",
             feature_desc->name,
             feature_desc->csr_guid.d1, feature_desc->csr_guid.d2, feature_desc->csr_guid.d3,
             feature_desc->csr_guid.d4[0], feature_desc->csr_guid.d4[1], feature_desc->csr_guid.d4[2], feature_desc->csr_guid.d4[3],
             feature_desc->csr_guid.d4[4], feature_desc->csr_guid.d4[5], feature_desc->csr_guid.d4[6], feature_desc->csr_guid.d4[7]);
     if (feature_desc->has_chunk) {
-      printf ("Has chunk : true\n"
+      fprintf (fd,"Has chunk : true\n"
               "CHUNK guid: %08x-%04x-%04x-%02x%02x%02x%02x%02x%02x%02x%02x\n",
               feature_desc->chunk_guid.d1, feature_desc->chunk_guid.d2, feature_desc->chunk_guid.d3,
               feature_desc->chunk_guid.d4[0], feature_desc->chunk_guid.d4[1], feature_desc->chunk_guid.d4[2], feature_desc->chunk_guid.d4[3],
               feature_desc->chunk_guid.d4[4], feature_desc->chunk_guid.d4[5], feature_desc->chunk_guid.d4[6], feature_desc->chunk_guid.d4[7]);
     } else {
-      printf ("Has chunk : false\n");
+      fprintf (fd,"Has chunk : false\n");
     }
-    printf ("Available : true\n");
+    fprintf (fd,"Available : true\n");
     
     err = get_sff_address_from_csr_guid (camera, &(feature_desc->csr_guid), &feature_address);
     if (err == DC1394_SUCCESS) {
-      printf ("Address   : 0x%016"PRIx64"\n", feature_address);
+      fprintf (fd,"Address   : 0x%016"PRIx64"\n", feature_address);
     } else {
-      printf ("Address   : unavailable\n");
+      fprintf (fd,"Address   : unavailable\n");
     }
   }
   return DC1394_SUCCESS;  
 }
 
-dc1394error_t dc1394_basler_sff_feature_print_all (dc1394camera_t* camera)
+dc1394error_t dc1394_basler_sff_feature_print_all (dc1394camera_t* camera, FILE *fd)
 {
   uint32_t i = DC1394_BASLER_SFF_FEATURE_MIN;
   while (i < DC1394_BASLER_SFF_FEATURE_MAX) {
-    dc1394_basler_sff_feature_print (camera, i);
-    printf ("\n");
+    dc1394_basler_sff_feature_print (camera, i, fd);
+    fprintf (fd, "\n");
     i++;
   }
   return DC1394_SUCCESS;

@@ -646,7 +646,7 @@ dc1394camera_t * dc1394_camera_new_unit(dc1394_t *dc1394, uint64_t guid, int uni
 /* Frees a camera structure*/
 void dc1394_camera_free(dc1394camera_t *camera);
 /* Print various camera information, such as GUID, vendor, model, supported IIDC specs, etc... */
-dc1394error_t dc1394_camera_print_info(dc1394camera_t *camera);
+dc1394error_t dc1394_camera_print_info(dc1394camera_t *camera, FILE *fd);
 
 /***************************************************************************
      Other functionalities
@@ -695,8 +695,8 @@ dc1394error_t dc1394_feature_get_all(dc1394camera_t *camera, dc1394featureset_t 
 dc1394error_t dc1394_feature_get(dc1394camera_t *camera, dc1394feature_info_t *feature);
 
 /* Displays the bounds and options of the given feature or of the entire feature set */
-dc1394error_t dc1394_feature_print(dc1394feature_info_t *feature);
-dc1394error_t dc1394_feature_print_all(dc1394featureset_t *features);
+dc1394error_t dc1394_feature_print(dc1394feature_info_t *feature, FILE *fd);
+dc1394error_t dc1394_feature_print_all(dc1394featureset_t *features, FILE *fd);
 
 /* get/set the values of multiple-value features on the camera */
 dc1394error_t dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint32_t *u_b_value, uint32_t *v_r_value);

@@ -109,9 +109,9 @@ int main (int argc, char **argv)
     printf ("I: found camera with guid 0x%"PRIx64"\n", guid);
   }
 
-  dc1394_camera_print_info (camera);
+  dc1394_camera_print_info (camera, stdout);
   printf ("\nSFF feature info:\n");
-  dc1394_basler_sff_feature_print_all (camera);  
+  dc1394_basler_sff_feature_print_all (camera, stdout);  
   dc1394_camera_free (camera);
   dc1394_camera_free_list (list);
   dc1394_free (d);

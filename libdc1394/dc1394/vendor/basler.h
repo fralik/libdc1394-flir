@@ -75,12 +75,12 @@ dc1394error_t dc1394_basler_sff_chunk_find (dc1394basler_sff_feature_t feature_i
 /**
  * prints info about one feature
  */
-dc1394error_t dc1394_basler_sff_feature_print (dc1394camera_t* camera, dc1394basler_sff_feature_t feature_id);
+dc1394error_t dc1394_basler_sff_feature_print (dc1394camera_t* camera, dc1394basler_sff_feature_t feature_id, FILE *fd);
 
 /**
  * prints info about all features
  */
-dc1394error_t dc1394_basler_sff_feature_print_all (dc1394camera_t* camera);
+dc1394error_t dc1394_basler_sff_feature_print_all (dc1394camera_t* camera, FILE *fd);
 
 #ifdef __cplusplus
 }

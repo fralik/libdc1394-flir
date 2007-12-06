@@ -26,7 +26,7 @@ typedef struct _platform_camera_t platform_camera_t;
 platform_camera_t * platform_camera_new (platform_t * p,
     platform_device_t * device, uint32_t unit_directory_offset);
 void platform_camera_free (platform_camera_t * cam);
-void platform_camera_print_info (platform_camera_t * cam);
+void platform_camera_print_info (platform_camera_t * cam, FILE *fd);
 void platform_camera_set_parent (platform_camera_t * cam,
         dc1394camera_t * parent);
 

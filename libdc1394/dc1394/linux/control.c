@@ -208,12 +208,12 @@ platform_camera_set_parent (platform_camera_t * cam,
 }
 
 void
-platform_camera_print_info (platform_camera_t * cam)
+platform_camera_print_info (platform_camera_t * cam, FILE *fd)
 {
-  printf("------ Camera platform-specific information ------\n");
-  printf("Handle                            :     %p\n", cam->handle);
-  printf("Port                              :     %d\n", cam->port);
-  printf("Node                              :     %d\n", cam->node);
+  fprintf(fd,"------ Camera platform-specific information ------\n");
+  fprintf(fd,"Handle                            :     %p\n", cam->handle);
+  fprintf(fd,"Port                              :     %d\n", cam->port);
+  fprintf(fd,"Node                              :     %d\n", cam->node);
 }
 
 dc1394error_t

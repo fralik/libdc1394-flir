@@ -148,42 +148,42 @@ update_camera_info (dc1394camera_t *camera)
 }
 
 dc1394error_t
-dc1394_camera_print_info(dc1394camera_t *camera) 
+dc1394_camera_print_info(dc1394camera_t *camera, FILE* fd) 
 {
   dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
   uint32_t value[2];
   
   value[0]= camera->guid & 0xffffffff;
   value[1]= (camera->guid >>32) & 0xffffffff;
-  printf ("------ Camera information ------\n");
-  printf ("Vendor                            :     %s\n", camera->vendor);
-  printf ("Model                             :     %s\n", camera->model);
-  printf ("Unit                              :     %d\n", camera->unit);
-  printf ("Specifications ID                 :     0x%x\n",
+  fprintf(fd,"------ Camera information ------\n");
+  fprintf(fd,"Vendor                            :     %s\n", camera->vendor);
+  fprintf(fd,"Model                             :     %s\n", camera->model);
+  fprintf(fd,"Unit                              :     %d\n", camera->unit);
+  fprintf(fd,"Specifications ID                 :     0x%x\n",
           camera->unit_spec_ID);
-  printf ("Software revision                 :     0x%x\n",
+  fprintf(fd,"Software revision                 :     0x%x\n",
           camera->unit_sw_version);
-  printf ("IIDC version code                 :     %d\n",
+  fprintf(fd,"IIDC version code                 :     %d\n",
           camera->iidc_version);
-  printf ("Unit directory offset             :     0x%x\n",
+  fprintf(fd,"Unit directory offset             :     0x%x\n",
           camera->unit_directory);
-  printf ("Unit dependent directory offset   :     0x%x\n",
+  fprintf(fd,"Unit dependent directory offset   :     0x%x\n",
           camera->unit_dependent_directory);
-  printf ("Commands registers base           :     0x%x\n",
+  fprintf(fd,"Commands registers base           :     0x%x\n",
           camera->command_registers_base);
-  printf ("Unique ID                         :     0x%08x%08x\n",
+  fprintf(fd,"Unique ID                         :     0x%08x%08x\n",
           value[1], value[0]);
-  printf ("Vendor ID                         :     0x%x\n", camera->vendor_id);
-  printf ("Model ID                          :     0x%x\n", camera->model_id);
+  fprintf(fd,"Vendor ID                         :     0x%x\n", camera->vendor_id);
+  fprintf(fd,"Model ID                          :     0x%x\n", camera->model_id);
   if (camera->advanced_features_csr>0)
-    printf("Advanced features found at offset :     0x%"PRIx64"\n", camera->advanced_features_csr);
-  printf("1394b mode capable (>=800Mbit/s)  :     ");
+    fprintf(fd,"Advanced features found at offset :     0x%"PRIx64"\n", camera->advanced_features_csr);
+  fprintf(fd,"1394b mode capable (>=800Mbit/s)  :     ");
   if (camera->bmode_capable==DC1394_TRUE)
-    printf("Yes\n");
+    fprintf(fd,"Yes\n");
   else
-    printf("No\n");
+    fprintf(fd,"No\n");
 
-  platform_camera_print_info (cpriv->pcam);
+  platform_camera_print_info (cpriv->pcam, fd);
 
   return DC1394_SUCCESS;
 }
@@ -339,7 +339,7 @@ dc1394_feature_get(dc1394camera_t *camera, dc1394feature_info_t *feature)
  Displays the bounds and options of the given feature
 *****************************************************/
 dc1394error_t
-dc1394_feature_print(dc1394feature_info_t *f) 
+dc1394_feature_print(dc1394feature_info_t *f, FILE *fd) 
 {
   int fid= f->id;
   
@@ -347,117 +347,117 @@ dc1394_feature_print(dc1394feature_info_t *f)
     return DC1394_INVALID_FEATURE;
   }
   const char *feature_string = dc1394_feature_get_string (fid);
-  printf("%s:\n\t", feature_string);
+  fprintf(fd,"%s:\n\t", feature_string);
   
   if (!f->available) {
-    printf("NOT AVAILABLE\n");
+    fprintf(fd,"NOT AVAILABLE\n");
     return DC1394_SUCCESS;
   }
   
   if (f->readout_capable)
-    printf("RC  ");
+    fprintf(fd,"RC  ");
   if (f->on_off_capable)
-    printf("O/OC  ");
+    fprintf(fd,"O/OC  ");
   int i;
   for (i=0;i<f->modes.num;i++) {
     switch (f->modes.modes[i]) {
       case DC1394_FEATURE_MODE_MANUAL:
-	printf("MC  ");
+	fprintf(fd,"MC  ");
 	break;
       case DC1394_FEATURE_MODE_AUTO:
-	printf("AC  ");
+	fprintf(fd,"AC  ");
 	break;
       case DC1394_FEATURE_MODE_ONE_PUSH_AUTO:
-	printf("OP  ");
+	fprintf(fd,"OP  ");
 	break;
     }
-    printf("(active is: ");
+    fprintf(fd,"(active is: ");
     switch (f->current_mode) {
       case DC1394_FEATURE_MODE_MANUAL:
-	printf("MAN)  ");
+	fprintf(fd,"MAN)  ");
 	break;
       case DC1394_FEATURE_MODE_AUTO:
-	printf("AUTO)  ");
+	fprintf(fd,"AUTO)  ");
 	break;
       case DC1394_FEATURE_MODE_ONE_PUSH_AUTO:
-	printf("ONE PUSH)  ");
+	fprintf(fd,"ONE PUSH)  ");
 	break;
     }
     
   }
   if (f->absolute_capable)
-    printf("ABS  ");
-  printf("\n");
+    fprintf(fd,"ABS  ");
+  fprintf(fd,"\n");
   
   if (f->on_off_capable) {
     if (f->is_on) 
-      printf("\tFeature: ON  ");
+      fprintf(fd,"\tFeature: ON  ");
     else
-      printf("\tFeature: OFF  ");
+      fprintf(fd,"\tFeature: OFF  ");
   }
   else
-    printf("\t");
+    fprintf(fd,"\t");
 
   if (fid != DC1394_FEATURE_TRIGGER) 
-    printf("min: %d max %d\n", f->min, f->max);
+    fprintf(fd,"min: %d max %d\n", f->min, f->max);
 
   switch(fid) {
   case DC1394_FEATURE_TRIGGER:
-    printf("\n\tAvailableTriggerModes: ");
+    fprintf(fd,"\n\tAvailableTriggerModes: ");
     if (f->trigger_modes.num==0) {
-      printf("none");
+      fprintf(fd,"none");
     }
     else {
       int i;
       for (i=0;i<f->trigger_modes.num;i++) {
-	printf("%d ",f->trigger_modes.modes[i]);
+	fprintf(fd,"%d ",f->trigger_modes.modes[i]);
       }
     }
-    printf("\n\tAvailableTriggerSources: ");
+    fprintf(fd,"\n\tAvailableTriggerSources: ");
     if (f->trigger_sources.num==0) {
-      printf("none");
+      fprintf(fd,"none");
     }
     else {
       int i;
       for (i=0;i<f->trigger_sources.num;i++) {
-	printf("%d ",f->trigger_sources.sources[i]);
+	fprintf(fd,"%d ",f->trigger_sources.sources[i]);
       }
     }
-    printf("\n\tPolarity Change Capable: ");
+    fprintf(fd,"\n\tPolarity Change Capable: ");
     
     if (f->polarity_capable) 
-      printf("True");
+      fprintf(fd,"True");
     else 
-      printf("False");
+      fprintf(fd,"False");
     
-    printf("\n\tCurrent Polarity: ");
+    fprintf(fd,"\n\tCurrent Polarity: ");
     
     if (f->trigger_polarity) 
-      printf("POS");
+      fprintf(fd,"POS");
     else 
-      printf("NEG");
+      fprintf(fd,"NEG");
     
-    printf("\n\tcurrent mode: %d\n", f->trigger_mode);
+    fprintf(fd,"\n\tcurrent mode: %d\n", f->trigger_mode);
     if (f->trigger_sources.num>0) {
-      printf("\n\tcurrent source: %d\n", f->trigger_source);
+      fprintf(fd,"\n\tcurrent source: %d\n", f->trigger_source);
     }
     break;
   case DC1394_FEATURE_WHITE_BALANCE: 
-    printf("\tB/U value: %d R/V value: %d\n", f->BU_value, f->RV_value);
+    fprintf(fd,"\tB/U value: %d R/V value: %d\n", f->BU_value, f->RV_value);
     break;
   case DC1394_FEATURE_TEMPERATURE:
-    printf("\tTarget temp: %d Current Temp: %d\n", f->target_value, f->value);
+    fprintf(fd,"\tTarget temp: %d Current Temp: %d\n", f->target_value, f->value);
     break;
   case DC1394_FEATURE_WHITE_SHADING: 
-    printf("\tR value: %d G value: %d B value: %d\n", f->R_value,
+    fprintf(fd,"\tR value: %d G value: %d B value: %d\n", f->R_value,
 	   f->G_value, f->B_value);
     break;
   default:
-    printf("\tcurrent value is: %d\n",f->value);
+    fprintf(fd,"\tcurrent value is: %d\n",f->value);
     break;
   }
   if (f->absolute_capable)
-    printf("\tabsolute settings:\n\t value: %f\n\t min: %f\n\t max: %f\n",
+    fprintf(fd,"\tabsolute settings:\n\t value: %f\n\t min: %f\n\t max: %f\n",
 	   f->abs_value,f->abs_min,f->abs_max);
 
   return DC1394_SUCCESS;
@@ -469,22 +469,22 @@ dc1394_feature_print(dc1394feature_info_t *f)
  Displays the entire feature set stored in features
 *****************************************************/
 dc1394error_t
-dc1394_feature_print_all(dc1394featureset_t *features) 
+dc1394_feature_print_all(dc1394featureset_t *features, FILE *fd) 
 {
   uint32_t i, j;
   dc1394error_t err=DC1394_SUCCESS;
   
-  printf("------ Features report ------\n");
-  printf("OP   - one push capable\n");
-  printf("RC   - readout capable\n");
-  printf("O/OC - on/off capable\n");
-  printf("AC   - auto capable\n");
-  printf("MC   - manual capable\n");
-  printf("ABS  - absolute capable\n");
-  printf("-----------------------------\n");
+  fprintf(fd,"------ Features report ------\n");
+  fprintf(fd,"OP   - one push capable\n");
+  fprintf(fd,"RC   - readout capable\n");
+  fprintf(fd,"O/OC - on/off capable\n");
+  fprintf(fd,"AC   - auto capable\n");
+  fprintf(fd,"MC   - manual capable\n");
+  fprintf(fd,"ABS  - absolute capable\n");
+  fprintf(fd,"-----------------------------\n");
   
   for (i= DC1394_FEATURE_MIN, j= 0; i <= DC1394_FEATURE_MAX; i++, j++)  {
-    err=dc1394_feature_print(&features->feature[j]);
+    err=dc1394_feature_print(&features->feature[j], fd);
     DC1394_ERR_RTN(err, "Could not print feature");
   }
   

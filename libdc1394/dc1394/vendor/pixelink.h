@@ -172,7 +172,7 @@ dc1394_pxl_set_gpio_mode_param(dc1394camera_t *, uint32_t ,
 	dc1394pxl_gpio_polarity_t, dc1394pxl_gpio_mode_t, double, double, double);
 
 dc1394error_t
-dc1394_pxl_print_camera_info(dc1394camera_t *);
+dc1394_pxl_print_camera_info(dc1394camera_t *, FILE *fd);
 
 #ifdef __cplusplus
 }
