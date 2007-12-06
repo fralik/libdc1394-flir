@@ -1,4 +1,5 @@
-2007-12-04 Damien Douxchamps http://damien.douxchamps.net/
+2007-12-06 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 489: Retire dc1394_cleanup_iso_channel_and_bandwidth.
 	* SVN 488: reserve dc1394_ prefix for exported functions.
 	           channel/bandwidth functions still have the prefix since
 		   we plan to export them soon.

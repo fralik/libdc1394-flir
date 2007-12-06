@@ -518,22 +518,6 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
   return DC1394_SUCCESS;
 } 
 
-dc1394error_t
-dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
-{
-  int i;
-
-  if (camera->capture_is_set>0)
-    return DC1394_CAPTURE_IS_RUNNING;
-  
-  // free all iso channels 
-  for (i=0;i<DC1394_NUM_ISO_CHANNELS;i++)
-    msw1394_ISOFreeChan(camera->port, i);
-  
-  // free bandwidth
-  return dc1394_free_bandwidth(camera);
-}
-
 // ########### capture #################
 
 dc1394error_t

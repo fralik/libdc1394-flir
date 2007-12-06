@@ -360,11 +360,3 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
 {
   return DC1394_SUCCESS;
 }
-
-#if 0
-dc1394error_t
-dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
-{
-  return DC1394_FAILURE;
-}
-#endif

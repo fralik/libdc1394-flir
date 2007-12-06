@@ -828,10 +828,6 @@ dc1394error_t dc1394_format7_set_roi(dc1394camera_t *camera, dc1394video_mode_t 
 dc1394error_t dc1394_format7_get_roi(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding,
 				     uint32_t *packet_size, uint32_t *left, uint32_t *top, uint32_t *width, uint32_t *height);
 
-/* This will have to be fixed or removed: it's ugly...*/
-dc1394error_t dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera);
-
-
 /***************************************************************************
      PIO, SIO and Strobe Functions
  ***************************************************************************/

@@ -502,23 +502,3 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
   craw->iso_bandwidth=0;
   return DC1394_SUCCESS;
 } 
-
-dc1394error_t
-dc1394_cleanup_iso_channels_and_bandwidth(dc1394camera_t *camera)
-{
-  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
-  platform_camera_t * craw = cpriv->pcam;
-  int i;
-
-  if (craw->capture_is_set>0)
-    return DC1394_CAPTURE_IS_RUNNING;
-  
-  // free all iso channels 
-  for (i=0;i<DC1394_NUM_ISO_CHANNELS;i++)
-    raw1394_channel_modify(craw->handle, i, RAW1394_MODIFY_FREE);
-  
-  // free bandwidth
-  raw1394_bandwidth_modify(craw->handle, 4915, RAW1394_MODIFY_FREE);
-
-  return DC1394_SUCCESS;
-}
