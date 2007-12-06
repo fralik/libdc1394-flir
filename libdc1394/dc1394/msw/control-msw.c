@@ -459,7 +459,7 @@ dc1394_free_iso_channel(dc1394camera_t *camera)
     return DC1394_RAW1394_FAILURE;
   }
 
-  dc1394_log_debug("Freed iso channel %d\n",NULL);
+  dc1394_log_debug("Freed iso channel\n",NULL);
 
   //camera->iso_channel=-1; // we don't need this line anymore.
   camera->iso_channel_is_set=0;
@@ -496,7 +496,7 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
     return DC1394_RAW1394_FAILURE;
   }
 
-  dc1394_log_error("Freed some bandwidth units\n",NULL);
+  dc1394_log_debug("Freed some bandwidth units\n",NULL);
 
   camera->iso_bandwidth=0;
   cmsw->bw_handle = INVALID_HANDLE_VALUE;

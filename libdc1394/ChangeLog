@@ -1,4 +1,5 @@
 2007-12-06 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 492: Changed some comments from error to debug.
 	* SVN 491: Printing functions now all have a file descriptor argument.
 	* SVN 490: Replace all fprintf errors by logging. Some lowest level
 	           errors using fprintf remain. Definitely needs testing on
