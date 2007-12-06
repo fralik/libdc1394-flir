@@ -416,7 +416,7 @@ int dc_init()
   dc1394camera_list_t * list;
 
   d = dc1394_new ();
-  if (dc1394_enumerate_cameras (d, &list) != DC1394_SUCCESS) {
+  if (dc1394_camera_enumerate (d, &list) != DC1394_SUCCESS) {
     fprintf (stderr, "Failed to enumerate cameras\n");
     exit (1);
   }
@@ -442,11 +442,11 @@ int dc_init()
       exit (1);
     }
   }
-  dc1394_free_camera_list (list);
+  dc1394_camera_free_list (list);
 
   printf("Using camera with GUID %"PRIx64"\n", camera->guid);
 
-  dc1394_print_camera_info(camera);
+  dc1394_camera_print_info(camera);
 
   return 1;
 }

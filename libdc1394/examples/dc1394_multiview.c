@@ -355,7 +355,7 @@ int main(int argc,char *argv[])
   }
   
   d = dc1394_new ();
-  if (dc1394_enumerate_cameras (d, &list) != DC1394_SUCCESS) {
+  if (dc1394_camera_enumerate (d, &list) != DC1394_SUCCESS) {
     fprintf (stderr, "Failed to enumerate cameras\n");
     exit (1);
   }
@@ -378,7 +378,7 @@ int main(int argc,char *argv[])
     j++;
   }
   numCameras = j;
-  dc1394_free_camera_list (list);
+  dc1394_camera_free_list (list);
 
   if (numCameras == 0) {
     fprintf (stderr, "No cameras found\n");
@@ -388,7 +388,7 @@ int main(int argc,char *argv[])
   /* setup cameras for capture */
   for (i = 0; i < numCameras; i++) {	
     
-    if(dc1394_get_camera_feature_set(cameras[i], &features) !=DC1394_SUCCESS) {
+    if(dc1394_feature_get_all(cameras[i], &features) !=DC1394_SUCCESS) {
       printf("unable to get feature set\n");
     } else {
       //dc1394_print_feature_set(&features);

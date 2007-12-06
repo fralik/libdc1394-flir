@@ -215,7 +215,7 @@ refresh_enumeration (dc1394_t * d)
 }
 
 dc1394error_t
-dc1394_enumerate_cameras (dc1394_t * d, dc1394camera_list_t **list)
+dc1394_camera_enumerate (dc1394_t * d, dc1394camera_list_t **list)
 {
     refresh_enumeration (d);
     dc1394camera_list_t * l;
@@ -240,7 +240,7 @@ dc1394_enumerate_cameras (dc1394_t * d, dc1394camera_list_t **list)
   Free a list of cameras returned by dc1394_enumerate_cameras()
  */
 void
-dc1394_free_camera_list (dc1394camera_list_t *list)
+dc1394_camera_free_list (dc1394camera_list_t *list)
 {
     if (list)
         free (list->ids);

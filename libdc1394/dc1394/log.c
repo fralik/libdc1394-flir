@@ -12,15 +12,24 @@ static void default_warninglog_handler(dc1394log_t type, const char *message, co
 }
 
 static void default_debuglog_handler(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) {
-#ifdef DC1394_DBG
-  fprintf(stderr, "libdc1394 debug in %s (%s, line %d): %s\n", function, file, line, message);
-#endif
+
+  static int log_enabled=0;
+  if (log_enabled == 0) {
+    if (getenv("DC1394_DEBUG") == NULL ) {
+      log_enabled = -1;
+    }
+    else {
+      log_enabled = 1;
+    }
+    if (log_enabled == 1)
+      fprintf(stderr, "libdc1394 debug in %s (%s, line %d): %s\n", function, file, line, message);
+  }
   return;
 }
 
 void(*system_errorlog_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) = default_errorlog_handler;
 void(*system_warninglog_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) = default_warninglog_handler;
-void(*system_debuglog_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) = NULL;
+void(*system_debuglog_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user) = default_debuglog_handler;
 
 dc1394error_t
 dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(dc1394log_t type, const char *message, const char *file, int line, const char *function, void* user)) {

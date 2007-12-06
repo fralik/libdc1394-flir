@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
   dc1394camera_list_t * list;
 
   d = dc1394_new ();
-  if (dc1394_enumerate_cameras (d, &list) != DC1394_SUCCESS) {
+  if (dc1394_camera_enumerate (d, &list) != DC1394_SUCCESS) {
     fprintf (stderr, "Failed to enumerate cameras\n");
     return 1;
   }
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
         list->ids[0].guid);
     return 1;
   }
-  dc1394_free_camera_list (list);
+  dc1394_camera_free_list (list);
 
   printf("Using camera with GUID %"PRIx64"\n", camera->guid);
 
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
   /*-----------------------------------------------------------------------
    *  report camera's features
    *-----------------------------------------------------------------------*/
-  if (dc1394_get_camera_feature_set(camera,&features) !=DC1394_SUCCESS) {
+  if (dc1394_feature_get_all(camera,&features) !=DC1394_SUCCESS) {
     fprintf( stderr, "unable to get feature set\n");
   }
   else {

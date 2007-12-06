@@ -148,7 +148,7 @@ update_camera_info (dc1394camera_t *camera)
 }
 
 dc1394error_t
-dc1394_print_camera_info(dc1394camera_t *camera) 
+dc1394_camera_print_info(dc1394camera_t *camera) 
 {
   dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
   uint32_t value[2];
@@ -195,14 +195,14 @@ dc1394_print_camera_info(dc1394camera_t *camera)
  described by node and stores them in features.
 *****************************************************/
 dc1394error_t
-dc1394_get_camera_feature_set(dc1394camera_t *camera, dc1394featureset_t *features) 
+dc1394_feature_get_all(dc1394camera_t *camera, dc1394featureset_t *features) 
 {
   uint32_t i, j;
   dc1394error_t err=DC1394_SUCCESS;
   
   for (i= DC1394_FEATURE_MIN, j= 0; i <= DC1394_FEATURE_MAX; i++, j++)  {
     features->feature[j].id= i;
-    err=dc1394_get_camera_feature(camera, &features->feature[j]);
+    err=dc1394_feature_get(camera, &features->feature[j]);
     DC1394_ERR_RTN(err, "Could not get camera feature");
   }
 
@@ -216,7 +216,7 @@ dc1394_get_camera_feature_set(dc1394camera_t *camera, dc1394featureset_t *featur
  feature described by feature->id
 *****************************************************/
 dc1394error_t
-dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature) 
+dc1394_feature_get(dc1394camera_t *camera, dc1394feature_info_t *feature) 
 {
   uint64_t offset;
   uint32_t value;
@@ -340,7 +340,7 @@ dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature)
  Displays the bounds and options of the given feature
 *****************************************************/
 dc1394error_t
-dc1394_print_feature(dc1394feature_info_t *f) 
+dc1394_feature_print(dc1394feature_info_t *f) 
 {
   int fid= f->id;
   
@@ -470,7 +470,7 @@ dc1394_print_feature(dc1394feature_info_t *f)
  Displays the entire feature set stored in features
 *****************************************************/
 dc1394error_t
-dc1394_print_feature_set(dc1394featureset_t *features) 
+dc1394_feature_print_all(dc1394featureset_t *features) 
 {
   uint32_t i, j;
   dc1394error_t err=DC1394_SUCCESS;
@@ -485,7 +485,7 @@ dc1394_print_feature_set(dc1394featureset_t *features)
   printf("-----------------------------\n");
   
   for (i= DC1394_FEATURE_MIN, j= 0; i <= DC1394_FEATURE_MAX; i++, j++)  {
-    err=dc1394_print_feature(&features->feature[j]);
+    err=dc1394_feature_print(&features->feature[j]);
     DC1394_ERR_RTN(err, "Could not print feature");
   }
   
@@ -493,7 +493,7 @@ dc1394_print_feature_set(dc1394featureset_t *features)
 }
 
 dc1394error_t
-dc1394_reset_camera(dc1394camera_t *camera)
+dc1394_camera_reset(dc1394camera_t *camera)
 {
   dc1394error_t err;
   err=dc1394_set_control_register(camera, REG_CAMERA_INITIALIZE, DC1394_FEATURE_ON);
@@ -940,7 +940,7 @@ dc1394_video_set_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t  
 }
 
 dc1394error_t
-dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr)
+dc1394_camera_set_power(dc1394camera_t *camera, dc1394switch_t pwr)
 {
   dc1394error_t err;
   switch (pwr) {

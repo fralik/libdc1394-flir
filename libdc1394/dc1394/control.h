@@ -636,9 +636,9 @@ dc1394error_t dc1394_read_cycle_timer (dc1394camera_t * camera,
  ***************************************************************************/
 
 /* Returns the list of cameras available on the computer. If present, multiple cards will be probed */
-dc1394error_t dc1394_enumerate_cameras(dc1394_t *dc1394, dc1394camera_list_t **list);
+dc1394error_t dc1394_camera_enumerate(dc1394_t *dc1394, dc1394camera_list_t **list);
 /* Frees the memory allocated in dc1394_enumerate_cameras for the camera list*/
-void dc1394_free_camera_list(dc1394camera_list_t *list);
+void dc1394_camera_free_list(dc1394camera_list_t *list);
 /* Create a new camera based on a GUID (Global Unique IDentifier) */
 dc1394camera_t * dc1394_camera_new(dc1394_t *dc1394, uint64_t guid);
 /* Create a new camera based on a GUID and a unit number (for multi-unit cameras) */
@@ -646,17 +646,17 @@ dc1394camera_t * dc1394_camera_new_unit(dc1394_t *dc1394, uint64_t guid, int uni
 /* Frees a camera structure*/
 void dc1394_camera_free(dc1394camera_t *camera);
 /* Print various camera information, such as GUID, vendor, model, supported IIDC specs, etc... */
-dc1394error_t dc1394_print_camera_info(dc1394camera_t *camera);
+dc1394error_t dc1394_camera_print_info(dc1394camera_t *camera);
 
 /***************************************************************************
      Other functionalities
  ***************************************************************************/
 
 /* reset a camera to factory default settings */
-dc1394error_t dc1394_reset_camera(dc1394camera_t *camera);
+dc1394error_t dc1394_camera_reset(dc1394camera_t *camera);
 
 /* turn a camera on or off */
-dc1394error_t dc1394_set_camera_power(dc1394camera_t *camera, dc1394switch_t pwr);
+dc1394error_t dc1394_camera_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
 
 /* functions to read and write camera setups in its memory channels. The _busy
    function can be used to verify when a write operation is finished. */
@@ -689,14 +689,14 @@ dc1394error_t dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394sw
  ***************************************************************************/
 
 /* Collects the available features for the camera described by node and stores them in features. */
-dc1394error_t dc1394_get_camera_feature_set(dc1394camera_t *camera, dc1394featureset_t *features);
+dc1394error_t dc1394_feature_get_all(dc1394camera_t *camera, dc1394featureset_t *features);
 
 /* Stores the bounds and options associated with the feature described by feature->feature_id */
-dc1394error_t dc1394_get_camera_feature(dc1394camera_t *camera, dc1394feature_info_t *feature);
+dc1394error_t dc1394_feature_get(dc1394camera_t *camera, dc1394feature_info_t *feature);
 
 /* Displays the bounds and options of the given feature or of the entire feature set */
-dc1394error_t dc1394_print_feature(dc1394feature_info_t *feature);
-dc1394error_t dc1394_print_feature_set(dc1394featureset_t *features);
+dc1394error_t dc1394_feature_print(dc1394feature_info_t *feature);
+dc1394error_t dc1394_feature_print_all(dc1394featureset_t *features);
 
 /* get/set the values of multiple-value features on the camera */
 dc1394error_t dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint32_t *u_b_value, uint32_t *v_r_value);

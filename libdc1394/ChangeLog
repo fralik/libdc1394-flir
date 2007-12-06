@@ -1,3 +1,8 @@
+2007-12-04 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 487: - Applied a consistant naming scheme for all functions.
+	           - Temporary (?) implementation of a DC1394_DEBUG
+		     compiler flag
+	
 2007-12-05 David Moore  <dcm@acm.org>
 	* SVN 486: Allow retries when reading config ROMs under linux to
 		   deal with sluggish cameras.
