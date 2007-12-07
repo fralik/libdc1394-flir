@@ -28,6 +28,7 @@
 #include "utils.h"
 #include "internal.h"
 #include "juju.h"
+#include "log.h"
 
 #define ptr_to_u64(p) ((__u64)(unsigned long)(p))
 #define u64_to_ptr(p) ((void *)(unsigned long)(p))

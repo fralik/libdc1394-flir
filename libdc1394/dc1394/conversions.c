@@ -1,6 +1,6 @@
 /*
  * 1394-Based Digital Camera Control Library
- * Color conversion functions, including Bayer pattern decoding
+ * Color conversion functions
  * Copyright (C) Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * Written by Damien Douxchamps and Frederic Devernay
