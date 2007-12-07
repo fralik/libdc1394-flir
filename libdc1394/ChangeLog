@@ -1,3 +1,6 @@
+2007-12-07 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 494: Compile fix for juju (thanks to Chris Rankin)
+
 2007-12-06 David Moore  <dcm@acm.org>
 	* SVN 493: Compile fix for Mac OS X.
 

@@ -69,7 +69,7 @@ platform_get_device_list (platform_t * p)
 
   dir = opendir("/dev");
   if (dir == NULL) {
-    dc1394_log_debug("opendir: %m");
+    dc1394_log_debug("opendir: %m",NULL);
     free (list->devices);
     free (list);
     return NULL;
@@ -88,7 +88,7 @@ platform_get_device_list (platform_t * p)
     snprintf(filename, sizeof filename, "/dev/%s", de->d_name);
     fd = open(filename, O_RDWR);
     if (fd < 0) {
-      dc1394_log_warning("could not open a device directory");
+      dc1394_log_warning("could not open a device directory",NULL);
       continue;
     }
 
@@ -103,7 +103,7 @@ platform_get_device_list (platform_t * p)
     get_info.rom_length = 1024;
     get_info.bus_reset = ptr_to_u64(&reset);
     if (ioctl(fd, FW_CDEV_IOC_GET_INFO, &get_info) < 0) {
-      dc1394_log_error("GET_CONFIG_ROM failed");
+      dc1394_log_error("GET_CONFIG_ROM failed",NULL);
       free (device);
       close(fd);
       continue;
@@ -159,7 +159,7 @@ platform_camera_new (platform_t * p, platform_device_t * device,
 
   fd = open(device->filename, O_RDWR);
   if (fd < 0) {
-    dc1394_log_error("could not open device");
+    dc1394_log_error("could not open device",NULL);
     return NULL;
   }
 
@@ -168,7 +168,7 @@ platform_camera_new (platform_t * p, platform_device_t * device,
   get_info.rom_length = 0;
   get_info.bus_reset = ptr_to_u64(&reset);
   if (ioctl(fd, FW_CDEV_IOC_GET_INFO, &get_info) < 0) {
-    dc1394_log_error("IOC_GET_INFO failed for a device");
+    dc1394_log_error("IOC_GET_INFO failed for a device",NULL);
     close(fd);
     return NULL;
   }
@@ -214,7 +214,7 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
 
   len = read (cam->fd, &u, sizeof u);
   if (len < 0) {
-    dc1394_log_error("failed to read response: %m\n");
+    dc1394_log_error("failed to read response: %m\n",NULL);
     return -1;
   }
 
@@ -262,7 +262,7 @@ do_transaction(platform_camera_t * cam, int tcode, uint64_t offset,
     int retval;
     len = ioctl (cam->fd, FW_CDEV_IOC_SEND_REQUEST, &request);
     if (len < 0) {
-      dc1394_log_error("failed to write request: %m");
+      dc1394_log_error("failed to write request: %m",NULL);
       return DC1394_FAILURE;
     }
 
