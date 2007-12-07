@@ -32,6 +32,7 @@
 #include "internal.h"
 #include "macosx.h"
 #include "utils.h"
+#include "log.h"
 
 platform_t *
 platform_new (void)

@@ -1,3 +1,6 @@
+2007-12-06 David Moore  <dcm@acm.org>
+	* SVN 493: Compile fix for Mac OS X.
+
 2007-12-06 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 492: Changed some comments from error to debug.
 	* SVN 491: Printing functions now all have a file descriptor argument.
