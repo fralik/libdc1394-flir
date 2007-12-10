@@ -704,6 +704,9 @@ Adapt_buffer_convert(dc1394video_frame_t *in, dc1394video_frame_t *out)
 
   // Copy padding bytes:
   memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
+
+  out->little_endian=0;   // not used before 1.32 is out.
+  out->data_in_padding=0; // not used before 1.32 is out.
 }
 
 dc1394error_t
@@ -874,6 +877,9 @@ Adapt_buffer_stereo(dc1394video_frame_t *in, dc1394video_frame_t *out)
 
   // Copy padding bytes:
   memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
+
+  out->little_endian=0;   // not used before 1.32 is out.
+  out->data_in_padding=0; // not used before 1.32 is out.
 
   return DC1394_SUCCESS;
 

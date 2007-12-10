@@ -2648,6 +2648,8 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
   // Copy padding bytes:
   memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
 
+  out->little_endian=0; // not used before 1.32 is out.
+  out->data_in_padding=0; // not used before 1.32 is out.
 }
 
 dc1394error_t

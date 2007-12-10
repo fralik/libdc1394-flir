@@ -348,6 +348,9 @@ capture_basic_setup (dc1394camera_t * camera,
   frame->image_bytes = frame->size[1] * frame->stride;
   frame->padding_bytes = frame->total_bytes - frame->image_bytes;
 
+  frame->little_endian=0;   // not used before 1.32 is out.
+  frame->data_in_padding=0; // not used before 1.32 is out.
+
   return DC1394_SUCCESS;
 }
 

@@ -583,19 +583,22 @@ typedef struct __dc1394_video_frame
   uint32_t                 stride;                /* the number of bytes per image line */
   dc1394video_mode_t       video_mode;            /* the video mode used for capturing this frame */
   uint64_t                 total_bytes;           /* the total size of the frame buffer in bytes. May include packet-
-                                                   * multiple padding and intentional padding (vendor specific) */
+                                                     multiple padding and intentional padding (vendor specific) */
   uint32_t                 image_bytes;           /* the number of bytes used for the image (image data only, no padding) */
   uint32_t                 padding_bytes;         /* the number of extra bytes, i.e. total_bytes-image_bytes.  */
   uint32_t                 packet_size;           /* the size of a packet in bytes. (IIDC data) */
   uint32_t                 packets_per_frame;     /* the number of packets per frame. (IIDC data) */
   uint64_t                 timestamp;             /* the unix time [microseconds] at which the frame was captured in
-					 	   * the video1394 ringbuffer */
+					 	     the video1394 ringbuffer */
   uint32_t                 frames_behind;         /* the number of frames in the ring buffer that are yet to be accessed by the user */
   dc1394camera_t           *camera;               /* the parent camera of this frame */
   uint32_t                 id;                    /* the frame position in the ring buffer */
-  uint64_t                 allocated_image_bytes; /* amount of memory allocated in for the *image field. -1 for output
-						   * of libdc1394? (this would avoid confusion between 'no allocated
-						   * memory' and 'don't touch this buffer' -> signed int?? */ 
+  uint64_t                 allocated_image_bytes; /* amount of memory allocated in for the *image field. */
+  dc1394bool_t             little_endian;         /* DC1394_TRUE if little endian (16bpp modes only),
+						     DC1394_FALSE otherwise */
+  dc1394bool_t             data_in_padding;       /* DC1394_TRUE if data is present in the padding bytes in IIDC 1.32 format,
+						     DC1394_FALSE otherwise */
+
 } dc1394video_frame_t;
 
 #ifdef __cplusplus

@@ -1,3 +1,7 @@
+2007-12-11 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 496: Added two boolean members to dc1394video_frame_t:
+	           little_endian and data_in_padding.
+
 2007-12-07 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 495: Compile fix for juju (thanks to Chao Wang)
         * SVN 494: Compile fix for juju (thanks to Chris Rankin)
