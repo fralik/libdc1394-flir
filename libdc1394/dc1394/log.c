@@ -18,12 +18,12 @@ static void default_debuglog_handler(dc1394log_t type, const char *message, void
   return;
 }
 
-void(*system_errorlog_handler)(dc1394log_t type, const char *message, void* user) = default_errorlog_handler;
-void(*system_warninglog_handler)(dc1394log_t type, const char *message, void* user) = default_warninglog_handler;
-void(*system_debuglog_handler)(dc1394log_t type, const char *message, void* user) = default_debuglog_handler;
-void *errorlog_data = NULL;
-void *warninglog_data = NULL;
-void *debuglog_data = NULL;
+static void(*system_errorlog_handler)(dc1394log_t type, const char *message, void* user) = default_errorlog_handler;
+static void(*system_warninglog_handler)(dc1394log_t type, const char *message, void* user) = default_warninglog_handler;
+static void(*system_debuglog_handler)(dc1394log_t type, const char *message, void* user) = default_debuglog_handler;
+static void *errorlog_data = NULL;
+static void *warninglog_data = NULL;
+static void *debuglog_data = NULL;
 
 dc1394error_t
 dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(dc1394log_t type, const char *message, void* user), void* user) {

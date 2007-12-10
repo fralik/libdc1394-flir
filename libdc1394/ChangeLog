@@ -1,4 +1,6 @@
-2007-12-11 Damien Douxchamps http://damien.douxchamps.net/
+2007-12-10 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 498: make system_*log_handler and *log_data static. Tell a word
+	           about DC1394_DEBUG in log.h (Rudolf Leitgeb)
 	* SVN 497: Finalize the error API
 	* SVN 496: Added two boolean members to dc1394video_frame_t:
 	           little_endian and data_in_padding.

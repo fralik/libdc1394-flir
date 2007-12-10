@@ -124,7 +124,7 @@ dc1394error_t dc1394_log_set_default_handler(dc1394log_t type);
  * This function shall be invoked if a fatal error condition is encountered.
  * The message passed as argument is delivered to the registered error reporting
  * function registered before.
- * @param [in] message: error message to be logged
+ * @param [in] format,...: error message to be logged, multiple arguments allowed (printf style)
  */
 void dc1394_log_error(const char *format,...);
 
@@ -133,7 +133,7 @@ void dc1394_log_error(const char *format,...);
  * This function shall be invoked if a nonfatal error condition is encountered.
  * The message passed as argument is delivered to the registered warning reporting
  * function registered before.
- * @param [in] message: error message to be logged
+ * @param [in] format,...: warning message to be logged, multiple arguments allowed (printf style)
  */
 void dc1394_log_warning(const char *format,...);
 
@@ -141,8 +141,9 @@ void dc1394_log_warning(const char *format,...);
  * dc1394_log_debug: logs a debug statement to the registered facility
  * This function shall be invoked if a debug statement is to be logged.
  * The message passed as argument is delivered to the registered debug reporting
- * function registered before.
- * @param [in] message: debug statement to be logged
+ * function registered before ONLY IF the environment variable DC1394_DEBUG has been set before the
+ * program starts.
+ * @param [in] format,...: debug statement to be logged, multiple arguments allowed (printf style)
  */
 void dc1394_log_debug(const char *format,...);
 
