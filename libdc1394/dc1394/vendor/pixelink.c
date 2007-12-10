@@ -491,7 +491,7 @@ dc1394_pxl_set_gpio_mode_param(dc1394camera_t *camera, uint32_t gpio_id,
 	return DC1394_FAILURE;
   }
   if (err == DC1394_FAILURE) {
-        dc1394_log_error("error reading gpio inq register\n",NULL);
+        dc1394_log_error("error reading gpio inq register\n");
 	return DC1394_FAILURE;
   }
 
@@ -529,7 +529,7 @@ dc1394_pxl_set_gpio_mode_param(dc1394camera_t *camera, uint32_t gpio_id,
 	  err = DC1394_FAILURE;
   }
   if (err == DC1394_FAILURE) {
-	dc1394_log_error("error with gpio mode setting\n",NULL);
+	dc1394_log_error("error with gpio mode setting\n");
 	return DC1394_FAILURE;
   }
 
@@ -553,7 +553,7 @@ dc1394_pxl_set_gpio_mode_param(dc1394camera_t *camera, uint32_t gpio_id,
   }
 
   if (err == DC1394_FAILURE) {
-	dc1394_log_error("error with gpio polarity setting\n",NULL);
+	dc1394_log_error("error with gpio polarity setting\n");
 	return DC1394_FAILURE;
   }
 
@@ -576,13 +576,13 @@ dc1394_pxl_set_gpio_mode_param(dc1394camera_t *camera, uint32_t gpio_id,
   dc1394_pxl_convert_uint32_to_float32(p3_max, &f3_max);
   
   if ((f1_val < f1_min)| (f1_val > f1_max)) {
-	dc1394_log_warning("WARNING: parameter1 out of bounds! corrected.\n",NULL);
+	dc1394_log_warning("WARNING: parameter1 out of bounds! corrected.\n");
   }
   if ((f2_val < f2_min)| (f2_val > f2_max)) {
-	dc1394_log_warning("\nWARNING: parameter2 out of bounds! corrected.\n",NULL);
+	dc1394_log_warning("\nWARNING: parameter2 out of bounds! corrected.\n");
   }
   if ((f3_val < f3_min)| (f3_val > f3_max)) {
-	dc1394_log_warning("\nWARNING: parameter3 out of bounds! corrected.\n",NULL);
+	dc1394_log_warning("\nWARNING: parameter3 out of bounds! corrected.\n");
   }
 
   f1_val = (f1_val < f1_min)? f1_min: ((f1_val > f1_max)? f1_max: f1_val);

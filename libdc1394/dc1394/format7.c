@@ -443,7 +443,7 @@ dc1394_format7_get_packet_size(dc1394camera_t *camera,
   *packet_size= (uint32_t) ( value & 0xFFFF0000UL ) >> 16;
   
   if (*packet_size==0) {
-    dc1394_log_error("packet size is zero. This should not happen.\n",NULL);
+    dc1394_log_error("packet size is zero. This should not happen.\n");
     return DC1394_FAILURE;
   }
   return err;
@@ -889,7 +889,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
     else { // recom. bpp asked, but register is 0. IGNORED
       err=dc1394_format7_get_packet_parameters(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */
       DC1394_ERR_RTN(err, "Packet para inq error");
-      dc1394_log_warning("Recommended packet size asked, but register is zero. Falling back to MAX packet size\n",NULL);
+      dc1394_log_warning("Recommended packet size asked, but register is zero. Falling back to MAX packet size\n");
       packet_size=max_bytes;
     }
     break;
@@ -901,7 +901,7 @@ dc1394_format7_set_roi(dc1394camera_t *camera,
   case DC1394_QUERY_FROM_CAMERA:
     // if we wanted QUERY_FROM_CAMERA, the QUERY_FROM_CAMERA value has been overwritten by
     // the current value at the beginning of the program. It is thus not possible to reach this code fragment.
-    dc1394_log_error("Packet size error: we should not reach this code region\n", NULL);
+    dc1394_log_error("Packet size error: we should not reach this code region\n");
     break;
   default:
     err=dc1394_format7_get_packet_parameters(camera, video_mode, &unit_bytes, &max_bytes); /* PACKET_PARA_INQ */

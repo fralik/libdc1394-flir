@@ -72,7 +72,7 @@ supported_channels (IOFireWireLibIsochPortRef rem_port, IOFWSpeed * maxSpeed,
       }
   }
   else {
-      dc1394_log_warning("could not get ISO speed, using 400 Mb\n",NULL);
+      dc1394_log_warning("could not get ISO speed, using 400 Mb\n");
       *maxSpeed = kFWSpeed400MBit;
   }
 
@@ -120,7 +120,7 @@ callback (buffer_info * buffer, NuDCLRef dcl)
   int i;
 
   if (!buffer) {
-    dc1394_log_error("callback buffer is null\n",NULL);
+    dc1394_log_error("callback buffer is null\n");
     return;
   }
 
@@ -128,7 +128,7 @@ callback (buffer_info * buffer, NuDCLRef dcl)
   capture = &(craw->capture);
 
   if (buffer->status != BUFFER_EMPTY)
-    dc1394_log_error("buffer should have been empty\n",NULL);
+    dc1394_log_error("buffer should have been empty\n");
 
   for (i = 0; i < buffer->num_dcls; i += 30) {
     (*capture->loc_port)->Notify (capture->loc_port,
@@ -203,7 +203,7 @@ CreateDCLProgram (platform_camera_t * craw)
   databuf->address = (UInt32) mmap (NULL, databuf->length,
       PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
   if (!databuf->address || databuf->address == (UInt32)-1) {
-    dc1394_log_error("mmap failed\n",NULL);
+    dc1394_log_error("mmap failed\n");
     return NULL;
   }
 
@@ -367,7 +367,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
       CFUUIDGetUUIDBytes (kIOFireWireIsochChannelInterfaceID));
   if (!chan) {
     platform_capture_stop (craw);
-    dc1394_log_error("Could not create IsochChannelInterface\n",NULL);
+    dc1394_log_error("Could not create IsochChannelInterface\n");
     return DC1394_FAILURE;
   }
   capture->chan = chan;
@@ -376,7 +376,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
       CFUUIDGetUUIDBytes (kIOFireWireRemoteIsochPortInterfaceID));
   if (!rem_port) {
     platform_capture_stop (craw);
-    dc1394_log_error("Could not create RemoteIsochPortInterface\n",NULL);
+    dc1394_log_error("Could not create RemoteIsochPortInterface\n");
     return DC1394_FAILURE;
   }
   capture->rem_port = rem_port;
@@ -395,7 +395,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
       CFUUIDGetUUIDBytes (kIOFireWireNuDCLPoolInterfaceID));
   if (!dcl_pool) {
     platform_capture_stop (craw);
-    dc1394_log_error("Could not create NuDCLPoolInterface\n",NULL);
+    dc1394_log_error("Could not create NuDCLPoolInterface\n");
     return DC1394_FAILURE;
   }
   capture->dcl_pool = dcl_pool;
@@ -403,7 +403,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   dcl_program = CreateDCLProgram (craw);
   if (!dcl_program) {
     platform_capture_stop (craw);
-    dc1394_log_error("Could not create DCL Program\n",NULL);
+    dc1394_log_error("Could not create DCL Program\n");
     return DC1394_FAILURE;
   }
 
@@ -412,7 +412,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
       CFUUIDGetUUIDBytes (kIOFireWireLocalIsochPortInterfaceID));
   if (!loc_port) {
     platform_capture_stop (craw);
-    dc1394_log_error("Could not create LocalIsochPortInterface\n",NULL);
+    dc1394_log_error("Could not create LocalIsochPortInterface\n");
     return DC1394_FAILURE;
   }
   capture->loc_port = loc_port;
@@ -426,14 +426,14 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   if ((*chan)->AllocateChannel (chan) != kIOReturnSuccess) {
     platform_capture_stop (craw);
-    dc1394_log_error("Could not allocate channel\n",NULL);
+    dc1394_log_error("Could not allocate channel\n");
     return DC1394_FAILURE;
   }
   capture->iso_is_allocated = 1;
 
   if ((*chan)->Start (chan) != kIOReturnSuccess) {
     platform_capture_stop (craw);
-    dc1394_log_error("Could not start channel\n",NULL);
+    dc1394_log_error("Could not start channel\n");
     return DC1394_FAILURE;
   }
   capture->iso_is_started = 1;
@@ -471,7 +471,7 @@ platform_capture_stop(platform_camera_t *craw)
             kDurationForever);
   }
   else if (capture->task) {
-    dc1394_log_warning("Forcefully killing servicing task...\n",NULL);
+    dc1394_log_warning("Forcefully killing servicing task...\n");
     MPTerminateTask (capture->task, 0);
     MPWaitOnQueue (capture->termination_queue, NULL, NULL, NULL,
             kDurationForever);
@@ -587,7 +587,7 @@ platform_capture_dequeue (platform_camera_t * craw,
 
   MPEnterCriticalRegion (capture->mutex, kDurationForever);
   if (buffer->status != BUFFER_FILLED) {
-    dc1394_log_error("expected filled buffer\n",NULL);
+    dc1394_log_error("expected filled buffer\n");
     MPExitCriticalRegion (capture->mutex);
     return DC1394_SUCCESS;
   }
@@ -620,7 +620,7 @@ platform_capture_enqueue (platform_camera_t * craw,
   void * dcl_list[2];
 
   if (frame->camera != camera) {
-    dc1394_log_error("camera does not match frame's camera\n",NULL);
+    dc1394_log_error("camera does not match frame's camera\n");
     return DC1394_INVALID_ARGUMENT_VALUE;
   }
 
@@ -657,7 +657,7 @@ dc1394_capture_schedule_with_runloop (dc1394camera_t * camera,
   dc1394capture_t * capture = &(craw->capture);
 
   if (craw->capture_is_set) {
-    dc1394_log_warning("schedule_with_runloop must be called before capture_setup\n",NULL);
+    dc1394_log_warning("schedule_with_runloop must be called before capture_setup\n");
     return -1;
   }
 

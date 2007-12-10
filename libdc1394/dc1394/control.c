@@ -793,7 +793,7 @@ dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed)
   }
   else { // fallback to legacy
     if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
-      dc1394_log_error("An ISO speed >400Mbps was requested while the camera is in LEGACY mode. Please set the operation mode to OPERATION_MODE_1394B before asking for 1394b ISO speeds\n",NULL);
+      dc1394_log_error("An ISO speed >400Mbps was requested while the camera is in LEGACY mode. Please set the operation mode to OPERATION_MODE_1394B before asking for 1394b ISO speeds\n");
       return DC1394_INVALID_ISO_SPEED;
     }
     err=dc1394_get_control_register(camera, REG_CAMERA_ISO_DATA, &value);
@@ -858,7 +858,7 @@ dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel)
     DC1394_ERR_RTN(err, "oops");
     speed=(value >> 24) & 0x3UL;
     if (speed>DC1394_ISO_SPEED_400-DC1394_ISO_SPEED_MIN) {
-      dc1394_log_error("an ISO speed >400Mbps was requested while the camera is in LEGACY mode              Please set the operation mode to OPERATION_MODE_1394B before asking for\n              1394b ISO speeds\n", NULL);
+      dc1394_log_error("an ISO speed >400Mbps was requested while the camera is in LEGACY mode              Please set the operation mode to OPERATION_MODE_1394B before asking for\n              1394b ISO speeds\n");
       return DC1394_FAILURE;
     }
     err=dc1394_set_control_register(camera, REG_CAMERA_ISO_DATA,

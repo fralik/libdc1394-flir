@@ -195,7 +195,7 @@ refresh_enumeration (dc1394_t * d)
 
     d->device_list = platform_get_device_list (d->platform);
     if (!d->device_list) {
-      dc1394_log_error("Platform failed to get device list\n",NULL);
+      dc1394_log_error("Platform failed to get device list\n");
         return -1;
     }
 
