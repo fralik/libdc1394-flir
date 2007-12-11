@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <dc1394/control.h>
+#include <dc1394/log.h>
 
 int main(int argc, char *argv[]) 
 {
@@ -34,27 +35,24 @@ int main(int argc, char *argv[])
   d = dc1394_new ();
 
   /* Find cameras, work with first one */
-  if (dc1394_camera_enumerate (d, &list) != DC1394_SUCCESS) {
-    fprintf (stderr, "Failed to enumerate cameras\n");
-    return 1;
-  }
+  err=dc1394_camera_enumerate (d, &list);
+  DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
 
   if (list->num == 0) {
-    fprintf (stderr, "No cameras found\n");
+    dc1394_log_error("No cameras found\n");
     return 1;
   }
   
   camera = dc1394_camera_new (d, list->ids[0].guid);
   if (!camera) {
-    fprintf (stderr, "Failed to initialize camera with guid %"PRIx64"\n",
-        list->ids[0].guid);
+    dc1394_log_error("Failed to initialize camera with guid %"PRIx64"\n", list->ids[0].guid);
     return 1;
   }
   dc1394_camera_free_list (list);
 
   printf("Using camera with GUID %"PRIx64"\n", camera->guid);
 
-  /* Setup capture with VIDEO1394 */
+  /* Setup capture */
   err=dc1394_capture_setup(camera, 4, DC1394_CAPTURE_FLAGS_DEFAULT);
   
   /* Start transmission */
@@ -62,10 +60,7 @@ int main(int argc, char *argv[])
 
   /* Capture */
   err=dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &frame);
-  if (err!=DC1394_SUCCESS) {
-    fprintf (stderr, "Problem getting an image");
-    return 1;
-  }
+  DC1394_ERR_RTN(err,"Problem getting an image");
   
   /* Release the buffer */
   err=dc1394_capture_enqueue(camera, frame);

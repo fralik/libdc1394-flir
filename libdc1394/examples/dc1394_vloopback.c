@@ -42,6 +42,7 @@
 #include <inttypes.h>
 
 #include <dc1394/control.h>
+#include <dc1394/log.h>
 #include "affine.h"
 
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
@@ -312,7 +313,7 @@ int capture_pipe(int dev, const unsigned char *image_in)
 			break;
 
 		default:
-			return 0;
+			return DC1394_FAILURE;
 	}
 	
 	affine_scale( image_in, DC1394_WIDTH/ppp, DC1394_HEIGHT,
@@ -342,9 +343,9 @@ int capture_pipe(int dev, const unsigned char *image_in)
 	
 	if (write(dev, out_pipe, size*bpp) != (size*bpp)) {
 		perror("Error writing image to pipe");
-		return 0;
+		return DC1394_FAILURE;
 	}
-	return 1;
+	return DC1394_SUCCESS;
 }
 
 int capture_mmap(int frame)
@@ -371,7 +372,7 @@ int capture_mmap(int frame)
 			break;
 
 		default:
-			return 0;
+			return DC1394_FAILURE;
 	}
 	
 	if (g_v4l_fmt == VIDEO_PALETTE_YUV422P && out_pipe != NULL) {
@@ -405,7 +406,7 @@ int capture_mmap(int frame)
 	}
 
 	
-	return 1;
+	return DC1394_SUCCESS;
 }
 
 /***** DIGITAL CAMERA *********************************************************/
@@ -414,33 +415,21 @@ int dc_init()
 {
   dc1394_t * d;
   dc1394camera_list_t * list;
+  dc1394error_t err;
 
   d = dc1394_new ();
-  if (dc1394_camera_enumerate (d, &list) != DC1394_SUCCESS) {
-    fprintf (stderr, "Failed to enumerate cameras\n");
-    exit (1);
-  }
+  err=dc1394_camera_enumerate (d, &list);
+  DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
 
   if (list->num == 0) {
-    fprintf (stderr, "No cameras found\n");
-    exit (1);
+    dc1394_log_error("No cameras found\n");
+    return 1;
   }
   
-  if (g_guid == 0) {
-    camera = dc1394_camera_new (d, list->ids[0].guid);
-    if (!camera) {
-      fprintf (stderr, "Failed to initialize camera with guid %"PRIx64"\n",
-          list->ids[0].guid);
-      exit (1);
-    }
-  }
-  else {
-    camera = dc1394_camera_new (d, g_guid);
-    if (!camera) {
-      fprintf (stderr, "Failed to find camera with guid %"PRIx64"\n",
-          list->ids[0].guid);
-      exit (1);
-    }
+  camera = dc1394_camera_new (d, list->ids[0].guid);
+  if (!camera) {
+    dc1394_log_error("Failed to initialize camera with guid %"PRIx64"\n", list->ids[0].guid);
+    return 1;
   }
   dc1394_camera_free_list (list);
 
@@ -448,13 +437,13 @@ int dc_init()
 
   dc1394_camera_print_info(camera, stdout);
 
-  return 1;
+  return DC1394_SUCCESS;
 }
 
 int dc_start(int palette)
 {
-	dc1394speed_t speed;
 	dc1394video_mode_t mode;
+	dc1394error_t err;
 
 	switch (palette) {
 		case VIDEO_PALETTE_RGB24:
@@ -468,31 +457,25 @@ int dc_start(int palette)
 			break;
 
 		default:
-			return 0;
+			return DC1394_FAILURE;
 	}
 	
-	if (dc1394_video_get_iso_speed(camera, &speed) !=DC1394_SUCCESS) 
-	{
-		printf("unable to get the iso speed\n");
-		return 0;
-	}
-	 
-	dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
-	dc1394_video_set_mode(camera, mode);
-	dc1394_video_set_framerate(camera, DC1394_FRAMERATE_15);
-	if (dc1394_capture_setup(camera, DC1394_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT) != DC1394_SUCCESS) 
-	{
-		fprintf(stderr, "unable to setup camera- check line %d of %s to make sure\n",
-			   __LINE__,__FILE__);
-		perror("that the video mode,framerate and format are supported\n");
-		fprintf(stderr, "is one supported by your camera\n");
-		return 0;
-	}
-  if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS) {
-    perror("unable to start camera iso transmission\n");
-    return 0;
-  }
-	return 1;
+	err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+	DC1394_ERR_RTN(err,"oops!\n");
+	
+	err=dc1394_video_set_mode(camera, mode);
+	DC1394_ERR_RTN(err,"oops!\n");
+	
+	err=dc1394_video_set_framerate(camera, DC1394_FRAMERATE_15);
+	DC1394_ERR_RTN(err,"oops!\n");
+	
+	err=dc1394_capture_setup(camera,4, DC1394_CAPTURE_FLAGS_DEFAULT);
+	DC1394_ERR_RTN(err,"unable to setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera\n");
+
+	err=dc1394_video_set_transmission(camera, DC1394_ON);
+	DC1394_ERR_RTN(err,"unable to start camera iso transmission\n");
+
+	return DC1394_SUCCESS;
 }
 
 void dc_stop()
@@ -572,7 +555,7 @@ int v4l_start_pipe (int width, int height, int format)
 			break;
 
 		default:
-			return 0;
+			return DC1394_FAILURE;
 	}
 
 	if (out_pipe)
@@ -581,29 +564,29 @@ int v4l_start_pipe (int width, int height, int format)
 	
 	if (ioctl (v4l_dev, VIDIOCGCAP, &vid_caps) == -1) {
 		perror ("ioctl (VIDIOCGCAP)");
-		return 0;
+		return DC1394_FAILURE;
 	}
 	if (ioctl (v4l_dev, VIDIOCGPICT, &vid_pic)== -1) {
 		perror ("ioctl VIDIOCGPICT");
-		return 0;
+		return DC1394_FAILURE;
 	}
 	vid_pic.palette = format;
 	if (ioctl (v4l_dev, VIDIOCSPICT, &vid_pic)== -1) {
 		perror ("ioctl VIDIOCSPICT");
-		return 0;
+		return DC1394_FAILURE;
 	}
 	if (ioctl (v4l_dev, VIDIOCGWIN, &vid_win)== -1) {
 		perror ("ioctl VIDIOCGWIN");
-		return 0;
+		return DC1394_FAILURE;
 	}
 	vid_win.width=width;
 	vid_win.height=height;
 	if (ioctl (v4l_dev, VIDIOCSWIN, &vid_win)== -1) {
 		perror ("ioctl VIDIOCSWIN");
-		return 0;
+		return DC1394_FAILURE;
 	}
 	//g_v4l_mode = V4L_MODE_PIPE;
-	return 1;
+	return DC1394_SUCCESS;
 }
 
 int v4l_start_mmap (int memsize)
@@ -614,9 +597,9 @@ int v4l_start_mmap (int memsize)
 
 	out_mmap = mmap(0, memsize, PROT_READ|PROT_WRITE, MAP_SHARED, v4l_dev, 0);
 	if ( out_mmap == (unsigned char *) -1 )
-		return 0;
+		return DC1394_FAILURE;
 	//g_v4l_mode = V4L_MODE_MMAP;
-	return 1;	
+	return DC1394_SUCCESS;	
 }
 
 int v4l_ioctl(unsigned long int cmd, void *arg)
@@ -688,7 +671,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 					break;
 
 				default:
-					return 1;
+					return DC1394_FAILURE;
 			}
 			break;
 		}
@@ -718,7 +701,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 
 				default:
 					printf("VIDIOCSPICT: unsupported video palette %d\n", vidpic->palette);
-					return 1;
+					return DC1394_FAILURE;
 			}
 			break;
 		}
@@ -747,9 +730,9 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			
 			if (vidwin->width > MAX_WIDTH ||
 			    vidwin->height > MAX_HEIGHT )
-				return 1;
+				return DC1394_FAILURE;
 			if (vidwin->flags)
-				return 1;
+				return DC1394_FAILURE;
 			g_width = vidwin->width;
 			g_height = vidwin->height;
 			printf("VIDIOCSWIN: size set to %dx%d\n", g_width, g_height);
@@ -794,13 +777,13 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 
 				default:
 					printf("VIDIOCMCAPTURE: unsupported video palette %d\n", vidmmap->format);
-					return 1;
+					return DC1394_FAILURE;
 			}
 				
 			if (vidmmap->height > MAX_HEIGHT ||
 			    vidmmap->width > MAX_WIDTH) {
 				printf("VIDIOCMCAPTURE: invalid size %dx%d\n", vidmmap->width, vidmmap->height );
-				return 1;
+				return DC1394_FAILURE;
 			}
 			if (vidmmap->height != g_height ||
 			    vidmmap->width != g_width) {
@@ -815,7 +798,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			struct video_mmap *vidmmap=arg;
 			if ( !capture_mmap(vidmmap->frame) ) {
 				printf("VIDIOCSYNC: failed frame %d\n", vidmmap->frame);
-				return 1;
+				return DC1394_FAILURE;
 			}
 			break;
 		}
@@ -825,7 +808,7 @@ int v4l_ioctl(unsigned long int cmd, void *arg)
 			break;
 		}
 	}
-	return 0;
+	return DC1394_SUCCESS;
 }
 
 void v4l_sighandler(int signo)
@@ -883,6 +866,7 @@ void cleanup(void) {
 
 int main(int argc,char *argv[])
 {
+	dc1394error_t err;
 	get_options(argc,argv);
 	
 	if (g_daemon) {
@@ -894,13 +878,13 @@ int main(int argc,char *argv[])
 	
 	atexit(cleanup);
 	
-	if (dc_init() < 1) {
-		fprintf(stderr, "no cameras found :(\n");
+	if (dc_init() != DC1394_SUCCESS) {
+		dc1394_log_error("no cameras found :(\n");
 		exit(-1);
 	}
 
-	if ( !dc_start(g_v4l_fmt) ) {
-		fprintf(stderr, "Failed to start dc1394 capture");
+	if ( dc_start(g_v4l_fmt)!=DC1394_SUCCESS ) {
+		dc1394_log_error("Failed to start dc1394 capture");
 		exit(-1);
 	}
 
@@ -911,13 +895,13 @@ int main(int argc,char *argv[])
 	}
 	
 	if (g_v4l_mode == V4L_MODE_PIPE) {		
-		if ( !v4l_start_pipe(g_width, g_height, g_v4l_fmt) ) {
-			fprintf(stderr, "Failed to start vloopback pipe provider");
+		if ( v4l_start_pipe(g_width, g_height, g_v4l_fmt)!=DC1394_SUCCESS ) {
+			dc1394_log_error("Failed to start vloopback pipe provider");
 			exit(-1);
 		}
 	} else {
-		if ( !v4l_start_mmap(MAX_WIDTH * MAX_HEIGHT * MAX_BPP * V4L_BUFFERS) ) {
-			fprintf(stderr, "Failed to start vloopback mmap provider");
+		if ( v4l_start_mmap(MAX_WIDTH * MAX_HEIGHT * MAX_BPP * V4L_BUFFERS)!=DC1394_SUCCESS ) {
+		        dc1394_log_error("Failed to start vloopback mmap provider");
 			exit(-1);
 		}
 	}
@@ -929,7 +913,8 @@ int main(int argc,char *argv[])
 	while (1) {
 	  if (g_v4l_mode == V4L_MODE_PIPE) {
             dc1394video_frame_t * framebuf=NULL;
-	    if (dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &framebuf)!=DC1394_SUCCESS) {
+	    err=dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &framebuf);
+	    if (err==DC1394_SUCCESS) {
 	      capture_pipe( v4l_dev, framebuf->image);
 	      dc1394_capture_enqueue(camera, framebuf);
 	    }

@@ -52,24 +52,22 @@ main(int argn, char **argv)
   dc1394camera_list_t * list;
 
   d = dc1394_new ();
-  if (dc1394_camera_enumerate (d, &list) != DC1394_SUCCESS) {
-    fprintf (stderr, "Failed to enumerate cameras\n");
-    return 1;
-  }
+  err=dc1394_camera_enumerate (d, &list);
+  DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
 
   if (list->num == 0) {
-    fprintf (stderr, "No cameras found\n");
+    dc1394_log_error("No cameras found\n");
     return 1;
   }
   
   camera = dc1394_camera_new (d, list->ids[0].guid);
   if (!camera) {
-    fprintf (stderr, "Failed to initialize camera with guid %"PRIx64"\n",
+    dc1394_log_error("Failed to initialize camera with guid %"PRIx64"\n",
         list->ids[0].guid);
     return 1;
   }
   dc1394_camera_free_list (list);
-  fprintf(stderr,"Using camera \"%s %s\"\n",camera->vendor,camera->model);
+  printf("Using camera \"%s %s\"\n",camera->vendor,camera->model);
 
   // setup video mode, etc...
   err=dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);

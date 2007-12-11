@@ -58,7 +58,7 @@ void print_format( uint32_t format )
     print_case(DC1394_VIDEO_MODE_1600x1200_MONO16);
    
   default:
-    fprintf(stderr,"Unknown format\n");
+    dc1394_log_error("Unknown format\n");
     exit(1);   
   }
 
@@ -116,8 +116,7 @@ void print_color_coding( uint32_t color_id )
     break;
 
   default:
-    dc1394_log_error("Unknown color coding",NULL);
-    fprintf(stderr,"Unknown color coding = %d\n",color_id);
+    dc1394_log_error("Unknown color coding = %d\n",color_id);
     exit(1);
   }
 }
@@ -134,10 +133,9 @@ void print_mode_info( dc1394camera_t *camera , uint32_t mode )
   printf("\n");
   
   dc1394framerates_t framerates;
-  if(dc1394_video_get_supported_framerates(camera,mode,&framerates) != DC1394_SUCCESS) {
-    fprintf( stderr, "Can't get frame rates\n");
-    exit(1);
-  }
+  dc1394error_t err;
+  err=dc1394_video_get_supported_framerates(camera,mode,&framerates);
+  DC1394_ERR(err,"Can't get frame rates\n");
   
   printf("Frame Rates:\n");
   for( j = 0; j < framerates.num; j++ ) {
@@ -152,7 +150,7 @@ void print_mode_info( dc1394camera_t *camera , uint32_t mode )
 /*-----------------------------------------------------------------------
  *  Releases the cameras and exits
  *-----------------------------------------------------------------------*/
-void clean_up_exit(dc1394camera_t *camera)
+void cleanup_and_exit(dc1394camera_t *camera)
 {
   dc1394_video_set_transmission(camera, DC1394_OFF);
   dc1394_capture_stop(camera);
@@ -164,142 +162,74 @@ int main(int argc, char *argv[])
 {
   FILE* imagefile;
   dc1394camera_t *camera;
-  uint32_t i;
-  dc1394featureset_t features;
   unsigned int width, height;
   dc1394video_frame_t *frame=NULL;
   dc1394_t * d;
   dc1394camera_list_t * list;
 
+  dc1394error_t err;
+
   d = dc1394_new ();
-  if (dc1394_camera_enumerate (d, &list) != DC1394_SUCCESS) {
-    fprintf (stderr, "Failed to enumerate cameras\n");
-    return 1;
-  }
+  err=dc1394_camera_enumerate (d, &list);
+  DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
 
   if (list->num == 0) {
-    fprintf (stderr, "No cameras found\n");
+    dc1394_log_error("No cameras found\n");
     return 1;
   }
   
   camera = dc1394_camera_new (d, list->ids[0].guid);
   if (!camera) {
-    fprintf (stderr, "Failed to initialize camera with guid %"PRIx64"\n",
-        list->ids[0].guid);
+    dc1394_log_error("Failed to initialize camera with guid %"PRIx64"\n", list->ids[0].guid);
     return 1;
   }
   dc1394_camera_free_list (list);
 
   printf("Using camera with GUID %"PRIx64"\n", camera->guid);
 
-
   dc1394video_modes_t modes;
-
-    // get supported modes
-  if (dc1394_video_get_supported_modes(camera, &modes)!=DC1394_SUCCESS) {
-    fprintf( stderr, "Couldnt get list of modes\n");
-    exit(1);
-  }
 
   /*-----------------------------------------------------------------------
    *  List Capture Modes
    *-----------------------------------------------------------------------*/
-  uint32_t selected_mode=0;
-  /*
-  printf("Listing Modes\n");
-  for(i = 0; i < modes.num; i++ ) {
-    uint32_t mode = modes.modes[i];
-    
-    print_mode_info( camera , mode );
+  err=dc1394_video_get_supported_modes(camera, &modes);
+  DC1394_ERR_RTN(err,"Could not get list of modes\n");
 
-    selected_mode = mode;
-  }
-  */
-  selected_mode = modes.modes[modes.num-1];
-  dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
-  dc1394_video_set_mode(camera,selected_mode);
-  dc1394_video_set_framerate(camera,DC1394_FRAMERATE_7_5);
+  uint32_t selected_mode = modes.modes[modes.num-1];
 
   /*-----------------------------------------------------------------------
    *  setup capture
    *-----------------------------------------------------------------------*/
   
-  if (dc1394_capture_setup(camera, 4, DC1394_CAPTURE_FLAGS_DEFAULT)!=DC1394_SUCCESS) {
-    fprintf( stderr,"unable to setup camera-\n"
-             "check line %d of %s to make sure\n"
-             "that the video mode,framerate and format are\n"
-             "supported by your camera\n",
-             __LINE__,__FILE__);
-    clean_up_exit(camera);
-  }
-  
-  /*-----------------------------------------------------------------------
-   *  report camera's features
-   *-----------------------------------------------------------------------*/
-  if( dc1394_external_trigger_set_mode(camera, DC1394_TRIGGER_MODE_0)
-      != DC1394_SUCCESS){
-    fprintf( stderr, "Warning: Unable to set camera trigger mode\n");
-#if 0
-    clean_up_exit(camera);
-#endif
-  }
-  
-  
-  /*-----------------------------------------------------------------------
-   *  report camera's features
-   *-----------------------------------------------------------------------*/
-  if (dc1394_feature_get_all(camera,&features) !=DC1394_SUCCESS) {
-    fprintf( stderr, "unable to get feature set\n");
-  }
-  else {
-    //dc1394_print_feature_set(&features);
-  }
-    
+  err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+  DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"oops!\n");
+
+  err=dc1394_video_set_mode(camera, selected_mode);
+  DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"oops!\n");
+
+  err=dc1394_video_set_framerate(camera, DC1394_FRAMERATE_7_5);
+  DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"oops!\n");
+
+  err=dc1394_capture_setup(camera,4, DC1394_CAPTURE_FLAGS_DEFAULT);
+  DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"unable to setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera\n");
 
   /*-----------------------------------------------------------------------
    *  have the camera start sending us data
    *-----------------------------------------------------------------------*/
-  if (dc1394_video_set_transmission(camera, DC1394_ON) !=DC1394_SUCCESS) {
-    fprintf( stderr, "unable to start camera iso transmission\n");
-    clean_up_exit(camera);
-  }
-  
-  /*-----------------------------------------------------------------------
-   *  Sleep untill the camera has a transmission
-   *-----------------------------------------------------------------------*/
-  dc1394switch_t status = DC1394_OFF;
-
-  i = 0;
-  while( status == DC1394_OFF && i++ < 5 ) {
-    usleep(50000);
-    if (dc1394_video_get_transmission(camera, &status)!=DC1394_SUCCESS) {
-      fprintf(stderr, "unable to get transmision status\n");
-      clean_up_exit(camera);
-    }
-  }
-
-  if( i == 5 ) {
-    fprintf(stderr,"Camera doesn't seem to want to turn on!\n");
-    clean_up_exit(camera);
-  }
-
+  err=dc1394_video_set_transmission(camera, DC1394_ON);
+  DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"unable to start camera iso transmission\n");
 
   /*-----------------------------------------------------------------------
    *  capture one frame
    *-----------------------------------------------------------------------*/
-  if (dc1394_capture_dequeue(camera,DC1394_CAPTURE_POLICY_WAIT, &frame)!=DC1394_SUCCESS) {
-    fprintf(stderr, "unable to capture a frame\n");
-    clean_up_exit(camera);
-  }
+  err=dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &frame);
+  DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"unable to capture a frame\n");
   
   /*-----------------------------------------------------------------------
    *  Stop data transmission
    *-----------------------------------------------------------------------*/
-  if (dc1394_video_set_transmission(camera,DC1394_OFF)!=DC1394_SUCCESS) {
-    fprintf(stderr, "Couldn't stop the channel.\n");
-    clean_up_exit(camera);
-  }
-  
+  err=dc1394_video_set_transmission(camera,DC1394_OFF);
+  DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"couldn't stop the camera?\n");  
 
   /*-----------------------------------------------------------------------
    *  Convert the image from what ever format it is to its RGB8
@@ -320,7 +250,7 @@ int main(int argc, char *argv[])
 
   if( imagefile == NULL) {
     perror( "Can't create '" IMAGE_FILE_NAME "'");
-    clean_up_exit(camera);
+    cleanup_and_exit(camera);
   }
   
     

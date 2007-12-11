@@ -69,13 +69,12 @@ int main (int argc, char **argv)
   dc1394camera_list_t * list;
 
   d = dc1394_new ();
-  if (dc1394_camera_enumerate (d, &list) != DC1394_SUCCESS) {
-    fprintf (stderr, "Failed to enumerate cameras\n");
-    return 1;
-  }
+
+  err=dc1394_camera_enumerate (d, &list);
+  DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
 
   if (list->num == 0) {
-    fprintf (stderr, "No cameras found\n");
+    dc1394_log_error("No cameras found\n");
     return 1;
   }
   
@@ -110,7 +109,7 @@ int main (int argc, char **argv)
   } else {
     camera = dc1394_camera_new (d, guid);
     if (camera == NULL) {
-      fprintf (stderr, "E: no camera with guid 0x%"PRIx64" found\n", guid);
+      dc1394_log_error("no camera with guid 0x%"PRIx64" found\n", guid);
       return 1;
     }
 
@@ -122,128 +121,73 @@ int main (int argc, char **argv)
    * setup format7 with a roi allocating a quarter of the screen and bounce around the roi, while changing gain and brightness
    */
   err = dc1394_video_set_mode (camera, DC1394_VIDEO_MODE_FORMAT7_0);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot choose format7_0\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera),"cannot choose format7_0\n");
   printf ("I: video mode is format7_0\n");
 
   err = dc1394_feature_set_value (camera, DC1394_FEATURE_GAIN, 100);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot set gain\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera),"cannot set gain\n");
   printf ("I: gain is 100\n");
 
   err = dc1394_feature_set_value (camera, DC1394_FEATURE_SHUTTER, 50);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot set shutter\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera),"cannot set shutter\n");
   printf ("I: shutter is 50\n");
 
   err = dc1394_feature_set_value (camera, DC1394_FEATURE_BRIGHTNESS, 150);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot set brightness\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera),"cannot set brightness\n");
   printf ("I: brightness is 150\n");
 
   err = dc1394_format7_get_max_image_size (camera, DC1394_VIDEO_MODE_FORMAT7_0, &max_width, &max_height);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot get max image size for format7_0\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera),"cannot get max image size for format7_0\n");
   printf ("I: max image size is: height = %d, width = %d\n", max_height, max_width);
 
   err = dc1394_format7_set_roi (camera, DC1394_VIDEO_MODE_FORMAT7_0, DC1394_COLOR_CODING_MONO8,
                                 DC1394_USE_RECOMMENDED, 0, 0, max_width / 2, max_height / 2);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot set roi\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera),"cannot set roi\n");
   printf ("I: roi is (0, 0) - (%d, %d)\n", max_width / 2, max_height / 2);
 
   err = dc1394_format7_get_total_bytes (camera, DC1394_VIDEO_MODE_FORMAT7_0, &total_bytes);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot get total bytes\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera),"cannot get total bytes\n");
   printf ("I: total bytes is %"PRIu64" before SFF enabled\n", total_bytes);
 
   err = dc1394_basler_sff_is_available (camera, &sff_available);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot check if SFF is available\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera),"cannot check if SFF is available\n");
   
   if (!sff_available) {
     dc1394_camera_free (camera);
-    fprintf (stderr, "E: SFF is not available\n");
+    dc1394_log_error("SFF is not available\n");
     return 2;
   } else {
     printf ("I: SFF is available\n");
   }
 
   err = dc1394_basler_sff_feature_enable (camera, DC1394_BASLER_SFF_EXTENDED_DATA_STREAM, DC1394_ON);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot enable Extended_Data_Stream\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera), "cannot enable Extended_Data_Stream\n");
 
   err = dc1394_format7_get_total_bytes (camera, DC1394_VIDEO_MODE_FORMAT7_0, &total_bytes);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot get total bytes\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera), "cannot get total bytes\n");
   printf ("I: total bytes is %"PRIu64" after Extended_Data_Stream was enabled\n", total_bytes);
 
   err = dc1394_basler_sff_feature_enable (camera, DC1394_BASLER_SFF_DCAM_VALUES, DC1394_ON);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot enable DCAM_Values\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera), "cannot enable DCAM_Values\n");
 
   err = dc1394_format7_get_total_bytes (camera, DC1394_VIDEO_MODE_FORMAT7_0, &total_bytes);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot get total bytes\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera), "cannot get total bytes\n");
   printf ("I: total bytes is %"PRIu64" after DCAM_Values was enabled\n", total_bytes);
 
   err = dc1394_capture_setup (camera, 10, DC1394_CAPTURE_FLAGS_DEFAULT);
-  if (err != DC1394_SUCCESS) {
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot setup capture\n");
-    return 2;
-  }
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera), "cannot setup capture\n");
 
   err = dc1394_video_set_transmission (camera, DC1394_ON);
-  if (err != DC1394_SUCCESS) {
+  if (err != DC1394_SUCCESS)
     dc1394_capture_stop (camera);
-    dc1394_camera_free (camera);
-    fprintf (stderr, "E: cannot enable transmission\n");
-    return 2;
-  } 
+  DC1394_ERR_CLN_RTN(err,dc1394_camera_free (camera), "cannot enable transmission\n");
 
   i = 0;
   dc1394video_frame_t* frame;
   while (i < 100) {
     err = dc1394_capture_dequeue (camera, DC1394_CAPTURE_POLICY_WAIT, &frame);
     if (err != DC1394_SUCCESS) {
-      fprintf (stderr, "E: capture failed (%d)\n", err);
+      dc1394_log_error("capture failed (%d)\n", err);
       break;
     }
     buffer = frame->image;
@@ -273,19 +217,19 @@ int main (int argc, char **argv)
     }
     
     if (err != DC1394_BASLER_NO_MORE_SFF_CHUNKS) {
-      fprintf (stderr, "E: error parsing chunks\n");
+      dc1394_log_error("error parsing chunks\n");
       break;
     }
     
     err = dc1394_capture_enqueue(camera, frame);
     if (err != DC1394_SUCCESS) {
-      fprintf (stderr, "E: cannot release buffer\n");
+      dc1394_log_error("cannot release buffer\n");
       break;
     }
 
     err = dc1394_format7_set_image_position (camera, DC1394_VIDEO_MODE_FORMAT7_0, (((i+1) * 10) % max_height) / 2 - 1, (((i+1) * 10) % max_width) / 2 - 1);
     if (err != DC1394_SUCCESS) {
-      fprintf (stderr, "E: cannot set image position %d - %d\n", (((i+1) * 10) % max_height) / 2 - 1, (((i+1) * 10) % max_width) / 2 - 1);
+      dc1394_log_error("cannot set image position %d - %d\n", (((i+1) * 10) % max_height) / 2 - 1, (((i+1) * 10) % max_width) / 2 - 1);
     }
     i++;
   }
