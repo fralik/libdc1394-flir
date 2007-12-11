@@ -308,11 +308,8 @@ platform_read_cycle_timer (platform_camera_t * cam,
 
 
 dc1394error_t
-platform_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
+platform_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
 {
-  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
-  platform_camera_t * craw = cpriv->pcam;
-
   if (pwr==DC1394_TRUE) {
     if (craw->broadcast_is_set==DC1394_FALSE) {
       craw->backup_node_id=craw->node;
@@ -334,10 +331,8 @@ platform_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
 
 
 dc1394error_t
-platform_get_broadcast(dc1394camera_t *camera, dc1394bool_t *pwr)
+platform_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
 {
-  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
-  platform_camera_t * craw = cpriv->pcam;
 
   *pwr=craw->broadcast_is_set;
 

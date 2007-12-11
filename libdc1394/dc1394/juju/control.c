@@ -360,14 +360,14 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
 }
 
 dc1394error_t
-platform_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
+platform_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
 {
   return DC1394_FUNCTION_NOT_SUPPORTED;
 }
 
 
 dc1394error_t
-platform_get_broadcast(dc1394camera_t *camera, dc1394bool_t *pwr)
+platform_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
 {
   return DC1394_FUNCTION_NOT_SUPPORTED;
 }

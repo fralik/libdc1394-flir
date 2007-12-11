@@ -1,4 +1,5 @@
 2007-12-11 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 502: Fix broadcast control
 	* SVN 501: Add the definition of two offsets (640, 644) which contain
 	           error bits for features. The functionality is not
 		   implemented yet; this will wait until 2.0.0 is released.

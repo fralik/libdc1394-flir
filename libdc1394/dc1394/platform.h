@@ -64,9 +64,9 @@ dc1394error_t platform_capture_enqueue (platform_camera_t * cam,
 			dc1394video_frame_t * frame);
 int platform_capture_get_fileno (platform_camera_t * cam);
 
-dc1394error_t platform_set_broadcast(dc1394camera_t *camera,
+dc1394error_t platform_set_broadcast(platform_camera_t * craw,
 					  dc1394bool_t pwr);
-dc1394error_t platform_get_broadcast(dc1394camera_t *camera,
+dc1394error_t platform_get_broadcast(platform_camera_t * craw,
 					  dc1394bool_t *pwr);
 
 #endif
