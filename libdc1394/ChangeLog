@@ -1,3 +1,7 @@
+2007-12-11 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 499: Small change in the numbering of the enum types (control.h).
+	           This allows 256 format7 modes, which may happen in 1.32.
+
 2007-12-10 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 498: make system_*log_handler and *log_data static. Tell a word
 	           about DC1394_DEBUG in log.h (Rudolf Leitgeb)

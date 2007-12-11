@@ -147,7 +147,7 @@ typedef enum {
 
 /* Enumeration of colour modings */
 typedef enum {
-  DC1394_COLOR_CODING_MONO8= 320,
+  DC1394_COLOR_CODING_MONO8= 352,
   DC1394_COLOR_CODING_YUV411,
   DC1394_COLOR_CODING_YUV422,
   DC1394_COLOR_CODING_YUV444,
@@ -165,7 +165,7 @@ typedef enum {
 
 /* Enumeration of trigger modes */
 typedef enum {
-  DC1394_TRIGGER_MODE_0= 352,
+  DC1394_TRIGGER_MODE_0= 384,
   DC1394_TRIGGER_MODE_1,
   DC1394_TRIGGER_MODE_2,
   DC1394_TRIGGER_MODE_3,
