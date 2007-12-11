@@ -287,6 +287,39 @@ platform_read_cycle_timer (platform_camera_t * cam,
   return DC1394_SUCCESS;
 }
 
+dc1394error_t
+platform_iso_set_persist (platform_camera_t * cam)
+{
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}
+
+dc1394error_t
+platform_iso_allocate_channel (platform_camera_t * cam,
+        uint64_t channels_allowed, int * channel)
+{
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}
+
+dc1394error_t
+platform_iso_release_channel (platform_camera_t * cam,
+    int channel)
+{
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}
+
+dc1394error_t
+platform_iso_allocate_bandwidth (platform_camera_t * cam,
+    int bandwidth_bytes)
+{
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}
+
+dc1394error_t
+platform_iso_release_bandwidth (platform_camera_t * cam,
+    int bandwidth_bytes)
+{
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}
 
 dc1394error_t
 platform_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)

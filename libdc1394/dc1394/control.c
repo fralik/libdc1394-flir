@@ -30,6 +30,7 @@
 #include "offsets.h"
 #include "utils.h"
 #include "log.h"
+#include "iso.h"
  
 
 dc1394error_t
@@ -941,10 +942,6 @@ dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr)
   dc1394error_t err;
 
   if (pwr==DC1394_ON) {
-    // first allocate iso channel and bandwidth
-    // err=dc1394_allocate_iso_channel_and_bandwidth(camera);
-    // DC1394_ERR_RTN(err, "Could not allocate ISO channel and bandwidth");
-    // then we start ISO
     err=dc1394_set_control_register(camera, REG_CAMERA_ISO_EN, DC1394_FEATURE_ON);
     DC1394_ERR_RTN(err, "Could not start ISO transmission");
   }
@@ -2120,6 +2117,9 @@ void
 dc1394_camera_free(dc1394camera_t *camera)
 {
   dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+
+  if (cpriv->iso_persist)
+    dc1394_iso_release_all (camera);
 
   platform_camera_free (cpriv->pcam);
   free (camera->vendor);

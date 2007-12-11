@@ -131,22 +131,17 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   // allocate channel/bandwidth if requested
   if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
-    err = dc1394_allocate_iso_channel(camera);
-    if (err != DC1394_SUCCESS)
-      return err;
-  }
-  if (flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC) {
-    err = dc1394_allocate_bandwidth(camera);
-    if (err != DC1394_SUCCESS)
-      goto error_channel;
-    DC1394_ERR_RTN(err,"Could not allocate bandwidth!");
+    dc1394_log_warning ("Warning: iso allocation not implemented yet for "
+        "juju drivers, using channel 0...\n");
+    if (dc1394_video_set_iso_channel (camera, 0) != DC1394_SUCCESS)
+      return DC1394_NO_ISO_CHANNEL;
   }
 
   err = DC1394_FAILURE;
   craw->iso_fd = open(craw->filename, O_RDWR);
   if (craw->iso_fd < 0) {
-    dc1394_log_error("error opening file\n");
-    goto error_bandwidth;
+    dc1394_log_error("error opening file: %s\n", strerror (errno));
+    return DC1394_FAILURE;
   }
 
   create.type = FW_CDEV_ISO_CONTEXT_RECEIVE;
@@ -166,6 +161,10 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     dc1394_log_error("basic setup failed\n");
     goto error_fd;
   }
+
+  if (dc1394_video_get_iso_channel (camera, &craw->iso_channel)
+          != DC1394_SUCCESS)
+    goto error_fd;
 
   craw->num_frames = num_dma_buffers;
   craw->current = -1;
@@ -234,12 +233,6 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
   munmap(craw->buffer, craw->buffer_size);
  error_fd:
   close(craw->iso_fd);
- error_bandwidth:
-  if (flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC)
-    dc1394_free_bandwidth(camera);
- error_channel:
-  if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC)
-    dc1394_free_iso_channel(camera);
 
   return err;
 }

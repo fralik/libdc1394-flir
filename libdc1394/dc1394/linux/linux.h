@@ -58,10 +58,10 @@ struct _platform_camera_t {
   dc1394capture_t capture;
   
   int                      capture_is_set;
-  int                      iso_channel_is_set;
-  int                      iso_channel;
-  unsigned int             iso_bandwidth;
+  int                      allocated_channel;
+  unsigned int             allocated_bandwidth;
   int                      iso_auto_started;
+  unsigned int             iso_channel;
 
   // for broadcast:
   int           backup_node_id;

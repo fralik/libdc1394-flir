@@ -28,6 +28,10 @@ typedef struct _dc1394camera_priv_t {
     dc1394camera_t camera;
 
     platform_camera_t * pcam;
+
+    uint64_t allocated_channels;
+    int allocated_bandwidth;
+    int iso_persist;
 } dc1394camera_priv_t;
 
 #define DC1394_CAMERA_PRIV(c) ((dc1394camera_priv_t *)c)
@@ -154,15 +158,6 @@ get_format_from_mode(uint32_t mode, uint32_t *format);
 dc1394bool_t
 is_feature_bit_set(uint32_t value, uint32_t feature);
 
-dc1394error_t
-dc1394_allocate_iso_channel(dc1394camera_t *camera);
-dc1394error_t
-dc1394_allocate_bandwidth(dc1394camera_t *camera);
-
-dc1394error_t
-dc1394_free_iso_channel(dc1394camera_t *camera);
-dc1394error_t
-dc1394_free_bandwidth(dc1394camera_t *camera);
 /*
 dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);

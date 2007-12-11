@@ -38,6 +38,7 @@
 #include "kernel-video1394.h"
 #include "utils.h"
 #include "log.h"
+#include "iso.h"
 #include "linux/linux.h"
 #include "linux/capture.h"
 
@@ -133,7 +134,7 @@ open_dma_device(platform_camera_t * craw)
  capture_basic_setup must be called before
 
 ******************************************************/
-dc1394error_t
+static dc1394error_t
 capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
 {
   struct video1394_mmap vmmap;
@@ -264,11 +265,12 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     flags = DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC |
         DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC;
 
-  craw->capture.flags=flags;
-
   // if capture is already set, abort
   if (craw->capture_is_set>0)
     return DC1394_CAPTURE_IS_RUNNING;
+
+  craw->capture.flags=flags;
+  craw->allocated_channel = -1;
 
   // if auto iso is requested, stop ISO (if necessary)
   if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
@@ -282,18 +284,32 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
   // allocate channel/bandwidth if requested
   if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
-    err=dc1394_allocate_iso_channel(camera);
-    DC1394_ERR_RTN(err,"Could not allocate ISO channel!");
+    if (dc1394_iso_allocate_channel (camera, 0, &craw->allocated_channel)
+        != DC1394_SUCCESS)
+      goto fail;
+    if (dc1394_video_set_iso_channel (camera, craw->allocated_channel)
+        != DC1394_SUCCESS)
+      goto fail;
   }
   if (flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC) {
-    err=dc1394_allocate_bandwidth(camera);
-    DC1394_ERR_RTN(err,"Could not allocate bandwidth!");
+    unsigned int bandwidth_usage;
+    if (dc1394_video_get_bandwidth_usage (camera, &bandwidth_usage)
+        != DC1394_SUCCESS)
+      goto fail;
+    if (dc1394_iso_allocate_bandwidth (camera, bandwidth_usage)
+        != DC1394_SUCCESS)
+      goto fail;
+    craw->allocated_bandwidth = bandwidth_usage;
   }
 
   craw->capture.frames = malloc (num_dma_buffers * sizeof (dc1394video_frame_t));
 
   err=capture_basic_setup(camera, craw->capture.frames);
   if (err != DC1394_SUCCESS)
+    goto fail;
+
+  if (dc1394_video_get_iso_channel (camera, &craw->iso_channel)
+          != DC1394_SUCCESS)
     goto fail;
   
   // the capture_is_set flag is set inside this function:
@@ -312,20 +328,24 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
 fail:
   // free resources if they were allocated
-  if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
-    if (dc1394_free_iso_channel(camera) != DC1394_SUCCESS)
-      dc1394_log_warning("Could not free ISO channel!\n");
+  if (craw->allocated_channel >= 0) {
+    if (dc1394_iso_release_channel (camera, craw->allocated_channel)
+        != DC1394_SUCCESS)
+      dc1394_log_warning("Warning: Could not free ISO channel\n");
   }
-  if (flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC) {
-    if (dc1394_free_bandwidth(camera) != DC1394_SUCCESS)
-      dc1394_log_warning("Could not free bandwidth!\n");
+  if (craw->allocated_bandwidth) {
+    if (dc1394_iso_release_bandwidth (camera, craw->allocated_bandwidth)
+        != DC1394_SUCCESS)
+      dc1394_log_warning("Warning: Could not free bandwidth\n");
   }
+  craw->allocated_channel = -1;
+  craw->allocated_bandwidth = 0;
 
   free (craw->capture.frames);
   craw->capture.frames = NULL;
-  DC1394_ERR_RTN(err,"Could not setup DMA capture");
+  dc1394_log_error ("Error: Failed to setup DMA capture\n");
 
-  return err;
+  return DC1394_FAILURE;
 }
 
 /*****************************************************
@@ -354,8 +374,8 @@ platform_capture_stop(platform_camera_t *craw)
     if (_dc1394_num_using_fd[craw->port] == 0) {
       
       while (close(craw->capture.dma_fd) != 0) {
-	dc1394_log_debug("waiting for dma_fd to close\n");
-	sleep (1);
+        dc1394_log_debug("waiting for dma_fd to close\n");
+        sleep (1);
       }
       
     }
@@ -370,14 +390,18 @@ platform_capture_stop(platform_camera_t *craw)
     craw->capture_is_set=0;
     
     // free ressources if they were allocated
-    if ((craw->capture.flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) >0) {
-      err=dc1394_free_iso_channel(camera);
-      DC1394_ERR_RTN(err,"Could not free ISO channel!");
+    if (craw->allocated_channel >= 0) {
+      if (dc1394_iso_release_channel (camera, craw->allocated_channel)
+          != DC1394_SUCCESS)
+        dc1394_log_warning("Warning: Could not free ISO channel\n");
     }
-    if ((craw->capture.flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC) >0) {
-      err=dc1394_free_bandwidth(camera);
-      DC1394_ERR_RTN(err,"Could not free bandwidth!");
+    if (craw->allocated_bandwidth) {
+      if (dc1394_iso_release_bandwidth (camera, craw->allocated_bandwidth)
+          != DC1394_SUCCESS)
+        dc1394_log_warning("Warning: Could not free bandwidth\n");
     }
+    craw->allocated_channel = -1;
+    craw->allocated_bandwidth = 0;
     
     // stop ISO if it was started automatically
     if (craw->iso_auto_started>0) {

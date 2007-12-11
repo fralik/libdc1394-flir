@@ -26,7 +26,9 @@ libdc1394_la_SOURCES =  \
 	bayer.c         \
 	log.c		\
 	log.h		\
-	checksum.c
+	checksum.c \
+	iso.c \
+	iso.h
 
 libdc1394_la_LIBADD = \
 	$(dc1394platform)/libdc1394-$(dc1394platform).la \
@@ -39,4 +41,5 @@ pkginclude_HEADERS =  \
 	conversions.h \
 	register.h    \
 	log.h	      \
-	checksum.h
+	checksum.h    \
+	iso.h

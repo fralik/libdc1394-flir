@@ -1,3 +1,8 @@
+2007-12-11 David Moore  <dcm@acm.org>
+	* SVN 504: Added isochronous allocation API in iso.c/iso.h.  Also
+		   includes platform-specific API additions.  Only implemented
+		   for the linux platform as of now.
+
 2007-12-11 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 503: Cleanup example programs
 	* SVN 502: Fix broadcast control

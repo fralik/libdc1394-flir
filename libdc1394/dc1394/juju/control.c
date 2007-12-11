@@ -329,34 +329,37 @@ platform_read_cycle_timer (platform_camera_t * cam,
 }
 
 dc1394error_t
-dc1394_allocate_iso_channel(dc1394camera_t *camera)
+platform_iso_set_persist (platform_camera_t * cam)
 {
-  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
-  platform_camera_t * cam = cpriv->pcam;
-  /* FIXME: do this right */
-
-  cam->iso_channel = 0;
-  cam->iso_channel_is_set = 1;
-
-  return DC1394_SUCCESS;
+  return DC1394_FUNCTION_NOT_SUPPORTED;
 }
 
 dc1394error_t
-dc1394_allocate_bandwidth(dc1394camera_t *camera)
+platform_iso_allocate_channel (platform_camera_t * cam,
+        uint64_t channels_allowed, int * channel)
 {
-  return DC1394_SUCCESS;
+  return DC1394_FUNCTION_NOT_SUPPORTED;
 }
 
 dc1394error_t
-dc1394_free_iso_channel(dc1394camera_t *camera)
+platform_iso_release_channel (platform_camera_t * cam,
+    int channel)
 {
-  return DC1394_SUCCESS;
-} 
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}
 
 dc1394error_t
-dc1394_free_bandwidth(dc1394camera_t *camera)
+platform_iso_allocate_bandwidth (platform_camera_t * cam,
+    int bandwidth_bytes)
 {
-  return DC1394_SUCCESS;
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}
+
+dc1394error_t
+platform_iso_release_bandwidth (platform_camera_t * cam,
+    int bandwidth_bytes)
+{
+  return DC1394_FUNCTION_NOT_SUPPORTED;
 }
 
 dc1394error_t
@@ -364,7 +367,6 @@ platform_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
 {
   return DC1394_FUNCTION_NOT_SUPPORTED;
 }
-
 
 dc1394error_t
 platform_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
