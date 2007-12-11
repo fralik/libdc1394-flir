@@ -62,6 +62,10 @@ struct _platform_camera_t {
   int                      iso_channel;
   unsigned int             iso_bandwidth;
   int                      iso_auto_started;
+
+  // for broadcast:
+  int           backup_node_id;
+  dc1394bool_t broadcast_is_set;
 };
 
 #endif

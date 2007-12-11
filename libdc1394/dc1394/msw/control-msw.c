@@ -712,3 +712,15 @@ dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame)
   return ConvertError(err1394);
 }
 
+dc1394error_t
+platform_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
+{
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}
+
+
+dc1394error_t
+platform_get_broadcast(dc1394camera_t *camera, dc1394bool_t *pwr)
+{
+  return DC1394_FUNCTION_NOT_SUPPORTED;
+}

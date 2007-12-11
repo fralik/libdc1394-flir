@@ -614,15 +614,14 @@ extern "C" {
 dc1394_t* dc1394_new (void);
 void dc1394_free (dc1394_t *dc1394);
 
-#if 0
-/* Sets and resets the broadcast flag of a camera. If the broadcast flag is set,
+/* Sets and gets the broadcast flag of a camera. If the broadcast flag is set,
    all devices on the bus will execute the command. Useful to sync ISO start
    commands or setting a bunch of cameras at the same time. Broadcast only works
    with identical devices (brand/model). If the devices are not identical your
    mileage may vary. Some cameras may not answer broadcast commands at all. Also,
    this only works with cameras on the SAME bus (IOW, the same port).*/
 dc1394error_t dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr);
-#endif
+dc1394error_t dc1394_camera_get_broadcast(dc1394camera_t *camera, dc1394bool_t *pwr);
 
 /* Resets the IEEE1394 bus which camera is attached to.  Calling this function is
    "rude" to other devices because it causes them to re-enumerate on the bus and

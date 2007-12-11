@@ -306,6 +306,45 @@ platform_read_cycle_timer (platform_camera_t * cam,
   return DC1394_SUCCESS;
 }
 
+
+dc1394error_t
+platform_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
+{
+  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+  platform_camera_t * craw = cpriv->pcam;
+
+  if (pwr==DC1394_TRUE) {
+    if (craw->broadcast_is_set==DC1394_FALSE) {
+      craw->backup_node_id=craw->node;
+      craw->node=63;
+      craw->broadcast_is_set=DC1394_TRUE;
+    }
+  }
+  else if (pwr==DC1394_FALSE) {
+    if (craw->broadcast_is_set==DC1394_TRUE) {
+      craw->node=craw->backup_node_id;
+      craw->broadcast_is_set=DC1394_FALSE;
+    }
+  }
+  else
+    return DC1394_INVALID_ARGUMENT_VALUE;
+
+  return DC1394_SUCCESS;
+}
+
+
+dc1394error_t
+platform_get_broadcast(dc1394camera_t *camera, dc1394bool_t *pwr)
+{
+  dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+  platform_camera_t * craw = cpriv->pcam;
+
+  *pwr=craw->broadcast_is_set;
+
+  return DC1394_SUCCESS;
+}
+
+
 dc1394error_t
 dc1394_allocate_iso_channel(dc1394camera_t *camera)
 {

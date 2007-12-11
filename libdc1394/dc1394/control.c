@@ -32,29 +32,19 @@
 #include "log.h"
  
 
-#if 0
 dc1394error_t
 dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
 {
-  if (pwr==DC1394_TRUE) {
-    if (camera->broadcast==DC1394_FALSE) {
-      camera->node_id_backup=camera->node;
-      camera->node=63;
-      camera->broadcast=DC1394_TRUE;
-    }
-  }
-  else if (pwr==DC1394_FALSE) {
-    if (camera->broadcast==DC1394_TRUE) {
-      camera->node=camera->node_id_backup;
-      camera->broadcast=DC1394_FALSE;
-    }
-  }
-  else
-    return DC1394_INVALID_ARGUMENT_VALUE;
-
-  return DC1394_SUCCESS;
+    dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    return platform_set_broadcast (cpriv->pcam, pwr);
 }
-#endif
+
+dc1394error_t
+dc1394_camera_get_broadcast(dc1394camera_t *camera, dc1394bool_t *pwr)
+{
+    dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    return platform_get_broadcast (cpriv->pcam, pwr);
+}
 
 dc1394error_t
 dc1394_reset_bus (dc1394camera_t * camera)

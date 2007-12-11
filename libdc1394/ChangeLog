@@ -1,4 +1,6 @@
 2007-12-11 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 500: Implement broadcast function. Error returned under juju,
+	           osx and msw.
 	* SVN 499: Small change in the numbering of the enum types (control.h).
 	           This allows 256 format7 modes, which may happen in 1.32.
 
