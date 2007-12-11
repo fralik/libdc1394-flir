@@ -1,4 +1,7 @@
 2007-12-11 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 501: Add the definition of two offsets (640, 644) which contain
+	           error bits for features. The functionality is not
+		   implemented yet; this will wait until 2.0.0 is released.
 	* SVN 500: Implement broadcast function. Error returned under juju,
 	           osx and msw.
 	* SVN 499: Small change in the numbering of the enum types (control.h).

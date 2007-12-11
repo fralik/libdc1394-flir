@@ -70,6 +70,8 @@
 #define REG_CAMERA_CUR_MEM_CH               0x624U
 #define REG_CAMERA_SOFT_TRIGGER             0x62CU
 #define REG_CAMERA_DATA_DEPTH               0x630U
+#define REG_CAMERA_FEATURE_ERR_HI_INQ       0x640h
+#define REG_CAMERA_FEATURE_ERR_LO_INQ       0x644h
 
 #define REG_CAMERA_FEATURE_HI_BASE          0x800U
 #define REG_CAMERA_FEATURE_LO_BASE          0x880U
