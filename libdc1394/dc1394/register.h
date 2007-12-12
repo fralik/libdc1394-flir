@@ -31,6 +31,7 @@
 #endif
 #include <errno.h>
 #include <stdlib.h>
+#include <dc1394/control.h>
  
 #ifdef __cplusplus
 extern "C" {

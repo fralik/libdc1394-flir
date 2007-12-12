@@ -23,7 +23,6 @@
 #ifndef __DC1394_VENDOR_AVT_H__
 #define __DC1394_VENDOR_AVT_H__
 
-#include <dc1394/internal.h>
 #include <dc1394/register.h>
 #include <dc1394/log.h>
 

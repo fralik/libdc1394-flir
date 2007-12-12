@@ -1,3 +1,6 @@
+2007-12-12 David Moore <dcm@acm.org>
+	* SVN 507: Remove internal.h include from vendor include files
+
 2007-12-12 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 506: fix dc1394_error_get_string().
         * SVN 505: change bit_depth -> data_depth for coherency.
