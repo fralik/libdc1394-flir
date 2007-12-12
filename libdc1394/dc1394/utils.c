@@ -368,5 +368,5 @@ dc1394_error_get_string(dc1394error_t error)
   if ((error>DC1394_ERROR_MAX)||(error<DC1394_ERROR_MIN))
     return NULL;
 
-  return dc1394_error_strings[error-DC1394_ERROR_MIN];
+  return dc1394_error_strings[-error-DC1394_ERROR_MAX];
 }

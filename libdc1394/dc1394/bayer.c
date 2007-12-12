@@ -111,7 +111,7 @@ dc1394_bayer_NearestNeighbor(const uint8_t *restrict bayer, uint8_t *restrict rg
 	|| tile == DC1394_COLOR_FILTER_GRBG;
     int i, imax, iinc;
 
-    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MAX))
+    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MIN))
       return DC1394_INVALID_COLOR_FILTER;
 
     /* add black border */
@@ -207,7 +207,7 @@ dc1394_bayer_Bilinear(const uint8_t *restrict bayer, uint8_t *restrict rgb, int 
     int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
 	|| tile == DC1394_COLOR_FILTER_GRBG;
 
-    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MAX))
+    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MIN))
       return DC1394_INVALID_COLOR_FILTER;
 
     ClearBorders(rgb, sx, sy, 1);
@@ -306,7 +306,7 @@ dc1394_bayer_HQLinear(const uint8_t *restrict bayer, uint8_t *restrict rgb, int 
     int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
 	|| tile == DC1394_COLOR_FILTER_GRBG;
 
-    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MAX))
+    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MIN))
       return DC1394_INVALID_COLOR_FILTER;
 
     ClearBorders(rgb, sx, sy, 2);
@@ -841,7 +841,7 @@ dc1394_bayer_Simple(const uint8_t *restrict bayer, uint8_t *restrict rgb, int sx
         || tile == DC1394_COLOR_FILTER_GRBG;
     int i, imax, iinc;
 
-    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MAX))
+    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MIN))
       return DC1394_INVALID_COLOR_FILTER;
 
     /* add black border */
@@ -928,7 +928,7 @@ dc1394_bayer_NearestNeighbor_uint16(const uint16_t *restrict bayer, uint16_t *re
 	|| tile == DC1394_COLOR_FILTER_GRBG;
     int i, iinc, imax;
 
-    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MAX))
+    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MIN))
       return DC1394_INVALID_COLOR_FILTER;
 
     /* add black border */
@@ -1012,7 +1012,7 @@ dc1394_bayer_Bilinear_uint16(const uint16_t *restrict bayer, uint16_t *restrict 
     int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
 	|| tile == DC1394_COLOR_FILTER_GRBG;
 
-    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MAX))
+    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MIN))
       return DC1394_INVALID_COLOR_FILTER;
 
     rgb += rgbStep + 3 + 1;
@@ -1124,7 +1124,7 @@ dc1394_bayer_HQLinear_uint16(const uint16_t *restrict bayer, uint16_t *restrict 
     int start_with_green = tile == DC1394_COLOR_FILTER_GBRG
 	|| tile == DC1394_COLOR_FILTER_GRBG;
 
-    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MAX))
+    if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MIN))
       return DC1394_INVALID_COLOR_FILTER;
 
     ClearBorders_uint16(rgb, sx, sy, 2);
