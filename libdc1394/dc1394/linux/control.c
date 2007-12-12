@@ -379,9 +379,9 @@ platform_iso_release_channel (platform_camera_t * cam,
 
 dc1394error_t
 platform_iso_allocate_bandwidth (platform_camera_t * cam,
-    int bandwidth_bytes)
+    int bandwidth_units)
 {
-  if (raw1394_bandwidth_modify (cam->handle, bandwidth_bytes,
+  if (raw1394_bandwidth_modify (cam->handle, bandwidth_units,
         RAW1394_MODIFY_ALLOC) < 0) {
     dc1394_log_error ("Error: Failed to allocate iso bandwidth\n");
     return DC1394_NO_BANDWIDTH;
@@ -392,9 +392,9 @@ platform_iso_allocate_bandwidth (platform_camera_t * cam,
 
 dc1394error_t
 platform_iso_release_bandwidth (platform_camera_t * cam,
-    int bandwidth_bytes)
+    int bandwidth_units)
 {
-  if (raw1394_bandwidth_modify (cam->handle, bandwidth_bytes,
+  if (raw1394_bandwidth_modify (cam->handle, bandwidth_units,
         RAW1394_MODIFY_FREE) < 0) {
     dc1394_log_error ("Error: Failed to free iso bandwidth\n");
     return DC1394_FAILURE;

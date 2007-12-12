@@ -350,14 +350,14 @@ platform_iso_release_channel (platform_camera_t * cam,
 
 dc1394error_t
 platform_iso_allocate_bandwidth (platform_camera_t * cam,
-    int bandwidth_bytes)
+    int bandwidth_units)
 {
   return DC1394_FUNCTION_NOT_SUPPORTED;
 }
 
 dc1394error_t
 platform_iso_release_bandwidth (platform_camera_t * cam,
-    int bandwidth_bytes)
+    int bandwidth_units)
 {
   return DC1394_FUNCTION_NOT_SUPPORTED;
 }

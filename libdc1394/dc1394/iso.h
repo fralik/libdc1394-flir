@@ -1,5 +1,24 @@
-#ifndef __ISO_H__
-#define __ISO_H__
+/*
+ * 1394-Based Digital Camera manual allocation of isochronous resources
+ * Written by David Moore <dcm@acm.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#ifndef __DC1394_ISO_H__
+#define __DC1394_ISO_H__
 
 #include <dc1394/control.h>
 
@@ -69,7 +88,7 @@ dc1394error_t dc1394_iso_release_channel (dc1394camera_t * camera,
 /**
  * dc1394_iso_allocate_bandwidth:
  * @camera: A camera handle.
- * @bandwidth_bytes: The number of isochronous bytes to allocate.
+ * @bandwidth_units: The number of isochronous bandwidth units to allocate.
  *
  * Allocates isochronous bandwidth.  This functions allocates bandwidth
  * _in addition_ to any previous allocations.  It may be called multiple
@@ -86,12 +105,12 @@ dc1394error_t dc1394_iso_release_channel (dc1394camera_t * camera,
  * no bandwidth is allocated.
  */
 dc1394error_t dc1394_iso_allocate_bandwidth (dc1394camera_t * camera,
-    int bandwidth_bytes);
+    int bandwidth_units);
 
 /**
  * dc1394_iso_release_bandwidth:
  * @camera: A camera handle.
- * @bandwidth_bytes: The number of isochronous bytes to free.
+ * @bandwidth_units: The number of isochronous bandwidth units to free.
  *
  * Releases previously allocated isochronous bandwidth.  Each dc1394camera_t
  * keeps track of a running total of bandwidth that has been allocated.
@@ -108,7 +127,7 @@ dc1394error_t dc1394_iso_allocate_bandwidth (dc1394camera_t * camera,
  * allow bandwidth release.
  */
 dc1394error_t dc1394_iso_release_bandwidth (dc1394camera_t * camera,
-    int bandwidth_bytes);
+    int bandwidth_units);
 
 /**
  * dc1394_iso_release_all:

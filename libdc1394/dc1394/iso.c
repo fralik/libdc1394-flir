@@ -51,28 +51,28 @@ dc1394_iso_release_channel (dc1394camera_t * camera, int channel)
 }
 
 dc1394error_t
-dc1394_iso_allocate_bandwidth (dc1394camera_t * camera, int bandwidth_bytes)
+dc1394_iso_allocate_bandwidth (dc1394camera_t * camera, int bandwidth_units)
 {
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
     dc1394error_t err;
-    if ((err = platform_iso_allocate_bandwidth (cpriv->pcam, bandwidth_bytes))
+    if ((err = platform_iso_allocate_bandwidth (cpriv->pcam, bandwidth_units))
             != DC1394_SUCCESS)
         return err;
 
-    cpriv->allocated_bandwidth += bandwidth_bytes;
+    cpriv->allocated_bandwidth += bandwidth_units;
     return DC1394_SUCCESS;
 }
 
 dc1394error_t
-dc1394_iso_release_bandwidth (dc1394camera_t * camera, int bandwidth_bytes)
+dc1394_iso_release_bandwidth (dc1394camera_t * camera, int bandwidth_units)
 {
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
     dc1394error_t err;
-    if ((err = platform_iso_release_bandwidth (cpriv->pcam, bandwidth_bytes))
+    if ((err = platform_iso_release_bandwidth (cpriv->pcam, bandwidth_units))
             != DC1394_SUCCESS)
         return err;
 
-    cpriv->allocated_bandwidth -= bandwidth_bytes;
+    cpriv->allocated_bandwidth -= bandwidth_units;
     if (cpriv->allocated_bandwidth < 0)
         cpriv->allocated_bandwidth = 0;
     return DC1394_SUCCESS;

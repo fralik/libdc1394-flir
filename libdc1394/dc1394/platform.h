@@ -70,9 +70,9 @@ dc1394error_t platform_iso_allocate_channel (platform_camera_t * cam,
 dc1394error_t platform_iso_release_channel (platform_camera_t * cam,
     int channel);
 dc1394error_t platform_iso_allocate_bandwidth (platform_camera_t * cam,
-    int bandwidth_bytes);
+    int bandwidth_units);
 dc1394error_t platform_iso_release_bandwidth (platform_camera_t * cam,
-    int bandwidth_bytes);
+    int bandwidth_units);
 
 dc1394error_t platform_set_broadcast(platform_camera_t * craw,
 					  dc1394bool_t pwr);
