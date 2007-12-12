@@ -51,28 +51,6 @@
     More details soon
 */
 
-/* Note on the coding of libdc1394 versions:
-   - LIBDC1394_VERSION represent the release number of the library,
-     e.g. 2.0.0. It consists in 4 digits, 2 for each number in the version.
-     Version 2.1 will thus appear as 0201. The last version number is not
-     used because a ".1" increment (as opposed to ".0.1") is necessary if
-     the API had significant changes justifying the use of this number.
-   - LIBDC1394_VERSION_xxx are the version codes used by libtool and defined
-     in configure.in. _MAJOR is for API changes (compat break), _REVISION is
-     for backward compatible API changes (e.g. new functions) and _AGE is
-     when the API does not change (only code changes). At least that's my
-     wild guess.
-   These numbers can be used to adapt the function calls to the library
-   version installed on the machine. They appeared in 2.0 so that you
-   may need to check their existance if your code must work with 1.x.
-*/
-
-
-#define LIBDC1394_VERSION            0200
-#define LIBDC1394_VERSION_MAJOR        20
-#define LIBDC1394_VERSION_REVISION      0
-#define LIBDC1394_VERSION_AGE           0
-
 /* Enumeration of iso data speeds */
 typedef enum {
   DC1394_ISO_SPEED_100= 0,
