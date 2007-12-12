@@ -667,7 +667,7 @@ Adapt_buffer_convert(dc1394video_frame_t *in, dc1394video_frame_t *out)
   // Hence nothing to do.
 
   // we always convert to 8bits (at this point) we can safely set this value to 8.
-  out->bit_depth=8;
+  out->data_depth=8;
 
   // don't know what to do with stride... >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
   // out->stride=??
@@ -740,11 +740,11 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
     case DC1394_COLOR_CODING_MONO16:
     case DC1394_COLOR_CODING_RAW16:
       Adapt_buffer_convert(in,out);
-      dc1394_MONO16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->bit_depth);
+      dc1394_MONO16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->data_depth);
       break;
     case DC1394_COLOR_CODING_RGB16:
       Adapt_buffer_convert(in,out);
-      dc1394_RGB16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->bit_depth);
+      dc1394_RGB16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->data_depth);
     break;
     default:
       return DC1394_FUNCTION_NOT_SUPPORTED;
@@ -754,7 +754,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
     switch(in->color_coding) {
     case DC1394_COLOR_CODING_MONO16:
       Adapt_buffer_convert(in,out);
-      dc1394_MONO16_to_MONO8(in->image, out->image, in->size[0], in->size[1], in->bit_depth);
+      dc1394_MONO16_to_MONO8(in->image, out->image, in->size[0], in->size[1], in->data_depth);
       break;
     case DC1394_COLOR_CODING_MONO8:
       Adapt_buffer_convert(in,out);
@@ -768,7 +768,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
     switch(in->color_coding) {
     case DC1394_COLOR_CODING_RGB16:
       Adapt_buffer_convert(in,out);
-      dc1394_RGB16_to_RGB8 (in->image, out->image, in->size[0], in->size[1], in->bit_depth);
+      dc1394_RGB16_to_RGB8 (in->image, out->image, in->size[0], in->size[1], in->data_depth);
       break;
     case DC1394_COLOR_CODING_YUV444:
       Adapt_buffer_convert(in,out);
@@ -790,7 +790,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
     case DC1394_COLOR_CODING_MONO16:
     case DC1394_COLOR_CODING_RAW16:
       Adapt_buffer_convert(in,out);
-      dc1394_MONO16_to_RGB8 (in->image, out->image, in->size[0], in->size[1],in->bit_depth);
+      dc1394_MONO16_to_RGB8 (in->image, out->image, in->size[0], in->size[1],in->data_depth);
       break;
     case DC1394_COLOR_CODING_RGB8:
       Adapt_buffer_convert(in,out);
@@ -840,7 +840,7 @@ Adapt_buffer_stereo(dc1394video_frame_t *in, dc1394video_frame_t *out)
   // Hence nothing to do.
 
   // we always convert to 8bits (at this point) we can safely set this value to 8.
-  out->bit_depth=8;
+  out->data_depth=8;
 
   // don't know what to do with stride... >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
   // out->stride=??

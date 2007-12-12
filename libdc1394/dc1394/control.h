@@ -579,7 +579,8 @@ typedef struct __dc1394_video_frame
   dc1394color_coding_t     color_coding;          /* the color coding used. This field is valid for all video modes. */
   dc1394color_filter_t     color_filter;          /* the color filter used. This field is valid only for RAW modes and IIDC 1.31 */
   uint32_t                 yuv_byte_order;        /* the order of the fields for 422 formats: YUYV or UYVY */
-  uint32_t                 bit_depth;             /* the number of bits per pixel. The number of grayscale levels is 2^(this_number) */
+  uint32_t                 data_depth;            /* the number of bits per pixel. The number of grayscale levels is 2^(this_number).
+						     This is independent from the colour coding */
   uint32_t                 stride;                /* the number of bytes per image line */
   dc1394video_mode_t       video_mode;            /* the video mode used for capturing this frame */
   uint64_t                 total_bytes;           /* the total size of the frame buffer in bytes. May include packet-
@@ -750,7 +751,6 @@ dc1394error_t dc1394_video_get_iso_speed(dc1394camera_t *camera, dc1394speed_t *
 dc1394error_t dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed);
 dc1394error_t dc1394_video_get_iso_channel(dc1394camera_t *camera, uint32_t * channel);
 dc1394error_t dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel);
-/* Both "DATA DEPTH" and "BIT DEPTH" are used. This should be fixed. */
 dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth);
  
 /* start/stop isochronous data transmission */

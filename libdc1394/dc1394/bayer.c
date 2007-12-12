@@ -2609,9 +2609,9 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
 
   // bit depth is conserved for 16 bit and set to 8bit for 8bit:
   if (in->color_coding==DC1394_COLOR_CODING_RAW16)
-    out->bit_depth=in->bit_depth;
+    out->data_depth=in->data_depth;
   else
-    out->bit_depth=8;
+    out->data_depth=8;
 
   // don't know what to do with stride... >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
   // out->stride=??
@@ -2686,21 +2686,21 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
     Adapt_buffer_bayer(in,out,method);
     switch (method) {
     case DC1394_BAYER_METHOD_NEAREST:
-      return dc1394_bayer_NearestNeighbor_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return dc1394_bayer_NearestNeighbor_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
     case DC1394_BAYER_METHOD_SIMPLE:
-      return dc1394_bayer_Simple_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return dc1394_bayer_Simple_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
     case DC1394_BAYER_METHOD_BILINEAR:
-      return dc1394_bayer_Bilinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return dc1394_bayer_Bilinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
     case DC1394_BAYER_METHOD_HQLINEAR:
-      return dc1394_bayer_HQLinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return dc1394_bayer_HQLinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
     case DC1394_BAYER_METHOD_DOWNSAMPLE:
-      return dc1394_bayer_Downsample_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return dc1394_bayer_Downsample_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
     case DC1394_BAYER_METHOD_EDGESENSE:
-      return dc1394_bayer_EdgeSense_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return dc1394_bayer_EdgeSense_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
     case DC1394_BAYER_METHOD_VNG:
-      return dc1394_bayer_VNG_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return dc1394_bayer_VNG_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
     case DC1394_BAYER_METHOD_AHD:
-      return dc1394_bayer_AHD_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->bit_depth);
+      return dc1394_bayer_AHD_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
     }
     break;
   default:
