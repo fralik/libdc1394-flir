@@ -370,3 +370,29 @@ dc1394_error_get_string(dc1394error_t error)
 
   return dc1394_error_strings[-error-DC1394_ERROR_MAX];
 }
+
+
+/*
+ * Checksum algorithms
+ * Copyright (C) 2006 Mikael Olenfalk, Tobii Technology AB, Stockholm Sweden
+ *
+ * Written by Mikael Olenfalk <mikael _DOT_ olenfalk _AT_ tobii _DOT_ com>
+ * Version : 16/02/2005 
+ */
+
+uint16_t
+dc1394_checksum_crc16 (const uint8_t* buffer, uint32_t buffer_size)
+{
+  uint32_t i, j, c, bit;
+  uint32_t crc = 0;
+  for (i = 0; i < buffer_size; i++) {
+    c = (uint32_t)*buffer++;
+    for (j = 0x80; j; j >>= 1) {
+      bit = crc & 0x8000;
+      crc <<= 1;
+      if (c & j) bit ^= 0x8000;
+      if (bit) crc ^= 0x1021;
+    }
+  }
+  return (uint16_t)(crc & 0xffff);
+}

@@ -41,6 +41,7 @@ dc1394bool_t dc1394_is_video_mode_still_image(dc1394video_mode_t video_mode);
 dc1394bool_t dc1394_is_same_camera(dc1394camera_id_t id1, dc1394camera_id_t id2);
 const char * dc1394_feature_get_string(dc1394feature_t feature);
 const char * dc1394_error_get_string(dc1394error_t error);
+uint16_t dc1394_checksum_crc16 (const uint8_t* buffer, uint32_t buffer_size);
 
 #ifdef __cplusplus
 }

@@ -1,3 +1,6 @@
+2007-12-12 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 510: merge checksum.c/h into utils.c/h
+
 2007-12-12 David Moore <dcm@acm.org>
 	* SVN 509: Removed LIBDC1394_VERSION* from control.h and updated
 		   libtool version info in configure.in.

@@ -25,7 +25,7 @@
 
 #include "../internal.h"
 #include "../register.h"
-#include "../checksum.h"
+#include "../utils.h"
 #include "../control.h"
 #include "basler.h"
 #include "basler_sff_registry.h"
