@@ -17,6 +17,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <dc1394/dc1394.h>
+
 #ifndef __DC1394_REGISTER_H__
 #define __DC1394_REGISTER_H__
 /*! \file register.h
@@ -25,14 +27,6 @@
     More details soon
 */
 
-#include <unistd.h>
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#include <errno.h>
-#include <stdlib.h>
-#include <dc1394/control.h>
- 
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -41,8 +41,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include <dc1394/control.h>
-#include <dc1394/log.h>
+#include <dc1394/dc1394.h>
 #include "affine.h"
 
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))

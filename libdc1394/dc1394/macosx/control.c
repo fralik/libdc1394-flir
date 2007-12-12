@@ -31,8 +31,7 @@
 #include "platform.h"
 #include "internal.h"
 #include "macosx.h"
-#include "utils.h"
-#include "log.h"
+#include <dc1394/dc1394.h>
 
 platform_t *
 platform_new (void)

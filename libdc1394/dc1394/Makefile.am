@@ -34,10 +34,16 @@ libdc1394_la_LIBADD = \
 	vendor/libdc1394-vendor.la
 
 # headers to be installed
-pkginclude_HEADERS =  \
-	control.h     \
-	utils.h       \
-	conversions.h \
-	register.h    \
-	log.h	      \
+pkginclude_HEADERS =  	\
+	dc1394.h	\
+	types.h		\
+	camera.h	\
+	control.h     	\
+	capture.h	\
+	video.h		\
+	format7.h	\
+	utils.h       	\
+	conversions.h 	\
+	register.h    	\
+	log.h	      	\
 	iso.h

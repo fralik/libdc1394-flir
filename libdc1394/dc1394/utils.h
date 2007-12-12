@@ -16,6 +16,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <dc1394/dc1394.h>
+//#include "internal.h"
+
 #ifndef __DC1394_UTILS_H__
 #define __DC1394_UTILS_H__
 /*! \file utils.h
@@ -23,8 +27,6 @@
 
     More details soon
 */
-
-#include <dc1394/control.h>
 
 #ifdef __cplusplus
 extern "C" {

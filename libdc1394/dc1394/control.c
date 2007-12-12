@@ -21,17 +21,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <inttypes.h>
-
-#include "control.h"
+#include <dc1394/dc1394.h>
 #include "internal.h"
-#include "config.h"
-#include "register.h"
 #include "offsets.h"
-#include "utils.h"
-#include "log.h"
-#include "iso.h"
- 
 
 dc1394error_t
 dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)

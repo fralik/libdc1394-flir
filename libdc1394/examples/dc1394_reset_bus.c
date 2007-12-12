@@ -10,8 +10,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include <dc1394/control.h>
-#include <dc1394/log.h>
+#include <dc1394/dc1394.h>
 #include <stdlib.h>
 #include <inttypes.h>
 

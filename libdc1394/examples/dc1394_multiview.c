@@ -35,8 +35,7 @@
 #include <inttypes.h>
 
 #include <libraw1394/raw1394.h>
-#include "dc1394/control.h"
-#include "dc1394/log.h"
+#include "dc1394/dc1394.h"
 
 
 /* uncomment the following to drop frames to prevent delays */
@@ -177,18 +176,6 @@ void iyu12yuy2 (unsigned char *src, unsigned char *dest, uint32_t NumPixels) {
     }
 }
 
-
-/* macro by Bart Nabbe */
-#define RGB2YUV(r, g, b, y, u, v)\
-  y = (9798*r + 19235*g + 3736*b)  / 32768;\
-  u = (-4784*r - 9437*g + 14221*b)  / 32768 + 128;\
-  v = (20218*r - 16941*g - 3277*b) / 32768 + 128;\
-  y = y < 0 ? 0 : y;\
-  u = u < 0 ? 0 : u;\
-  v = v < 0 ? 0 : v;\
-  y = y > 255 ? 255 : y;\
-  u = u > 255 ? 255 : u;\
-  v = v > 255 ? 255 : v
 
 static inline
 void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, uint32_t NumPixels) {

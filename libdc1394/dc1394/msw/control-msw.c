@@ -23,10 +23,7 @@
 #include "internal.h"
 #include "register.h"
 #include "offsets.h"
-#include "utils.h"
-#include "log.h"
-#include "control.h"
-
+#include <dc1394/dc1394.h>
 #include "msw1394.h"
 
 #define DC1394_CAST_CAMERA_TO_MSW(cammsw, camera) dc1394camera_msw_t * cammsw = (dc1394camera_msw_t *) camera

@@ -1,4 +1,5 @@
 2007-12-12 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 511: Split control.h into several header files.
         * SVN 510: merge checksum.c/h into utils.c/h
 
 2007-12-12 David Moore <dcm@acm.org>

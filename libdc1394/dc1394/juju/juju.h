@@ -24,7 +24,7 @@
 #include "internal.h"
 #include "register.h"
 #include "offsets.h"
-#include "control.h"
+#include <dc1394/dc1394.h>
 
 struct _platform_t {
   int dummy;

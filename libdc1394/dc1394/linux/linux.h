@@ -26,7 +26,7 @@
 #include <libraw1394/raw1394.h>
 #include <libraw1394/csr.h>
 //#include "linux/raw1394support.h"
-#include "control.h"
+#include <dc1394/dc1394.h>
 
 struct _platform_t {
   int dummy;

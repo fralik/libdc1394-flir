@@ -18,29 +18,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <stdlib.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <errno.h>
 
 #include <libraw1394/raw1394.h>
 #include <libraw1394/csr.h>
 
 #include "config.h"
-#include "internal.h"
-#include "control.h"
+#include <dc1394/dc1394.h>
 #include "kernel-video1394.h"
-#include "utils.h"
-#include "log.h"
-#include "iso.h"
-#include "linux/linux.h"
-#include "linux/capture.h"
+#include "linux.h"
+#include "internal.h"
 
 #define MAX_NUM_PORTS 16
 

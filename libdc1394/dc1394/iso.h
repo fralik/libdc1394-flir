@@ -17,10 +17,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <dc1394/dc1394.h>
+
 #ifndef __DC1394_ISO_H__
 #define __DC1394_ISO_H__
 
-#include <dc1394/control.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * dc1394_iso_set_persist:
@@ -144,5 +148,9 @@ dc1394error_t dc1394_iso_release_bandwidth (dc1394camera_t * camera,
  * if some resources were not able to be released.
  */
 dc1394error_t dc1394_iso_release_all (dc1394camera_t * camera);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

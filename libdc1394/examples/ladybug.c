@@ -27,8 +27,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include <dc1394/control.h>
-#include <dc1394/log.h>
+#include <dc1394/dc1394.h>
 
 // change this to switch from RAW to JPEG
 #define VIDEO_MODE DC1394_VIDEO_MODE_FORMAT7_7 

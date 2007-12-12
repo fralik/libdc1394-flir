@@ -1,5 +1,5 @@
-#ifndef __PLATFORM_H__
-#define __PLATFORM_H__
+#ifndef __DC1394_PLATFORM_H__
+#define __DC1394_PLATFORM_H__
 
 #include <stdint.h>
 #include "control.h"

@@ -29,7 +29,7 @@
 #include <poll.h>
 
 #include "juju/juju.h"
-#include "log.h"
+#include <dc1394/dc1394.h>
 
 #define ptr_to_u64(p) ((__u64)(unsigned long)(p))
 #define u64_to_ptr(p) ((void *)(unsigned long)(p))

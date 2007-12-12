@@ -19,16 +19,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include <dc1394/log.h>
+#include <dc1394/dc1394.h>
+
 #ifndef __DC1394_CONVERSIONS_H__
 #define __DC1394_CONVERSIONS_H__
+
 /*! \file conversions.h
     \brief Various structures, etc...
 
     More details soon
 */
 
-#include <dc1394/control.h>
-#include <dc1394/utils.h>
 #define restrict __restrict
 
 typedef enum {

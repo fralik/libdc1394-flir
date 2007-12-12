@@ -19,9 +19,9 @@
 #ifndef __DC1394_INTERNAL_H__
 #define __DC1394_INTERNAL_H__
 
-#include "control.h"
-#include "offsets.h"
 #include "config.h"
+#include <dc1394/dc1394.h>
+#include "offsets.h"
 #include "platform.h"
 
 typedef struct _dc1394camera_priv_t {
@@ -84,6 +84,9 @@ int refresh_enumeration (dc1394_t * d);
    raw1394_new_handle but I (Damien) not sure this would solve the problem as the handle
    creation might have happened in the creating (as opposed to created) thread.*/
 #define DC1394_SLOW_DOWN            ((rand()%20)+10)
+
+/* Maximum number of characters in vendor and model strings */
+#define MAX_CHARS                      256
 
 
 // Format_0

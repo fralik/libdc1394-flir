@@ -20,19 +20,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <libraw1394/raw1394.h>
-#include <libraw1394/csr.h>
-#include <unistd.h>
-#include <arpa/inet.h>
 
 #include "config.h"
-#include "platform.h"
-#include "internal.h"
+#include <dc1394/dc1394.h>
+#include "dc1394/internal.h"
 #include "linux.h"
-#include "utils.h"
-#include "log.h"
+#include "offsets.h"
+#include "types.h"
 
 
 platform_t *

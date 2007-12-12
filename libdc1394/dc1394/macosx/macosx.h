@@ -24,7 +24,7 @@
 #ifndef __DC1394_MACOSX_H__
 #define __DC1394_MACOSX_H__
 
-#include "control.h"
+#include <dc1394/dc1394.h>
 #include "macosx/capture.h"
 #include <IOKit/firewire/IOFireWireLib.h>
 #include <CoreServices/CoreServices.h>

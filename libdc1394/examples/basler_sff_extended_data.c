@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include <dc1394/control.h>
+#include <dc1394/dc1394.h>
 #include <dc1394/vendor/basler.h>
 
 int list_cameras (dc1394_t * d, dc1394camera_list_t * list)

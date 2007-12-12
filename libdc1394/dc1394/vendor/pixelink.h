@@ -25,14 +25,10 @@
 #ifndef __DC1394_VENDOR_PIXELINK_H__
 #define __DC1394_VENDOR_PIXELINK_H__
 
+#include <dc1394/dc1394.h>
+
 //#define PIXELINK_DEBUG_LOWEST_LEVEL
 //#define PIXELINK_DEBUG_DISPLAY
-
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-
-#include <dc1394/register.h>
 
 /*
  * The following deal with the Pixelink specific extensions for cameras 
