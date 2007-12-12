@@ -63,8 +63,8 @@ else
     fi
     AC_SUBST(WINDDK)
     dc1394platform=msw
-	CFLAGS="$CFLAGS -include \${top_srcdir}/dc1394/msw/compat.h"
 	platform_LDFLAGS="-Wl,--export-all -no-undefined -lsetupapi -lws2_32"
+        platform_CFLAGS="-DDC1394_DLL_EXPORTS -include \${top_srcdir}/dc1394/msw/compat.h"
 	AC_SUBST(platform_LDFLAGS)
     ;;
   esac

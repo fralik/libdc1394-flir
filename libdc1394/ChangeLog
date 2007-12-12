@@ -1,4 +1,6 @@
 2007-12-12 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 512: -DDC1394_DLL_EXPORTS is MSW only. Also, don't change the
+	           CFLAGS but instead use AM_CFLAGS.
 	* SVN 511: Split control.h into several header files.
         * SVN 510: merge checksum.c/h into utils.c/h
 
