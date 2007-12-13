@@ -1,4 +1,5 @@
 2007-12-13 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 514: Version 2.0.0-rc8
         * SVN 513: Fix redefinition of MIN and MAX macros (Rudolf Leitgeb)
 
 2007-12-12 Damien Douxchamps http://damien.douxchamps.net/
