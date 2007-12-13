@@ -1,3 +1,6 @@
+2007-12-13 David Moore  <dcm@acm.org>
+	* SVN 515: Add basler_sff_registry.h to dc1394/vendor/Makefile.am
+
 2007-12-13 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 514: Version 2.0.0-rc8
         * SVN 513: Fix redefinition of MIN and MAX macros (Rudolf Leitgeb)

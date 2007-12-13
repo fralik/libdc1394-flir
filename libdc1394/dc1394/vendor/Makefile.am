@@ -9,6 +9,7 @@ libdc1394_vendor_la_SOURCES =  \
 	pixelink.c \
 	pixelink.h \
 	basler.c \
+	basler_sff_registry.h \
 	basler_sff_registry.c
 
 # headers to be installed

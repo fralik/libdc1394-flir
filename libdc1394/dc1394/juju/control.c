@@ -88,7 +88,7 @@ platform_get_device_list (platform_t * p)
     snprintf(filename, sizeof filename, "/dev/%s", de->d_name);
     fd = open(filename, O_RDWR);
     if (fd < 0) {
-      dc1394_log_warning("could not open a device directory");
+      dc1394_log_warning("Failed to open %s: %s\n", filename, strerror (errno));
       continue;
     }
 
