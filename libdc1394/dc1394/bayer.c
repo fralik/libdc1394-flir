@@ -1826,8 +1826,12 @@ dc1394_bayer_Simple_uint16(const uint16_t *restrict bayer, uint16_t *restrict rg
 
 #define SQR(x) ((x)*(x))
 #define ABS(x) (((int)(x) ^ ((int)(x) >> 31)) - ((int)(x) >> 31))
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#ifndef MIN
+  #define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
+#ifndef MAX
+  #define MAX(a,b) ((a) > (b) ? (a) : (b))
+#endif
 #define LIM(x,min,max) MAX(min,MIN(x,max))
 #define ULIM(x,y,z) ((y) < (z) ? LIM(x,y,z) : LIM(x,z,y))
 /*

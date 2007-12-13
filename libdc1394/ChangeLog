@@ -1,3 +1,6 @@
+2007-12-13 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 513: Fix redefinition of MIN and MAX macros (Rudolf Leitgeb)
+
 2007-12-12 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 512: -DDC1394_DLL_EXPORTS is MSW only. Also, don't change the
 	           CFLAGS but instead use AM_CFLAGS.

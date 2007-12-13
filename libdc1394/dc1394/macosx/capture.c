@@ -105,7 +105,9 @@ finalize_callback (dc1394capture_t * capture)
   return kIOReturnSuccess;
 }
 
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#ifndef MIN
+  #define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
 #define DATA_SIZE 12
 
 static void
