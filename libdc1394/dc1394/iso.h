@@ -22,6 +22,12 @@
 #ifndef __DC1394_ISO_H__
 #define __DC1394_ISO_H__
 
+/*! \file iso.h
+    \brief Functions to manually manage the ISO resources (channels and bandwidth)
+
+    More details soon
+*/
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -2,10 +2,18 @@
 #include <dc1394/log.h>
 #include <dc1394/dc1394.h>
 
+/*! \file video.h
+    \brief Functions related to video modes, formats, framerate and video flow.
+
+    More details soon
+*/
+
 #ifndef __DC1394_VIDEO_H__
 #define __DC1394_VIDEO_H__
 
-/* Enumeration of iso data speeds */
+/**
+ * Enumeration of iso data speeds
+ */
 typedef enum {
   DC1394_ISO_SPEED_100= 0,
   DC1394_ISO_SPEED_200,
@@ -18,7 +26,9 @@ typedef enum {
 #define DC1394_ISO_SPEED_MAX                   DC1394_ISO_SPEED_3200
 #define DC1394_ISO_SPEED_NUM                  (DC1394_ISO_SPEED_MAX - DC1394_ISO_SPEED_MIN + 1)
 
-/* Enumeration of video framerates */
+/**
+ * Enumeration of video framerates
+ */
 typedef enum {
   DC1394_FRAMERATE_1_875= 32,
   DC1394_FRAMERATE_3_75,
@@ -33,7 +43,9 @@ typedef enum {
 #define DC1394_FRAMERATE_MAX               DC1394_FRAMERATE_240
 #define DC1394_FRAMERATE_NUM              (DC1394_FRAMERATE_MAX - DC1394_FRAMERATE_MIN + 1)
 
-/* Operation modes */
+/**
+ * Operation modes
+ */
 typedef enum {
   DC1394_OPERATION_MODE_LEGACY = 480,
   DC1394_OPERATION_MODE_1394B
@@ -42,14 +54,18 @@ typedef enum {
 #define DC1394_OPERATION_MODE_MAX    DC1394_OPERATION_MODE_1394B
 #define DC1394_OPERATION_MODE_NUM   (DC1394_OPERATION_MODE_MAX - DC1394_OPERATION_MODE_MIN + 1)
 
-typedef struct
-{
+/**
+ * No Docs
+ */
+typedef struct {
   uint32_t                num;
   dc1394framerate_t       framerates[DC1394_FRAMERATE_NUM];
 } dc1394framerates_t;
 
-/* video frame structure. In general this structure should be calloc'ed so that members such as "allocated size"
-   are properly set to zero. Don't forget to free the "image" member before freeing the struct itself. */
+/**
+ * video frame structure. In general this structure should be calloc'ed so that members such as "allocated size"
+ * are properly set to zero. Don't forget to free the "image" member before freeing the struct itself.
+ */
 typedef struct __dc1394_video_frame
 {
   unsigned char          * image;                 /* the image. May contain padding data too (vendor specific) */
@@ -89,36 +105,104 @@ extern "C" {
      Video functions: formats, framerates,...
  ***************************************************************************/
 
-/* functions for querying camera attributes */
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *video_modes);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_supported_framerates(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394framerates_t *framerates);
 
-/* get/set the framerate, mode, format, iso speed for the video */
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_framerate(dc1394camera_t *camera, dc1394framerate_t *framerate);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_set_framerate(dc1394camera_t *camera, dc1394framerate_t framerate);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_mode(dc1394camera_t *camera, dc1394video_mode_t *video_mode);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_set_mode(dc1394camera_t *camera, dc1394video_mode_t video_mode);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t *mode);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_set_operation_mode(dc1394camera_t *camera, dc1394operation_mode_t mode);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_iso_speed(dc1394camera_t *camera, dc1394speed_t *speed);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_set_iso_speed(dc1394camera_t *camera, dc1394speed_t speed);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_iso_channel(dc1394camera_t *camera, uint32_t * channel);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_set_iso_channel(dc1394camera_t *camera, uint32_t channel);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth);
  
-/* start/stop isochronous data transmission */
+/**
+ * start/stop isochronous data transmission
+ */
 dc1394error_t dc1394_video_set_transmission(dc1394camera_t *camera, dc1394switch_t pwr);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_transmission(dc1394camera_t *camera, dc1394switch_t *pwr);
 
-/* turn one shot mode on or off */
+/**
+ *  turn one shot mode on or off
+ */
 dc1394error_t dc1394_video_set_one_shot(dc1394camera_t *camera, dc1394switch_t pwr);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_one_shot(dc1394camera_t *camera, dc1394bool_t *is_on);
 
-/* turn multishot mode on or off */
+/**
+ * turn multishot mode on or off
+ */
 dc1394error_t dc1394_video_set_multi_shot(dc1394camera_t *camera, uint32_t numFrames, dc1394switch_t pwr);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_multi_shot(dc1394camera_t *camera, dc1394bool_t *is_on, uint32_t *numFrames);
 
-/* Utility function */
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t *bandwidth);
 
 #ifdef __cplusplus

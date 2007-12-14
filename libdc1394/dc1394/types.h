@@ -1,7 +1,15 @@
 #ifndef __DC1394_TYPES_H__
 #define __DC1394_TYPES_H__
 
-/* Enumeration of video modes */
+/*! \file types.h
+    \brief Various types that must be defined here
+
+    More details soon
+*/
+
+/**
+ * Enumeration of video modes
+ */
 typedef enum {
   DC1394_VIDEO_MODE_160x120_YUV444= 64,
   DC1394_VIDEO_MODE_320x240_YUV422,
@@ -45,7 +53,9 @@ typedef enum {
 #define DC1394_VIDEO_MODE_FORMAT7_MAX       DC1394_VIDEO_MODE_FORMAT7_7
 #define DC1394_VIDEO_MODE_FORMAT7_NUM      (DC1394_VIDEO_MODE_FORMAT7_MAX - DC1394_VIDEO_MODE_FORMAT7_MIN + 1)
 
-/* Enumeration of colour modings */
+/**
+ * Enumeration of colour modings
+ */
 typedef enum {
   DC1394_COLOR_CODING_MONO8= 352,
   DC1394_COLOR_CODING_YUV411,
@@ -63,7 +73,9 @@ typedef enum {
 #define DC1394_COLOR_CODING_MAX     DC1394_COLOR_CODING_RAW16
 #define DC1394_COLOR_CODING_NUM    (DC1394_COLOR_CODING_MAX - DC1394_COLOR_CODING_MIN + 1)
 
-/* Format 7 sensor layouts*/
+/**
+ * Format 7 RAW sensor layouts
+ */
 typedef enum {
   DC1394_COLOR_FILTER_RGGB = 512,
   DC1394_COLOR_FILTER_GBRG,
@@ -74,7 +86,9 @@ typedef enum {
 #define DC1394_COLOR_FILTER_MAX        DC1394_COLOR_FILTER_BGGR
 #define DC1394_COLOR_FILTER_NUM       (DC1394_COLOR_FILTER_MAX - DC1394_COLOR_FILTER_MIN + 1)
 
-/* Byte order for YUV formats (may be expanded to RGB in the future) */
+/**
+ * Byte order for YUV formats (may be expanded to RGB in the future)
+ */
 typedef enum {
   DC1394_BYTE_ORDER_UYVY=800,
   DC1394_BYTE_ORDER_YUYV
@@ -83,25 +97,35 @@ typedef enum {
 #define DC1394_BYTE_ORDER_MAX        DC1394_BYTE_ORDER_YUYV
 #define DC1394_BYTE_ORDER_NUM       (DC1394_BYTE_ORDER_MAX - DC1394_BYTE_ORDER_MIN + 1)
 
+/**
+ * No Docs
+ */
 typedef struct
 {
   uint32_t                num;
   dc1394color_coding_t    codings[DC1394_COLOR_CODING_NUM];
 } dc1394color_codings_t;
 
+/**
+ * No Docs
+ */
 typedef struct
 {
   uint32_t                num;
   dc1394video_mode_t      modes[DC1394_VIDEO_MODE_NUM];
 } dc1394video_modes_t;
 
-/* Yet another boolean data type */
+/**
+ * Yet another boolean data type
+ */
 typedef enum {
   DC1394_FALSE= 0,
   DC1394_TRUE
 } dc1394bool_t;
 
-/* Yet another boolean data type */
+/**
+ * Yet another boolean data type 
+ */
 typedef enum {
   DC1394_OFF= 0,
   DC1394_ON

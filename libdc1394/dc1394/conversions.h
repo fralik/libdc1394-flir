@@ -27,13 +27,16 @@
 #define __DC1394_CONVERSIONS_H__
 
 /*! \file conversions.h
-    \brief Various structures, etc...
+    \brief functions to convert video formats
 
     More details soon
 */
 
 #define restrict __restrict
 
+/**
+ * No Docs
+ */
 typedef enum {
   DC1394_BAYER_METHOD_NEAREST=0,
   DC1394_BAYER_METHOD_SIMPLE,
@@ -48,6 +51,9 @@ typedef enum {
 #define DC1394_BAYER_METHOD_MAX      DC1394_BAYER_METHOD_AHD
 #define DC1394_BAYER_METHOD_NUM     (DC1394_BAYER_METHOD_MAX-DC1394_BAYER_METHOD_MIN+1)
 
+/**
+ * No Docs
+ */
 typedef enum {
   DC1394_STEREO_METHOD_INTERLACED=0,
   DC1394_STEREO_METHOD_FIELD
@@ -90,14 +96,23 @@ extern "C" {
  *  CONVERSION FUNCTIONS TO YUV422, MONO8 and RGB8
  **********************************************************************/
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_convert_to_YUV422(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
 			 dc1394color_coding_t source_coding, uint32_t bits);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_convert_to_MONO8(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
 			dc1394color_coding_t source_coding, uint32_t bits);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_convert_to_RGB8(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
 		       dc1394color_coding_t source_coding, uint32_t bits);
@@ -106,7 +121,9 @@ dc1394_convert_to_RGB8(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t hei
  *  CONVERSION FUNCTIONS FOR STEREO IMAGES
  **********************************************************************/
 
-//changes a 16bit stereo image (8bit/channel) into two 8bit images on top of each other
+/**
+ * changes a 16bit stereo image (8bit/channel) into two 8bit images on top of each other
+ */
 dc1394error_t
 dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height);
 
@@ -140,10 +157,17 @@ dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t 
  *                                                                                              *
  ************************************************************************************************/
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_bayer_decoding_8bit(const uint8_t *bayer, uint8_t *rgb,
 			   uint32_t width, uint32_t height, dc1394color_filter_t tile,
 			   dc1394bayer_method_t method);
+
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
 			    uint32_t width, uint32_t height, dc1394color_filter_t tile,
@@ -154,12 +178,21 @@ dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
  *  Frame based conversions
  **********************************************************************************/
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394stereo_method_t method);
 

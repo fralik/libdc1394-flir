@@ -200,11 +200,17 @@ typedef struct dc1394basler_sff_extended_data_stream_t {
   dc1394basler_sff_chunk_tail_t tail;
 } dc1394basler_sff_extended_data_stream_t;
 
+/**
+ * No Docs
+ */
 typedef struct dc1394basler_sff_frame_counter_t {
   uint32_t counter;
   dc1394basler_sff_chunk_tail_t tail;
 } dc1394basler_sff_frame_counter_t;
 
+/**
+ * No Docs
+ */
 typedef struct dc1394basler_sff_cycle_time_stamp_t {
   union {
     struct {
@@ -218,6 +224,9 @@ typedef struct dc1394basler_sff_cycle_time_stamp_t {
   } cycle_time_stamp;
 } dc1394basler_sff_cycle_time_stamp_t;
 
+/**
+ * No Docs
+ */
 typedef struct dc1394basler_dcam_csr_value_t {
   uint32_t value: 12;
   uint32_t reserved2: 12;
@@ -229,6 +238,9 @@ typedef struct dc1394basler_dcam_csr_value_t {
   uint32_t presence_inq: 1;
 } dc1394basler_dcam_csr_value_t;
 
+/**
+ * No Docs
+ */
 typedef struct dc1394basler_dcam_whitebalance_csr_value_t {
   uint32_t v_r_value: 12;
   uint32_t u_b_value: 12;
@@ -240,6 +252,9 @@ typedef struct dc1394basler_dcam_whitebalance_csr_value_t {
   uint32_t presence_inq: 1;
 } dc1394basler_dcam_whitebalance_csr_value_t;
 
+/**
+ * No Docs
+ */
 typedef struct dc1394basler_sff_dcam_values_t {
   /* gain */
   dc1394basler_dcam_csr_value_t gain_csr;
@@ -265,6 +280,9 @@ typedef struct dc1394basler_sff_dcam_values_t {
   dc1394basler_sff_chunk_tail_t tail;
 } dc1394basler_sff_dcam_values_t;
 
+/**
+ * No Docs
+ */
 typedef struct dc1394basler_sff_crc_checksum_t {
   uint8_t crc_checksum_low;
   uint8_t crc_checksum_high;

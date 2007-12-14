@@ -18,12 +18,12 @@
  */
 
 #include <dc1394/dc1394.h>
-//#include "internal.h"
 
 #ifndef __DC1394_UTILS_H__
 #define __DC1394_UTILS_H__
+
 /*! \file utils.h
-    \brief This is used for utility functions
+    \brief Utility functions
 
     More details soon
 */
@@ -32,17 +32,64 @@
 extern "C" {
 #endif
 
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_get_image_size_from_video_mode(dc1394camera_t *camera, uint32_t video_mode, uint32_t *width, uint32_t *height);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_framerate_as_float(dc1394framerate_t framerate_enum, float *framerate);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_get_color_coding_depth(dc1394color_coding_t color_coding, uint32_t * bits);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_get_bits_per_pixel(dc1394color_coding_t color_coding, uint32_t* bits);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_get_color_coding_from_video_mode(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding);
+
+/**
+ * No Docs
+ */
 dc1394error_t dc1394_is_color(dc1394color_coding_t color_mode, dc1394bool_t *is_color);
+
+/**
+ * No Docs
+ */
 dc1394bool_t dc1394_is_video_mode_scalable(dc1394video_mode_t video_mode);
+
+/**
+ * No Docs
+ */
 dc1394bool_t dc1394_is_video_mode_still_image(dc1394video_mode_t video_mode);
+
+/**
+ * No Docs
+ */
 dc1394bool_t dc1394_is_same_camera(dc1394camera_id_t id1, dc1394camera_id_t id2);
+
+/**
+ * No Docs
+ */
 const char * dc1394_feature_get_string(dc1394feature_t feature);
+
+/**
+ * No Docs
+ */
 const char * dc1394_error_get_string(dc1394error_t error);
+
+/**
+ * No Docs
+ */
 uint16_t dc1394_checksum_crc16 (const uint8_t* buffer, uint32_t buffer_size);
 
 #ifdef __cplusplus

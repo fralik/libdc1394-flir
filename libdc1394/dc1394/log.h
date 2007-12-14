@@ -25,7 +25,15 @@
 #ifndef __DC1394_LOG_H__
 #define __DC1394_LOG_H__
 
-/* Return values for visible functions*/
+/*! \file log.h
+    \brief Functions to log errors, warning and debug messages
+
+    More details soon
+*/
+
+/**
+ * Return values for visible functions
+ */
 typedef enum {
   DC1394_SUCCESS                     =  0,
   DC1394_FAILURE                     = -1,
@@ -72,7 +80,9 @@ typedef enum {
 #define DC1394_ERROR_MAX  DC1394_SUCCESS
 #define DC1394_ERROR_NUM (DC1394_ERROR_MAX-DC1394_ERROR_MIN+1)
 
-/* Types of logging messages */
+/**
+ * Types of logging messages
+ */
 typedef enum {
   DC1394_LOG_ERROR=768,
   DC1394_LOG_WARNING,

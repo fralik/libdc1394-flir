@@ -32,6 +32,9 @@
 
 #include "basler_sff.h"
 
+/**
+ * No Docs
+ */
 typedef struct sff_feature {
   /** human-readable name of the feature */
   const char* name;
@@ -55,11 +58,19 @@ typedef struct sff_feature {
   uint32_t data_size;
 } sff_feature;
 
-/** Returns a sff feature descriptor by id */
+/**
+ * Returns a sff feature descriptor by id
+ */
 const sff_feature* basler_sff_registry_find_by_id (dc1394basler_sff_feature_t feature_id);
-/** Returns a sff feature descriptor by CSR guid */
+
+/**
+ * Returns a sff feature descriptor by CSR guid
+ */
 const sff_feature* basler_sff_registry_find_by_csr_guid (dc1394basler_sff_guid_t* csr_guid);
-/** Returns a sff feature descriptor by CHUNK guid */
+
+/**
+ * Returns a sff feature descriptor by CHUNK guid
+ */
 const sff_feature* basler_sff_registry_find_by_chunk_guid (dc1394basler_sff_guid_t* csr_guid);
 
 #endif

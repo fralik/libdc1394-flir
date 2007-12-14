@@ -2,6 +2,11 @@
 #define __DC1394_H__
 
 
+/*! \file dc1394.h
+    \brief Main include file, which include all others.
+
+    More details soon
+*/
 
 #include <string.h>
 #include <unistd.h>

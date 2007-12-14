@@ -69,7 +69,6 @@
 /* 
  * The following are some of the constants that are register specific.
  */
-
 #define PxL_GPO_CFG_ENABLE			0x80000000U
 #define PxL_GPO_CFG_DISABLE			0x00000000U
 #define PxL_GPO_CFG_POLARITY_HIGH		0x40000000U
@@ -80,16 +79,18 @@
 #define PxL_GPO_CFG_MODE_BUSY			0x00000003U
 #define PxL_GPO_CFG_MODE_FLASH			0x00000004U
 
-/* 
- * Some enumerated values
+/**
+ * No Docs
  */
-
 typedef enum {
   DC1394_PxL_GPIO_POLARITY_NONE=0,
   DC1394_PxL_GPIO_POLARITY_HIGH,
   DC1394_PxL_GPIO_POLARITY_LOW
 } dc1394pxl_gpio_polarity_t;
 
+/**
+ * No Docs
+ */
 typedef enum {
   DC1394_PxL_GPIO_MODE_STROBE=0,
   DC1394_PxL_GPIO_MODE_NORMAL,
@@ -101,7 +102,9 @@ typedef enum {
 /* IEEE 32 bit floating point type */
 typedef float float32_t;
 
-/* GPIO Information structure */
+/**
+ * GPIO Information structure
+ */
 typedef struct __dc1394_pxl_gpio_info_struct {
   uint32_t       number;
   dc1394bool_t presence;
@@ -113,7 +116,9 @@ typedef struct __dc1394_pxl_gpio_info_struct {
   dc1394bool_t mode_flash;
 } dc1394_pxl_gpio_info_t;
 
-/* Camera information */
+/**
+ * Camera information
+ */
 typedef struct __dc1394_pxl_camera_info_struct {
   uint32_t fpga_version;
   uint32_t fw_version;
@@ -121,7 +126,9 @@ typedef struct __dc1394_pxl_camera_info_struct {
   char description[PxL_MAX_STRING_LENGTH];
 } dc1394_pxl_camera_info_t;
 
-/* Advanced feature inquiry */
+/**
+ * Advanced feature inquiry
+ */
 typedef struct __dc1394_pxl_adv_feature_info_struct {
   dc1394bool_t name_presence;
   uint32_t name_offset;
@@ -132,40 +139,72 @@ typedef struct __dc1394_pxl_adv_feature_info_struct {
 extern "C" {
 #endif
 
-/* List of functions */
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_convert_float32_to_quadlet(double , uint32_t *);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_convert_uint32_to_float32(uint32_t , double *);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_get_camera_name(dc1394camera_t *, char *, uint32_t);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_get_camera_info(dc1394camera_t *, dc1394_pxl_camera_info_t *);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_get_camera_serial_number(dc1394camera_t *, uint32_t *);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_get_gpo_param(dc1394camera_t *, uint32_t, uint32_t *, uint32_t *, uint32_t *);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_get_gpo_param_min_max(dc1394camera_t *, uint32_t, uint32_t *, 
 		uint32_t *, uint32_t *, uint32_t *, uint32_t *, uint32_t *, 
 		uint32_t *, uint32_t *, uint32_t *);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_get_gpo_config(dc1394camera_t *, uint32_t, uint32_t *);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_set_gpo_config(dc1394camera_t *, uint32_t, uint32_t);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_set_gpio_mode_param(dc1394camera_t *, uint32_t , 
 	dc1394pxl_gpio_polarity_t, dc1394pxl_gpio_mode_t, double, double, double);
 
+/**
+ * No Docs
+ */
 dc1394error_t
 dc1394_pxl_print_camera_info(dc1394camera_t *, FILE *fd);
 

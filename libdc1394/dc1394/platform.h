@@ -2,7 +2,7 @@
 #define __DC1394_PLATFORM_H__
 
 #include <stdint.h>
-#include "control.h"
+#include <dc1394/dc1394.h>
 
 typedef struct _platform_t platform_t;
 

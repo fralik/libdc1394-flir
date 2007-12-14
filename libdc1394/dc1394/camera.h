@@ -5,7 +5,15 @@
 #ifndef __DC1394_CAMERA_H__
 #define __DC1394_CAMERA_H__
 
-/* IIDC versions*/
+/*! \file camera.h
+    \brief Basic system and camera functions
+
+    More details soon
+*/
+
+/**
+ * IIDC versions
+ */
 typedef enum {
   DC1394_IIDC_VERSION_1_04 = 544,
   DC1394_IIDC_VERSION_1_20,
@@ -25,7 +33,9 @@ typedef enum {
 #define DC1394_IIDC_VERSION_MAX        DC1394_IIDC_VERSION_1_39
 #define DC1394_IIDC_VERSION_NUM       (DC1394_IIDC_VERSION_MAX - DC1394_IIDC_VERSION_MIN + 1)
 
-/* Enumeration of power classes */
+/**
+ * Enumeration of power classes
+ */
 typedef enum {
   DC1394_POWER_CLASS_NONE=608,
   DC1394_POWER_CLASS_PROV_MIN_15W,
@@ -40,7 +50,9 @@ typedef enum {
 #define DC1394_POWER_CLASS_MAX       DC1394_POWER_CLASS_USES_MAX_10W
 #define DC1394_POWER_CLASS_NUM      (DC1394_POWER_CLASS_MAX - DC1394_POWER_CLASS_MIN + 1)
 
-/* Enumeration of PHY delays */
+/**
+ * Enumeration of PHY delays
+ */
 typedef enum {
   DC1394_PHY_DELAY_MAX_144_NS=640,
   DC1394_PHY_DELAY_UNKNOWN_0,
@@ -51,7 +63,9 @@ typedef enum {
 #define DC1394_PHY_DELAY_MAX         DC1394_PHY_DELAY_UNKNOWN_0
 #define DC1394_PHY_DELAY_NUM        (DC1394_PHY_DELAY_MAX - DC1394_PHY_DELAY_MIN + 1)
 
-/* Camera structure */
+/**
+ * Camera structure
+ */
 typedef struct __dc1394_camera
 {
   /* system/firmware information */
@@ -86,12 +100,18 @@ typedef struct __dc1394_camera
 
 } dc1394camera_t;
 
+/**
+ * No Docs
+ */
 typedef struct
 {
   uint16_t             unit;
   uint64_t             guid;
 } dc1394camera_id_t;
 
+/**
+ * No Docs
+ */
 typedef struct __dc1394camera_list_t
 {
   uint32_t             num;
@@ -108,25 +128,35 @@ extern "C" {
      General system functions
  ***************************************************************************/
 
-/* */
+/**
+ * No docs
+ */
 dc1394_t* dc1394_new (void);
+
+/**
+ * No docs
+ */
 void dc1394_free (dc1394_t *dc1394);
 
-/* Sets and gets the broadcast flag of a camera. If the broadcast flag is set,
-   all devices on the bus will execute the command. Useful to sync ISO start
-   commands or setting a bunch of cameras at the same time. Broadcast only works
-   with identical devices (brand/model). If the devices are not identical your
-   mileage may vary. Some cameras may not answer broadcast commands at all. Also,
-   this only works with cameras on the SAME bus (IOW, the same port).*/
+/**
+ * Sets and gets the broadcast flag of a camera. If the broadcast flag is set,
+ * all devices on the bus will execute the command. Useful to sync ISO start
+ * commands or setting a bunch of cameras at the same time. Broadcast only works
+ * with identical devices (brand/model). If the devices are not identical your
+ * mileage may vary. Some cameras may not answer broadcast commands at all. Also,
+ * this only works with cameras on the SAME bus (IOW, the same port).
+ */
 dc1394error_t dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr);
 dc1394error_t dc1394_camera_get_broadcast(dc1394camera_t *camera, dc1394bool_t *pwr);
 
-/* Resets the IEEE1394 bus which camera is attached to.  Calling this function is
-   "rude" to other devices because it causes them to re-enumerate on the bus and
-   may cause a temporary disruption in their current activities.  Thus, use it
-   sparingly.  Its primary use is if a program shuts down uncleanly and needs to
-   free leftover ISO channels or bandwidth.  A bus reset will free those things
-   as a side effect. */
+/**
+ * Resets the IEEE1394 bus which camera is attached to.  Calling this function is
+ * "rude" to other devices because it causes them to re-enumerate on the bus and
+ * may cause a temporary disruption in their current activities.  Thus, use it
+ * sparingly.  Its primary use is if a program shuts down uncleanly and needs to
+ * free leftover ISO channels or bandwidth.  A bus reset will free those things
+ * as a side effect.
+ */
 dc1394error_t dc1394_reset_bus(dc1394camera_t *camera);
 dc1394error_t dc1394_read_cycle_timer (dc1394camera_t * camera,
         uint32_t * cycle_timer, uint64_t * local_time);
@@ -135,17 +165,34 @@ dc1394error_t dc1394_read_cycle_timer (dc1394camera_t * camera,
      Camera functions
  ***************************************************************************/
 
-/* Returns the list of cameras available on the computer. If present, multiple cards will be probed */
+/**
+ * Returns the list of cameras available on the computer. If present, multiple cards will be probed
+ */
 dc1394error_t dc1394_camera_enumerate(dc1394_t *dc1394, dc1394camera_list_t **list);
-/* Frees the memory allocated in dc1394_enumerate_cameras for the camera list*/
+
+/**
+ * Frees the memory allocated in dc1394_enumerate_cameras for the camera list
+ */
 void dc1394_camera_free_list(dc1394camera_list_t *list);
-/* Create a new camera based on a GUID (Global Unique IDentifier) */
+
+/**
+ * Create a new camera based on a GUID (Global Unique IDentifier)
+ */
 dc1394camera_t * dc1394_camera_new(dc1394_t *dc1394, uint64_t guid);
-/* Create a new camera based on a GUID and a unit number (for multi-unit cameras) */
+
+/**
+ * Create a new camera based on a GUID and a unit number (for multi-unit cameras)
+ */
 dc1394camera_t * dc1394_camera_new_unit(dc1394_t *dc1394, uint64_t guid, int unit);
-/* Frees a camera structure*/
+
+/**
+ * Frees a camera structure
+ */
 void dc1394_camera_free(dc1394camera_t *camera);
-/* Print various camera information, such as GUID, vendor, model, supported IIDC specs, etc... */
+
+/**
+ * Print various camera information, such as GUID, vendor, model, supported IIDC specs, etc...
+ */
 dc1394error_t dc1394_camera_print_info(dc1394camera_t *camera, FILE *fd);
 
 #ifdef __cplusplus
