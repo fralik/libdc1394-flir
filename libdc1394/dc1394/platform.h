@@ -12,8 +12,8 @@ void platform_free (platform_t * p);
 typedef struct _platform_device_t platform_device_t;
 
 typedef struct _platform_device_list_t {
-  platform_device_t ** devices;
-  int num_devices;
+    platform_device_t ** devices;
+    int num_devices;
 } platform_device_list_t;
 
 platform_device_list_t * platform_get_device_list (platform_t * p);
@@ -39,14 +39,14 @@ static inline dc1394error_t
 platform_camera_read_quad (platform_camera_t * cam, uint64_t offset,
     uint32_t * quad)
 {
-  return platform_camera_read (cam, offset, quad, 1);
+    return platform_camera_read (cam, offset, quad, 1);
 }
 
 static inline dc1394error_t
 platform_camera_write_quad (platform_camera_t * cam, uint64_t offset,
     uint32_t quad)
 {
-  return platform_camera_write (cam, offset, &quad, 1);
+    return platform_camera_write (cam, offset, &quad, 1);
 }
 
 dc1394error_t platform_reset_bus (platform_camera_t * cam);

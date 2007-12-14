@@ -44,7 +44,7 @@ dc1394error_t dc1394_get_registers (dc1394camera_t *camera,
 static inline dc1394error_t dc1394_get_register (dc1394camera_t *camera,
 						 uint64_t offset, uint32_t *value)
 {
-  return dc1394_get_registers (camera, offset, value, 1);
+    return dc1394_get_registers (camera, offset, value, 1);
 }
 
 /**
@@ -59,7 +59,7 @@ dc1394error_t dc1394_set_registers (dc1394camera_t *camera,
 static inline dc1394error_t dc1394_set_register (dc1394camera_t *camera,
 						 uint64_t offset, uint32_t value)
 {
-  return dc1394_set_registers (camera, offset, &value, 1);
+    return dc1394_set_registers (camera, offset, &value, 1);
 }
 
 
@@ -79,7 +79,7 @@ dc1394error_t dc1394_get_control_registers (dc1394camera_t *camera,
 static inline dc1394error_t dc1394_get_control_register (dc1394camera_t *camera,
     uint64_t offset, uint32_t *value)
 {
-  return dc1394_get_control_registers (camera, offset, value, 1);
+    return dc1394_get_control_registers (camera, offset, value, 1);
 }
 
 /**
@@ -94,7 +94,7 @@ dc1394error_t dc1394_set_control_registers (dc1394camera_t *camera,
 static inline dc1394error_t dc1394_set_control_register (dc1394camera_t *camera,
     uint64_t offset, uint32_t value)
 {
-  return dc1394_set_control_registers (camera, offset, &value, 1);
+    return dc1394_set_control_registers (camera, offset, &value, 1);
 }
 
 
@@ -114,7 +114,7 @@ dc1394_get_adv_control_registers(dc1394camera_t *camera, uint64_t offset, uint32
 static inline dc1394error_t
 dc1394_get_adv_control_register(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
-  return dc1394_get_adv_control_registers(camera, offset, value, 1);
+    return dc1394_get_adv_control_registers(camera, offset, value, 1);
 }
 
 /**
@@ -129,7 +129,7 @@ dc1394_set_adv_control_registers(dc1394camera_t *camera, uint64_t offset, uint32
 static inline dc1394error_t
 dc1394_set_adv_control_register(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
-  return dc1394_set_adv_control_registers(camera, offset, &value, 1);
+    return dc1394_set_adv_control_registers(camera, offset, &value, 1);
 }
 
 

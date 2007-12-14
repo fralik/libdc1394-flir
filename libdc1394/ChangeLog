@@ -1,4 +1,5 @@
 2007-12-14 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 518: Change indentation from 2 to 4 spaces 
 	* SVN 517: Framework for the Doxygen comments. 
 	* SVN 516: Version 2.0.0-rc9
 

@@ -208,7 +208,7 @@ dc1394_bayer_Bilinear(const uint8_t *restrict bayer, uint8_t *restrict rgb, int 
 	|| tile == DC1394_COLOR_FILTER_GRBG;
 
     if ((tile>DC1394_COLOR_FILTER_MAX)||(tile<DC1394_COLOR_FILTER_MIN))
-      return DC1394_INVALID_COLOR_FILTER;
+	return DC1394_INVALID_COLOR_FILTER;
 
     ClearBorders(rgb, sx, sy, 1);
     rgb += rgbStep + 3 + 1;
@@ -1340,263 +1340,263 @@ dc1394_bayer_EdgeSense_uint16(const uint16_t *restrict bayer, uint16_t *restrict
     case DC1394_COLOR_FILTER_GRBG:	//---------------------------------------------------------
     case DC1394_COLOR_FILTER_GBRG:
 	// copy original RGB data to output images
-      for (i = 0; i < sy*sx; i += (sx<<1)) {
-	for (j = 0; j < sx; j += 2) {
-	  outG[(i + j) * 3] = bayer[i + j];
-	  outG[(i + sx + (j + 1)) * 3] = bayer[i + sx + (j + 1)];
-	  outR[(i + j + 1) * 3] = bayer[i + j + 1];
-	  outB[(i + sx + j) * 3] = bayer[i + sx + j];
+	for (i = 0; i < sy*sx; i += (sx<<1)) {
+	    for (j = 0; j < sx; j += 2) {
+		outG[(i + j) * 3] = bayer[i + j];
+		outG[(i + sx + (j + 1)) * 3] = bayer[i + sx + (j + 1)];
+		outR[(i + j + 1) * 3] = bayer[i + j + 1];
+		outB[(i + sx + j) * 3] = bayer[i + sx + j];
+	    }
 	}
-      }
-      // process GREEN channel
-      for (i = 3*sx; i < (sy - 2)*sx; i += (sx<<1)) {
-	for (j = 2; j < sx - 3; j += 2) {
-	  dh = abs(((outB[(i + j - 2) * 3] +
-		     outB[(i + j + 2) * 3]) >> 1) -
-		   outB[(i + j) * 3]);
-	  dv = abs(((outB[(i - (sx<<1) + j) * 3] +
-		     outB[(i + (sx<<1) + j) * 3]) >> 1)  -
-		   outB[(i + j) * 3]);
-	  if (dh < dv)
-	    tmp = (outG[(i + j - 1) * 3] +
-		   outG[(i + j + 1) * 3]) >> 1;
-	  else {
-	    if (dh > dv)
-	      tmp = (outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 1;
-	    else
-	      tmp = (outG[(i + j - 1) * 3] +
-		     outG[(i + j + 1) * 3] +
-		     outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 2;
-	  }
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	// process GREEN channel
+	for (i = 3*sx; i < (sy - 2)*sx; i += (sx<<1)) {
+	    for (j = 2; j < sx - 3; j += 2) {
+		dh = abs(((outB[(i + j - 2) * 3] +
+			   outB[(i + j + 2) * 3]) >> 1) -
+			 outB[(i + j) * 3]);
+		dv = abs(((outB[(i - (sx<<1) + j) * 3] +
+			   outB[(i + (sx<<1) + j) * 3]) >> 1)  -
+			 outB[(i + j) * 3]);
+		if (dh < dv)
+		    tmp = (outG[(i + j - 1) * 3] +
+			   outG[(i + j + 1) * 3]) >> 1;
+		else {
+		    if (dh > dv)
+			tmp = (outG[(i - sx + j) * 3] +
+			       outG[(i + sx + j) * 3]) >> 1;
+		    else
+			tmp = (outG[(i + j - 1) * 3] +
+			       outG[(i + j + 1) * 3] +
+			       outG[(i - sx + j) * 3] +
+			       outG[(i + sx + j) * 3]) >> 2;
+		}
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
 	
-      for (i = 2*sx; i < (sy - 3)*sx; i += (sx<<1)) {
-	for (j = 3; j < sx - 2; j += 2) {
-	  dh = abs(((outR[(i + j - 2) * 3] +
-		     outR[(i + j + 2) * 3]) >>1 ) -
-		   outR[(i + j) * 3]);
-	  dv = abs(((outR[(i - (sx<<1) + j) * 3] +
-		     outR[(i + (sx<<1) + j) * 3]) >>1 ) -
-		   outR[(i + j) * 3]);
-	  if (dh < dv)
-	    tmp = (outG[(i + j - 1) * 3] +
-		   outG[(i + j + 1) * 3]) >> 1;
-	  else {
-	    if (dh > dv)
-	      tmp = (outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 1;
-	    else
-	      tmp = (outG[(i + j - 1) * 3] +
-		     outG[(i + j + 1) * 3] +
-		     outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 2;
-	  }
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	for (i = 2*sx; i < (sy - 3)*sx; i += (sx<<1)) {
+	    for (j = 3; j < sx - 2; j += 2) {
+		dh = abs(((outR[(i + j - 2) * 3] +
+			   outR[(i + j + 2) * 3]) >>1 ) -
+			 outR[(i + j) * 3]);
+		dv = abs(((outR[(i - (sx<<1) + j) * 3] +
+			   outR[(i + (sx<<1) + j) * 3]) >>1 ) -
+			 outR[(i + j) * 3]);
+		if (dh < dv)
+		    tmp = (outG[(i + j - 1) * 3] +
+			   outG[(i + j + 1) * 3]) >> 1;
+		else {
+		    if (dh > dv)
+			tmp = (outG[(i - sx + j) * 3] +
+			       outG[(i + sx + j) * 3]) >> 1;
+		    else
+			tmp = (outG[(i + j - 1) * 3] +
+			       outG[(i + j + 1) * 3] +
+			       outG[(i - sx + j) * 3] +
+			       outG[(i + sx + j) * 3]) >> 2;
+		}
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-      // process RED channel
-      for (i = 0; i < (sy - 1)*sx; i += (sx<<1)) {
-	for (j = 2; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i + j - 1) * 3] -
-		outG[(i + j - 1) * 3] +
-		outR[(i + j + 1) * 3] -
-		outG[(i + j + 1) * 3]) >> 1);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	// process RED channel
+	for (i = 0; i < (sy - 1)*sx; i += (sx<<1)) {
+	    for (j = 2; j < sx - 1; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outR[(i + j - 1) * 3] -
+		      outG[(i + j - 1) * 3] +
+		      outR[(i + j + 1) * 3] -
+		      outG[(i + j + 1) * 3]) >> 1);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-      for (i = sx; i < (sy - 2)*sx; i += (sx<<1)) {
-	for (j = 1; j < sx; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i - sx + j) * 3] -
-		outG[(i - sx + j) * 3] +
-		outR[(i + sx + j) * 3] -
-		outG[(i + sx + j) * 3]) >> 1);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	for (i = sx; i < (sy - 2)*sx; i += (sx<<1)) {
+	    for (j = 1; j < sx; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outR[(i - sx + j) * 3] -
+		      outG[(i - sx + j) * 3] +
+		      outR[(i + sx + j) * 3] -
+		      outG[(i + sx + j) * 3]) >> 1);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
+	    for (j = 2; j < sx - 1; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outR[(i - sx + j - 1) * 3] -
+		      outG[(i - sx + j - 1) * 3] +
+		      outR[(i - sx + j + 1) * 3] -
+		      outG[(i - sx + j + 1) * 3] +
+		      outR[(i + sx + j - 1) * 3] -
+		      outG[(i + sx + j - 1) * 3] +
+		      outR[(i + sx + j + 1) * 3] -
+		      outG[(i + sx + j + 1) * 3]) >> 2);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-	for (j = 2; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i - sx + j - 1) * 3] -
-		outG[(i - sx + j - 1) * 3] +
-		outR[(i - sx + j + 1) * 3] -
-		outG[(i - sx + j + 1) * 3] +
-		outR[(i + sx + j - 1) * 3] -
-		outG[(i + sx + j - 1) * 3] +
-		outR[(i + sx + j + 1) * 3] -
-		outG[(i + sx + j + 1) * 3]) >> 2);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	
+	// process BLUE channel
+	for (i = sx; i < sy*sx; i += (sx<<1)) {
+	    for (j = 1; j < sx - 2; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outB[(i + j - 1) * 3] -
+		      outG[(i + j - 1) * 3] +
+		      outB[(i + j + 1) * 3] -
+		      outG[(i + j + 1) * 3]) >> 1);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-
-      // process BLUE channel
-      for (i = sx; i < sy*sx; i += (sx<<1)) {
-	for (j = 1; j < sx - 2; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i + j - 1) * 3] -
-		outG[(i + j - 1) * 3] +
-		outB[(i + j + 1) * 3] -
-		outG[(i + j + 1) * 3]) >> 1);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	for (i = 2*sx; i < (sy - 1)*sx; i += (sx<<1)) {
+	    for (j = 0; j < sx - 1; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outB[(i - sx + j) * 3] -
+		      outG[(i - sx + j) * 3] +
+		      outB[(i + sx + j) * 3] -
+		      outG[(i + sx + j) * 3]) >> 1);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
+	    for (j = 1; j < sx - 2; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outB[(i - sx + j - 1) * 3] -
+		      outG[(i - sx + j - 1) * 3] +
+		      outB[(i - sx + j + 1) * 3] -
+		      outG[(i - sx + j + 1) * 3] +
+		      outB[(i + sx + j - 1) * 3] -
+		      outG[(i + sx + j - 1) * 3] +
+		      outB[(i + sx + j + 1) * 3] -
+		      outG[(i + sx + j + 1) * 3]) >> 2);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-      for (i = 2*sx; i < (sy - 1)*sx; i += (sx<<1)) {
-	for (j = 0; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i - sx + j) * 3] -
-		outG[(i - sx + j) * 3] +
-		outB[(i + sx + j) * 3] -
-		outG[(i + sx + j) * 3]) >> 1);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
-	}
-	for (j = 1; j < sx - 2; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i - sx + j - 1) * 3] -
-		outG[(i - sx + j - 1) * 3] +
-		outB[(i - sx + j + 1) * 3] -
-		outG[(i - sx + j + 1) * 3] +
-		outB[(i + sx + j - 1) * 3] -
-		outG[(i + sx + j - 1) * 3] +
-		outB[(i + sx + j + 1) * 3] -
-		outG[(i + sx + j + 1) * 3]) >> 2);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
-	}
-      }
-      break;
-
+	break;
+	
     case DC1394_COLOR_FILTER_BGGR:	//---------------------------------------------------------
     case DC1394_COLOR_FILTER_RGGB:
 	// copy original RGB data to output images
-      for (i = 0; i < sy*sx; i += (sx<<1)) {
-	for (j = 0; j < sx; j += 2) {
-	  outB[(i + j) * 3] = bayer[i + j];
-	  outR[(i + sx + (j + 1)) * 3] = bayer[i + sx + (j + 1)];
-	  outG[(i + j + 1) * 3] = bayer[i + j + 1];
-	  outG[(i + sx + j) * 3] = bayer[i + sx + j];
+	for (i = 0; i < sy*sx; i += (sx<<1)) {
+	    for (j = 0; j < sx; j += 2) {
+		outB[(i + j) * 3] = bayer[i + j];
+		outR[(i + sx + (j + 1)) * 3] = bayer[i + sx + (j + 1)];
+		outG[(i + j + 1) * 3] = bayer[i + j + 1];
+		outG[(i + sx + j) * 3] = bayer[i + sx + j];
+	    }
 	}
-      }
-      // process GREEN channel
-      for (i = 2*sx; i < (sy - 2)*sx; i += (sx<<1)) {
-	for (j = 2; j < sx - 3; j += 2) {
-	  dh = abs(((outB[(i + j - 2) * 3] +
-		    outB[(i + j + 2) * 3]) >> 1) -
-		   outB[(i + j) * 3]);
-	  dv = abs(((outB[(i - (sx<<1) + j) * 3] +
-		    outB[(i + (sx<<1) + j) * 3]) >> 1) -
-		   outB[(i + j) * 3]);
-	  if (dh < dv)
-	    tmp = (outG[(i + j - 1) * 3] +
-		   outG[(i + j + 1) * 3]) >> 1;
-	  else {
-	    if (dh > dv)
-	      tmp = (outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 1;
-	    else
-	      tmp = (outG[(i + j - 1) * 3] +
-		     outG[(i + j + 1) * 3] +
-		     outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >> 2;
-	  }
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	// process GREEN channel
+	for (i = 2*sx; i < (sy - 2)*sx; i += (sx<<1)) {
+	    for (j = 2; j < sx - 3; j += 2) {
+		dh = abs(((outB[(i + j - 2) * 3] +
+			   outB[(i + j + 2) * 3]) >> 1) -
+			 outB[(i + j) * 3]);
+		dv = abs(((outB[(i - (sx<<1) + j) * 3] +
+			   outB[(i + (sx<<1) + j) * 3]) >> 1) -
+			 outB[(i + j) * 3]);
+		if (dh < dv)
+		    tmp = (outG[(i + j - 1) * 3] +
+			   outG[(i + j + 1) * 3]) >> 1;
+		else {
+		    if (dh > dv)
+			tmp = (outG[(i - sx + j) * 3] +
+			       outG[(i + sx + j) * 3]) >> 1;
+		    else
+			tmp = (outG[(i + j - 1) * 3] +
+			       outG[(i + j + 1) * 3] +
+			       outG[(i - sx + j) * 3] +
+			       outG[(i + sx + j) * 3]) >> 2;
+		}
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-      for (i = 3*sx; i < (sy - 3)*sx; i += (sx<<1)) {
-	for (j = 3; j < sx - 2; j += 2) {
-	  dh = abs(((outR[(i + j - 2) * 3] +
-		    outR[(i + j + 2) * 3]) >> 1) -
-		   outR[(i + j) * 3]);
-	  dv = abs(((outR[(i - (sx<<1) + j) * 3] +
-		    outR[(i + (sx<<1) + j) * 3]) >> 1) -
-		   outR[(i + j) * 3]);
-	  if (dh < dv)
-	    tmp = (outG[(i + j - 1) * 3] +
-		   outG[(i + j + 1) * 3]) >>1;
-	  else {
-	    if (dh > dv)
-	      tmp = (outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >>1;
-	    else
-	      tmp = (outG[(i + j - 1) * 3] +
-		     outG[(i + j + 1) * 3] +
-		     outG[(i - sx + j) * 3] +
-		     outG[(i + sx + j) * 3]) >>2;
-	  }
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	for (i = 3*sx; i < (sy - 3)*sx; i += (sx<<1)) {
+	    for (j = 3; j < sx - 2; j += 2) {
+		dh = abs(((outR[(i + j - 2) * 3] +
+			   outR[(i + j + 2) * 3]) >> 1) -
+			 outR[(i + j) * 3]);
+		dv = abs(((outR[(i - (sx<<1) + j) * 3] +
+			   outR[(i + (sx<<1) + j) * 3]) >> 1) -
+			 outR[(i + j) * 3]);
+		if (dh < dv)
+		    tmp = (outG[(i + j - 1) * 3] +
+			   outG[(i + j + 1) * 3]) >>1;
+		else {
+		    if (dh > dv)
+			tmp = (outG[(i - sx + j) * 3] +
+			       outG[(i + sx + j) * 3]) >>1;
+		    else
+			tmp = (outG[(i + j - 1) * 3] +
+			       outG[(i + j + 1) * 3] +
+			       outG[(i - sx + j) * 3] +
+			       outG[(i + sx + j) * 3]) >>2;
+		}
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-      // process RED channel
-      for (i = sx; i < (sy - 1)*sx; i += (sx<<1)) {	// G-points (1/2)
-	for (j = 2; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i + j - 1) * 3] -
-		outG[(i + j - 1) * 3] +
-		outR[(i + j + 1) * 3] -
-		outG[(i + j + 1) * 3]) >>1);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	// process RED channel
+	for (i = sx; i < (sy - 1)*sx; i += (sx<<1)) {	// G-points (1/2)
+	    for (j = 2; j < sx - 1; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outR[(i + j - 1) * 3] -
+		      outG[(i + j - 1) * 3] +
+		      outR[(i + j + 1) * 3] -
+		      outG[(i + j + 1) * 3]) >>1);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-      for (i = 2*sx; i < (sy - 2)*sx; i += (sx<<1)) {
-	for (j = 1; j < sx; j += 2) {	// G-points (2/2)
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i - sx + j) * 3] -
-		outG[(i - sx + j) * 3] +
-		outR[(i + sx + j) * 3] -
-		outG[(i + sx + j) * 3]) >> 1);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	for (i = 2*sx; i < (sy - 2)*sx; i += (sx<<1)) {
+	    for (j = 1; j < sx; j += 2) {	// G-points (2/2)
+		tmp = outG[(i + j) * 3] +
+		    ((outR[(i - sx + j) * 3] -
+		      outG[(i - sx + j) * 3] +
+		      outR[(i + sx + j) * 3] -
+		      outG[(i + sx + j) * 3]) >> 1);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
+	    for (j = 2; j < sx - 1; j += 2) {	// B-points
+		tmp = outG[(i + j) * 3] +
+		    ((outR[(i - sx + j - 1) * 3] -
+		      outG[(i - sx + j - 1) * 3] +
+		      outR[(i - sx + j + 1) * 3] -
+		      outG[(i - sx + j + 1) * 3] +
+		      outR[(i + sx + j - 1) * 3] -
+		      outG[(i + sx + j - 1) * 3] +
+		      outR[(i + sx + j + 1) * 3] -
+		      outG[(i + sx + j + 1) * 3]) >> 2);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-	for (j = 2; j < sx - 1; j += 2) {	// B-points
-	  tmp = outG[(i + j) * 3] +
-	      ((outR[(i - sx + j - 1) * 3] -
-		outG[(i - sx + j - 1) * 3] +
-		outR[(i - sx + j + 1) * 3] -
-		outG[(i - sx + j + 1) * 3] +
-		outR[(i + sx + j - 1) * 3] -
-		outG[(i + sx + j - 1) * 3] +
-		outR[(i + sx + j + 1) * 3] -
-		outG[(i + sx + j + 1) * 3]) >> 2);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	
+	// process BLUE channel
+	for (i = 0; i < sy*sx; i += (sx<<1)) {
+	    for (j = 1; j < sx - 2; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outB[(i + j - 1) * 3] -
+		      outG[(i + j - 1) * 3] +
+		      outB[(i + j + 1) * 3] -
+		      outG[(i + j + 1) * 3]) >> 1);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-      
-      // process BLUE channel
-      for (i = 0; i < sy*sx; i += (sx<<1)) {
-	for (j = 1; j < sx - 2; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i + j - 1) * 3] -
-		outG[(i + j - 1) * 3] +
-		outB[(i + j + 1) * 3] -
-		outG[(i + j + 1) * 3]) >> 1);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
+	for (i = sx; i < (sy - 1)*sx; i += (sx<<1)) {
+	    for (j = 0; j < sx - 1; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outB[(i - sx + j) * 3] -
+		      outG[(i - sx + j) * 3] +
+		      outB[(i + sx + j) * 3] -
+		      outG[(i + sx + j) * 3]) >> 1);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
+	    for (j = 1; j < sx - 2; j += 2) {
+		tmp = outG[(i + j) * 3] +
+		    ((outB[(i - sx + j - 1) * 3] -
+		      outG[(i - sx + j - 1) * 3] +
+		      outB[(i - sx + j + 1) * 3] -
+		      outG[(i - sx + j + 1) * 3] +
+		      outB[(i + sx + j - 1) * 3] -
+		      outG[(i + sx + j - 1) * 3] +
+		      outB[(i + sx + j + 1) * 3] -
+		      outG[(i + sx + j + 1) * 3]) >> 2);
+		CLIP16(tmp, outR[(i + j) * 3], bits);
+	    }
 	}
-      }
-      for (i = sx; i < (sy - 1)*sx; i += (sx<<1)) {
-	for (j = 0; j < sx - 1; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i - sx + j) * 3] -
-		outG[(i - sx + j) * 3] +
-		outB[(i + sx + j) * 3] -
-		outG[(i + sx + j) * 3]) >> 1);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
-	}
-	for (j = 1; j < sx - 2; j += 2) {
-	  tmp = outG[(i + j) * 3] +
-	      ((outB[(i - sx + j - 1) * 3] -
-		outG[(i - sx + j - 1) * 3] +
-		outB[(i - sx + j + 1) * 3] -
-		outG[(i - sx + j + 1) * 3] +
-		outB[(i + sx + j - 1) * 3] -
-		outG[(i + sx + j - 1) * 3] +
-		outB[(i + sx + j + 1) * 3] -
-		outG[(i + sx + j + 1) * 3]) >> 2);
-	  CLIP16(tmp, outR[(i + j) * 3], bits);
-	}
-      }
-      break;
+	break;
     }
-   
+    
     ClearBorders_uint16(rgb, sx, sy, 3);
 
     return DC1394_SUCCESS;
@@ -1884,124 +1884,124 @@ dc1394_bayer_VNG(const uint8_t *restrict bayer,
 		 uint8_t *restrict dst, int sx, int sy,
 		 dc1394color_filter_t pattern)
 {
-  const int height = sy, width = sx;
-  static const signed char *cp;
-  /* the following has the same type as the image */
-  uint8_t (*brow[5])[3], *pix;          /* [FD] */
-  int code[8][2][320], *ip, gval[8], gmin, gmax, sum[4];
-  int row, col, x, y, x1, x2, y1, y2, t, weight, grads, color, diag;
-  int g, diff, thold, num, c;
-  uint32_t filters;                     /* [FD] */
-  
-  /* first, use bilinear bayer decoding */
-  dc1394_bayer_Bilinear(bayer, dst, sx, sy, pattern);
-
-  switch(pattern) {
-      case DC1394_COLOR_FILTER_BGGR:
-          filters = 0x16161616;
-          break;
-      case DC1394_COLOR_FILTER_GRBG:
-          filters = 0x61616161;
-          break;
-      case DC1394_COLOR_FILTER_RGGB:
-          filters = 0x94949494;
-          break;
-      case DC1394_COLOR_FILTER_GBRG:
-          filters = 0x49494949;
-          break;
-      default:
+    const int height = sy, width = sx;
+    static const signed char *cp;
+    /* the following has the same type as the image */
+    uint8_t (*brow[5])[3], *pix;          /* [FD] */
+    int code[8][2][320], *ip, gval[8], gmin, gmax, sum[4];
+    int row, col, x, y, x1, x2, y1, y2, t, weight, grads, color, diag;
+    int g, diff, thold, num, c;
+    uint32_t filters;                     /* [FD] */
+    
+    /* first, use bilinear bayer decoding */
+    dc1394_bayer_Bilinear(bayer, dst, sx, sy, pattern);
+    
+    switch(pattern) {
+    case DC1394_COLOR_FILTER_BGGR:
+	filters = 0x16161616;
+	break;
+    case DC1394_COLOR_FILTER_GRBG:
+	filters = 0x61616161;
+	break;
+    case DC1394_COLOR_FILTER_RGGB:
+	filters = 0x94949494;
+	break;
+    case DC1394_COLOR_FILTER_GBRG:
+	filters = 0x49494949;
+	break;
+    default:
 	return DC1394_INVALID_COLOR_FILTER;
-  }
-      
-  for (row=0; row < 8; row++) {		/* Precalculate for VNG */
-    for (col=0; col < 2; col++) {
-      ip = code[row][col];
-      for (cp=bayervng_terms, t=0; t < 64; t++) {
-	y1 = *cp++;  x1 = *cp++;
-	y2 = *cp++;  x2 = *cp++;
-	weight = *cp++;
-	grads = *cp++;
-	color = FC(row+y1,col+x1);
-	if (FC(row+y2,col+x2) != color) continue;
-	diag = (FC(row,col+1) == color && FC(row+1,col) == color) ? 2:1;
-	if (abs(y1-y2) == diag && abs(x1-x2) == diag) continue;
-	*ip++ = (y1*width + x1)*3 + color; /* [FD] */
-	*ip++ = (y2*width + x2)*3 + color; /* [FD] */
-	*ip++ = weight;
-	for (g=0; g < 8; g++)
-	  if (grads & 1<<g) *ip++ = g;
-	*ip++ = -1;
-      }
-      *ip++ = INT_MAX;
-      for (cp=bayervng_chood, g=0; g < 8; g++) {
-	y = *cp++;  x = *cp++;
-	*ip++ = (y*width + x) * 3;      /* [FD] */
-	color = FC(row,col);
-	if (FC(row+y,col+x) != color && FC(row+y*2,col+x*2) == color)
-	  *ip++ = (y*width + x) * 6 + color; /* [FD] */
-	else
-	  *ip++ = 0;
-      }
     }
-  }
-  brow[4] = calloc (width*3, sizeof **brow);
-  //merror (brow[4], "vng_interpolate()");
-  for (row=0; row < 3; row++)
-    brow[row] = brow[4] + row*width;
-  for (row=2; row < height-2; row++) {		/* Do VNG interpolation */
-    for (col=2; col < width-2; col++) {
-        pix = dst + (row*width+col)*3;  /* [FD] */
-      ip = code[row & 7][col & 1];
-      memset (gval, 0, sizeof gval);
-      while ((g = ip[0]) != INT_MAX) {		/* Calculate gradients */
-	diff = ABS(pix[g] - pix[ip[1]]) << ip[2];
-	gval[ip[3]] += diff;
-	ip += 5;
-	if ((g = ip[-1]) == -1) continue;
-	gval[g] += diff;
-	while ((g = *ip++) != -1)
-	  gval[g] += diff;
-      }
-      ip++;
-      gmin = gmax = gval[0];			/* Choose a threshold */
-      for (g=1; g < 8; g++) {
-	if (gmin > gval[g]) gmin = gval[g];
-	if (gmax < gval[g]) gmax = gval[g];
-      }
-      if (gmax == 0) {
-          memcpy (brow[2][col], pix, 3 * sizeof *dst); /* [FD] */
-	continue;
-      }
-      thold = gmin + (gmax >> 1);
-      memset (sum, 0, sizeof sum);
-      color = FC(row,col);
-      for (num=g=0; g < 8; g++,ip+=2) {		/* Average the neighbors */
-	if (gval[g] <= thold) {
-	  for (c=0; c < 3; c++)         /* [FD] */
-	    if (c == color && ip[1])
-	      sum[c] += (pix[c] + pix[ip[1]]) >> 1;
-	    else
-	      sum[c] += pix[ip[0] + c];
-	  num++;
+    
+    for (row=0; row < 8; row++) {		/* Precalculate for VNG */
+	for (col=0; col < 2; col++) {
+	    ip = code[row][col];
+	    for (cp=bayervng_terms, t=0; t < 64; t++) {
+		y1 = *cp++;  x1 = *cp++;
+		y2 = *cp++;  x2 = *cp++;
+		weight = *cp++;
+		grads = *cp++;
+		color = FC(row+y1,col+x1);
+		if (FC(row+y2,col+x2) != color) continue;
+		diag = (FC(row,col+1) == color && FC(row+1,col) == color) ? 2:1;
+		if (abs(y1-y2) == diag && abs(x1-x2) == diag) continue;
+		*ip++ = (y1*width + x1)*3 + color; /* [FD] */
+		*ip++ = (y2*width + x2)*3 + color; /* [FD] */
+		*ip++ = weight;
+		for (g=0; g < 8; g++)
+		    if (grads & 1<<g) *ip++ = g;
+		*ip++ = -1;
+	    }
+	    *ip++ = INT_MAX;
+	    for (cp=bayervng_chood, g=0; g < 8; g++) {
+		y = *cp++;  x = *cp++;
+		*ip++ = (y*width + x) * 3;      /* [FD] */
+		color = FC(row,col);
+		if (FC(row+y,col+x) != color && FC(row+y*2,col+x*2) == color)
+		    *ip++ = (y*width + x) * 6 + color; /* [FD] */
+		else
+		    *ip++ = 0;
+	    }
 	}
-      }
-      for (c=0; c < 3; c++) {           /* [FD] Save to buffer */
-	t = pix[color];
-	if (c != color)
-	  t += (sum[c] - sum[color]) / num;
-	CLIP(t,brow[2][col][c]);        /* [FD] */
-      }
     }
-    if (row > 3)				/* Write buffer to image */
-        memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst); /* [FD] */
-    for (g=0; g < 4; g++)
-      brow[(g-1) & 3] = brow[g];
-  }
-  memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst);
-  memcpy (dst + 3*((row-1)*width+2), brow[1]+2, (width-4)*3*sizeof *dst);
-  free (brow[4]);
-
-  return DC1394_SUCCESS;
+    brow[4] = calloc (width*3, sizeof **brow);
+    //merror (brow[4], "vng_interpolate()");
+    for (row=0; row < 3; row++)
+	brow[row] = brow[4] + row*width;
+    for (row=2; row < height-2; row++) {		/* Do VNG interpolation */
+	for (col=2; col < width-2; col++) {
+	    pix = dst + (row*width+col)*3;        /* [FD] */
+	    ip = code[row & 7][col & 1];
+	    memset (gval, 0, sizeof gval);
+	    while ((g = ip[0]) != INT_MAX) {		/* Calculate gradients */
+		diff = ABS(pix[g] - pix[ip[1]]) << ip[2];
+		gval[ip[3]] += diff;
+		ip += 5;
+		if ((g = ip[-1]) == -1) continue;
+		gval[g] += diff;
+		while ((g = *ip++) != -1)
+		    gval[g] += diff;
+	    }
+	    ip++;
+	    gmin = gmax = gval[0];			/* Choose a threshold */
+	    for (g=1; g < 8; g++) {
+		if (gmin > gval[g]) gmin = gval[g];
+		if (gmax < gval[g]) gmax = gval[g];
+	    }
+	    if (gmax == 0) {
+		memcpy (brow[2][col], pix, 3 * sizeof *dst); /* [FD] */
+		continue;
+	    }
+	    thold = gmin + (gmax >> 1);
+	    memset (sum, 0, sizeof sum);
+	    color = FC(row,col);
+	    for (num=g=0; g < 8; g++,ip+=2) {		/* Average the neighbors */
+		if (gval[g] <= thold) {
+		    for (c=0; c < 3; c++)         /* [FD] */
+			if (c == color && ip[1])
+			    sum[c] += (pix[c] + pix[ip[1]]) >> 1;
+			else
+			    sum[c] += pix[ip[0] + c];
+		    num++;
+		}
+	    }
+	    for (c=0; c < 3; c++) {               /* [FD] Save to buffer */
+		t = pix[color];
+		if (c != color)
+		    t += (sum[c] - sum[color]) / num;
+		CLIP(t,brow[2][col][c]);          /* [FD] */
+	    }
+	}
+	if (row > 3)				/* Write buffer to image */
+	    memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst); /* [FD] */
+	for (g=0; g < 4; g++)
+	    brow[(g-1) & 3] = brow[g];
+    }
+    memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst);
+    memcpy (dst + 3*((row-1)*width+2), brow[1]+2, (width-4)*3*sizeof *dst);
+    free (brow[4]);
+    
+    return DC1394_SUCCESS;
 }
 
 
@@ -2010,125 +2010,125 @@ dc1394_bayer_VNG_uint16(const uint16_t *restrict bayer,
 			uint16_t *restrict dst, int sx, int sy,
 			dc1394color_filter_t pattern, int bits)
 {
-  const int height = sy, width = sx;
-  static const signed char *cp;
-  /* the following has the same type as the image */
-  uint16_t (*brow[5])[3], *pix;          /* [FD] */
-  int code[8][2][320], *ip, gval[8], gmin, gmax, sum[4];
-  int row, col, x, y, x1, x2, y1, y2, t, weight, grads, color, diag;
-  int g, diff, thold, num, c;
-  uint32_t filters;                     /* [FD] */
-  
-  /* first, use bilinear bayer decoding */
-  
-  dc1394_bayer_Bilinear_uint16(bayer, dst, sx, sy, pattern, bits);
-
-  switch(pattern) {
-      case DC1394_COLOR_FILTER_BGGR:
-          filters = 0x16161616;
-          break;
-      case DC1394_COLOR_FILTER_GRBG:
-          filters = 0x61616161;
-          break;
-      case DC1394_COLOR_FILTER_RGGB:
-          filters = 0x94949494;
-          break;
-      case DC1394_COLOR_FILTER_GBRG:
-          filters = 0x49494949;
-          break;
-      default:
+    const int height = sy, width = sx;
+    static const signed char *cp;
+    /* the following has the same type as the image */
+    uint16_t (*brow[5])[3], *pix;          /* [FD] */
+    int code[8][2][320], *ip, gval[8], gmin, gmax, sum[4];
+    int row, col, x, y, x1, x2, y1, y2, t, weight, grads, color, diag;
+    int g, diff, thold, num, c;
+    uint32_t filters;                     /* [FD] */
+    
+    /* first, use bilinear bayer decoding */
+    
+    dc1394_bayer_Bilinear_uint16(bayer, dst, sx, sy, pattern, bits);
+    
+    switch(pattern) {
+    case DC1394_COLOR_FILTER_BGGR:
+	filters = 0x16161616;
+	break;
+    case DC1394_COLOR_FILTER_GRBG:
+	filters = 0x61616161;
+	break;
+    case DC1394_COLOR_FILTER_RGGB:
+	filters = 0x94949494;
+	break;
+    case DC1394_COLOR_FILTER_GBRG:
+	filters = 0x49494949;
+	break;
+    default:
 	return DC1394_INVALID_COLOR_FILTER;
-  }
-      
-  for (row=0; row < 8; row++) {		/* Precalculate for VNG */
-    for (col=0; col < 2; col++) {
-      ip = code[row][col];
-      for (cp=bayervng_terms, t=0; t < 64; t++) {
-	y1 = *cp++;  x1 = *cp++;
-	y2 = *cp++;  x2 = *cp++;
-	weight = *cp++;
-	grads = *cp++;
-	color = FC(row+y1,col+x1);
-	if (FC(row+y2,col+x2) != color) continue;
-	diag = (FC(row,col+1) == color && FC(row+1,col) == color) ? 2:1;
-	if (abs(y1-y2) == diag && abs(x1-x2) == diag) continue;
-	*ip++ = (y1*width + x1)*3 + color; /* [FD] */
-	*ip++ = (y2*width + x2)*3 + color; /* [FD] */
-	*ip++ = weight;
-	for (g=0; g < 8; g++)
-	  if (grads & 1<<g) *ip++ = g;
-	*ip++ = -1;
-      }
-      *ip++ = INT_MAX;
-      for (cp=bayervng_chood, g=0; g < 8; g++) {
-	y = *cp++;  x = *cp++;
-	*ip++ = (y*width + x) * 3;      /* [FD] */
-	color = FC(row,col);
-	if (FC(row+y,col+x) != color && FC(row+y*2,col+x*2) == color)
-	  *ip++ = (y*width + x) * 6 + color; /* [FD] */
-	else
-	  *ip++ = 0;
-      }
     }
-  }
-  brow[4] = calloc (width*3, sizeof **brow);
-  //merror (brow[4], "vng_interpolate()");
-  for (row=0; row < 3; row++)
-    brow[row] = brow[4] + row*width;
-  for (row=2; row < height-2; row++) {		/* Do VNG interpolation */
-    for (col=2; col < width-2; col++) {
-        pix = dst + (row*width+col)*3;  /* [FD] */
-      ip = code[row & 7][col & 1];
-      memset (gval, 0, sizeof gval);
-      while ((g = ip[0]) != INT_MAX) {		/* Calculate gradients */
-	diff = ABS(pix[g] - pix[ip[1]]) << ip[2];
-	gval[ip[3]] += diff;
-	ip += 5;
-	if ((g = ip[-1]) == -1) continue;
-	gval[g] += diff;
-	while ((g = *ip++) != -1)
-	  gval[g] += diff;
-      }
-      ip++;
-      gmin = gmax = gval[0];			/* Choose a threshold */
-      for (g=1; g < 8; g++) {
-	if (gmin > gval[g]) gmin = gval[g];
-	if (gmax < gval[g]) gmax = gval[g];
-      }
-      if (gmax == 0) {
-          memcpy (brow[2][col], pix, 3 * sizeof *dst); /* [FD] */
-	continue;
-      }
-      thold = gmin + (gmax >> 1);
-      memset (sum, 0, sizeof sum);
-      color = FC(row,col);
-      for (num=g=0; g < 8; g++,ip+=2) {		/* Average the neighbors */
-	if (gval[g] <= thold) {
-	  for (c=0; c < 3; c++)         /* [FD] */
-	    if (c == color && ip[1])
-	      sum[c] += (pix[c] + pix[ip[1]]) >> 1;
-	    else
-	      sum[c] += pix[ip[0] + c];
-	  num++;
+    
+    for (row=0; row < 8; row++) {		/* Precalculate for VNG */
+	for (col=0; col < 2; col++) {
+	    ip = code[row][col];
+	    for (cp=bayervng_terms, t=0; t < 64; t++) {
+		y1 = *cp++;  x1 = *cp++;
+		y2 = *cp++;  x2 = *cp++;
+		weight = *cp++;
+		grads = *cp++;
+		color = FC(row+y1,col+x1);
+		if (FC(row+y2,col+x2) != color) continue;
+		diag = (FC(row,col+1) == color && FC(row+1,col) == color) ? 2:1;
+		if (abs(y1-y2) == diag && abs(x1-x2) == diag) continue;
+		*ip++ = (y1*width + x1)*3 + color; /* [FD] */
+		*ip++ = (y2*width + x2)*3 + color; /* [FD] */
+		*ip++ = weight;
+		for (g=0; g < 8; g++)
+		    if (grads & 1<<g) *ip++ = g;
+		*ip++ = -1;
+	    }
+	    *ip++ = INT_MAX;
+	    for (cp=bayervng_chood, g=0; g < 8; g++) {
+		y = *cp++;  x = *cp++;
+		*ip++ = (y*width + x) * 3;      /* [FD] */
+		color = FC(row,col);
+		if (FC(row+y,col+x) != color && FC(row+y*2,col+x*2) == color)
+		    *ip++ = (y*width + x) * 6 + color; /* [FD] */
+		else
+		    *ip++ = 0;
+	    }
 	}
-      }
-      for (c=0; c < 3; c++) {           /* [FD] Save to buffer */
-	t = pix[color];
-	if (c != color)
-	  t += (sum[c] - sum[color]) / num;
-	CLIP16(t,brow[2][col][c],bits);        /* [FD] */
-      }
     }
-    if (row > 3)				/* Write buffer to image */
-        memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst); /* [FD] */
-    for (g=0; g < 4; g++)
-      brow[(g-1) & 3] = brow[g];
-  }
-  memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst);
-  memcpy (dst + 3*((row-1)*width+2), brow[1]+2, (width-4)*3*sizeof *dst);
-  free (brow[4]);
-
-  return DC1394_SUCCESS;
+    brow[4] = calloc (width*3, sizeof **brow);
+    //merror (brow[4], "vng_interpolate()");
+    for (row=0; row < 3; row++)
+	brow[row] = brow[4] + row*width;
+    for (row=2; row < height-2; row++) {		/* Do VNG interpolation */
+	for (col=2; col < width-2; col++) {
+	    pix = dst + (row*width+col)*3;  /* [FD] */
+	    ip = code[row & 7][col & 1];
+	    memset (gval, 0, sizeof gval);
+	    while ((g = ip[0]) != INT_MAX) {		/* Calculate gradients */
+		diff = ABS(pix[g] - pix[ip[1]]) << ip[2];
+		gval[ip[3]] += diff;
+		ip += 5;
+		if ((g = ip[-1]) == -1) continue;
+		gval[g] += diff;
+		while ((g = *ip++) != -1)
+		    gval[g] += diff;
+	    }
+	    ip++;
+	    gmin = gmax = gval[0];			/* Choose a threshold */
+	    for (g=1; g < 8; g++) {
+		if (gmin > gval[g]) gmin = gval[g];
+		if (gmax < gval[g]) gmax = gval[g];
+	    }
+	    if (gmax == 0) {
+		memcpy (brow[2][col], pix, 3 * sizeof *dst); /* [FD] */
+		continue;
+	    }
+	    thold = gmin + (gmax >> 1);
+	    memset (sum, 0, sizeof sum);
+	    color = FC(row,col);
+	    for (num=g=0; g < 8; g++,ip+=2) {		/* Average the neighbors */
+		if (gval[g] <= thold) {
+		    for (c=0; c < 3; c++)         /* [FD] */
+			if (c == color && ip[1])
+			    sum[c] += (pix[c] + pix[ip[1]]) >> 1;
+			else
+			    sum[c] += pix[ip[0] + c];
+		    num++;
+		}
+	    }
+	    for (c=0; c < 3; c++) {           /* [FD] Save to buffer */
+		t = pix[color];
+		if (c != color)
+		    t += (sum[c] - sum[color]) / num;
+		CLIP16(t,brow[2][col][c],bits);        /* [FD] */
+	    }
+	}
+	if (row > 3)				/* Write buffer to image */
+	    memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst); /* [FD] */
+	for (g=0; g < 4; g++)
+	    brow[(g-1) & 3] = brow[g];
+    }
+    memcpy (dst + 3*((row-2)*width+2), brow[0]+2, (width-4)*3*sizeof *dst);
+    memcpy (dst + 3*((row-1)*width+2), brow[1]+2, (width-4)*3*sizeof *dst);
+    free (brow[4]);
+    
+    return DC1394_SUCCESS;
 }
 
 
@@ -2147,32 +2147,32 @@ static const float d65_white[3] = { 0.950456, 1, 1.088754 };
 
 static void cam_to_cielab (uint16_t cam[3], float lab[3]) /* [SA] */
 {
-  int c, i, j;
-  float r, xyz[3];
-  static float cbrt[0x10000], xyz_cam[3][4];
-
-  if (cam == NULL) {
-    for (i=0; i < 0x10000; i++) {
-      r = i / 65535.0;
-      cbrt[i] = r > 0.008856 ? pow(r,1/3.0) : 7.787*r + 16/116.0;
+    int c, i, j;
+    float r, xyz[3];
+    static float cbrt[0x10000], xyz_cam[3][4];
+    
+    if (cam == NULL) {
+	for (i=0; i < 0x10000; i++) {
+	    r = i / 65535.0;
+	    cbrt[i] = r > 0.008856 ? pow(r,1/3.0) : 7.787*r + 16/116.0;
+	}
+	for (i=0; i < 3; i++)
+	    for (j=0; j < 3; j++)                           /* [SA] */
+		xyz_cam[i][j] = xyz_rgb[i][j] / d65_white[i]; /* [SA] */
+    } else {
+	xyz[0] = xyz[1] = xyz[2] = 0.5;
+	FORC3 { /* [SA] */
+	    xyz[0] += xyz_cam[0][c] * cam[c];
+	    xyz[1] += xyz_cam[1][c] * cam[c];
+	    xyz[2] += xyz_cam[2][c] * cam[c];
+	}
+	xyz[0] = cbrt[CLIPOUT16((int) xyz[0],16)];        /* [SA] */
+	xyz[1] = cbrt[CLIPOUT16((int) xyz[1],16)];        /* [SA] */
+	xyz[2] = cbrt[CLIPOUT16((int) xyz[2],16)];        /* [SA] */
+	lab[0] = 116 * xyz[1] - 16;
+	lab[1] = 500 * (xyz[0] - xyz[1]);
+	lab[2] = 200 * (xyz[1] - xyz[2]);
     }
-    for (i=0; i < 3; i++)
-      for (j=0; j < 3; j++)                           /* [SA] */
-        xyz_cam[i][j] = xyz_rgb[i][j] / d65_white[i]; /* [SA] */
-  } else {
-    xyz[0] = xyz[1] = xyz[2] = 0.5;
-    FORC3 { /* [SA] */
-      xyz[0] += xyz_cam[0][c] * cam[c];
-      xyz[1] += xyz_cam[1][c] * cam[c];
-      xyz[2] += xyz_cam[2][c] * cam[c];
-    }
-    xyz[0] = cbrt[CLIPOUT16((int) xyz[0],16)];        /* [SA] */
-    xyz[1] = cbrt[CLIPOUT16((int) xyz[1],16)];        /* [SA] */
-    xyz[2] = cbrt[CLIPOUT16((int) xyz[2],16)];        /* [SA] */
-    lab[0] = 116 * xyz[1] - 16;
-    lab[1] = 500 * (xyz[0] - xyz[1]);
-    lab[2] = 200 * (xyz[1] - xyz[2]);
-  }
 }
 
 /*
@@ -2186,174 +2186,174 @@ dc1394_bayer_AHD(const uint8_t *restrict bayer,
 		 uint8_t *restrict dst, int sx, int sy,
 		 dc1394color_filter_t pattern)
 {
-  int i, j, top, left, row, col, tr, tc, fc, c, d, val, hm[2];
-  /* the following has the same type as the image */
-  uint8_t (*pix)[3], (*rix)[3];      /* [SA] */
-  uint16_t rix16[3];                 /* [SA] */
-  static const int dir[4] = { -1, 1, -TS, TS };
-  unsigned ldiff[2][4], abdiff[2][4], leps, abeps;
-  float flab[3];                     /* [SA] */
-  uint8_t (*rgb)[TS][TS][3];
-   short (*lab)[TS][TS][3];
-   char (*homo)[TS][TS], *buffer;
-
-  /* start - new code for libdc1394 */
-  uint32_t filters;
-  const int height = sy, width = sx;
-  int x, y;
-
-  if (ahd_inited==DC1394_FALSE) {
-      /* WARNING: this might not be multi-processor safe */
-      cam_to_cielab (NULL,NULL);
-      ahd_inited = DC1394_TRUE; 
-  }
-
-  switch(pattern) {
-      case DC1394_COLOR_FILTER_BGGR:
-          filters = 0x16161616;
-          break;
-      case DC1394_COLOR_FILTER_GRBG:
-          filters = 0x61616161;
-          break;
-      case DC1394_COLOR_FILTER_RGGB:
-          filters = 0x94949494;
-          break;
-      case DC1394_COLOR_FILTER_GBRG:
-          filters = 0x49494949;
-          break;
-      default:
+    int i, j, top, left, row, col, tr, tc, fc, c, d, val, hm[2];
+    /* the following has the same type as the image */
+    uint8_t (*pix)[3], (*rix)[3];      /* [SA] */
+    uint16_t rix16[3];                 /* [SA] */
+    static const int dir[4] = { -1, 1, -TS, TS };
+    unsigned ldiff[2][4], abdiff[2][4], leps, abeps;
+    float flab[3];                     /* [SA] */
+    uint8_t (*rgb)[TS][TS][3];
+    short (*lab)[TS][TS][3];
+    char (*homo)[TS][TS], *buffer;
+    
+    /* start - new code for libdc1394 */
+    uint32_t filters;
+    const int height = sy, width = sx;
+    int x, y;
+    
+    if (ahd_inited==DC1394_FALSE) {
+	/* WARNING: this might not be multi-processor safe */
+	cam_to_cielab (NULL,NULL);
+	ahd_inited = DC1394_TRUE; 
+    }
+    
+    switch(pattern) {
+    case DC1394_COLOR_FILTER_BGGR:
+	filters = 0x16161616;
+	break;
+    case DC1394_COLOR_FILTER_GRBG:
+	filters = 0x61616161;
+	break;
+    case DC1394_COLOR_FILTER_RGGB:
+	filters = 0x94949494;
+	break;
+    case DC1394_COLOR_FILTER_GBRG:
+	filters = 0x49494949;
+	break;
+    default:
 	return DC1394_INVALID_COLOR_FILTER;
-  }
-
-  /* fill-in destination with known exact values */
-  for (y = 0; y < height; y++) {
-      for (x = 0; x < width; x++) {
-          int channel = FC(y,x);
-          dst[(y*width+x)*3 + channel] = bayer[y*width+x];
-      }
-  }
-  /* end - new code for libdc1394 */
-
-  /* start - code from border_interpolate (int border) */
-  {
-  int border = 3;
-  unsigned row, col, y, x, f, c, sum[8];
-
-  for (row=0; row < height; row++)
-    for (col=0; col < width; col++) {
-      if (col==border && row >= border && row < height-border)
-	col = width-border;
-      memset (sum, 0, sizeof sum);
-      for (y=row-1; y != row+2; y++)
-	for (x=col-1; x != col+2; x++)
-	  if (y < height && x < width) {
-	    f = FC(y,x);
-	    sum[f] += dst[(y*width+x)*3 + f];           /* [SA] */
-	    sum[f+4]++;
-	  }
-      f = FC(row,col);
-      FORC3 if (c != f && sum[c+4])                     /* [SA] */
-	dst[(row*width+col)*3 + c] = sum[c] / sum[c+4]; /* [SA] */
     }
-  }
-  /* end - code from border_interpolate (int border) */
-
-
-  buffer = (char *) malloc (26*TS*TS);		/* 1664 kB */
-  /* merror (buffer, "ahd_interpolate()"); */
-  rgb  = (uint8_t(*)[TS][TS][3]) buffer;                /* [SA] */
-  lab  = (short (*)[TS][TS][3])(buffer + 12*TS*TS);
-  homo = (char  (*)[TS][TS])   (buffer + 24*TS*TS);
-
-  for (top=0; top < height; top += TS-6)
-    for (left=0; left < width; left += TS-6) {
-      memset (rgb, 0, 12*TS*TS);
-
-/*  Interpolate green horizontally and vertically:		*/
-      for (row = top < 2 ? 2:top; row < top+TS && row < height-2; row++) {
-	col = left + (FC(row,left) == 1);
-	if (col < 2) col += 2;
-	for (fc = FC(row,col); col < left+TS && col < width-2; col+=2) {
-	  pix = (uint8_t (*)[3])dst + (row*width+col);          /* [SA] */
-	  val = ((pix[-1][1] + pix[0][fc] + pix[1][1]) * 2
-		- pix[-2][fc] - pix[2][fc]) >> 2;
-	  rgb[0][row-top][col-left][1] = ULIM(val,pix[-1][1],pix[1][1]);
-	  val = ((pix[-width][1] + pix[0][fc] + pix[width][1]) * 2
-		- pix[-2*width][fc] - pix[2*width][fc]) >> 2;
-	  rgb[1][row-top][col-left][1] = ULIM(val,pix[-width][1],pix[width][1]);
+    
+    /* fill-in destination with known exact values */
+    for (y = 0; y < height; y++) {
+	for (x = 0; x < width; x++) {
+	    int channel = FC(y,x);
+	    dst[(y*width+x)*3 + channel] = bayer[y*width+x];
 	}
-      }
-/*  Interpolate red and blue, and convert to CIELab:		*/
-      for (d=0; d < 2; d++)
-	for (row=top+1; row < top+TS-1 && row < height-1; row++)
-	  for (col=left+1; col < left+TS-1 && col < width-1; col++) {
-	    pix = (uint8_t (*)[3])dst + (row*width+col);        /* [SA] */
-	    rix = &rgb[d][row-top][col-left];
-	    if ((c = 2 - FC(row,col)) == 1) {
-	      c = FC(row+1,col);
-	      val = pix[0][1] + (( pix[-1][2-c] + pix[1][2-c]
-				 - rix[-1][1] - rix[1][1] ) >> 1);
-	      rix[0][2-c] = CLIPOUT(val);         /* [SA] */
-	      val = pix[0][1] + (( pix[-width][c] + pix[width][c]
-				 - rix[-TS][1] - rix[TS][1] ) >> 1);
-	    } else
-	      val = rix[0][1] + (( pix[-width-1][c] + pix[-width+1][c]
-				 + pix[+width-1][c] + pix[+width+1][c]
-				 - rix[-TS-1][1] - rix[-TS+1][1]
-				 - rix[+TS-1][1] - rix[+TS+1][1] + 1) >> 2);
-	    rix[0][c] = CLIPOUT(val);             /* [SA] */
-	    c = FC(row,col);
-	    rix[0][c] = pix[0][c];
-	    rix16[0] = rix[0][0];                 /* [SA] */
-	    rix16[1] = rix[0][1];                 /* [SA] */
-	    rix16[2] = rix[0][2];                 /* [SA] */
-	    cam_to_cielab (rix16, flab);          /* [SA] */
-	    FORC3 lab[d][row-top][col-left][c] = 64*flab[c];
-	  }
-/*  Build homogeneity maps from the CIELab images:		*/
-      memset (homo, 0, 2*TS*TS);
-      for (row=top+2; row < top+TS-2 && row < height; row++) {
-	tr = row-top;
-	for (col=left+2; col < left+TS-2 && col < width; col++) {
-	  tc = col-left;
-	  for (d=0; d < 2; d++)
-	    for (i=0; i < 4; i++)
-	      ldiff[d][i] = ABS(lab[d][tr][tc][0]-lab[d][tr][tc+dir[i]][0]);
-	  leps = MIN(MAX(ldiff[0][0],ldiff[0][1]),
-		     MAX(ldiff[1][2],ldiff[1][3]));
-	  for (d=0; d < 2; d++)
-	    for (i=0; i < 4; i++)
-	      if (i >> 1 == d || ldiff[d][i] <= leps)
-		abdiff[d][i] = SQR(lab[d][tr][tc][1]-lab[d][tr][tc+dir[i]][1])
-			     + SQR(lab[d][tr][tc][2]-lab[d][tr][tc+dir[i]][2]);
-	  abeps = MIN(MAX(abdiff[0][0],abdiff[0][1]),
-		      MAX(abdiff[1][2],abdiff[1][3]));
-	  for (d=0; d < 2; d++)
-	    for (i=0; i < 4; i++)
-	      if (ldiff[d][i] <= leps && abdiff[d][i] <= abeps)
-		homo[d][tr][tc]++;
-	}
-      }
-/*  Combine the most homogenous pixels for the final result:	*/
-      for (row=top+3; row < top+TS-3 && row < height-3; row++) {
-	tr = row-top;
-	for (col=left+3; col < left+TS-3 && col < width-3; col++) {
-	  tc = col-left;
-	  for (d=0; d < 2; d++)
-	    for (hm[d]=0, i=tr-1; i <= tr+1; i++)
-	      for (j=tc-1; j <= tc+1; j++)
-		hm[d] += homo[d][i][j];
-	  if (hm[0] != hm[1])
-	    FORC3 dst[(row*width+col)*3 + c] = CLIPOUT(rgb[hm[1] > hm[0]][tr][tc][c]); /* [SA] */
-	  else
-	    FORC3 dst[(row*width+col)*3 + c] = 
-                CLIPOUT((rgb[0][tr][tc][c] + rgb[1][tr][tc][c]) >> 1);      /* [SA] */
-	}
-      }
     }
-  free (buffer);
-
-  return DC1394_SUCCESS;
+    /* end - new code for libdc1394 */
+    
+    /* start - code from border_interpolate (int border) */
+    {
+	int border = 3;
+	unsigned row, col, y, x, f, c, sum[8];
+	
+	for (row=0; row < height; row++)
+	    for (col=0; col < width; col++) {
+		if (col==border && row >= border && row < height-border)
+		    col = width-border;
+		memset (sum, 0, sizeof sum);
+		for (y=row-1; y != row+2; y++)
+		    for (x=col-1; x != col+2; x++)
+			if (y < height && x < width) {
+			    f = FC(y,x);
+			    sum[f] += dst[(y*width+x)*3 + f];           /* [SA] */
+			    sum[f+4]++;
+			}
+		f = FC(row,col);
+		FORC3 if (c != f && sum[c+4])                     /* [SA] */
+		    dst[(row*width+col)*3 + c] = sum[c] / sum[c+4]; /* [SA] */
+	    }
+    }
+    /* end - code from border_interpolate (int border) */
+    
+    
+    buffer = (char *) malloc (26*TS*TS);		/* 1664 kB */
+    /* merror (buffer, "ahd_interpolate()"); */
+    rgb  = (uint8_t(*)[TS][TS][3]) buffer;                /* [SA] */
+    lab  = (short (*)[TS][TS][3])(buffer + 12*TS*TS);
+    homo = (char  (*)[TS][TS])   (buffer + 24*TS*TS);
+  
+    for (top=0; top < height; top += TS-6)
+	for (left=0; left < width; left += TS-6) {
+	    memset (rgb, 0, 12*TS*TS);
+	    
+	    /*  Interpolate green horizontally and vertically:		*/
+	    for (row = top < 2 ? 2:top; row < top+TS && row < height-2; row++) {
+		col = left + (FC(row,left) == 1);
+		if (col < 2) col += 2;
+		for (fc = FC(row,col); col < left+TS && col < width-2; col+=2) {
+		    pix = (uint8_t (*)[3])dst + (row*width+col);          /* [SA] */
+		    val = ((pix[-1][1] + pix[0][fc] + pix[1][1]) * 2
+			   - pix[-2][fc] - pix[2][fc]) >> 2;
+		    rgb[0][row-top][col-left][1] = ULIM(val,pix[-1][1],pix[1][1]);
+		    val = ((pix[-width][1] + pix[0][fc] + pix[width][1]) * 2
+			   - pix[-2*width][fc] - pix[2*width][fc]) >> 2;
+		    rgb[1][row-top][col-left][1] = ULIM(val,pix[-width][1],pix[width][1]);
+		}
+	    }
+	    /*  Interpolate red and blue, and convert to CIELab:		*/
+	    for (d=0; d < 2; d++)
+		for (row=top+1; row < top+TS-1 && row < height-1; row++)
+		    for (col=left+1; col < left+TS-1 && col < width-1; col++) {
+			pix = (uint8_t (*)[3])dst + (row*width+col);        /* [SA] */
+			rix = &rgb[d][row-top][col-left];
+			if ((c = 2 - FC(row,col)) == 1) {
+			    c = FC(row+1,col);
+			    val = pix[0][1] + (( pix[-1][2-c] + pix[1][2-c]
+						 - rix[-1][1] - rix[1][1] ) >> 1);
+			    rix[0][2-c] = CLIPOUT(val);         /* [SA] */
+			    val = pix[0][1] + (( pix[-width][c] + pix[width][c]
+						 - rix[-TS][1] - rix[TS][1] ) >> 1);
+			} else
+			    val = rix[0][1] + (( pix[-width-1][c] + pix[-width+1][c]
+						 + pix[+width-1][c] + pix[+width+1][c]
+						 - rix[-TS-1][1] - rix[-TS+1][1]
+						 - rix[+TS-1][1] - rix[+TS+1][1] + 1) >> 2);
+			rix[0][c] = CLIPOUT(val);             /* [SA] */
+			c = FC(row,col);
+			rix[0][c] = pix[0][c];
+			rix16[0] = rix[0][0];                 /* [SA] */
+			rix16[1] = rix[0][1];                 /* [SA] */
+			rix16[2] = rix[0][2];                 /* [SA] */
+			cam_to_cielab (rix16, flab);          /* [SA] */
+			FORC3 lab[d][row-top][col-left][c] = 64*flab[c];
+		    }
+	    /*  Build homogeneity maps from the CIELab images:		*/
+	    memset (homo, 0, 2*TS*TS);
+	    for (row=top+2; row < top+TS-2 && row < height; row++) {
+		tr = row-top;
+		for (col=left+2; col < left+TS-2 && col < width; col++) {
+		    tc = col-left;
+		    for (d=0; d < 2; d++)
+			for (i=0; i < 4; i++)
+			    ldiff[d][i] = ABS(lab[d][tr][tc][0]-lab[d][tr][tc+dir[i]][0]);
+		    leps = MIN(MAX(ldiff[0][0],ldiff[0][1]),
+			       MAX(ldiff[1][2],ldiff[1][3]));
+		    for (d=0; d < 2; d++)
+			for (i=0; i < 4; i++)
+			    if (i >> 1 == d || ldiff[d][i] <= leps)
+				abdiff[d][i] = SQR(lab[d][tr][tc][1]-lab[d][tr][tc+dir[i]][1])
+				    + SQR(lab[d][tr][tc][2]-lab[d][tr][tc+dir[i]][2]);
+		    abeps = MIN(MAX(abdiff[0][0],abdiff[0][1]),
+				MAX(abdiff[1][2],abdiff[1][3]));
+		    for (d=0; d < 2; d++)
+			for (i=0; i < 4; i++)
+			    if (ldiff[d][i] <= leps && abdiff[d][i] <= abeps)
+				homo[d][tr][tc]++;
+		}
+	    }
+	    /*  Combine the most homogenous pixels for the final result:	*/
+	    for (row=top+3; row < top+TS-3 && row < height-3; row++) {
+		tr = row-top;
+		for (col=left+3; col < left+TS-3 && col < width-3; col++) {
+		    tc = col-left;
+		    for (d=0; d < 2; d++)
+			for (hm[d]=0, i=tr-1; i <= tr+1; i++)
+			    for (j=tc-1; j <= tc+1; j++)
+				hm[d] += homo[d][i][j];
+		    if (hm[0] != hm[1])
+			FORC3 dst[(row*width+col)*3 + c] = CLIPOUT(rgb[hm[1] > hm[0]][tr][tc][c]); /* [SA] */
+		    else
+			FORC3 dst[(row*width+col)*3 + c] = 
+			    CLIPOUT((rgb[0][tr][tc][c] + rgb[1][tr][tc][c]) >> 1);      /* [SA] */
+		}
+	    }
+	}
+    free (buffer);
+    
+    return DC1394_SUCCESS;
 }
 
 dc1394error_t
@@ -2361,194 +2361,194 @@ dc1394_bayer_AHD_uint16(const uint16_t *restrict bayer,
 			uint16_t *restrict dst, int sx, int sy,
 			dc1394color_filter_t pattern, int bits)
 {
-  int i, j, top, left, row, col, tr, tc, fc, c, d, val, hm[2];
-  /* the following has the same type as the image */
-  uint16_t (*pix)[3], (*rix)[3];      /* [SA] */
-  static const int dir[4] = { -1, 1, -TS, TS };
-  unsigned ldiff[2][4], abdiff[2][4], leps, abeps;
-  float flab[3];
-  uint16_t (*rgb)[TS][TS][3];         /* [SA] */
-   short (*lab)[TS][TS][3];
-   char (*homo)[TS][TS], *buffer;
-
-  /* start - new code for libdc1394 */
-  uint32_t filters;
-  const int height = sy, width = sx;
-  int x, y;
-
-  if (ahd_inited==DC1394_FALSE) {
-      /* WARNING: this might not be multi-processor safe */
-      cam_to_cielab (NULL,NULL);
-      ahd_inited = DC1394_TRUE; 
-  }
-
-  switch(pattern) {
-      case DC1394_COLOR_FILTER_BGGR:
-          filters = 0x16161616;
-          break;
-      case DC1394_COLOR_FILTER_GRBG:
-          filters = 0x61616161;
-          break;
-      case DC1394_COLOR_FILTER_RGGB:
-          filters = 0x94949494;
-          break;
-      case DC1394_COLOR_FILTER_GBRG:
-          filters = 0x49494949;
-          break;
-      default:
+    int i, j, top, left, row, col, tr, tc, fc, c, d, val, hm[2];
+    /* the following has the same type as the image */
+    uint16_t (*pix)[3], (*rix)[3];      /* [SA] */
+    static const int dir[4] = { -1, 1, -TS, TS };
+    unsigned ldiff[2][4], abdiff[2][4], leps, abeps;
+    float flab[3];
+    uint16_t (*rgb)[TS][TS][3];         /* [SA] */
+    short (*lab)[TS][TS][3];
+    char (*homo)[TS][TS], *buffer;
+    
+    /* start - new code for libdc1394 */
+    uint32_t filters;
+    const int height = sy, width = sx;
+    int x, y;
+    
+    if (ahd_inited==DC1394_FALSE) {
+	/* WARNING: this might not be multi-processor safe */
+	cam_to_cielab (NULL,NULL);
+	ahd_inited = DC1394_TRUE; 
+    }
+    
+    switch(pattern) {
+    case DC1394_COLOR_FILTER_BGGR:
+	filters = 0x16161616;
+	break;
+    case DC1394_COLOR_FILTER_GRBG:
+	filters = 0x61616161;
+	break;
+    case DC1394_COLOR_FILTER_RGGB:
+	filters = 0x94949494;
+	break;
+    case DC1394_COLOR_FILTER_GBRG:
+	filters = 0x49494949;
+	break;
+    default:
 	return DC1394_INVALID_COLOR_FILTER;
-  }
-
-  /* fill-in destination with known exact values */
-  for (y = 0; y < height; y++) {
-      for (x = 0; x < width; x++) {
-          int channel = FC(y,x);
-	  dst[(y*width+x)*3 + channel] = bayer[y*width+x];
-      }
-  }
-  /* end - new code for libdc1394 */
-
-  /* start - code from border_interpolate(int border) */
-  {
-  int border = 3;
-  unsigned row, col, y, x, f, c, sum[8];
-
-  for (row=0; row < height; row++)
-    for (col=0; col < width; col++) {
-      if (col==border && row >= border && row < height-border)
+    }
+    
+    /* fill-in destination with known exact values */
+    for (y = 0; y < height; y++) {
+	for (x = 0; x < width; x++) {
+	    int channel = FC(y,x);
+	    dst[(y*width+x)*3 + channel] = bayer[y*width+x];
+	}
+    }
+    /* end - new code for libdc1394 */
+    
+    /* start - code from border_interpolate(int border) */
+    {
+	int border = 3;
+	unsigned row, col, y, x, f, c, sum[8];
+	
+	for (row=0; row < height; row++)
+	    for (col=0; col < width; col++) {
+		if (col==border && row >= border && row < height-border)
 	col = width-border;
-      memset (sum, 0, sizeof sum);
-      for (y=row-1; y != row+2; y++)
-	for (x=col-1; x != col+2; x++)
-	  if (y < height && x < width) {
-	    f = FC(y,x);
-	    sum[f] += dst[(y*width+x)*3 + f];           /* [SA] */
-	    sum[f+4]++;
-	  }
-      f = FC(row,col);
-      FORC3 if (c != f && sum[c+4])                     /* [SA] */
-	dst[(row*width+col)*3 + c] = sum[c] / sum[c+4]; /* [SA] */
+		memset (sum, 0, sizeof sum);
+		for (y=row-1; y != row+2; y++)
+		    for (x=col-1; x != col+2; x++)
+			if (y < height && x < width) {
+			    f = FC(y,x);
+			    sum[f] += dst[(y*width+x)*3 + f];           /* [SA] */
+			    sum[f+4]++;
+			}
+		f = FC(row,col);
+		FORC3 if (c != f && sum[c+4])                     /* [SA] */
+		    dst[(row*width+col)*3 + c] = sum[c] / sum[c+4]; /* [SA] */
+	    }
     }
-  }
-  /* end - code from border_interpolate(int border) */
+    /* end - code from border_interpolate(int border) */
+    
 
-
-  buffer = (char *) malloc (26*TS*TS);		/* 1664 kB */
-  /* merror (buffer, "ahd_interpolate()"); */
-  rgb  = (uint16_t(*)[TS][TS][3]) buffer;               /* [SA] */
-  lab  = (short (*)[TS][TS][3])(buffer + 12*TS*TS);
-  homo = (char  (*)[TS][TS])   (buffer + 24*TS*TS);
-
-  for (top=0; top < height; top += TS-6)
-    for (left=0; left < width; left += TS-6) {
-      memset (rgb, 0, 12*TS*TS);
-
-/*  Interpolate green horizontally and vertically:		*/
-      for (row = top < 2 ? 2:top; row < top+TS && row < height-2; row++) {
-	col = left + (FC(row,left) == 1);
-	if (col < 2) col += 2;
-	for (fc = FC(row,col); col < left+TS && col < width-2; col+=2) {
-	  pix = (uint16_t (*)[3])dst + (row*width+col);          /* [SA] */
-	  val = ((pix[-1][1] + pix[0][fc] + pix[1][1]) * 2
-		- pix[-2][fc] - pix[2][fc]) >> 2;
-	  rgb[0][row-top][col-left][1] = ULIM(val,pix[-1][1],pix[1][1]);
-	  val = ((pix[-width][1] + pix[0][fc] + pix[width][1]) * 2
-		- pix[-2*width][fc] - pix[2*width][fc]) >> 2;
-	  rgb[1][row-top][col-left][1] = ULIM(val,pix[-width][1],pix[width][1]);
+    buffer = (char *) malloc (26*TS*TS);		/* 1664 kB */
+    /* merror (buffer, "ahd_interpolate()"); */
+    rgb  = (uint16_t(*)[TS][TS][3]) buffer;               /* [SA] */
+    lab  = (short (*)[TS][TS][3])(buffer + 12*TS*TS);
+    homo = (char  (*)[TS][TS])   (buffer + 24*TS*TS);
+    
+    for (top=0; top < height; top += TS-6)
+	for (left=0; left < width; left += TS-6) {
+	    memset (rgb, 0, 12*TS*TS);
+	    
+	    /*  Interpolate green horizontally and vertically:		*/
+	    for (row = top < 2 ? 2:top; row < top+TS && row < height-2; row++) {
+		col = left + (FC(row,left) == 1);
+		if (col < 2) col += 2;
+		for (fc = FC(row,col); col < left+TS && col < width-2; col+=2) {
+		    pix = (uint16_t (*)[3])dst + (row*width+col);          /* [SA] */
+		    val = ((pix[-1][1] + pix[0][fc] + pix[1][1]) * 2
+			   - pix[-2][fc] - pix[2][fc]) >> 2;
+		    rgb[0][row-top][col-left][1] = ULIM(val,pix[-1][1],pix[1][1]);
+		    val = ((pix[-width][1] + pix[0][fc] + pix[width][1]) * 2
+			   - pix[-2*width][fc] - pix[2*width][fc]) >> 2;
+		    rgb[1][row-top][col-left][1] = ULIM(val,pix[-width][1],pix[width][1]);
+		}
+	    }
+	    /*  Interpolate red and blue, and convert to CIELab:		*/
+	    for (d=0; d < 2; d++)
+		for (row=top+1; row < top+TS-1 && row < height-1; row++)
+		    for (col=left+1; col < left+TS-1 && col < width-1; col++) {
+			pix = (uint16_t (*)[3])dst + (row*width+col);        /* [SA] */
+			rix = &rgb[d][row-top][col-left];
+			if ((c = 2 - FC(row,col)) == 1) {
+			    c = FC(row+1,col);
+			    val = pix[0][1] + (( pix[-1][2-c] + pix[1][2-c]
+						 - rix[-1][1] - rix[1][1] ) >> 1);
+			    rix[0][2-c] = CLIPOUT16(val, bits); /* [SA] */
+			    val = pix[0][1] + (( pix[-width][c] + pix[width][c]
+						 - rix[-TS][1] - rix[TS][1] ) >> 1);
+			} else
+			    val = rix[0][1] + (( pix[-width-1][c] + pix[-width+1][c]
+						 + pix[+width-1][c] + pix[+width+1][c]
+						 - rix[-TS-1][1] - rix[-TS+1][1]
+						 - rix[+TS-1][1] - rix[+TS+1][1] + 1) >> 2);
+			rix[0][c] = CLIPOUT16(val, bits);     /* [SA] */
+			c = FC(row,col);
+			rix[0][c] = pix[0][c];
+			cam_to_cielab (rix[0], flab);
+			FORC3 lab[d][row-top][col-left][c] = 64*flab[c];
+		    }
+	    /*  Build homogeneity maps from the CIELab images:		*/
+	    memset (homo, 0, 2*TS*TS);
+	    for (row=top+2; row < top+TS-2 && row < height; row++) {
+		tr = row-top;
+		for (col=left+2; col < left+TS-2 && col < width; col++) {
+		    tc = col-left;
+		    for (d=0; d < 2; d++)
+			for (i=0; i < 4; i++)
+			    ldiff[d][i] = ABS(lab[d][tr][tc][0]-lab[d][tr][tc+dir[i]][0]);
+		    leps = MIN(MAX(ldiff[0][0],ldiff[0][1]),
+			       MAX(ldiff[1][2],ldiff[1][3]));
+		    for (d=0; d < 2; d++)
+			for (i=0; i < 4; i++)
+			    if (i >> 1 == d || ldiff[d][i] <= leps)
+				abdiff[d][i] = SQR(lab[d][tr][tc][1]-lab[d][tr][tc+dir[i]][1])
+				    + SQR(lab[d][tr][tc][2]-lab[d][tr][tc+dir[i]][2]);
+		    abeps = MIN(MAX(abdiff[0][0],abdiff[0][1]),
+				MAX(abdiff[1][2],abdiff[1][3]));
+		    for (d=0; d < 2; d++)
+			for (i=0; i < 4; i++)
+			    if (ldiff[d][i] <= leps && abdiff[d][i] <= abeps)
+				homo[d][tr][tc]++;
+		}
+	    }
+	    /*  Combine the most homogenous pixels for the final result:	*/
+	    for (row=top+3; row < top+TS-3 && row < height-3; row++) {
+		tr = row-top;
+		for (col=left+3; col < left+TS-3 && col < width-3; col++) {
+		    tc = col-left;
+		    for (d=0; d < 2; d++)
+			for (hm[d]=0, i=tr-1; i <= tr+1; i++)
+			    for (j=tc-1; j <= tc+1; j++)
+				hm[d] += homo[d][i][j];
+		    if (hm[0] != hm[1])
+			FORC3 dst[(row*width+col)*3 + c] = CLIPOUT16(rgb[hm[1] > hm[0]][tr][tc][c], bits); /* [SA] */
+		    else
+			FORC3 dst[(row*width+col)*3 + c] = 
+			    CLIPOUT16((rgb[0][tr][tc][c] + rgb[1][tr][tc][c]) >> 1, bits); /* [SA] */
+		}
+	    }
 	}
-      }
-/*  Interpolate red and blue, and convert to CIELab:		*/
-      for (d=0; d < 2; d++)
-	for (row=top+1; row < top+TS-1 && row < height-1; row++)
-	  for (col=left+1; col < left+TS-1 && col < width-1; col++) {
-	    pix = (uint16_t (*)[3])dst + (row*width+col);        /* [SA] */
-	    rix = &rgb[d][row-top][col-left];
-	    if ((c = 2 - FC(row,col)) == 1) {
-	      c = FC(row+1,col);
-	      val = pix[0][1] + (( pix[-1][2-c] + pix[1][2-c]
-				 - rix[-1][1] - rix[1][1] ) >> 1);
-	      rix[0][2-c] = CLIPOUT16(val, bits); /* [SA] */
-	      val = pix[0][1] + (( pix[-width][c] + pix[width][c]
-				 - rix[-TS][1] - rix[TS][1] ) >> 1);
-	    } else
-	      val = rix[0][1] + (( pix[-width-1][c] + pix[-width+1][c]
-				 + pix[+width-1][c] + pix[+width+1][c]
-				 - rix[-TS-1][1] - rix[-TS+1][1]
-				 - rix[+TS-1][1] - rix[+TS+1][1] + 1) >> 2);
-	    rix[0][c] = CLIPOUT16(val, bits);     /* [SA] */
-	    c = FC(row,col);
-	    rix[0][c] = pix[0][c];
-	    cam_to_cielab (rix[0], flab);
-	    FORC3 lab[d][row-top][col-left][c] = 64*flab[c];
-	  }
-/*  Build homogeneity maps from the CIELab images:		*/
-      memset (homo, 0, 2*TS*TS);
-      for (row=top+2; row < top+TS-2 && row < height; row++) {
-	tr = row-top;
-	for (col=left+2; col < left+TS-2 && col < width; col++) {
-	  tc = col-left;
-	  for (d=0; d < 2; d++)
-	    for (i=0; i < 4; i++)
-	      ldiff[d][i] = ABS(lab[d][tr][tc][0]-lab[d][tr][tc+dir[i]][0]);
-	  leps = MIN(MAX(ldiff[0][0],ldiff[0][1]),
-		     MAX(ldiff[1][2],ldiff[1][3]));
-	  for (d=0; d < 2; d++)
-	    for (i=0; i < 4; i++)
-	      if (i >> 1 == d || ldiff[d][i] <= leps)
-		abdiff[d][i] = SQR(lab[d][tr][tc][1]-lab[d][tr][tc+dir[i]][1])
-			     + SQR(lab[d][tr][tc][2]-lab[d][tr][tc+dir[i]][2]);
-	  abeps = MIN(MAX(abdiff[0][0],abdiff[0][1]),
-		      MAX(abdiff[1][2],abdiff[1][3]));
-	  for (d=0; d < 2; d++)
-	    for (i=0; i < 4; i++)
-	      if (ldiff[d][i] <= leps && abdiff[d][i] <= abeps)
-		homo[d][tr][tc]++;
-	}
-      }
-/*  Combine the most homogenous pixels for the final result:	*/
-      for (row=top+3; row < top+TS-3 && row < height-3; row++) {
-	tr = row-top;
-	for (col=left+3; col < left+TS-3 && col < width-3; col++) {
-	  tc = col-left;
-	  for (d=0; d < 2; d++)
-	    for (hm[d]=0, i=tr-1; i <= tr+1; i++)
-	      for (j=tc-1; j <= tc+1; j++)
-		hm[d] += homo[d][i][j];
-	  if (hm[0] != hm[1])
-	    FORC3 dst[(row*width+col)*3 + c] = CLIPOUT16(rgb[hm[1] > hm[0]][tr][tc][c], bits); /* [SA] */
-	  else
-	    FORC3 dst[(row*width+col)*3 + c] = 
-                CLIPOUT16((rgb[0][tr][tc][c] + rgb[1][tr][tc][c]) >> 1, bits); /* [SA] */
-	}
-      }
-    }
-  free (buffer);
-
-  return DC1394_SUCCESS;
+    free (buffer);
+    
+    return DC1394_SUCCESS;
 }
 
 dc1394error_t
 dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb, uint32_t sx, uint32_t sy, dc1394color_filter_t tile, dc1394bayer_method_t method)
 {
-  switch (method) {
-  case DC1394_BAYER_METHOD_NEAREST:
-    return dc1394_bayer_NearestNeighbor(bayer, rgb, sx, sy, tile);
-  case DC1394_BAYER_METHOD_SIMPLE:
-    return dc1394_bayer_Simple(bayer, rgb, sx, sy, tile);
-  case DC1394_BAYER_METHOD_BILINEAR:
-    return dc1394_bayer_Bilinear(bayer, rgb, sx, sy, tile);
-  case DC1394_BAYER_METHOD_HQLINEAR:
-    return dc1394_bayer_HQLinear(bayer, rgb, sx, sy, tile);
-  case DC1394_BAYER_METHOD_DOWNSAMPLE:
-    return dc1394_bayer_Downsample(bayer, rgb, sx, sy, tile);
-  case DC1394_BAYER_METHOD_EDGESENSE:
-    return dc1394_bayer_EdgeSense(bayer, rgb, sx, sy, tile);
-  case DC1394_BAYER_METHOD_VNG:
-    return dc1394_bayer_VNG(bayer, rgb, sx, sy, tile);
-  case DC1394_BAYER_METHOD_AHD:
-    return dc1394_bayer_AHD(bayer, rgb, sx, sy, tile);
-  default:
-    return DC1394_INVALID_BAYER_METHOD;
+    switch (method) {
+    case DC1394_BAYER_METHOD_NEAREST:
+	return dc1394_bayer_NearestNeighbor(bayer, rgb, sx, sy, tile);
+    case DC1394_BAYER_METHOD_SIMPLE:
+	return dc1394_bayer_Simple(bayer, rgb, sx, sy, tile);
+    case DC1394_BAYER_METHOD_BILINEAR:
+	return dc1394_bayer_Bilinear(bayer, rgb, sx, sy, tile);
+    case DC1394_BAYER_METHOD_HQLINEAR:
+	return dc1394_bayer_HQLinear(bayer, rgb, sx, sy, tile);
+    case DC1394_BAYER_METHOD_DOWNSAMPLE:
+	return dc1394_bayer_Downsample(bayer, rgb, sx, sy, tile);
+    case DC1394_BAYER_METHOD_EDGESENSE:
+	return dc1394_bayer_EdgeSense(bayer, rgb, sx, sy, tile);
+    case DC1394_BAYER_METHOD_VNG:
+	return dc1394_bayer_VNG(bayer, rgb, sx, sy, tile);
+    case DC1394_BAYER_METHOD_AHD:
+	return dc1394_bayer_AHD(bayer, rgb, sx, sy, tile);
+    default:
+	return DC1394_INVALID_BAYER_METHOD;
   }
 
 }
@@ -2556,160 +2556,160 @@ dc1394_bayer_decoding_8bit(const uint8_t *restrict bayer, uint8_t *restrict rgb,
 dc1394error_t
 dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict rgb, uint32_t sx, uint32_t sy, dc1394color_filter_t tile, dc1394bayer_method_t method, uint32_t bits)
 {
-  switch (method) {
-  case DC1394_BAYER_METHOD_NEAREST:
-    return dc1394_bayer_NearestNeighbor_uint16(bayer, rgb, sx, sy, tile, bits);
-  case DC1394_BAYER_METHOD_SIMPLE:
-    return dc1394_bayer_Simple_uint16(bayer, rgb, sx, sy, tile, bits);
-  case DC1394_BAYER_METHOD_BILINEAR:
-    return dc1394_bayer_Bilinear_uint16(bayer, rgb, sx, sy, tile, bits);
-  case DC1394_BAYER_METHOD_HQLINEAR:
-    return dc1394_bayer_HQLinear_uint16(bayer, rgb, sx, sy, tile, bits);
-  case DC1394_BAYER_METHOD_DOWNSAMPLE:
-    return dc1394_bayer_Downsample_uint16(bayer, rgb, sx, sy, tile, bits);
-  case DC1394_BAYER_METHOD_EDGESENSE:
-    return dc1394_bayer_EdgeSense_uint16(bayer, rgb, sx, sy, tile, bits);
-  case DC1394_BAYER_METHOD_VNG:
-    return dc1394_bayer_VNG_uint16(bayer, rgb, sx, sy, tile, bits);
-  case DC1394_BAYER_METHOD_AHD:
-    return dc1394_bayer_AHD_uint16(bayer, rgb, sx, sy, tile, bits);
-  default:
-    return DC1394_INVALID_BAYER_METHOD;
-  }
+    switch (method) {
+    case DC1394_BAYER_METHOD_NEAREST:
+	return dc1394_bayer_NearestNeighbor_uint16(bayer, rgb, sx, sy, tile, bits);
+    case DC1394_BAYER_METHOD_SIMPLE:
+	return dc1394_bayer_Simple_uint16(bayer, rgb, sx, sy, tile, bits);
+    case DC1394_BAYER_METHOD_BILINEAR:
+	return dc1394_bayer_Bilinear_uint16(bayer, rgb, sx, sy, tile, bits);
+    case DC1394_BAYER_METHOD_HQLINEAR:
+	return dc1394_bayer_HQLinear_uint16(bayer, rgb, sx, sy, tile, bits);
+    case DC1394_BAYER_METHOD_DOWNSAMPLE:
+	return dc1394_bayer_Downsample_uint16(bayer, rgb, sx, sy, tile, bits);
+    case DC1394_BAYER_METHOD_EDGESENSE:
+	return dc1394_bayer_EdgeSense_uint16(bayer, rgb, sx, sy, tile, bits);
+    case DC1394_BAYER_METHOD_VNG:
+	return dc1394_bayer_VNG_uint16(bayer, rgb, sx, sy, tile, bits);
+    case DC1394_BAYER_METHOD_AHD:
+	return dc1394_bayer_AHD_uint16(bayer, rgb, sx, sy, tile, bits);
+    default:
+	return DC1394_INVALID_BAYER_METHOD;
+    }
 
 }
 
 void
 Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method)
 {
-  uint32_t bpp;
+    uint32_t bpp;
+    
+    // conversions will halve the buffer size if the method is DOWNSAMPLE:
+    out->size[0]=in->size[0];
+    out->size[1]=in->size[1];
+    if (method == DC1394_BAYER_METHOD_DOWNSAMPLE) {
+	out->size[0]/=2; // ODD SIZE CASES NOT TAKEN INTO ACCOUNT
+	out->size[1]/=2;
+    }
+    
+    // as a convention we divide the image position by two in the case of a DOWNSAMPLE:
+    out->position[0]=in->position[0];
+    out->position[1]=in->position[1];
+    if (method == DC1394_BAYER_METHOD_DOWNSAMPLE) {
+	out->position[0]/=2;
+	out->position[1]/=2;
+    }
+    
+    // the destination color coding is ALWAYS RGB. Set this.
+    if (in->color_coding==DC1394_COLOR_CODING_RAW16)
+	out->color_coding=DC1394_COLOR_CODING_RGB16;
+    else
+	out->color_coding=DC1394_COLOR_CODING_RGB8;
+    
+    // keep the color filter value in all cases. If the format is not raw it will not be further used anyway
+    out->color_filter=in->color_filter;
+    
+    // The output is never YUV, hence nothing to do about YUV byte order
+    
+    // bit depth is conserved for 16 bit and set to 8bit for 8bit:
+    if (in->color_coding==DC1394_COLOR_CODING_RAW16)
+	out->data_depth=in->data_depth;
+    else
+	out->data_depth=8;
+    
+    // don't know what to do with stride... >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
+    // out->stride=??
+    
+    // the video mode should not change. Color coding and other stuff can be accessed in specific fields of this struct
+    out->video_mode = in->video_mode;
+    
+    // padding is kept:
+    out->padding_bytes = in->padding_bytes;
+    
+    // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
+    dc1394_get_bits_per_pixel(out->color_coding, &bpp);
+    out->image_bytes=(out->size[0]*out->size[1]*bpp)/8;
+    
+    // total is image_bytes + padding_bytes
+    out->total_bytes = out->image_bytes + out->padding_bytes;
 
-  // conversions will halve the buffer size if the method is DOWNSAMPLE:
-  out->size[0]=in->size[0];
-  out->size[1]=in->size[1];
-  if (method == DC1394_BAYER_METHOD_DOWNSAMPLE) {
-    out->size[0]/=2; // ODD SIZE CASES NOT TAKEN INTO ACCOUNT
-    out->size[1]/=2;
-  }
-  
-  // as a convention we divide the image position by two in the case of a DOWNSAMPLE:
-  out->position[0]=in->position[0];
-  out->position[1]=in->position[1];
-  if (method == DC1394_BAYER_METHOD_DOWNSAMPLE) {
-    out->position[0]/=2;
-    out->position[1]/=2;
-  }
+    // bytes-per-packet and packets_per_frame are internal data that can be kept as is.
+    out->packet_size  = in->packet_size;
+    out->packets_per_frame = in->packets_per_frame;
+    
+    // timestamp, frame_behind, id and camera are copied too:
+    out->timestamp = in->timestamp;
+    out->frames_behind = in->frames_behind;
+    out->camera = in->camera;
+    out->id = in->id;
+    
+    // verify memory allocation:
+    if (out->total_bytes>out->allocated_image_bytes) {
+	free(out->image);
+	out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
+    }
 
-  // the destination color coding is ALWAYS RGB. Set this.
-  if (in->color_coding==DC1394_COLOR_CODING_RAW16)
-    out->color_coding=DC1394_COLOR_CODING_RGB16;
-  else
-    out->color_coding=DC1394_COLOR_CODING_RGB8;
-
-  // keep the color filter value in all cases. If the format is not raw it will not be further used anyway
-  out->color_filter=in->color_filter;
-
-  // The output is never YUV, hence nothing to do about YUV byte order
-
-  // bit depth is conserved for 16 bit and set to 8bit for 8bit:
-  if (in->color_coding==DC1394_COLOR_CODING_RAW16)
-    out->data_depth=in->data_depth;
-  else
-    out->data_depth=8;
-
-  // don't know what to do with stride... >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
-  // out->stride=??
-  
-  // the video mode should not change. Color coding and other stuff can be accessed in specific fields of this struct
-  out->video_mode = in->video_mode;
-
-  // padding is kept:
-  out->padding_bytes = in->padding_bytes;
-
-  // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
-  dc1394_get_bits_per_pixel(out->color_coding, &bpp);
-  out->image_bytes=(out->size[0]*out->size[1]*bpp)/8;
-
-  // total is image_bytes + padding_bytes
-  out->total_bytes = out->image_bytes + out->padding_bytes;
-
-  // bytes-per-packet and packets_per_frame are internal data that can be kept as is.
-  out->packet_size  = in->packet_size;
-  out->packets_per_frame = in->packets_per_frame;
-
-  // timestamp, frame_behind, id and camera are copied too:
-  out->timestamp = in->timestamp;
-  out->frames_behind = in->frames_behind;
-  out->camera = in->camera;
-  out->id = in->id;
-  
-  // verify memory allocation:
-  if (out->total_bytes>out->allocated_image_bytes) {
-    free(out->image);
-    out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
-  }
-
-  // Copy padding bytes:
-  memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
-
-  out->little_endian=0; // not used before 1.32 is out.
-  out->data_in_padding=0; // not used before 1.32 is out.
+    // Copy padding bytes:
+    memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
+    
+    out->little_endian=0; // not used before 1.32 is out.
+    out->data_in_padding=0; // not used before 1.32 is out.
 }
 
 dc1394error_t
 dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method)
 {
-  if ((method<DC1394_BAYER_METHOD_MIN)||(method>DC1394_BAYER_METHOD_MAX))
-    return DC1394_INVALID_BAYER_METHOD;
-
-  switch (in->color_coding) {
-  case DC1394_COLOR_CODING_RAW8:
-  case DC1394_COLOR_CODING_MONO8:
-    Adapt_buffer_bayer(in,out,method);
-    switch (method) {
-    case DC1394_BAYER_METHOD_NEAREST:
-      return dc1394_bayer_NearestNeighbor(in->image, out->image, in->size[0], in->size[1], in->color_filter);
-    case DC1394_BAYER_METHOD_SIMPLE:
-      return dc1394_bayer_Simple(in->image, out->image, in->size[0], in->size[1], in->color_filter);
-    case DC1394_BAYER_METHOD_BILINEAR:
-      return dc1394_bayer_Bilinear(in->image, out->image, in->size[0], in->size[1], in->color_filter);
-    case DC1394_BAYER_METHOD_HQLINEAR:
-      return dc1394_bayer_HQLinear(in->image, out->image, in->size[0], in->size[1], in->color_filter);
-    case DC1394_BAYER_METHOD_DOWNSAMPLE:
-      return dc1394_bayer_Downsample(in->image, out->image, in->size[0], in->size[1], in->color_filter);
-    case DC1394_BAYER_METHOD_EDGESENSE:
-      return dc1394_bayer_EdgeSense(in->image, out->image, in->size[0], in->size[1], in->color_filter);
-    case DC1394_BAYER_METHOD_VNG:
-      return dc1394_bayer_VNG(in->image, out->image, in->size[0], in->size[1], in->color_filter);
-    case DC1394_BAYER_METHOD_AHD:
-      return dc1394_bayer_AHD(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+    if ((method<DC1394_BAYER_METHOD_MIN)||(method>DC1394_BAYER_METHOD_MAX))
+	return DC1394_INVALID_BAYER_METHOD;
+    
+    switch (in->color_coding) {
+    case DC1394_COLOR_CODING_RAW8:
+    case DC1394_COLOR_CODING_MONO8:
+	Adapt_buffer_bayer(in,out,method);
+	switch (method) {
+	case DC1394_BAYER_METHOD_NEAREST:
+	    return dc1394_bayer_NearestNeighbor(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+	case DC1394_BAYER_METHOD_SIMPLE:
+	    return dc1394_bayer_Simple(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+	case DC1394_BAYER_METHOD_BILINEAR:
+	    return dc1394_bayer_Bilinear(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+	case DC1394_BAYER_METHOD_HQLINEAR:
+	    return dc1394_bayer_HQLinear(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+	case DC1394_BAYER_METHOD_DOWNSAMPLE:
+	    return dc1394_bayer_Downsample(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+	case DC1394_BAYER_METHOD_EDGESENSE:
+	    return dc1394_bayer_EdgeSense(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+	case DC1394_BAYER_METHOD_VNG:
+	    return dc1394_bayer_VNG(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+	case DC1394_BAYER_METHOD_AHD:
+	    return dc1394_bayer_AHD(in->image, out->image, in->size[0], in->size[1], in->color_filter);
+	}
+	break;
+    case DC1394_COLOR_CODING_MONO16:
+    case DC1394_COLOR_CODING_RAW16:
+	Adapt_buffer_bayer(in,out,method);
+	switch (method) {
+	case DC1394_BAYER_METHOD_NEAREST:
+	    return dc1394_bayer_NearestNeighbor_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
+	case DC1394_BAYER_METHOD_SIMPLE:
+	    return dc1394_bayer_Simple_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
+	case DC1394_BAYER_METHOD_BILINEAR:
+	    return dc1394_bayer_Bilinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
+	case DC1394_BAYER_METHOD_HQLINEAR:
+	    return dc1394_bayer_HQLinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
+	case DC1394_BAYER_METHOD_DOWNSAMPLE:
+	    return dc1394_bayer_Downsample_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
+	case DC1394_BAYER_METHOD_EDGESENSE:
+	    return dc1394_bayer_EdgeSense_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
+	case DC1394_BAYER_METHOD_VNG:
+	    return dc1394_bayer_VNG_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
+	case DC1394_BAYER_METHOD_AHD:
+	    return dc1394_bayer_AHD_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
+	}
+	break;
+    default:
+	return DC1394_FUNCTION_NOT_SUPPORTED;
     }
-    break;
-  case DC1394_COLOR_CODING_MONO16:
-  case DC1394_COLOR_CODING_RAW16:
-    Adapt_buffer_bayer(in,out,method);
-    switch (method) {
-    case DC1394_BAYER_METHOD_NEAREST:
-      return dc1394_bayer_NearestNeighbor_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
-    case DC1394_BAYER_METHOD_SIMPLE:
-      return dc1394_bayer_Simple_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
-    case DC1394_BAYER_METHOD_BILINEAR:
-      return dc1394_bayer_Bilinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
-    case DC1394_BAYER_METHOD_HQLINEAR:
-      return dc1394_bayer_HQLinear_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
-    case DC1394_BAYER_METHOD_DOWNSAMPLE:
-      return dc1394_bayer_Downsample_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
-    case DC1394_BAYER_METHOD_EDGESENSE:
-      return dc1394_bayer_EdgeSense_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
-    case DC1394_BAYER_METHOD_VNG:
-      return dc1394_bayer_VNG_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
-    case DC1394_BAYER_METHOD_AHD:
-      return dc1394_bayer_AHD_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);
-    }
-    break;
-  default:
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-  }
-
-  return DC1394_SUCCESS;
+    
+    return DC1394_SUCCESS;
 }

@@ -37,14 +37,14 @@
  * Enumeration of trigger modes
  */
 typedef enum {
-  DC1394_TRIGGER_MODE_0= 384,
-  DC1394_TRIGGER_MODE_1,
-  DC1394_TRIGGER_MODE_2,
-  DC1394_TRIGGER_MODE_3,
-  DC1394_TRIGGER_MODE_4,
-  DC1394_TRIGGER_MODE_5,
-  DC1394_TRIGGER_MODE_14,
-  DC1394_TRIGGER_MODE_15
+    DC1394_TRIGGER_MODE_0= 384,
+    DC1394_TRIGGER_MODE_1,
+    DC1394_TRIGGER_MODE_2,
+    DC1394_TRIGGER_MODE_3,
+    DC1394_TRIGGER_MODE_4,
+    DC1394_TRIGGER_MODE_5,
+    DC1394_TRIGGER_MODE_14,
+    DC1394_TRIGGER_MODE_15
 } dc1394trigger_mode_t;
 #define DC1394_TRIGGER_MODE_MIN     DC1394_TRIGGER_MODE_0
 #define DC1394_TRIGGER_MODE_MAX     DC1394_TRIGGER_MODE_15
@@ -54,28 +54,28 @@ typedef enum {
  * Enumeration of camera features
  */
 typedef enum {
-  DC1394_FEATURE_BRIGHTNESS= 416,
-  DC1394_FEATURE_EXPOSURE,
-  DC1394_FEATURE_SHARPNESS,
-  DC1394_FEATURE_WHITE_BALANCE,
-  DC1394_FEATURE_HUE,
-  DC1394_FEATURE_SATURATION,
-  DC1394_FEATURE_GAMMA,
-  DC1394_FEATURE_SHUTTER,
-  DC1394_FEATURE_GAIN,
-  DC1394_FEATURE_IRIS,
-  DC1394_FEATURE_FOCUS,
-  DC1394_FEATURE_TEMPERATURE,
-  DC1394_FEATURE_TRIGGER,
-  DC1394_FEATURE_TRIGGER_DELAY,
-  DC1394_FEATURE_WHITE_SHADING,
-  DC1394_FEATURE_FRAME_RATE,
-  DC1394_FEATURE_ZOOM,
-  DC1394_FEATURE_PAN,
-  DC1394_FEATURE_TILT,
-  DC1394_FEATURE_OPTICAL_FILTER,
-  DC1394_FEATURE_CAPTURE_SIZE,
-  DC1394_FEATURE_CAPTURE_QUALITY
+    DC1394_FEATURE_BRIGHTNESS= 416,
+    DC1394_FEATURE_EXPOSURE,
+    DC1394_FEATURE_SHARPNESS,
+    DC1394_FEATURE_WHITE_BALANCE,
+    DC1394_FEATURE_HUE,
+    DC1394_FEATURE_SATURATION,
+    DC1394_FEATURE_GAMMA,
+    DC1394_FEATURE_SHUTTER,
+    DC1394_FEATURE_GAIN,
+    DC1394_FEATURE_IRIS,
+    DC1394_FEATURE_FOCUS,
+    DC1394_FEATURE_TEMPERATURE,
+    DC1394_FEATURE_TRIGGER,
+    DC1394_FEATURE_TRIGGER_DELAY,
+    DC1394_FEATURE_WHITE_SHADING,
+    DC1394_FEATURE_FRAME_RATE,
+    DC1394_FEATURE_ZOOM,
+    DC1394_FEATURE_PAN,
+    DC1394_FEATURE_TILT,
+    DC1394_FEATURE_OPTICAL_FILTER,
+    DC1394_FEATURE_CAPTURE_SIZE,
+    DC1394_FEATURE_CAPTURE_QUALITY
 } dc1394feature_t;
 #define DC1394_FEATURE_MIN           DC1394_FEATURE_BRIGHTNESS
 #define DC1394_FEATURE_MAX           DC1394_FEATURE_CAPTURE_QUALITY
@@ -85,11 +85,11 @@ typedef enum {
  * Enumeration of trigger sources
  */
 typedef enum {
-  DC1394_TRIGGER_SOURCE_0= 576,
-  DC1394_TRIGGER_SOURCE_1,
-  DC1394_TRIGGER_SOURCE_2,
-  DC1394_TRIGGER_SOURCE_3,
-  DC1394_TRIGGER_SOURCE_SOFTWARE
+    DC1394_TRIGGER_SOURCE_0= 576,
+    DC1394_TRIGGER_SOURCE_1,
+    DC1394_TRIGGER_SOURCE_2,
+    DC1394_TRIGGER_SOURCE_3,
+    DC1394_TRIGGER_SOURCE_SOFTWARE
 } dc1394trigger_source_t;
 #define DC1394_TRIGGER_SOURCE_MIN      DC1394_TRIGGER_SOURCE_0
 #define DC1394_TRIGGER_SOURCE_MAX      DC1394_TRIGGER_SOURCE_SOFTWARE
@@ -99,8 +99,8 @@ typedef enum {
  * External trigger polarity
  */
 typedef enum {
-  DC1394_TRIGGER_ACTIVE_LOW= 704,
-  DC1394_TRIGGER_ACTIVE_HIGH
+    DC1394_TRIGGER_ACTIVE_LOW= 704,
+    DC1394_TRIGGER_ACTIVE_HIGH
 } dc1394trigger_polarity_t;
 #define DC1394_TRIGGER_ACTIVE_MIN    DC1394_TRIGGER_ACTIVE_LOW
 #define DC1394_TRIGGER_ACTIVE_MAX    DC1394_TRIGGER_ACTIVE_HIGH
@@ -110,9 +110,9 @@ typedef enum {
  * Control modes for a feature (excl. absolute control)
  */
 typedef enum {
-  DC1394_FEATURE_MODE_MANUAL= 736,
-  DC1394_FEATURE_MODE_AUTO,
-  DC1394_FEATURE_MODE_ONE_PUSH_AUTO
+    DC1394_FEATURE_MODE_MANUAL= 736,
+    DC1394_FEATURE_MODE_AUTO,
+    DC1394_FEATURE_MODE_ONE_PUSH_AUTO
 } dc1394feature_mode_t;
 #define DC1394_FEATURE_MODE_MIN      DC1394_FEATURE_MODE_MANUAL
 #define DC1394_FEATURE_MODE_MAX      DC1394_FEATURE_MODE_ONE_PUSH_AUTO
@@ -123,8 +123,8 @@ typedef enum {
  */
 typedef struct
 {
-  uint32_t                num;
-  dc1394feature_mode_t    modes[DC1394_FEATURE_MODE_NUM];
+    uint32_t                num;
+    dc1394feature_mode_t    modes[DC1394_FEATURE_MODE_NUM];
 } dc1394feature_modes_t;
 
 /**
@@ -132,8 +132,8 @@ typedef struct
  */
 typedef struct
 {
-  uint32_t                num;
-  dc1394trigger_mode_t    modes[DC1394_TRIGGER_MODE_NUM];
+    uint32_t                num;
+    dc1394trigger_mode_t    modes[DC1394_TRIGGER_MODE_NUM];
 } dc1394trigger_modes_t;
 
 /**
@@ -141,8 +141,8 @@ typedef struct
  */
 typedef struct
 {
-  uint32_t                num;
-  dc1394trigger_source_t  sources[DC1394_TRIGGER_SOURCE_NUM];
+    uint32_t                num;
+    dc1394trigger_source_t  sources[DC1394_TRIGGER_SOURCE_NUM];
 } dc1394trigger_sources_t;
 
 /**
@@ -150,34 +150,34 @@ typedef struct
  */
 typedef struct __dc1394feature_info_t_struct 
 {
-  dc1394feature_t    id;
-  dc1394bool_t       available;
-  dc1394bool_t       absolute_capable;
-  dc1394bool_t       readout_capable;
-  dc1394bool_t       on_off_capable;
-  dc1394bool_t       polarity_capable;
-  dc1394switch_t     is_on;
-  dc1394feature_mode_t     current_mode;
-  dc1394feature_modes_t    modes;
-  dc1394trigger_modes_t    trigger_modes;
-  dc1394trigger_mode_t     trigger_mode;
-  dc1394trigger_polarity_t trigger_polarity;
-  dc1394trigger_sources_t  trigger_sources;
-  dc1394trigger_source_t   trigger_source;
-  uint32_t           min;
-  uint32_t           max;
-  uint32_t           value;
-  uint32_t           BU_value;
-  uint32_t           RV_value;
-  uint32_t           B_value;
-  uint32_t           R_value;
-  uint32_t           G_value;
-  uint32_t           target_value;
-  
-  dc1394switch_t     abs_control;
-  float              abs_value;
-  float              abs_max;
-  float              abs_min;
+    dc1394feature_t    id;
+    dc1394bool_t       available;
+    dc1394bool_t       absolute_capable;
+    dc1394bool_t       readout_capable;
+    dc1394bool_t       on_off_capable;
+    dc1394bool_t       polarity_capable;
+    dc1394switch_t     is_on;
+    dc1394feature_mode_t     current_mode;
+    dc1394feature_modes_t    modes;
+    dc1394trigger_modes_t    trigger_modes;
+    dc1394trigger_mode_t     trigger_mode;
+    dc1394trigger_polarity_t trigger_polarity;
+    dc1394trigger_sources_t  trigger_sources;
+    dc1394trigger_source_t   trigger_source;
+    uint32_t           min;
+    uint32_t           max;
+    uint32_t           value;
+    uint32_t           BU_value;
+    uint32_t           RV_value;
+    uint32_t           B_value;
+    uint32_t           R_value;
+    uint32_t           G_value;
+    uint32_t           target_value;
+    
+    dc1394switch_t     abs_control;
+    float              abs_value;
+    float              abs_max;
+    float              abs_min;
   
 } dc1394feature_info_t;
 
@@ -186,7 +186,7 @@ typedef struct __dc1394feature_info_t_struct
  */
 typedef struct __dc1394featureset_t
 {
-  dc1394feature_info_t    feature[DC1394_FEATURE_NUM];
+    dc1394feature_info_t    feature[DC1394_FEATURE_NUM];
 } dc1394featureset_t;
 
 #ifdef __cplusplus

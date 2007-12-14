@@ -165,7 +165,6 @@ is_feature_bit_set(uint32_t value, uint32_t feature);
 dc1394bool_t
 _dc1394_iidc_check_video_mode(dc1394camera_t *camera, dc1394video_mode_t *mode);
 */
-dc1394error_t capture_basic_setup (dc1394camera_t * camera,
-    dc1394video_frame_t * frame);
+dc1394error_t capture_basic_setup (dc1394camera_t * camera, dc1394video_frame_t * frame);
 
 #endif /* _DC1394_INTERNAL_H */

@@ -17,34 +17,34 @@
  */
 typedef struct __dc1394format7mode_t
 {
-  dc1394bool_t present;
-
-  uint32_t size_x;
-  uint32_t size_y;
-  uint32_t max_size_x;
-  uint32_t max_size_y;
-
-  uint32_t pos_x;
-  uint32_t pos_y;
-
-  uint32_t unit_size_x;
-  uint32_t unit_size_y;
-  uint32_t unit_pos_x;
-  uint32_t unit_pos_y;
-
-  dc1394color_codings_t color_codings;
-  dc1394color_coding_t color_coding;
-
-  uint32_t pixnum;
-
-  uint32_t packet_size; /* in bytes */
-  uint32_t unit_packet_size;
-  uint32_t max_packet_size;
-
-  uint64_t total_bytes;
-
-  dc1394color_filter_t color_filter;
-
+    dc1394bool_t present;
+    
+    uint32_t size_x;
+    uint32_t size_y;
+    uint32_t max_size_x;
+    uint32_t max_size_y;
+    
+    uint32_t pos_x;
+    uint32_t pos_y;
+    
+    uint32_t unit_size_x;
+    uint32_t unit_size_y;
+    uint32_t unit_pos_x;
+    uint32_t unit_pos_y;
+    
+    dc1394color_codings_t color_codings;
+    dc1394color_coding_t color_coding;
+    
+    uint32_t pixnum;
+    
+    uint32_t packet_size; /* in bytes */
+    uint32_t unit_packet_size;
+    uint32_t max_packet_size;
+    
+    uint64_t total_bytes;
+    
+    dc1394color_filter_t color_filter;
+    
 } dc1394format7mode_t;
 
 /**
@@ -52,7 +52,7 @@ typedef struct __dc1394format7mode_t
  */
 typedef struct __dc1394format7modeset_t
 {
-  dc1394format7mode_t mode[DC1394_VIDEO_MODE_FORMAT7_NUM];
+    dc1394format7mode_t mode[DC1394_VIDEO_MODE_FORMAT7_NUM];
 } dc1394format7modeset_t;
 
 #ifdef __cplusplus
