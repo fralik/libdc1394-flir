@@ -90,33 +90,33 @@ int refresh_enumeration (dc1394_t * d);
 
 
 // Format_0
-#define DC1394_VIDEO_MODE_FORMAT0_MIN	    DC1394_VIDEO_MODE_160x120_YUV444
-#define DC1394_VIDEO_MODE_FORMAT0_MAX	    DC1394_VIDEO_MODE_640x480_MONO16
+#define DC1394_VIDEO_MODE_FORMAT0_MIN            DC1394_VIDEO_MODE_160x120_YUV444
+#define DC1394_VIDEO_MODE_FORMAT0_MAX            DC1394_VIDEO_MODE_640x480_MONO16
 #define DC1394_VIDEO_MODE_FORMAT0_NUM      (DC1394_VIDEO_MODE_FORMAT0_MAX - DC1394_VIDEO_MODE_FORMAT0_MIN + 1)
 
 // Format_1
-#define DC1394_VIDEO_MODE_FORMAT1_MIN	    DC1394_VIDEO_MODE_800x600_YUV422
-#define DC1394_VIDEO_MODE_FORMAT1_MAX	    DC1394_VIDEO_MODE_1024x768_MONO16
+#define DC1394_VIDEO_MODE_FORMAT1_MIN            DC1394_VIDEO_MODE_800x600_YUV422
+#define DC1394_VIDEO_MODE_FORMAT1_MAX            DC1394_VIDEO_MODE_1024x768_MONO16
 #define DC1394_VIDEO_MODE_FORMAT1_NUM      (DC1394_VIDEO_MODE_FORMAT1_MAX - DC1394_VIDEO_MODE_FORMAT1_MIN + 1)
 
 // Format_2
-#define DC1394_VIDEO_MODE_FORMAT2_MIN	    DC1394_VIDEO_MODE_1280x960_YUV422
-#define DC1394_VIDEO_MODE_FORMAT2_MAX	    DC1394_VIDEO_MODE_1600x1200_MONO16
-#define DC1394_VIDEO_MODE_FORMAT2_NUM	   (DC1394_VIDEO_MODE_FORMAT2_MAX - DC1394_VIDEO_MODE_FORMAT2_MIN + 1)
+#define DC1394_VIDEO_MODE_FORMAT2_MIN            DC1394_VIDEO_MODE_1280x960_YUV422
+#define DC1394_VIDEO_MODE_FORMAT2_MAX            DC1394_VIDEO_MODE_1600x1200_MONO16
+#define DC1394_VIDEO_MODE_FORMAT2_NUM           (DC1394_VIDEO_MODE_FORMAT2_MAX - DC1394_VIDEO_MODE_FORMAT2_MIN + 1)
 
 // Format_6
-#define DC1394_VIDEO_MODE_FORMAT6_MIN	    DC1394_VIDEO_MODE_EXIF
-#define DC1394_VIDEO_MODE_FORMAT6_MAX	    DC1394_VIDEO_MODE_EXIF
-#define DC1394_VIDEO_MODE_FORMAT6_NUM	   (DC1394_VIDEO_MODE_FORMAT6_MAX - DC1394_VIDEO_MODE_FORMAT6_MIN + 1)
+#define DC1394_VIDEO_MODE_FORMAT6_MIN            DC1394_VIDEO_MODE_EXIF
+#define DC1394_VIDEO_MODE_FORMAT6_MAX            DC1394_VIDEO_MODE_EXIF
+#define DC1394_VIDEO_MODE_FORMAT6_NUM           (DC1394_VIDEO_MODE_FORMAT6_MAX - DC1394_VIDEO_MODE_FORMAT6_MIN + 1)
 
 /* Enumeration of camera image formats */
 /* This could disappear from the API I think.*/
 enum {
-  DC1394_FORMAT0= 384,
-  DC1394_FORMAT1,
-  DC1394_FORMAT2,
-  DC1394_FORMAT6=390,
-  DC1394_FORMAT7
+    DC1394_FORMAT0= 384,
+    DC1394_FORMAT1,
+    DC1394_FORMAT2,
+    DC1394_FORMAT6=390,
+    DC1394_FORMAT7
 };
 #define DC1394_FORMAT_MIN           DC1394_FORMAT0
 #define DC1394_FORMAT_MAX           DC1394_FORMAT7
@@ -133,7 +133,7 @@ enum {
       offset= REG_CAMERA_FEATURE_LO_BASE +(feature+12-DC1394_FEATURE_ZOOM)*0x04U;\
     else                                                                         \
       offset= REG_CAMERA_FEATURE_LO_BASE +(feature-DC1394_FEATURE_ZOOM)*0x04U;   \
-										   }
+                                                                                   }
 
 #define FEATURE_TO_INQUIRY_OFFSET(feature, offset)                                   \
     {                                                                                \
@@ -149,7 +149,7 @@ enum {
 
 /* Internal functions required by two different source files */
 
-dc1394error_t 
+dc1394error_t
 get_quadlets_per_packet(uint32_t mode, uint32_t frame_rate, uint32_t *qpp);
 
 dc1394error_t
@@ -157,7 +157,7 @@ get_quadlets_from_format(dc1394camera_t *camera, uint32_t mode, uint32_t *quads)
 
 dc1394error_t
 get_format_from_mode(uint32_t mode, uint32_t *format);
-		
+
 dc1394bool_t
 is_feature_bit_set(uint32_t value, uint32_t feature);
 

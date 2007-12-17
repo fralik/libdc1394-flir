@@ -4,7 +4,7 @@
  * Copyright (C) 2006 Mikael Olenfalk, Tobii Technology AB, Stockholm Sweden
  *
  * Written by Mikael Olenfalk <mikael _DOT_ olenfalk _AT_ tobii _DOT_ com>
- * Version : 16/02/2005 
+ * Version : 16/02/2005
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

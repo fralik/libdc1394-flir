@@ -81,7 +81,7 @@ identify_unit (dc1394_t * d, platform_device_t * dev, uint64_t guid,
      The following modifications have been tested with a stereo head
      (BumbleBee). Most other cameras should be compatible, please consider
      contributing to the lib if your PG camera is not recognized.
-     
+
      PG cams sometimes have a Unit_Spec_ID of 0xB09D, instead of the
      0xA02D of classic IIDC cameras. Also, their software revision differs.
      I could only get a 1.14 version from my BumbleBee but other versions
@@ -89,12 +89,12 @@ identify_unit (dc1394_t * d, platform_device_t * dev, uint64_t guid,
 
      As PG is regularly providing firmware updates you might also install
      the latest one in your camera for an increased compatibility.
-     
+
      Damien
 
      (updated 2005-04-30)
   */
-  
+
     if ((info.unit_spec_ID != 0xA02D) &&
             (info.unit_spec_ID != 0xB09D))
         return -1;

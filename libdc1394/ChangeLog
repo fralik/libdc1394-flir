@@ -1,3 +1,6 @@
+2007-12-16 David Moore  <dcm@acm.org>
+	* SVN 519: Convert tabs to spaces and delete trailing whitespace.
+
 2007-12-14 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 518: Change indentation from 2 to 4 spaces 
 	* SVN 517: Framework for the Doxygen comments. 

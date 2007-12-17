@@ -38,12 +38,12 @@ enum {
 #define VIDEO1394_VARIABLE_PACKET_SIZE 0x00000004
 
 struct video1394_mmap {
-  int channel;		    /* -1 to find an open channel in LISTEN/TALK */
+  int channel;                    /* -1 to find an open channel in LISTEN/TALK */
   unsigned int sync_tag;
   unsigned int nb_buffers;
   unsigned int buf_size;
-  unsigned int packet_size; /* For VARIABLE_PACKET_SIZE: 
-			       Maximum packet size */
+  unsigned int packet_size; /* For VARIABLE_PACKET_SIZE:
+                               Maximum packet size */
   unsigned int fps;
   unsigned int syt_offset;
   unsigned int flags;
@@ -53,24 +53,24 @@ struct video1394_mmap {
 struct video1394_queue_variable {
   unsigned int channel;
   unsigned int buffer;
-  unsigned int* packet_sizes; /* Buffer of size:  
-				 buf_size / packet_size  */
+  unsigned int* packet_sizes; /* Buffer of size:
+                                 buf_size / packet_size  */
 };
 
 struct video1394_wait {
   unsigned int channel;
   unsigned int buffer;
-  struct timeval filltime;	/* time of buffer full */
+  struct timeval filltime;        /* time of buffer full */
 };
 
 #define VIDEO1394_IOC_LISTEN_CHANNEL       _IOWR('#', 0x10, struct video1394_mmap)
-#define VIDEO1394_IOC_UNLISTEN_CHANNEL	   _IOW ('#', 0x11, int)
+#define VIDEO1394_IOC_UNLISTEN_CHANNEL           _IOW ('#', 0x11, int)
 #define VIDEO1394_IOC_LISTEN_QUEUE_BUFFER  _IOW ('#', 0x12, struct video1394_wait)
 #define VIDEO1394_IOC_LISTEN_WAIT_BUFFER   _IOWR('#', 0x13, struct video1394_wait)
-#define VIDEO1394_IOC_TALK_CHANNEL	   _IOWR('#', 0x14, struct video1394_mmap)
+#define VIDEO1394_IOC_TALK_CHANNEL           _IOWR('#', 0x14, struct video1394_mmap)
 #define VIDEO1394_IOC_UNTALK_CHANNEL       _IOW ('#', 0x15, int)
 #define VIDEO1394_IOC_TALK_QUEUE_BUFFER    _IOW ('#', 0x16, size_t)
-#define VIDEO1394_IOC_TALK_WAIT_BUFFER	   _IOW ('#', 0x17, struct video1394_wait)
+#define VIDEO1394_IOC_TALK_WAIT_BUFFER           _IOW ('#', 0x17, struct video1394_wait)
 #define VIDEO1394_IOC_LISTEN_POLL_BUFFER   _IOWR('#', 0x18, struct video1394_wait)
 
 #endif

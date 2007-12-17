@@ -58,10 +58,10 @@ dc1394error_t platform_capture_setup (platform_camera_t *cam,
 dc1394error_t platform_capture_stop (platform_camera_t *cam);
 
 dc1394error_t platform_capture_dequeue (platform_camera_t * cam,
-			dc1394capture_policy_t policy,
-			dc1394video_frame_t **frame_return);
+                        dc1394capture_policy_t policy,
+                        dc1394video_frame_t **frame_return);
 dc1394error_t platform_capture_enqueue (platform_camera_t * cam,
-			dc1394video_frame_t * frame);
+                        dc1394video_frame_t * frame);
 int platform_capture_get_fileno (platform_camera_t * cam);
 
 dc1394error_t platform_iso_set_persist (platform_camera_t * cam);
@@ -75,8 +75,8 @@ dc1394error_t platform_iso_release_bandwidth (platform_camera_t * cam,
     int bandwidth_units);
 
 dc1394error_t platform_set_broadcast(platform_camera_t * craw,
-					  dc1394bool_t pwr);
+                                          dc1394bool_t pwr);
 dc1394error_t platform_get_broadcast(platform_camera_t * craw,
-					  dc1394bool_t *pwr);
+                                          dc1394bool_t *pwr);
 
 #endif

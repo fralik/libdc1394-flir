@@ -149,7 +149,7 @@ dc1394error_t dc1394_iso_release_bandwidth (dc1394camera_t * camera,
  * by previous processes.  To release resources in such a case, the manual
  * release functions dc1394_iso_release_channel() and
  * dc1394_iso_release_bandwidth() must be used.
- * 
+ *
  * Returns: DC1394_SUCCESS if the operation succeeded.  DC1394_FAILURE
  * if some resources were not able to be released.
  */

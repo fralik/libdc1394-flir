@@ -148,7 +148,7 @@ typedef struct
 /**
  * No Docs
  */
-typedef struct __dc1394feature_info_t_struct 
+typedef struct __dc1394feature_info_t_struct
 {
     dc1394feature_t    id;
     dc1394bool_t       available;
@@ -173,12 +173,12 @@ typedef struct __dc1394feature_info_t_struct
     uint32_t           R_value;
     uint32_t           G_value;
     uint32_t           target_value;
-    
+
     dc1394switch_t     abs_control;
     float              abs_value;
     float              abs_max;
     float              abs_min;
-  
+
 } dc1394feature_info_t;
 
 /**

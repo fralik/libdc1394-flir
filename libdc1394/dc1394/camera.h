@@ -94,10 +94,10 @@ typedef struct __dc1394_camera
     dc1394bool_t         has_vmode_error_status;
     dc1394bool_t         has_feature_error_status;
     int                  max_mem_channel;
-    
+
     /* not used, for future use: */
     uint32_t             flags;
-    
+
 } dc1394camera_t;
 
 /**

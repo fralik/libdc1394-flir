@@ -1,4 +1,4 @@
-	/*
+        /*
  * 1394-Based Digital Camera Control Library utilities
  * Copyright (C) Damien Douxchamps <ddouxchamps@users.sf.net>
  *

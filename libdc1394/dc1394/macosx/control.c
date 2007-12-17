@@ -59,47 +59,47 @@ platform_get_device_list (platform_t * p)
     io_iterator_t iterator;
     io_object_t node;
     CFMutableDictionaryRef dict;
-    
+
     list = calloc (1, sizeof (platform_device_list_t));
     if (!list)
-	return NULL;
+        return NULL;
     list->devices = malloc(allocated_size * sizeof(platform_device_t *));
     if (!list->devices) {
-	free (list);
-	return NULL;
+        free (list);
+        return NULL;
     }
-    
+
     res = IOMasterPort (MACH_PORT_NULL, &master_port);
     if (res != KERN_SUCCESS)
-	return NULL;
-    
+        return NULL;
+
     dict = IOServiceMatching ("IOFireWireDevice");
     if (!dict)
-	return NULL;
-    
+        return NULL;
+
     res = IOServiceGetMatchingServices (master_port, dict, &iterator);
-    
+
     while ((node = IOIteratorNext (iterator))) {
-	platform_device_t * device = malloc (sizeof (platform_device_t));
-	if (!device) {
-	    IOObjectRelease (node);
-	    continue;
-	}
-	
-	device->node = node;
-	list->devices[list->num_devices] = device;
-	list->num_devices++;
-	
-	if (list->num_devices >= allocated_size) {
-	    allocated_size += 64;
-	    list->devices = realloc (list->devices,
-				     allocated_size * sizeof (platform_device_t *));
-	    if (!list->devices)
-		return NULL;
-	}
+        platform_device_t * device = malloc (sizeof (platform_device_t));
+        if (!device) {
+            IOObjectRelease (node);
+            continue;
+        }
+
+        device->node = node;
+        list->devices[list->num_devices] = device;
+        list->num_devices++;
+
+        if (list->num_devices >= allocated_size) {
+            allocated_size += 64;
+            list->devices = realloc (list->devices,
+                                     allocated_size * sizeof (platform_device_t *));
+            if (!list->devices)
+                return NULL;
+        }
     }
     IOObjectRelease (iterator);
-    
+
     return list;
 }
 
@@ -108,8 +108,8 @@ platform_free_device_list (platform_device_list_t * d)
 {
     int i;
     for (i = 0; i < d->num_devices; i++) {
-	IOObjectRelease (d->devices[i]->node);
-	free (d->devices[i]);
+        IOObjectRelease (d->devices[i]->node);
+        free (d->devices[i]);
     }
     free (d->devices);
     free (d);
@@ -121,23 +121,23 @@ platform_device_get_config_rom (platform_device_t * device,
 {
     CFTypeRef prop;
     prop = IORegistryEntryCreateCFProperty (device->node,
-					    CFSTR ("FireWire Device ROM"), kCFAllocatorDefault, 0);
+                                            CFSTR ("FireWire Device ROM"), kCFAllocatorDefault, 0);
     if (!prop)
-	return -1;
+        return -1;
     CFDataRef data = CFDictionaryGetValue (prop, CFSTR ("Offset 0"));
     if (!data) {
-	CFRelease (prop);
-	return -1;
+        CFRelease (prop);
+        return -1;
     }
-    
+
     int nquads = CFDataGetLength (data) / 4;
     if (*num_quads > nquads)
-	*num_quads = nquads;
+        *num_quads = nquads;
     const uint8_t * d = CFDataGetBytePtr (data);
     int i;
     for (i = 0; i < *num_quads; i++)
-	quads[i] = (d[4*i] << 24) | (d[4*i+1] << 16) | (d[4*i+2] << 8) | d[4*i+3];
-    
+        quads[i] = (d[4*i] << 24) | (d[4*i+1] << 16) | (d[4*i+2] << 8) | d[4*i+3];
+
     CFRelease (prop);
     return 0;
 }
@@ -151,30 +151,30 @@ platform_camera_new (platform_t * p, platform_device_t * device,
     IOCFPlugInInterface ** plugin_interface = NULL;
     SInt32 score;
     IOFireWireLibDeviceRef iface = NULL;
-    
+
     res = IOCreatePlugInInterfaceForService (device->node, kIOFireWireLibTypeID,
-					     kIOCFPlugInInterfaceID, &plugin_interface, &score);
+                                             kIOCFPlugInInterfaceID, &plugin_interface, &score);
     if (res != KERN_SUCCESS) {
-	dc1394_log_error("Failed to get plugin interface\n");
-	return NULL;
+        dc1394_log_error("Failed to get plugin interface\n");
+        return NULL;
     }
-    
+
     /* TODO: error check here */
     (*plugin_interface)->QueryInterface (plugin_interface,
-					 CFUUIDGetUUIDBytes (kIOFireWireDeviceInterfaceID),
+                                         CFUUIDGetUUIDBytes (kIOFireWireDeviceInterfaceID),
                                        (void**) &iface);
     IODestroyPlugInInterface (plugin_interface);
-    
+
     res = (*iface)->Open (iface);
     if (res != kIOReturnSuccess) {
-	(*iface)->Release (iface);
-	return NULL;
+        (*iface)->Release (iface);
+        return NULL;
     }
-    
+
     camera = calloc (1, sizeof (platform_camera_t));
     camera->iface = iface;
     (*camera->iface)->GetBusGeneration (camera->iface,
-					&(camera->generation));
+                                        &(camera->generation));
     return camera;
 }
 
@@ -209,23 +209,23 @@ platform_camera_read (platform_camera_t * cam, uint64_t offset,
     int i, retval;
     UInt32 length;
     UInt64 addr = CONFIG_ROM_BASE + offset;
-    
+
     full_addr.addressHi = addr >> 32;
     full_addr.addressLo = addr & 0xffffffff;
-    
+
     length = 4 * num_quads;
     if (num_quads > 1)
-	retval = (*d)->Read (d, (*d)->GetDevice (d), &full_addr, quads, &length,
-			     false, cam->generation);
+        retval = (*d)->Read (d, (*d)->GetDevice (d), &full_addr, quads, &length,
+                             false, cam->generation);
     else
-	retval = (*d)->ReadQuadlet (d, (*d)->GetDevice (d), &full_addr,
-				    (UInt32 *) quads, false, cam->generation);
+        retval = (*d)->ReadQuadlet (d, (*d)->GetDevice (d), &full_addr,
+                                    (UInt32 *) quads, false, cam->generation);
     if (retval != 0) {
-	dc1394_log_error("Error reading camera register...\n");
-	return DC1394_FAILURE;
+        dc1394_log_error("Error reading camera register...\n");
+        return DC1394_FAILURE;
     }
     for (i = 0; i < num_quads; i++)
-	quads[i] = ntohl (quads[i]);
+        quads[i] = ntohl (quads[i]);
     return DC1394_SUCCESS;
 }
 
@@ -239,23 +239,23 @@ platform_camera_write (platform_camera_t * cam, uint64_t offset,
     UInt32 length;
     UInt64 addr = CONFIG_ROM_BASE + offset;
     uint32_t values[num_quads];
-    
+
     full_addr.addressHi = addr >> 32;
     full_addr.addressLo = addr & 0xffffffff;
-    
+
     for (i = 0; i < num_quads; i++)
-	values[i] = htonl (quads[i]);
-    
+        values[i] = htonl (quads[i]);
+
     length = 4 * num_quads;
     if (num_quads > 1)
-	retval = (*d)->Write (d, (*d)->GetDevice (d), &full_addr, values, &length,
-			      false, cam->generation);
+        retval = (*d)->Write (d, (*d)->GetDevice (d), &full_addr, values, &length,
+                              false, cam->generation);
     else
-	retval = (*d)->WriteQuadlet (d, (*d)->GetDevice (d), &full_addr, values[0],
-				     false, cam->generation);
+        retval = (*d)->WriteQuadlet (d, (*d)->GetDevice (d), &full_addr, values[0],
+                                     false, cam->generation);
     if (retval != 0) {
-	dc1394_log_error("Error writing camera register...\n");
-	return DC1394_FAILURE;
+        dc1394_log_error("Error writing camera register...\n");
+        return DC1394_FAILURE;
     }
     return DC1394_SUCCESS;
 }
@@ -264,11 +264,11 @@ dc1394error_t
 platform_reset_bus (platform_camera_t * cam)
 {
     IOFireWireLibDeviceRef d = cam->iface;
-    
+
     if ((*d)->BusReset (d) == 0)
-	return DC1394_SUCCESS;
+        return DC1394_SUCCESS;
     else
-	return DC1394_FAILURE;
+        return DC1394_FAILURE;
 }
 
 dc1394error_t
@@ -277,10 +277,10 @@ platform_read_cycle_timer (platform_camera_t * cam,
 {
     IOFireWireLibDeviceRef d = cam->iface;
     struct timeval tv;
-    
+
     if ((*d)->GetCycleTime (d, (UInt32 *) cycle_timer) != 0)
-	return DC1394_FAILURE;
-    
+        return DC1394_FAILURE;
+
     gettimeofday (&tv, NULL);
     *local_time = (uint64_t)tv.tv_sec * 1000000ULL + tv.tv_usec;
     return DC1394_SUCCESS;

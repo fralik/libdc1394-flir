@@ -4,7 +4,7 @@
  * Copyright (C) 2006 Mikael Olenfalk, Tobii Technology AB, Stockholm Sweden
  *
  * Written by Mikael Olenfalk <mikael _DOT_ olenfalk _AT_ tobii _DOT_ com>
- * Version : 16/02/2005 
+ * Version : 16/02/2005
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -89,7 +89,7 @@ typedef enum dc1394basler_sff_feature_t {
    * for more information.
    */
   DC1394_BASLER_SFF_DCAM_VALUES,
-  
+
   /**
    * The CRC checksum feature adds a chunk to each image frame
    * containing a 16bit CRC checksum computed using the Z-modem
@@ -99,7 +99,7 @@ typedef enum dc1394basler_sff_feature_t {
    * for more information
    */
   DC1394_BASLER_SFF_CRC_CHECKSUM,
-  
+
   /**
    * The test images feature is used to check the camera's basic
    * functionality and its ability to transmit an image via
@@ -108,7 +108,7 @@ typedef enum dc1394basler_sff_feature_t {
    * the image is generated with a software program and the camera's
    * digital devices and does not use the optics the pixel array
    * or the ADCs.
-   * 
+   *
    * <b>This feature is not implemented</b>
    */
   DC1394_BASLER_SFF_TEST_IMAGES,
@@ -162,7 +162,7 @@ typedef enum dc1394basler_sff_feature_t {
 typedef struct __dc1394basler_sff_t {
   dc1394basler_sff_feature_t feature_id;
 
-  /* the following members are used for iterating */  
+  /* the following members are used for iterating */
   void* frame_buffer;
   uint32_t frame_size;
   void* current_iter;
@@ -259,11 +259,11 @@ typedef struct dc1394basler_sff_dcam_values_t {
   /* gain */
   dc1394basler_dcam_csr_value_t gain_csr;
   uint32_t gain_absolute_value;
-  
+
   /* shutter */
   dc1394basler_dcam_csr_value_t shutter_csr;
   uint32_t shutter_absolute_value;
-  
+
   /* gamma */
   dc1394basler_dcam_csr_value_t gamma_csr;
   uint32_t gamma_absolute_value;

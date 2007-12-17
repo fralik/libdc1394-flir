@@ -23,7 +23,7 @@
 
 /* See the 1394-Based Digital Camera Spec. for definitions of these */
 
-/* Base ROM offsets */ 
+/* Base ROM offsets */
 
 #define ROM_BUS_INFO_BLOCK             0x400U
 #define ROM_ROOT_DIRECTORY             0x414U
@@ -97,7 +97,7 @@
 #define REG_CAMERA_TILT                     0x888U
 #define REG_CAMERA_OPTICAL_FILTER           0x88CU
 #define REG_CAMERA_CAPTURE_SIZE             0x8C0U
-#define REG_CAMERA_CAPTURE_QUALITY          0x8C4U 
+#define REG_CAMERA_CAPTURE_QUALITY          0x8C4U
 
 /* Format_7 offsets */
 

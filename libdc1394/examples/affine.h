@@ -22,12 +22,12 @@
 
 #include <math.h>
 
-/** Affine transforms for 2d image manipulation. Current provides shearing and 
-	rotating support.
+/** Affine transforms for 2d image manipulation. Current provides shearing and
+        rotating support.
 */
 
 typedef struct {
-	double matrix[2][2];
+        double matrix[2][2];
 } affine_transform_t;
 
 void affine_transform_init( affine_transform_t *this );

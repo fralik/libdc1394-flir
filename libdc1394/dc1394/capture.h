@@ -15,7 +15,7 @@
 /**
  * The capture policy: blocking (wait for a frame forever) or polling (returns if no frames in buffer)
  */
-typedef enum { 
+typedef enum {
     DC1394_CAPTURE_POLICY_WAIT=672,
     DC1394_CAPTURE_POLICY_POLL
 } dc1394capture_policy_t;

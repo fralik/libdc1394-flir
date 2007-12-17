@@ -21,14 +21,14 @@
 #define compat_h
 
 #if !(defined(DC1394_DLL_SYMBOL))
-#	if defined (DC1394_DLL_EXPORTS)
-#		if defined (_MSC_VER)
+#        if defined (DC1394_DLL_EXPORTS)
+#                if defined (_MSC_VER)
 __declspec(dllexport)
-#		elif defined (__GNUC__)
+#                elif defined (__GNUC__)
 __attribute__ ((dllexport))
-#		endif
-#	else
-#	endif
+#                endif
+#        else
+#        endif
 #endif
 
 #if defined (_MSC_VER)

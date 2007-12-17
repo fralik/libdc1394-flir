@@ -13,7 +13,7 @@
  *          application or the user: plugging in a camera, resetting the
  *          firewire bus, ....
  * debug:   A sort of way point for the library. This log level is supposed
- *          to report that a specific function has been entered or has 
+ *          to report that a specific function has been entered or has
  *          passed a certain stage. This log level is turned off by default
  *          and may produce a lot of output during regular operation.
  *          The main purpose for this log level is for debugging libdc1394
@@ -177,7 +177,7 @@ extern "C" {
  *             type: the type of log
  */
 dc1394error_t dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(dc1394log_t type,
-					  const char *message, void* user), void* user);
+                                          const char *message, void* user), void* user);
 
 /**
  * dc1394_log_set_default_handler: set the log handler to the default handler

@@ -25,7 +25,7 @@
 #endif
 
 typedef enum {
-  MSW1394_SUCCESS = 0,                                  
+  MSW1394_SUCCESS = 0,
   MSW1394_FAILURE,
   MSW1394_INVALID_PORT,
   MSW1394_NO_MEMORY,

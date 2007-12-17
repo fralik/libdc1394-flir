@@ -18,33 +18,33 @@
 typedef struct __dc1394format7mode_t
 {
     dc1394bool_t present;
-    
+
     uint32_t size_x;
     uint32_t size_y;
     uint32_t max_size_x;
     uint32_t max_size_y;
-    
+
     uint32_t pos_x;
     uint32_t pos_y;
-    
+
     uint32_t unit_size_x;
     uint32_t unit_size_y;
     uint32_t unit_pos_x;
     uint32_t unit_pos_y;
-    
+
     dc1394color_codings_t color_codings;
     dc1394color_coding_t color_coding;
-    
+
     uint32_t pixnum;
-    
+
     uint32_t packet_size; /* in bytes */
     uint32_t unit_packet_size;
     uint32_t max_packet_size;
-    
+
     uint64_t total_bytes;
-    
+
     dc1394color_filter_t color_filter;
-    
+
 } dc1394format7mode_t;
 
 /**
@@ -190,13 +190,13 @@ dc1394error_t dc1394_format7_get_mode_info(dc1394camera_t *camera, dc1394video_m
  * Note that this function does not SWITCH to the video mode passed as argument, it mearly sets it
  */
 dc1394error_t dc1394_format7_set_roi(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t color_coding,
-				     int32_t packet_size, int32_t left, int32_t top, int32_t width, int32_t height);
+                                     int32_t packet_size, int32_t left, int32_t top, int32_t width, int32_t height);
 
 /**
  * Joint function that fully gets a certain ROI taking all parameters into account.
  */
 dc1394error_t dc1394_format7_get_roi(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding,
-				     uint32_t *packet_size, uint32_t *left, uint32_t *top, uint32_t *width, uint32_t *height);
+                                     uint32_t *packet_size, uint32_t *left, uint32_t *top, uint32_t *width, uint32_t *height);
 
 #ifdef __cplusplus
 }

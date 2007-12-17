@@ -27,12 +27,12 @@
 
 typedef struct __dc1394_camera_msw
 {
-	dc1394camera_t camera;
-	int port;
-	SELF_ID selfid;
-	HANDLE bw_handle;
-	msw1394_ISO ISO;
-	dc1394video_frame_t *frames;	
+        dc1394camera_t camera;
+        int port;
+        SELF_ID selfid;
+        HANDLE bw_handle;
+        msw1394_ISO ISO;
+        dc1394video_frame_t *frames;
 } dc1394camera_msw_t;
 
 #endif

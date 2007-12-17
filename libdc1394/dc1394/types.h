@@ -44,7 +44,7 @@ typedef enum {
     DC1394_VIDEO_MODE_FORMAT7_6,
     DC1394_VIDEO_MODE_FORMAT7_7
 } dc1394video_mode_t;
-#define DC1394_VIDEO_MODE_MIN	    DC1394_VIDEO_MODE_160x120_YUV444
+#define DC1394_VIDEO_MODE_MIN            DC1394_VIDEO_MODE_160x120_YUV444
 #define DC1394_VIDEO_MODE_MAX       DC1394_VIDEO_MODE_FORMAT7_7
 #define DC1394_VIDEO_MODE_NUM      (DC1394_VIDEO_MODE_MAX - DC1394_VIDEO_MODE_MIN + 1)
 
@@ -124,7 +124,7 @@ typedef enum {
 } dc1394bool_t;
 
 /**
- * Yet another boolean data type 
+ * Yet another boolean data type
  */
 typedef enum {
     DC1394_OFF= 0,

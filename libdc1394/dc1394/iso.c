@@ -10,7 +10,7 @@ dc1394_iso_set_persist (dc1394camera_t * camera)
     dc1394error_t err;
     if ((err = platform_iso_set_persist (cpriv->pcam)) != DC1394_SUCCESS)
         return err;
-    
+
     cpriv->iso_persist = 1;
     return DC1394_SUCCESS;
 }
