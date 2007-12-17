@@ -12,7 +12,10 @@
 */
 
 /**
- * IIDC versions
+ * List of IIDC versions
+ *
+ * Currently, the following versions exist: 1.04, 1.20, PTGREY, 1.30 and 1.31 (1.32 coming soon)
+ * Observing other versions means that there's a bug crawling somewhere.
  */
 typedef enum {
     DC1394_IIDC_VERSION_1_04 = 544,
@@ -35,6 +38,8 @@ typedef enum {
 
 /**
  * Enumeration of power classes
+ *
+ * This is currently not used in libdc1394.
  */
 typedef enum {
     DC1394_POWER_CLASS_NONE=608,
@@ -52,6 +57,8 @@ typedef enum {
 
 /**
  * Enumeration of PHY delays
+ *
+ * This is currently not used in libdc1394.
  */
 typedef enum {
     DC1394_PHY_DELAY_MAX_144_NS=640,
@@ -65,6 +72,9 @@ typedef enum {
 
 /**
  * Camera structure
+ *
+ * This structure represents the camera in libdc1394. It contains a number of useful static information, such as model/vendor names,
+ * a few capabilities, some ROM offsets, a unique identifier, etc... 
  */
 typedef struct __dc1394_camera
 {
@@ -101,7 +111,10 @@ typedef struct __dc1394_camera
 } dc1394camera_t;
 
 /**
- * No Docs
+ * A unique identifier for a functional camera unit
+ *
+ * Since a single camera can contain several functional units (think stereo cameras), the GUID is not enough to identify an IIDC camera.
+ * The unit number must also be used, hence this struct. 
  */
 typedef struct
 {
@@ -110,7 +123,9 @@ typedef struct
 } dc1394camera_id_t;
 
 /**
- * No Docs
+ * A list of cameras
+ *
+ * Usually returned by dc1394_camera_eumerate(). 
  */
 typedef struct __dc1394camera_list_t
 {
@@ -129,12 +144,12 @@ extern "C" {
  ***************************************************************************/
 
 /**
- * No docs
+ * Creates a new context in which cameras can be searched and used. This should be called before using any other libdc1394 function. 
  */
 dc1394_t* dc1394_new (void);
 
 /**
- * No docs
+ * Liberates a context. Last function to use in your program. After this, no libdc1394 function can be used.
  */
 void dc1394_free (dc1394_t *dc1394);
 

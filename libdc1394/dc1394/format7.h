@@ -13,7 +13,7 @@
 */
 
 /**
- * No Docs
+ * A struct containing information about a mode of Format_7, the scalable image format.
  */
 typedef struct __dc1394format7mode_t
 {
@@ -48,12 +48,18 @@ typedef struct __dc1394format7mode_t
 } dc1394format7mode_t;
 
 /**
- * No Docs
+ * A struct containing the list of Format_7 modes.
+ * FIXME: this may become very big if format_7 pages are used in IIDC 1.32. It would be better to use a "num" and an allocated list.
  */
 typedef struct __dc1394format7modeset_t
 {
     dc1394format7mode_t mode[DC1394_VIDEO_MODE_FORMAT7_NUM];
 } dc1394format7modeset_t;
+
+/* Parameter flags for dc1394_setup_format7_capture() */
+#define DC1394_QUERY_FROM_CAMERA -1
+#define DC1394_USE_MAX_AVAIL     -2
+#define DC1394_USE_RECOMMENDED   -3
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,122 +72,122 @@ extern "C" {
 /* image size */
 
 /**
- * No Docs
+ * Gets the maximal image size for a given mode.
  */
 dc1394error_t dc1394_format7_get_max_image_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *h_size,uint32_t *v_size);
 
 /**
- * No Docs
+ * Gets the unit sizes for a given mode. The image size can only be a multiple of the unit size, and cannot be smaller than it.
  */
 dc1394error_t dc1394_format7_get_unit_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *h_unit, uint32_t *v_unit);
 
 /**
- * No Docs
+ * Gets the current image size.
  */
 dc1394error_t dc1394_format7_get_image_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *width, uint32_t *height);
 
 /**
- * No Docs
+ * Sets the current image size
  */
 dc1394error_t dc1394_format7_set_image_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t width, uint32_t height);
 
 /* image position */
 
 /**
- * No Docs
+ * Gets the current image position
  */
 dc1394error_t dc1394_format7_get_image_position(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *left, uint32_t *top);
 
 /**
- * No Docs
+ * Sets the current image position
  */
 dc1394error_t dc1394_format7_set_image_position(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t left, uint32_t top);
 
 /**
- * No Docs
+ * Gets the unit positions for a given mode. The image position can only be a multiple of the unit position (zero is acceptable).
  */
 dc1394error_t dc1394_format7_get_unit_position(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *h_unit_pos, uint32_t *v_unit_pos);
 
 /* color coding */
 
 /**
- * No Docs
+ * Gets the current color coding
  */
 dc1394error_t dc1394_format7_get_color_coding(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding);
 
 /**
- * No Docs
+ * Gets the list of color codings available for this mode
  */
 dc1394error_t dc1394_format7_get_color_codings(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_codings_t *codings);
 
 /**
- * No Docs
+ * Sets the current color coding
  */
 dc1394error_t dc1394_format7_set_color_coding(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t color_coding);
 
 /**
- * No Docs
+ * Gets the current color filter
  */
 dc1394error_t dc1394_format7_get_color_filter(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_filter_t *color_filter);
 
 /* packet */
 
 /**
- * No Docs
+ * Get the parameters of the packet size: its maximal size and its unit size. The packet size is always a multiple of the unit bytes and cannot be zero.
  */
 dc1394error_t dc1394_format7_get_packet_parameters(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *unit_bytes, uint32_t *max_bytes);
 
 /**
- * No Docs
+ * Gets the current packet size
  */
 dc1394error_t dc1394_format7_get_packet_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *packet_size);
 
 /**
- * No Docs
+ * Sets the current packet size
  */
 dc1394error_t dc1394_format7_set_packet_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t packet_size);
 
 /**
- * No Docs
+ * Gets the recommended packet size. Ignore if zero.
  */
 dc1394error_t dc1394_format7_get_recommended_packet_size(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *packet_size);
 
 /**
- * No Docs
+ * Gets the number of packets per frame.
  */
 dc1394error_t dc1394_format7_get_packets_per_frame(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *ppf);
 
 /* other */
 
 /**
- * No Docs
+ * Gets the data depth (e.g. 12, 13, 14 bits/pixel)
  */
 dc1394error_t dc1394_format7_get_data_depth(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *data_depth);
 
 /**
- * No Docs
+ * Gets the frame interval in float format
  */
 dc1394error_t dc1394_format7_get_frame_interval(dc1394camera_t *camera, dc1394video_mode_t video_mode, float *interval);
 
 /**
- * No Docs
+ * Gets the number of pixels per image frame
  */
 dc1394error_t dc1394_format7_get_pixel_number(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint32_t *pixnum);
 
 /**
- * No Docs
+ * Get the total number of bytes per frame. This includes padding (to reach an entire number of packets)
  */
 dc1394error_t dc1394_format7_get_total_bytes(dc1394camera_t *camera, dc1394video_mode_t video_mode, uint64_t *total_bytes);
 
 /* These functions get the properties of (one or all) format7 mode(s) */
 
 /**
- * No Docs
+ * Gets the properties of all Format_7 modes supported by the camera.
  */
 dc1394error_t dc1394_format7_get_modeset(dc1394camera_t *camera, dc1394format7modeset_t *info);
 
 /**
- * No Docs
+ * Gets the properties of a Format_7 mode
  */
 dc1394error_t dc1394_format7_get_mode_info(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394format7mode_t *f7_mode);
 

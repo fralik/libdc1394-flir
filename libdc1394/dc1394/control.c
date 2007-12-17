@@ -1781,13 +1781,6 @@ dc1394_feature_has_absolute_control(dc1394camera_t *camera, dc1394feature_t feat
 }
 
 
-/* This function returns the bandwidth that is used by the camera *IF* ISO was ON.
-   The returned value is in bandwidth units. The 1394 bus has 4915 bandwidth units
-   available per cycle. Each unit corresponds to the time it takes to send one
-   quadlet at ISO speed S1600. The bandwidth usage at S400 is thus four times the
-   number of quadlets per packet. Thanks to Krisitian Hogsberg for clarifying this.
-*/
-
 dc1394error_t
 dc1394_video_get_bandwidth_usage(dc1394camera_t *camera, uint32_t *bandwidth)
 {

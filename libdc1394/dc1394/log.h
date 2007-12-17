@@ -32,7 +32,9 @@
 */
 
 /**
- * Return values for visible functions
+ * Error codes returned by most libdc1394 functions.
+ *
+ * General rule: 0 is success, negative denotes a problem.
  */
 typedef enum {
     DC1394_SUCCESS                     =  0,
@@ -82,6 +84,11 @@ typedef enum {
 
 /**
  * Types of logging messages
+ *
+ * Three types exist:
+ * - ERROR for real, hard, unrecoverable errors that will result in the program terminating.
+ * - WARNING for things that have gone wrong, but are not requiring a termination of the program.
+ * - DEBUG for debug messages that can be very verbose but may help the developers to fix bugs.
  */
 typedef enum {
     DC1394_LOG_ERROR=768,

@@ -1,4 +1,6 @@
 2007-12-17 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 522: Write a very basic, one-line description of (almost) every
+	           function.
 	* SVN 521: little cleanup in the example programs
 	* SVN 520: comments don't end with "\n", so that custom handlers can
 	           choose what to do (use "\r", for instance). Instead, the

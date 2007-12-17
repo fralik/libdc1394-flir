@@ -119,7 +119,7 @@ typedef enum {
 #define DC1394_FEATURE_MODE_NUM     (DC1394_FEATURE_MODE_MAX - DC1394_FEATURE_MODE_MIN + 1)
 
 /**
- * No Docs
+ * List of feature modes
  */
 typedef struct
 {
@@ -128,7 +128,7 @@ typedef struct
 } dc1394feature_modes_t;
 
 /**
- * No Docs
+ * List of trigger modes
  */
 typedef struct
 {
@@ -137,7 +137,7 @@ typedef struct
 } dc1394trigger_modes_t;
 
 /**
- * No Docs
+ * List of trigger sources
  */
 typedef struct
 {
@@ -146,7 +146,9 @@ typedef struct
 } dc1394trigger_sources_t;
 
 /**
- * No Docs
+ * A structure containing all information about a feature.
+ *
+ * Some fields are only valid for some features (e.g. trigger, white balance,...)
  */
 typedef struct __dc1394feature_info_t_struct
 {
@@ -182,7 +184,7 @@ typedef struct __dc1394feature_info_t_struct
 } dc1394feature_info_t;
 
 /**
- * No Docs
+ * The list of features
  */
 typedef struct __dc1394featureset_t
 {
@@ -208,48 +210,128 @@ dc1394error_t dc1394_feature_get_all(dc1394camera_t *camera, dc1394featureset_t 
 dc1394error_t dc1394_feature_get(dc1394camera_t *camera, dc1394feature_info_t *feature);
 
 /**
- * Displays the bounds and options of the given feature or of the entire feature set
+ * Displays the bounds and options of the given feature
  */
 dc1394error_t dc1394_feature_print(dc1394feature_info_t *feature, FILE *fd);
+
+/**
+ * Displays the bounds and options of every feature supported by the camera
+ */
 dc1394error_t dc1394_feature_print_all(dc1394featureset_t *features, FILE *fd);
 
 /**
- * get/set the values of multiple-value features on the camera
+ * Gets the whitebalance values
  */
 dc1394error_t dc1394_feature_whitebalance_get_value(dc1394camera_t *camera, uint32_t *u_b_value, uint32_t *v_r_value);
+
+/**
+ * Sets the whitebalance values
+ */
 dc1394error_t dc1394_feature_whitebalance_set_value(dc1394camera_t *camera, uint32_t u_b_value, uint32_t v_r_value);
+
+/**
+ * Gets the temperature values (target and current)
+ */
 dc1394error_t dc1394_feature_temperature_get_value(dc1394camera_t *camera, uint32_t *target_temperature, uint32_t *temperature);
+
+/**
+ * Sets the temperature values (target only) FIXME: COULD BE DROPPED? already in the standard feature_set_value()?
+ */
 dc1394error_t dc1394_feature_temperature_set_value(dc1394camera_t *camera, uint32_t target_temperature);
+
+/**
+ * Gets the white shading values
+ */
 dc1394error_t dc1394_feature_whiteshading_get_value(dc1394camera_t *camera, uint32_t *r_value, uint32_t *g_value, uint32_t *b_value);
+
+/**
+ * Sets the white shading values
+ */
 dc1394error_t dc1394_feature_whiteshading_set_value(dc1394camera_t *camera, uint32_t r_value, uint32_t g_value, uint32_t b_value);
 
 /**
- * get/set the values of single-value features on the camera
+ * Gets the value of a feature
  */
 dc1394error_t dc1394_feature_get_value(dc1394camera_t *camera, dc1394feature_t feature, uint32_t *value);
+
+/**
+ * Sets the value of a feature
+ */
 dc1394error_t dc1394_feature_set_value(dc1394camera_t *camera, dc1394feature_t feature, uint32_t value);
 
 /**
- * query/set specific feature characteristics
+ * Tells whether a feature is present or not
  */
 dc1394error_t dc1394_feature_is_present(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+
+/**
+ * Tells whether a feature is readable or not
+ */
 dc1394error_t dc1394_feature_is_readable(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+
+/**
+ * Gets the boundaries of a feature
+ */
 dc1394error_t dc1394_feature_get_boundaries(dc1394camera_t *camera, dc1394feature_t feature, uint32_t *min, uint32_t *max);
+
+/**
+ * Tells whether a feature is switcheable or not (ON/OFF)
+ */
 dc1394error_t dc1394_feature_is_switchable(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+
+/**
+ * Gets the power status of a feature (ON or OFF)
+ */
 dc1394error_t dc1394_feature_get_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t *pwr);
+
+/**
+ * Sets the power status of a feature (ON or OFF)
+ */
 dc1394error_t dc1394_feature_set_power(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t pwr);
+
+/**
+ * Gets the list of control modes for a feature (manual, auto, etc...)
+ */
 dc1394error_t dc1394_feature_get_modes(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_modes_t *modes);
+
+/**
+ * Gets the current control modes for a feature
+ */
 dc1394error_t dc1394_feature_get_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_mode_t *mode);
+
+/**
+ * Sets the current control modes for a feature
+ */
 dc1394error_t dc1394_feature_set_mode(dc1394camera_t *camera, dc1394feature_t feature, dc1394feature_mode_t mode);
 
 /**
- * absolute settings
+ * Tells whether a feature can be controlled in absolute mode
  */
 dc1394error_t dc1394_feature_has_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, dc1394bool_t *value);
+
+/**
+ * Gets the absolute boundaries of a feature
+ */
 dc1394error_t dc1394_feature_get_absolute_boundaries(dc1394camera_t *camera, dc1394feature_t feature, float *min, float *max);
+
+/**
+ * Gets the absolute value of a feature
+ */
 dc1394error_t dc1394_feature_get_absolute_value(dc1394camera_t *camera, dc1394feature_t feature, float *value);
+
+/**
+ * Sets the absolute value of a feature
+ */
 dc1394error_t dc1394_feature_set_absolute_value(dc1394camera_t *camera, dc1394feature_t feature, float value);
+
+/**
+ * Gets the status of absolute control of a feature
+ */
 dc1394error_t dc1394_feature_get_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t *pwr);
+
+/**
+ * Sets the feature in absolute control mode (ON/OFF)
+ */
 dc1394error_t dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394feature_t feature, dc1394switch_t pwr);
 
 /***************************************************************************
@@ -257,23 +339,63 @@ dc1394error_t dc1394_feature_set_absolute_control(dc1394camera_t *camera, dc1394
  ***************************************************************************/
 
 /**
- * external trigger feature functions
+ * Sets the polarity of the external trigger
  */
 dc1394error_t dc1394_external_trigger_set_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t polarity);
+
+/**
+ * Gets the polarity of the external trigger
+ */
 dc1394error_t dc1394_external_trigger_get_polarity(dc1394camera_t *camera, dc1394trigger_polarity_t *polarity);
+
+/**
+ * Tells whether the external trigger can change its polarity or not.
+ */
 dc1394error_t dc1394_external_trigger_has_polarity(dc1394camera_t *camera, dc1394bool_t *polarity_capable);
+
+/**
+ * Switch between internal and external trigger
+ */
 dc1394error_t dc1394_external_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
+
+/**
+ * Gets the status of the external trigger
+ */
 dc1394error_t dc1394_external_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr);
+
+/**
+ * Sets the external trigger mode
+ */
 dc1394error_t dc1394_external_trigger_set_mode(dc1394camera_t *camera, dc1394trigger_mode_t mode);
+
+/**
+ * Gets the external trigger mode
+ */
 dc1394error_t dc1394_external_trigger_get_mode(dc1394camera_t *camera, dc1394trigger_mode_t *mode);
+
+/**
+ * Sets the external trigger source
+ */
 dc1394error_t dc1394_external_trigger_set_source(dc1394camera_t *camera, dc1394trigger_source_t source);
+
+/**
+ * Gets the external trigger source
+ */
 dc1394error_t dc1394_external_trigger_get_source(dc1394camera_t *camera, dc1394trigger_source_t *source);
+
+/**
+ * Gets the list of available external trigger source
+ */
 dc1394error_t dc1394_external_trigger_get_supported_sources(dc1394camera_t *camera, dc1394trigger_sources_t *sources);
 
 /**
- * Turn one software trigger on or off and get state
+ * Turn software trigger on or off
  */
 dc1394error_t dc1394_software_trigger_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
+
+/**
+ * Gets the state of software trigger
+ */
 dc1394error_t dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394switch_t *pwr);
 
 /***************************************************************************
@@ -281,9 +403,13 @@ dc1394error_t dc1394_software_trigger_get_power(dc1394camera_t *camera, dc1394sw
  ***************************************************************************/
 
 /**
- * PIO (Parallel Input-Output)
+ * Sends a quadlet on the PIO (output)
  */
 dc1394error_t dc1394_pio_set(dc1394camera_t *camera, uint32_t value);
+
+/**
+ * Gets the current quadlet at the PIO (input)
+ */
 dc1394error_t dc1394_pio_get(dc1394camera_t *camera, uint32_t *value);
 
 /***************************************************************************
@@ -301,10 +427,21 @@ dc1394error_t dc1394_camera_reset(dc1394camera_t *camera);
 dc1394error_t dc1394_camera_set_power(dc1394camera_t *camera, dc1394switch_t pwr);
 
 /**
- * functions to read and write camera setups in its memory channels. The _busy function can be used to verify when a write operation is finished.
+ * Download a camera setup from the memory.
  */
 dc1394error_t dc1394_memory_busy(dc1394camera_t *camera, dc1394bool_t *value);
+
+/**
+ * Uploads a camera setup in the memory.
+ *
+ * Note that this operation can only be performed a certain number of
+ * times for a given camera, as it requires reprogramming of an EEPROM.
+ */
 dc1394error_t dc1394_memory_save(dc1394camera_t *camera, uint32_t channel);
+
+/**
+ * Tells whether the writing of the camera setup in memory is finished or not.
+ */
 dc1394error_t dc1394_memory_load(dc1394camera_t *camera, uint32_t channel);
 
 

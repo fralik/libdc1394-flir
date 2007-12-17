@@ -44,10 +44,4 @@
 #include <dc1394/video.h>
 #include <dc1394/utils.h>
 
-/*! \file control.h
-    \brief Controls the library
-
-    More details soon
-*/
-
 #endif

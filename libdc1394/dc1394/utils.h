@@ -33,62 +33,64 @@ extern "C" {
 #endif
 
 /**
- * No Docs
+ * Returns the image width and height (in pixels) corresponding to a video mode. Works for scalable and non-scalable video modes.
  */
 dc1394error_t dc1394_get_image_size_from_video_mode(dc1394camera_t *camera, uint32_t video_mode, uint32_t *width, uint32_t *height);
 
 /**
- * No Docs
+ * Returns the given framerate as a float.
  */
 dc1394error_t dc1394_framerate_as_float(dc1394framerate_t framerate_enum, float *framerate);
 
 /**
- * No Docs
+ * Returns the number of bits per pixel for a certain color coding. This is the size of the data sent on the bus, the effective
+ * data depth may vary. Example: RGB16 is 16, YUV411 is 8, YUV422 is 8.
  */
 dc1394error_t dc1394_get_color_coding_depth(dc1394color_coding_t color_coding, uint32_t * bits);
 
 /**
- * No Docs
+ * Returns the bit-space used by a pixel. This is different from the data depth! For instance, RGB16 has a bit space of 48 bits,
+ * YUV422 is 16bits and YU411 is 12bits. 
  */
 dc1394error_t dc1394_get_bits_per_pixel(dc1394color_coding_t color_coding, uint32_t* bits);
 
 /**
- * No Docs
+ * Returns the color coding from the video mode. Works with scalable image formats too.
  */
 dc1394error_t dc1394_get_color_coding_from_video_mode(dc1394camera_t *camera, dc1394video_mode_t video_mode, dc1394color_coding_t *color_coding);
 
 /**
- * No Docs
+ * Tells whether the color mode is color or monochrome
  */
 dc1394error_t dc1394_is_color(dc1394color_coding_t color_mode, dc1394bool_t *is_color);
 
 /**
- * No Docs
+ * Tells whether the video mode is scalable or not.
  */
 dc1394bool_t dc1394_is_video_mode_scalable(dc1394video_mode_t video_mode);
 
 /**
- * No Docs
+ * Tells whether the video mode is "still image" or not ("still image" is currently not supported by any cameras on the market)
  */
 dc1394bool_t dc1394_is_video_mode_still_image(dc1394video_mode_t video_mode);
 
 /**
- * No Docs
+ * Tells whether two IDs refer to the same physical camera unit.
  */
 dc1394bool_t dc1394_is_same_camera(dc1394camera_id_t id1, dc1394camera_id_t id2);
 
 /**
- * No Docs
+ * Returns a descriptive name for a feature 
  */
 const char * dc1394_feature_get_string(dc1394feature_t feature);
 
 /**
- * No Docs
+ * Returns a descriptive string for an error code
  */
 const char * dc1394_error_get_string(dc1394error_t error);
 
 /**
- * No Docs
+ * Calculates the CRC16 checksum of a memory region. Useful to verify the CRC of an image buffer, for instance.
  */
 uint16_t dc1394_checksum_crc16 (const uint8_t* buffer, uint32_t buffer_size);
 

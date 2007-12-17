@@ -35,7 +35,9 @@
 #define restrict __restrict
 
 /**
- * No Docs
+ * A list of de-mosaicing techniques for Bayer-patterns.
+ *
+ * The speed of the techniques can vary greatly, as well as their quality.
  */
 typedef enum {
     DC1394_BAYER_METHOD_NEAREST=0,
@@ -52,7 +54,7 @@ typedef enum {
 #define DC1394_BAYER_METHOD_NUM     (DC1394_BAYER_METHOD_MAX-DC1394_BAYER_METHOD_MIN+1)
 
 /**
- * No Docs
+ * A list of known stereo-in-normal-video modes used by manufacturers like Point Grey Research and Videre Design.
  */
 typedef enum {
     DC1394_STEREO_METHOD_INTERLACED=0,
@@ -97,21 +99,21 @@ extern "C" {
  **********************************************************************/
 
 /**
- * No Docs
+ * Converts an image buffer to YUV422
  */
 dc1394error_t
 dc1394_convert_to_YUV422(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
                          dc1394color_coding_t source_coding, uint32_t bits);
 
 /**
- * No Docs
+ * Converts an image buffer to MONO8
  */
 dc1394error_t
 dc1394_convert_to_MONO8(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
                         dc1394color_coding_t source_coding, uint32_t bits);
 
 /**
- * No Docs
+ * Converts an image buffer to RGB8
  */
 dc1394error_t
 dc1394_convert_to_RGB8(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t height, uint32_t byte_order,
@@ -158,7 +160,7 @@ dc1394_deinterlace_stereo(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t 
  ************************************************************************************************/
 
 /**
- * No Docs
+ * Perform de-mosaicing on an 8-bit image buffer
  */
 dc1394error_t
 dc1394_bayer_decoding_8bit(const uint8_t *bayer, uint8_t *rgb,
@@ -166,7 +168,7 @@ dc1394_bayer_decoding_8bit(const uint8_t *bayer, uint8_t *rgb,
                            dc1394bayer_method_t method);
 
 /**
- * No Docs
+ * Perform de-mosaicing on an 16-bit image buffer
  */
 dc1394error_t
 dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
@@ -179,19 +181,25 @@ dc1394_bayer_decoding_16bit(const uint16_t *bayer, uint16_t *rgb,
  **********************************************************************************/
 
 /**
- * No Docs
+ * Converts the format of a video frame.
+ *
+ * To set the format of the output, simply set the values of the corresponding fields in the output frame
  */
 dc1394error_t
 dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out);
 
 /**
- * No Docs
+ * De-mosaicing of a Bayer-encoded video frame
+ *
+ * To set the format of the output, simply set the values of the corresponding fields in the output frame
  */
 dc1394error_t
 dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method);
 
 /**
- * No Docs
+ * De-interlacing of stereo data for cideo frames
+ *
+ * To set the format of the output, simply set the values of the corresponding fields in the output frame
  */
 dc1394error_t
 dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394stereo_method_t method);

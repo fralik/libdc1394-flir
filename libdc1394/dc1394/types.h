@@ -8,7 +8,7 @@
 */
 
 /**
- * Enumeration of video modes
+ * Enumeration of video modes. Note that the notion of IIDC "format" is not present here, except in the format_7 name.
  */
 typedef enum {
     DC1394_VIDEO_MODE_160x120_YUV444= 64,
@@ -54,7 +54,7 @@ typedef enum {
 #define DC1394_VIDEO_MODE_FORMAT7_NUM      (DC1394_VIDEO_MODE_FORMAT7_MAX - DC1394_VIDEO_MODE_FORMAT7_MIN + 1)
 
 /**
- * Enumeration of colour modings
+ * Enumeration of colour codings. For details on the data format please read the IIDC specifications.
  */
 typedef enum {
     DC1394_COLOR_CODING_MONO8= 352,
@@ -74,7 +74,12 @@ typedef enum {
 #define DC1394_COLOR_CODING_NUM    (DC1394_COLOR_CODING_MAX - DC1394_COLOR_CODING_MIN + 1)
 
 /**
- * Format 7 RAW sensor layouts
+ * RAW sensor filters. These elementary tiles tesselate the image plane in RAW modes. RGGB should be interpreted in 2D as
+ *
+ *    RG
+ *    GB
+ *
+ * and similarly for other filters.
  */
 typedef enum {
     DC1394_COLOR_FILTER_RGGB = 512,
@@ -88,6 +93,8 @@ typedef enum {
 
 /**
  * Byte order for YUV formats (may be expanded to RGB in the future)
+ *
+ * IIDC cameras always return data in UYVY order, but conversion functions can change this if requested.
  */
 typedef enum {
     DC1394_BYTE_ORDER_UYVY=800,
@@ -98,7 +105,7 @@ typedef enum {
 #define DC1394_BYTE_ORDER_NUM       (DC1394_BYTE_ORDER_MAX - DC1394_BYTE_ORDER_MIN + 1)
 
 /**
- * No Docs
+ * A struct containing a list of color codings
  */
 typedef struct
 {
@@ -107,7 +114,7 @@ typedef struct
 } dc1394color_codings_t;
 
 /**
- * No Docs
+ * A struct containing a list of video modes
  */
 typedef struct
 {
@@ -124,7 +131,7 @@ typedef enum {
 } dc1394bool_t;
 
 /**
- * Yet another boolean data type
+ * Yet another boolean data type, a bit more oriented towards electrical-engineers
  */
 typedef enum {
     DC1394_OFF= 0,
