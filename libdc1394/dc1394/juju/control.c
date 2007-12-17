@@ -88,7 +88,7 @@ platform_get_device_list (platform_t * p)
         snprintf(filename, sizeof filename, "/dev/%s", de->d_name);
         fd = open(filename, O_RDWR);
         if (fd < 0) {
-            dc1394_log_warning("Failed to open %s: %s\n", filename, strerror (errno));
+            dc1394_log_warning("Failed to open %s: %s", filename, strerror (errno));
             continue;
         }
 
@@ -103,7 +103,7 @@ platform_get_device_list (platform_t * p)
         get_info.rom_length = 1024;
         get_info.bus_reset = ptr_to_u64(&reset);
         if (ioctl(fd, FW_CDEV_IOC_GET_INFO, &get_info) < 0) {
-            dc1394_log_error("GET_CONFIG_ROM failed");
+            dc1394_log_error("GET_CONFIG_ROM failed for %s: %m",filename);
             free (device);
             close(fd);
             continue;
@@ -157,7 +157,7 @@ platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_d
 
     fd = open(device->filename, O_RDWR);
     if (fd < 0) {
-        dc1394_log_error("could not open device");
+        dc1394_log_error("could not open device %s: %m", device->filename);
         return NULL;
     }
 
@@ -166,7 +166,7 @@ platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_d
     get_info.rom_length = 0;
     get_info.bus_reset = ptr_to_u64(&reset);
     if (ioctl(fd, FW_CDEV_IOC_GET_INFO, &get_info) < 0) {
-        dc1394_log_error("IOC_GET_INFO failed for a device");
+        dc1394_log_error("IOC_GET_INFO failed for a device %s: %m",device->filename);
         close(fd);
         return NULL;
     }
@@ -211,7 +211,7 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
 
     len = read (cam->fd, &u, sizeof u);
     if (len < 0) {
-        dc1394_log_error("failed to read response: %m\n");
+        dc1394_log_error("failed to read response for %s: %m",cam->filename);
         return -1;
     }
 
@@ -222,7 +222,7 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
 
     case FW_CDEV_EVENT_RESPONSE:
 #if 0
-        printf ("type %d rcode %d length %d\n", u.response.r.type,
+        printf ("type %d rcode %d length %d", u.response.r.type,
                 u.response.r.rcode, u.response.r.length);
 #endif
         if (u.response.r.rcode == 4)

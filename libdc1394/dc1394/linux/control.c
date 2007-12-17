@@ -167,7 +167,7 @@ platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_d
         return NULL;
 
     if (device->generation != raw1394_get_generation (handle)) {
-        dc1394_log_error("generation has changed since bus was scanned\n");
+        dc1394_log_error("generation has changed since bus was scanned");
         raw1394_destroy_handle (handle);
         return NULL;
     }
@@ -340,7 +340,7 @@ platform_iso_allocate_channel (platform_camera_t * cam,  uint64_t channels_allow
     }
 
     if (i == 64) {
-        dc1394_log_error ("Error: Failed to allocate iso channel\n", NULL);
+        dc1394_log_error ("Error: Failed to allocate iso channel");
         return DC1394_NO_ISO_CHANNEL;
     }
 
@@ -352,7 +352,7 @@ dc1394error_t
 platform_iso_release_channel (platform_camera_t * cam, int channel)
 {
     if (raw1394_channel_modify (cam->handle, channel, RAW1394_MODIFY_FREE) < 0) {
-        dc1394_log_error("Error: Could not free iso channel\n");
+        dc1394_log_error("Error: Could not free iso channel");
         return DC1394_FAILURE;
     }
 
@@ -363,7 +363,7 @@ dc1394error_t
 platform_iso_allocate_bandwidth (platform_camera_t * cam, int bandwidth_units)
 {
     if (raw1394_bandwidth_modify (cam->handle, bandwidth_units, RAW1394_MODIFY_ALLOC) < 0) {
-        dc1394_log_error ("Error: Failed to allocate iso bandwidth\n");
+        dc1394_log_error ("Error: Failed to allocate iso bandwidth");
         return DC1394_NO_BANDWIDTH;
     }
 
@@ -374,7 +374,7 @@ dc1394error_t
 platform_iso_release_bandwidth (platform_camera_t * cam, int bandwidth_units)
 {
     if (raw1394_bandwidth_modify (cam->handle, bandwidth_units, RAW1394_MODIFY_FREE) < 0) {
-        dc1394_log_error ("Error: Failed to free iso bandwidth\n");
+        dc1394_log_error ("Error: Failed to free iso bandwidth");
         return DC1394_FAILURE;
     }
 

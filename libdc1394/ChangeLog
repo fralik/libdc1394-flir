@@ -1,3 +1,9 @@
+2007-12-17 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 520: comments don't end with "\n", so that custom handlers can
+	           choose what to do (use "\r", for instance). Instead, the
+		   "\n" is added in the default handlers. Some vararg
+		   comments have also been also reinstated.
+
 2007-12-16 David Moore  <dcm@acm.org>
 	* SVN 519: Convert tabs to spaces and delete trailing whitespace.
 

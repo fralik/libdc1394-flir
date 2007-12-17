@@ -3,17 +3,17 @@
 #include <stdarg.h>
 
 static void default_errorlog_handler(dc1394log_t type, const char *message, void* user) {
-    fprintf(stderr, "libdc1394 error: %s", message);
+    fprintf(stderr, "libdc1394 error: %s\n", message);
     return;
 }
 
 static void default_warninglog_handler(dc1394log_t type, const char *message, void* user) {
-    fprintf(stderr, "libdc1394 warning: %s", message);
+    fprintf(stderr, "libdc1394 warning: %s\n", message);
     return;
 }
 
 static void default_debuglog_handler(dc1394log_t type, const char *message, void* user) {
-    fprintf(stderr, "libdc1394 debug: %s", message);
+    fprintf(stderr, "libdc1394 debug: %s\n", message);
     return;
 }
 

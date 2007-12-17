@@ -91,7 +91,7 @@ queue_frame (platform_camera_t *craw, int index)
 
     retval = ioctl(craw->iso_fd, FW_CDEV_IOC_QUEUE_ISO, &queue);
     if (retval < 0) {
-        dc1394_log_error("queue_iso failed; %m\n");
+        dc1394_log_error("queue_iso failed; %m");
         return DC1394_IOCTL_FAILURE;
     }
 
@@ -130,7 +130,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
 
     // allocate channel/bandwidth if requested
     if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
-        dc1394_log_warning ("Warning: iso allocation not implemented yet for juju drivers, using channel 0...\n");
+        dc1394_log_warning ("Warning: iso allocation not implemented yet for juju drivers, using channel 0...");
         if (dc1394_video_set_iso_channel (camera, 0) != DC1394_SUCCESS)
             return DC1394_NO_ISO_CHANNEL;
     }
@@ -138,7 +138,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
     err = DC1394_FAILURE;
     craw->iso_fd = open(craw->filename, O_RDWR);
     if (craw->iso_fd < 0) {
-        dc1394_log_error("error opening file: %s\n", strerror (errno));
+        dc1394_log_error("error opening file: %s", strerror (errno));
         return DC1394_FAILURE;
     }
 
@@ -148,7 +148,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
     create.speed = SCODE_400;
     err = DC1394_IOCTL_FAILURE;
     if (ioctl(craw->iso_fd, FW_CDEV_IOC_CREATE_ISO_CONTEXT, &create) < 0) {
-        dc1394_log_error("failed to create iso context\n");
+        dc1394_log_error("failed to create iso context");
         goto error_fd;
     }
 
@@ -156,7 +156,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
 
     err = capture_basic_setup(camera, &proto);
     if (err != DC1394_SUCCESS) {
-        dc1394_log_error("basic setup failed\n");
+        dc1394_log_error("basic setup failed");
         goto error_fd;
     }
 
@@ -180,7 +180,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
     for (i = 0; i < num_dma_buffers; i++) {
         err = init_frame(craw, i, &proto);
         if (err != DC1394_SUCCESS) {
-            dc1394_log_error("error initing frames\n");
+            dc1394_log_error("error initing frames");
             break;
         }
     }
@@ -193,7 +193,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
     for (i = 0; i < num_dma_buffers; i++) {
         err = queue_frame(craw, i);
         if (err != DC1394_SUCCESS) {
-            dc1394_log_error("error queuing\n");
+            dc1394_log_error("error queuing");
             goto error_frames;
         }
     }
@@ -209,7 +209,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
     retval = ioctl(craw->iso_fd, FW_CDEV_IOC_START_ISO, &start_iso);
     err = DC1394_IOCTL_FAILURE;
     if (retval < 0) {
-        dc1394_log_error("error starting iso\n");
+        dc1394_log_error("error starting iso");
         goto error_frames;
     }
 
@@ -296,7 +296,7 @@ platform_capture_dequeue (platform_camera_t * craw, dc1394capture_policy_t polic
     while (craw->ready_frames == 0) {
         err = poll(fds, 1, timeout);
         if (err < 0) {
-            dc1394_log_error("poll() failed for a device");
+            dc1394_log_error("poll() failed for device %s.", craw->filename);
             return DC1394_FAILURE;
         } else if (err == 0) {
             return DC1394_SUCCESS;
@@ -304,7 +304,7 @@ platform_capture_dequeue (platform_camera_t * craw, dc1394capture_policy_t polic
 
         len = read (craw->iso_fd, &iso, sizeof iso);
         if (len < 0) {
-            dc1394_log_error("failed to read a response\n");
+            dc1394_log_error("failed to read a response: %m");
             return DC1394_FAILURE;
         }
 
@@ -332,7 +332,7 @@ platform_capture_enqueue (platform_camera_t * craw, dc1394video_frame_t * frame)
 
     err = DC1394_INVALID_ARGUMENT_VALUE;
     if (frame->camera != camera)
-        DC1394_ERR_RTN(err, "camera does not match frame's camera\n");
+        DC1394_ERR_RTN(err, "camera does not match frame's camera");
 
     err = queue_frame (craw, frame->id);
     DC1394_ERR_RTN(err, "Failed to queue frame");

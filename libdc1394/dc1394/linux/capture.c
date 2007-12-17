@@ -138,7 +138,7 @@ capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
     }
 
     if (open_dma_device(craw) != DC1394_SUCCESS) {
-        dc1394_log_warning("Could not open video1394 device file in /dev\n");
+        dc1394_log_warning("Could not open video1394 device file in /dev");
         capture_cleanup_alloc(); // free allocated memory if necessary
         return DC1394_INVALID_VIDEO1394_DEVICE;
     }
@@ -151,7 +151,7 @@ capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
 
     /* tell the video1394 system that we want to listen to the given channel */
     if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_LISTEN_CHANNEL, &vmmap) < 0) {
-        dc1394_log_error("VIDEO1394_IOC_LISTEN_CHANNEL ioctl failed\n");
+        dc1394_log_error("VIDEO1394_IOC_LISTEN_CHANNEL ioctl failed: %s", strerror(errno));
         capture_cleanup_alloc(); // free allocated memory if necessary
         return DC1394_IOCTL_FAILURE;
     }
@@ -168,7 +168,7 @@ capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
         vwait.buffer= i;
 
         if (ioctl(craw->capture.dma_fd,VIDEO1394_IOC_LISTEN_QUEUE_BUFFER,&vwait) < 0) {
-            dc1394_log_error("VIDEO1394_IOC_LISTEN_QUEUE_BUFFER ioctl failed\n");
+            dc1394_log_error("VIDEO1394_IOC_LISTEN_QUEUE_BUFFER ioctl failed");
             ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(vwait.channel));
             craw->capture_is_set=0;
             capture_cleanup_alloc(); // free allocated memory if necessary
@@ -182,27 +182,22 @@ capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
 
     /* make sure the ring buffer was allocated */
     if (craw->capture.dma_ring_buffer == (uint8_t*)(-1)) {
-        dc1394_log_error("mmap failed!\n");
+        dc1394_log_error("mmap failed!");
         ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
         craw->capture_is_set=0;
         capture_cleanup_alloc(); // free allocated memory if necessary
 
         // This should be display if the user has low memory
         if (vmmap.nb_buffers * vmmap.buf_size > sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES)) {
-            dc1394_log_error("Unable to allocate DMA buffer.\nThe requested size is bigger than the available memory.\nPlease free some memory before allocating the buffers\n");
-            /*
-              printf("Unable to allocate DMA buffer. The requested size (0x%ux or %ud MiB,\n",
-              vmmap.nb_buffers * vmmap.buf_size,
-              vmmap.nb_buffers * vmmap.buf_size/1048576);
-              printf("is bigger than the available memory (0x%lux or %lud MiB)!\n",
-              sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES),
-              sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES)/1048576);
-              printf("Please free some memory before allocating the buffers.\n");
-            */
+            dc1394_log_error("Unable to allocate DMA buffer.\nThe requested size (0x%ux or %ud MiB) is bigger than the available memory (0x%lux or %lud MiB).\nPlease free some memory before allocating the buffers",
+			     vmmap.nb_buffers * vmmap.buf_size,
+			     vmmap.nb_buffers * vmmap.buf_size/1048576,
+			     sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES),
+			     sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES)/1048576);
         } else {
             // if it's not low memory, then it's the vmalloc limit.
             // VMALLOC_RESERVED not sufficient (default is 128MiB in recent kernels)
-            dc1394_log_error("Unable to allocate DMA buffer. The requested size may be larger than the usual default VMALLOC_RESERVED limit of 128MiB. To verify this, look for the following line in dmesg:\n'allocation failed: out of vmalloc space'\nIf you see this, reboot with the kernel boot parameter:\n'vmalloc=k'\nwhere k (in bytes) is larger than your requested DMA ring buffer size.\nNote that other processes share the vmalloc space so you may need a\nlarge amount of vmalloc memory.\n");
+            dc1394_log_error("Unable to allocate DMA buffer. The requested size (0x%x) may be larger than the usual default VMALLOC_RESERVED limit of 128MiB. To verify this, look for the following line in dmesg:\n'allocation failed: out of vmalloc space'\nIf you see this, reboot with the kernel boot parameter:\n'vmalloc=k'\nwhere k (in bytes) is larger than your requested DMA ring buffer size.\nNote that other processes share the vmalloc space so you may need a\nlarge amount of vmalloc memory.", vmmap.nb_buffers * vmmap.buf_size);
             //}
         }
         return DC1394_IOCTL_FAILURE;
@@ -317,19 +312,19 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     if (craw->allocated_channel >= 0) {
         if (dc1394_iso_release_channel (camera, craw->allocated_channel)
             != DC1394_SUCCESS)
-            dc1394_log_warning("Warning: Could not free ISO channel\n");
+            dc1394_log_warning("Warning: Could not free ISO channel");
     }
     if (craw->allocated_bandwidth) {
         if (dc1394_iso_release_bandwidth (camera, craw->allocated_bandwidth)
             != DC1394_SUCCESS)
-            dc1394_log_warning("Warning: Could not free bandwidth\n");
+            dc1394_log_warning("Warning: Could not free bandwidth");
     }
     craw->allocated_channel = -1;
     craw->allocated_bandwidth = 0;
 
     free (craw->capture.frames);
     craw->capture.frames = NULL;
-    dc1394_log_error ("Error: Failed to setup DMA capture\n");
+    dc1394_log_error ("Error: Failed to setup DMA capture");
 
     return DC1394_FAILURE;
 }
@@ -360,7 +355,7 @@ platform_capture_stop(platform_camera_t *craw)
         if (_dc1394_num_using_fd[craw->port] == 0) {
 
             while (close(craw->capture.dma_fd) != 0) {
-                dc1394_log_debug("waiting for dma_fd to close\n");
+                dc1394_log_debug("waiting for dma_fd to close");
                 sleep (1);
             }
 
@@ -379,12 +374,12 @@ platform_capture_stop(platform_camera_t *craw)
         if (craw->allocated_channel >= 0) {
             if (dc1394_iso_release_channel (camera, craw->allocated_channel)
                 != DC1394_SUCCESS)
-                dc1394_log_warning("Warning: Could not free ISO channel\n");
+                dc1394_log_warning("Warning: Could not free ISO channel");
         }
         if (craw->allocated_bandwidth) {
             if (dc1394_iso_release_bandwidth (camera, craw->allocated_bandwidth)
                 != DC1394_SUCCESS)
-                dc1394_log_warning("Warning: Could not free bandwidth\n");
+                dc1394_log_warning("Warning: Could not free bandwidth");
         }
         craw->allocated_channel = -1;
         craw->allocated_bandwidth = 0;
@@ -449,7 +444,7 @@ platform_capture_dequeue (platform_camera_t * craw,
             return DC1394_SUCCESS;
         }
         else {
-            dc1394_log_error("VIDEO1394_IOC_LISTEN_WAIT/POLL_BUFFER ioctl failed!\n");
+            dc1394_log_error("VIDEO1394_IOC_LISTEN_WAIT/POLL_BUFFER ioctl failed!");
             return DC1394_IOCTL_FAILURE;
         }
     }
@@ -474,7 +469,7 @@ platform_capture_enqueue (platform_camera_t * craw,
     memset(&vwait, 0, sizeof(vwait));
 
     if (frame->camera != camera) {
-        dc1394_log_error("camera does not match frame's camera\n");
+        dc1394_log_error("camera does not match frame's camera");
         return DC1394_INVALID_ARGUMENT_VALUE;
     }
 
@@ -482,7 +477,7 @@ platform_capture_enqueue (platform_camera_t * craw,
     vwait.buffer = frame->id;
 
     if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_LISTEN_QUEUE_BUFFER, &vwait) < 0)  {
-        dc1394_log_error("VIDEO1394_IOC_LISTEN_QUEUE_BUFFER ioctl failed!\n");
+        dc1394_log_error("VIDEO1394_IOC_LISTEN_QUEUE_BUFFER ioctl failed!");
         return DC1394_IOCTL_FAILURE;
     }
 
