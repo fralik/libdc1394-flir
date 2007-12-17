@@ -415,21 +415,21 @@ int dc_init()
 
     d = dc1394_new ();
     err=dc1394_camera_enumerate (d, &list);
-    DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
+    DC1394_ERR_RTN(err,"Failed to enumerate cameras");
 
     if (list->num == 0) {
-        dc1394_log_error("No cameras found\n");
+        dc1394_log_error("No cameras found");
         return 1;
     }
 
     camera = dc1394_camera_new (d, list->ids[0].guid);
     if (!camera) {
-        dc1394_log_error("Failed to initialize camera with guid %"PRIx64"\n", list->ids[0].guid);
+        dc1394_log_error("Failed to initialize camera with guid %llx", list->ids[0].guid);
         return 1;
     }
     dc1394_camera_free_list (list);
 
-    printf("Using camera with GUID %"PRIx64"\n", camera->guid);
+    printf("Using camera with GUID %llx", camera->guid);
 
     dc1394_camera_print_info(camera, stdout);
 
@@ -457,19 +457,19 @@ int dc_start(int palette)
     }
 
     err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
-    DC1394_ERR_RTN(err,"oops!\n");
+    DC1394_ERR_RTN(err,"Could not set ISO speed");
 
     err=dc1394_video_set_mode(camera, mode);
-    DC1394_ERR_RTN(err,"oops!\n");
+    DC1394_ERR_RTN(err,"Could not set video mode");
 
     err=dc1394_video_set_framerate(camera, DC1394_FRAMERATE_15);
-    DC1394_ERR_RTN(err,"oops!\n");
+    DC1394_ERR_RTN(err,"Could not set framerate");
 
     err=dc1394_capture_setup(camera,4, DC1394_CAPTURE_FLAGS_DEFAULT);
-    DC1394_ERR_RTN(err,"unable to setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera\n");
+    DC1394_ERR_RTN(err,"Could not setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera");
 
     err=dc1394_video_set_transmission(camera, DC1394_ON);
-    DC1394_ERR_RTN(err,"unable to start camera iso transmission\n");
+    DC1394_ERR_RTN(err,"Could not start camera iso transmission");
 
     return DC1394_SUCCESS;
 }
@@ -875,7 +875,7 @@ int main(int argc,char *argv[])
     atexit(cleanup);
 
     if (dc_init() != DC1394_SUCCESS) {
-        dc1394_log_error("no cameras found :(\n");
+        dc1394_log_error("no cameras found :(");
         exit(-1);
     }
 

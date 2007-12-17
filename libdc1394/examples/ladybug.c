@@ -52,16 +52,16 @@ main(int argn, char **argv)
 
     d = dc1394_new ();
     err=dc1394_camera_enumerate (d, &list);
-    DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
+    DC1394_ERR_RTN(err,"Failed to enumerate cameras");
 
     if (list->num == 0) {
-        dc1394_log_error("No cameras found\n");
+        dc1394_log_error("No cameras found");
         return 1;
     }
 
     camera = dc1394_camera_new (d, list->ids[0].guid);
     if (!camera) {
-        dc1394_log_error("Failed to initialize camera with guid %"PRIx64"\n",list->ids[0].guid);
+        dc1394_log_error("Failed to initialize camera with guid %llx",list->ids[0].guid);
         return 1;
     }
     dc1394_camera_free_list (list);
@@ -69,19 +69,19 @@ main(int argn, char **argv)
 
     // setup video mode, etc...
     err=dc1394_video_set_operation_mode(camera, DC1394_OPERATION_MODE_1394B);
-    DC1394_ERR_RTN(err,"erreur!");
+    DC1394_ERR_RTN(err,"Could not set B mode");
     err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_800);
-    DC1394_ERR_RTN(err,"erreur!");
+    DC1394_ERR_RTN(err,"Could not set 800Mbps speed");
     err=dc1394_video_set_mode(camera, VIDEO_MODE);
-    DC1394_ERR_RTN(err,"erreur!");
+    DC1394_ERR_RTN(err,"Could not set video mode");
     err=dc1394_format7_set_roi(camera, VIDEO_MODE, DC1394_COLOR_CODING_MONO8, 2000, 0,0, 512, 2015);
-    DC1394_ERR_RTN(err,"erreur!");
+    DC1394_ERR_RTN(err,"Could not set ROI");
 
     // setup capture
     err=dc1394_capture_setup(camera, 10, DC1394_CAPTURE_FLAGS_DEFAULT);
-    DC1394_ERR_RTN(err,"erreur!");
+    DC1394_ERR_RTN(err,"Could not setup capture");
     err=dc1394_video_set_transmission(camera, DC1394_ON);
-    DC1394_ERR_RTN(err,"erreur!");
+    DC1394_ERR_RTN(err,"Could not start transmission");
 
     int cam, k, i=0;
     unsigned int jpgadr, jpgsize, adr;
@@ -89,7 +89,7 @@ main(int argn, char **argv)
     while (i<NFRAMES) {
         // capture frame
         err=dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &frame);
-        DC1394_ERR_RTN(err,"erreur!");
+        DC1394_ERR_RTN(err,"Could not dequeue a frame");
         // do something with the image
         for (cam=0;cam<6;cam++) {
             for (k=0;k<4;k++) {
@@ -118,16 +118,16 @@ main(int argn, char **argv)
         fclose(fd);
         // release frame
         err=dc1394_capture_enqueue(camera, frame);
-        DC1394_ERR_RTN(err,"erreur!");
+        DC1394_ERR_RTN(err,"Could not enqueue a frame");
         fprintf(stderr,"%d\r",i);
         i++;
     }
 
     // stop capture
     err=dc1394_video_set_transmission(camera, DC1394_OFF);
-    DC1394_ERR_RTN(err,"erreur!");
+    DC1394_ERR_RTN(err,"Could not stop transmission");
     err=dc1394_capture_stop(camera);
-    DC1394_ERR_RTN(err,"erreur!");
+    DC1394_ERR_RTN(err,"Could not stop capture");
     dc1394_camera_free (camera);
     dc1394_free (d);
     return 0;

@@ -131,7 +131,7 @@ void print_mode_info( dc1394camera_t *camera , uint32_t mode )
     dc1394framerates_t framerates;
     dc1394error_t err;
     err=dc1394_video_get_supported_framerates(camera,mode,&framerates);
-    DC1394_ERR(err,"Can't get frame rates\n");
+    DC1394_ERR(err,"Could not get frame rates");
 
     printf("Frame Rates:\n");
     for( j = 0; j < framerates.num; j++ ) {
@@ -167,29 +167,29 @@ int main(int argc, char *argv[])
 
     d = dc1394_new ();
     err=dc1394_camera_enumerate (d, &list);
-    DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
+    DC1394_ERR_RTN(err,"Failed to enumerate cameras");
 
     if (list->num == 0) {
-        dc1394_log_error("No cameras found\n");
+        dc1394_log_error("No cameras found");
         return 1;
     }
 
     camera = dc1394_camera_new (d, list->ids[0].guid);
     if (!camera) {
-        dc1394_log_error("Failed to initialize camera with guid %"PRIx64"\n", list->ids[0].guid);
+        dc1394_log_error("Failed to initialize camera with guid %llx", list->ids[0].guid);
         return 1;
     }
     dc1394_camera_free_list (list);
 
-    printf("Using camera with GUID %"PRIx64"\n", camera->guid);
+    printf("Using camera with GUID %llx", camera->guid);
 
     dc1394video_modes_t modes;
 
     /*-----------------------------------------------------------------------
-     *  List Capture Modes
+     *  list Capture Modes
      *-----------------------------------------------------------------------*/
     err=dc1394_video_get_supported_modes(camera, &modes);
-    DC1394_ERR_RTN(err,"Could not get list of modes\n");
+    DC1394_ERR_RTN(err,"Could not get list of modes");
 
     uint32_t selected_mode = modes.modes[modes.num-1];
 
@@ -198,37 +198,37 @@ int main(int argc, char *argv[])
      *-----------------------------------------------------------------------*/
 
     err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
-    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"oops!\n");
+    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set iso speed");
 
     err=dc1394_video_set_mode(camera, selected_mode);
-    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"oops!\n");
+    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set video mode\n");
 
     err=dc1394_video_set_framerate(camera, DC1394_FRAMERATE_7_5);
-    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"oops!\n");
+    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set framerate\n");
 
     err=dc1394_capture_setup(camera,4, DC1394_CAPTURE_FLAGS_DEFAULT);
-    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"unable to setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera\n");
+    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera\n");
 
     /*-----------------------------------------------------------------------
      *  have the camera start sending us data
      *-----------------------------------------------------------------------*/
     err=dc1394_video_set_transmission(camera, DC1394_ON);
-    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"unable to start camera iso transmission\n");
+    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not start camera iso transmission\n");
 
     /*-----------------------------------------------------------------------
      *  capture one frame
      *-----------------------------------------------------------------------*/
     err=dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &frame);
-    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"unable to capture a frame\n");
+    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not capture a frame\n");
 
     /*-----------------------------------------------------------------------
-     *  Stop data transmission
+     *  stop data transmission
      *-----------------------------------------------------------------------*/
     err=dc1394_video_set_transmission(camera,DC1394_OFF);
-    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"couldn't stop the camera?\n");
+    DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not stop the camera?\n");
 
     /*-----------------------------------------------------------------------
-     *  Convert the image from what ever format it is to its RGB8
+     *  convert the image from what ever format it is to its RGB8
      *-----------------------------------------------------------------------*/
 
     dc1394_get_image_size_from_video_mode(camera, selected_mode, &width, &height);
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
     printf("wrote: " IMAGE_FILE_NAME "\n");
 
     /*-----------------------------------------------------------------------
-     *  Close camera
+     *  close camera
      *-----------------------------------------------------------------------*/
     free(new_frame->image);
     free(new_frame);

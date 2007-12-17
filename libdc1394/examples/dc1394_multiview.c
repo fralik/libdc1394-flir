@@ -203,7 +203,7 @@ void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, uint32_t NumPixels) {
 void set_frame_length(unsigned long size, int numCameras)
 {
     frame_length=size;
-    dc1394_log_debug("Setting frame size to %ld kb\n",size/1024);
+    dc1394_log_debug("Setting frame size to %ld kb",size/1024);
     frame_free=0;
     frame_buffer = malloc( size * numCameras);
 }
@@ -263,7 +263,7 @@ void QueryXv()
             xv_name[4]=0;
             memcpy(xv_name,&formats[j].id,4);
             if(formats[j].id==format) {
-                dc1394_log_error("using Xv format 0x%x %s %s\n",formats[j].id,xv_name,(formats[j].format==XvPacked)?"packed":"planar");
+                dc1394_log_error("using Xv format 0x%x %s %s",formats[j].id,xv_name,(formats[j].format==XvPacked)?"packed":"planar");
                 if(adaptor<0)adaptor=i;
             }
         }
@@ -341,10 +341,10 @@ int main(int argc,char *argv[])
 
     d = dc1394_new ();
     err=dc1394_camera_enumerate (d, &list);
-    DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
+    DC1394_ERR_RTN(err,"Failed to enumerate cameras");
 
     if (list->num == 0) {
-        dc1394_log_error("No cameras found\n");
+        dc1394_log_error("No cameras found");
         return 1;
     }
 
@@ -354,7 +354,7 @@ int main(int argc,char *argv[])
             break;
         cameras[j] = dc1394_camera_new (d, list->ids[i].guid);
         if (!cameras[j]) {
-            dc1394_log_warning("Failed to initialize camera with guid %"PRIx64"\n", list->ids[i].guid);
+            dc1394_log_warning("Failed to initialize camera with guid %llx", list->ids[i].guid);
             continue;
         }
         j++;
@@ -363,7 +363,7 @@ int main(int argc,char *argv[])
     dc1394_camera_free_list (list);
 
     if (numCameras == 0) {
-        dc1394_log_error("No cameras found\n");
+        dc1394_log_error("No cameras found");
         exit (1);
     }
 
@@ -371,19 +371,19 @@ int main(int argc,char *argv[])
     for (i = 0; i < numCameras; i++) {
 
         err=dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_400);
-        DC1394_ERR_CLN_RTN(err,cleanup(),"oops!\n");
+        DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set ISO speed");
 
         err=dc1394_video_set_mode(cameras[i], res);
-        DC1394_ERR_CLN_RTN(err,cleanup(),"oops!\n");
+        DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set video mode");
 
         err=dc1394_video_set_framerate(cameras[i], fps);
-        DC1394_ERR_CLN_RTN(err,cleanup(),"oops!\n");
+        DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set framerate");
 
         err=dc1394_capture_setup(cameras[i],NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT);
-        DC1394_ERR_CLN_RTN(err,cleanup(),"unable to setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera\n");
+        DC1394_ERR_CLN_RTN(err,cleanup(),"Could not setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera");
 
         err=dc1394_video_set_transmission(cameras[i], DC1394_ON);
-        DC1394_ERR_CLN_RTN(err,cleanup(),"unable to start camera iso transmission\n");
+        DC1394_ERR_CLN_RTN(err,cleanup(),"Could not start camera iso transmission");
 
     }
 
@@ -403,14 +403,14 @@ int main(int argc,char *argv[])
         set_frame_length(device_width*device_height*2, numCameras);
         break;
     default:
-        dc1394_log_error("Unknown format set (internal error)\n");
+        dc1394_log_error("Unknown format set (internal error)");
         exit(255);
     }
 
     /* make the window */
     display=XOpenDisplay(getenv("DISPLAY"));
     if(display==NULL) {
-        dc1394_log_error("Could not open display \"%s\"\n",getenv("DISPLAY"));
+        dc1394_log_error("Could not open display \"%s\"",getenv("DISPLAY"));
         cleanup();
         exit(-1);
     }
@@ -440,7 +440,7 @@ int main(int argc,char *argv[])
 
         for (i = 0; i < numCameras; i++) {
             if (dc1394_capture_dequeue(cameras[i], DC1394_CAPTURE_POLICY_WAIT, &frames[i])!=DC1394_SUCCESS)
-                dc1394_log_error("Failed to capture from camera %d\n", i);
+                dc1394_log_error("Failed to capture from camera %d", i);
         }
 
         display_frames();

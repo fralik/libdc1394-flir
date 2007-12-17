@@ -63,10 +63,10 @@ int main (int argc, char **argv)
 
     d = dc1394_new ();
     err=dc1394_camera_enumerate (d, &list);
-    DC1394_ERR_RTN(err,"Failed to enumerate cameras\n");
+    DC1394_ERR_RTN(err,"Failed to enumerate cameras");
 
     if (list->num == 0) {
-        dc1394_log_error("No cameras found\n");
+        dc1394_log_error("No cameras found");
         return 1;
     }
 
@@ -101,7 +101,7 @@ int main (int argc, char **argv)
     } else {
         camera = dc1394_camera_new (d, guid);
         if (camera == NULL) {
-            dc1394_log_error("no camera with guid 0x%"PRIx64" found\n", guid);
+            dc1394_log_error("no camera with guid 0x%"PRIx64" found", guid);
             return 1;
         }
 
