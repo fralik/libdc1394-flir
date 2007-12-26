@@ -1,4 +1,6 @@
 2007-12-26 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 524: Prevent a camera from appearing twice when two interface
+	           cards linked to the same computer are bridged.
         * SVN 523: Go around a firmware problem in the iSight (v1.0.3): two
 	           vendor leaves are present but there's no model leaf, even
 		   though the second 'vendor' leaf is clearly the model leaf.

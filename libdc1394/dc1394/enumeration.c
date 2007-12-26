@@ -219,12 +219,21 @@ dc1394_camera_enumerate (dc1394_t * d, dc1394camera_list_t **list)
         return DC1394_SUCCESS;
 
     l->ids = malloc (d->num_cameras * sizeof (dc1394camera_id_t));
-    l->num = d->num_cameras;
+    l->num = 0;
 
-    int i;
+    int i,j;
     for (i = 0; i < d->num_cameras; i++) {
-        l->ids[i].guid = d->cameras[i].guid;
-        l->ids[i].unit = d->cameras[i].unit;
+	// verify that the camera has not appeared yet.
+	for (j = 0; j < i; j++) {
+	    if ((d->cameras[i].guid==d->cameras[j].guid)&&
+		(d->cameras[i].unit==d->cameras[j].unit))
+		break;
+	}
+	if (j==i) {
+	    l->ids[i].guid = d->cameras[i].guid;
+	    l->ids[i].unit = d->cameras[i].unit;
+	    l->num++;
+	}
     }
     return DC1394_SUCCESS;
 }
