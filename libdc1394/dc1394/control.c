@@ -2007,8 +2007,18 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
             goto fail;
         if ((quad >> 24) == 0x40)
             command_regs_base = quad & 0xffffff;
-        else if ((quad >> 24) == 0x81)
-            vendor_name_offset = offset + 4 * ((quad & 0xffffff) + i);
+        else if ((quad >> 24) == 0x81) {
+	    /*
+	      The iSight version 1.0.3 has two 0x81 (vendor) leaves instead of a 0x81 and
+	      a 0x82 (model leaf). To go around this problem, we save the second vendor
+	      leaf as the model leaf. This is safe because if there is two 0x81 AND a 0x82,
+	      the real model leaf will overwrite the spurious second vendor string.
+	    */
+	    if (vendor_name_offset==0)
+		vendor_name_offset = offset + 4 * ((quad & 0xffffff) + i);
+	    else
+		model_name_offset = offset + 4 * ((quad & 0xffffff) + i);
+	}
         else if ((quad >> 24) == 0x82)
             model_name_offset = offset + 4 * ((quad & 0xffffff) + i);
         else if ((quad >> 24) == 0x38)

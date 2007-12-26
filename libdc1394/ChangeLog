@@ -1,3 +1,8 @@
+2007-12-26 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 523: Go around a firmware problem in the iSight (v1.0.3): two
+	           vendor leaves are present but there's no model leaf, even
+		   though the second 'vendor' leaf is clearly the model leaf.
+	
 2007-12-17 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 522: Write a very basic, one-line description of (almost) every
 	           function.
