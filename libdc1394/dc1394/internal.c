@@ -142,7 +142,7 @@ get_quadlets_from_format(dc1394camera_t *camera, dc1394video_mode_t video_mode, 
     err=dc1394_get_color_coding_from_video_mode(camera, video_mode, &color_coding);
     DC1394_ERR_RTN(err, "Invalid mode ID");
 
-    err=dc1394_get_bits_per_pixel(color_coding, &bpp);
+    err=dc1394_get_color_coding_bit_size(color_coding, &bpp);
     DC1394_ERR_RTN(err, "Invalid color mode ID");
 
     *quads=(w*h*bpp)/32;
@@ -267,7 +267,7 @@ capture_basic_setup (dc1394camera_t * camera, dc1394video_frame_t * frame)
     err = dc1394_video_get_data_depth (camera, &frame->data_depth);
     DC1394_ERR_RTN(err, "Unable to get data depth");
 
-    err = dc1394_get_bits_per_pixel (frame->color_coding, &bpp);
+    err = dc1394_get_color_coding_bit_size (frame->color_coding, &bpp);
     DC1394_ERR_RTN(err, "Unable to get bytes per pixel");
 
     frame->stride = (bpp * frame->size[0])/8;

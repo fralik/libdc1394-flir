@@ -1,4 +1,5 @@
 2007-12-27 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 526: fix compilation issues with the previous change.
 	* SVN 525: Change the name of two utilitary functions that were very
 	           confusing:
 		   - dc1394_get_color_coding_depth >

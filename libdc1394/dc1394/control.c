@@ -1701,7 +1701,7 @@ dc1394_video_get_data_depth(dc1394camera_t *camera, uint32_t *depth)
         err = dc1394_get_color_coding_from_video_mode (camera, mode, &coding);
         DC1394_ERR_RTN(err, "Could not get color coding");
 
-        err = dc1394_get_color_coding_depth (coding, depth);
+        err = dc1394_get_color_coding_data_depth (coding, depth);
         DC1394_ERR_RTN(err, "Could not get data depth from color coding");
 
         return err;

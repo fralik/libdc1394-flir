@@ -679,7 +679,7 @@ Adapt_buffer_convert(dc1394video_frame_t *in, dc1394video_frame_t *out)
     out->padding_bytes = in->padding_bytes;
 
     // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
-    dc1394_get_bits_per_pixel(out->color_coding, &bpp);
+    dc1394_get_color_coding_bit_size(out->color_coding, &bpp);
     out->image_bytes=(out->size[0]*out->size[1]*bpp)/8;
 
     // total is image_bytes + padding_bytes
@@ -852,7 +852,7 @@ Adapt_buffer_stereo(dc1394video_frame_t *in, dc1394video_frame_t *out)
     out->padding_bytes = in->padding_bytes;
 
     // image bytes changes:    >>>> TODO: STRIDE SHOULD BE TAKEN INTO ACCOUNT... <<<<
-    dc1394_get_bits_per_pixel(out->color_coding, &bpp);
+    dc1394_get_color_coding_bit_size(out->color_coding, &bpp);
     out->image_bytes=(out->size[0]*out->size[1]*bpp)/8;
 
     // total is image_bytes + padding_bytes
