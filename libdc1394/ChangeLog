@@ -1,3 +1,12 @@
+2007-12-27 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 525: Change the name of two utilitary functions that were very
+	           confusing:
+		   - dc1394_get_color_coding_depth >
+		         dc1394_get_color_coding_data_depth
+		   - dc1394_get_bits_per_pixel >
+		         dc1394_get_color_coding_bit_size
+		   Version numbers bumped to 22,0,0.
+
 2007-12-26 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 524: Prevent a camera from appearing twice when two interface
 	           cards linked to the same computer are bridged.

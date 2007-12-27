@@ -46,13 +46,13 @@ dc1394error_t dc1394_framerate_as_float(dc1394framerate_t framerate_enum, float 
  * Returns the number of bits per pixel for a certain color coding. This is the size of the data sent on the bus, the effective
  * data depth may vary. Example: RGB16 is 16, YUV411 is 8, YUV422 is 8.
  */
-dc1394error_t dc1394_get_color_coding_depth(dc1394color_coding_t color_coding, uint32_t * bits);
+dc1394error_t dc1394_get_color_coding_data_depth(dc1394color_coding_t color_coding, uint32_t * bits);
 
 /**
  * Returns the bit-space used by a pixel. This is different from the data depth! For instance, RGB16 has a bit space of 48 bits,
  * YUV422 is 16bits and YU411 is 12bits. 
  */
-dc1394error_t dc1394_get_bits_per_pixel(dc1394color_coding_t color_coding, uint32_t* bits);
+dc1394error_t dc1394_get_color_coding_bit_size(dc1394color_coding_t color_coding, uint32_t* bits);
 
 /**
  * Returns the color coding from the video mode. Works with scalable image formats too.

@@ -214,7 +214,7 @@ dc1394_is_color(dc1394color_coding_t color_coding, dc1394bool_t *is_color)
 }
 
 dc1394error_t
-dc1394_get_color_coding_depth(dc1394color_coding_t color_coding, uint32_t * bits)
+dc1394_get_color_coding_data_depth(dc1394color_coding_t color_coding, uint32_t * bits)
 {
     switch(color_coding) {
     case DC1394_COLOR_CODING_MONO8:
@@ -238,7 +238,7 @@ dc1394_get_color_coding_depth(dc1394color_coding_t color_coding, uint32_t * bits
 }
 
 dc1394error_t
-dc1394_get_bits_per_pixel(dc1394color_coding_t color_coding, uint32_t* bits)
+dc1394_get_color_coding_bit_size(dc1394color_coding_t color_coding, uint32_t* bits)
 {
     switch(color_coding) {
     case DC1394_COLOR_CODING_MONO8:
