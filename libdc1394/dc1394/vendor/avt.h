@@ -1,10 +1,11 @@
 /*
  * 1394-Based Digital Camera Control Library
- * Allied Vision Technologies (AVT) specific extensions
- * Copyright (C) 2005 Inria Sophia-Antipolis
  *
+ * Allied Vision Technologies (AVT) specific extensions
+ * 
  * Written by Pierre MOOS <pierre.moos@gmail.com>
- * Version : 16/02/2005
+ *
+ * Copyright (C) 2005 Inria Sophia-Antipolis
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +21,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #ifndef __DC1394_VENDOR_AVT_H__
 #define __DC1394_VENDOR_AVT_H__
 

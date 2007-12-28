@@ -1,10 +1,11 @@
 /*
  * 1394-Based Digital Camera Control Library
- * Copyright (C) 2000 SMART Technologies Inc.
  *
- * Written by Gord Peters <GordPeters@smarttech.com>
- * Additions by Chris Urmson <curmson@ri.cmu.edu>
- * Additions by Damien Douxchamps <ddouxchamps@users.sf.net>
+ * Linux specific type definitions
+ *  
+ * Written by
+ *   Damien Douxchamps <ddouxchamps@users.sf.net>
+ *   David Moore <dcm@acm.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +21,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #ifndef __DC1394_LINUX_H__
 #define __DC1394_LINUX_H__
 

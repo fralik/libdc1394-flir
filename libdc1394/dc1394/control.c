@@ -1,10 +1,9 @@
 /*
  * 1394-Based Digital Camera Control Library
- * Copyright (C) 2000 SMART Technologies Inc.
  *
- * Written by Gord Peters <GordPeters@smarttech.com>
- * Additions by Chris Urmson <curmson@ri.cmu.edu>
- * Additions by Damien Douxchamps <ddouxchamps@users.sf.net>
+ * Generic camera control functions
+ *
+ * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

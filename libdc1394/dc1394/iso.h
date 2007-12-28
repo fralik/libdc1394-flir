@@ -1,5 +1,8 @@
 /*
- * 1394-Based Digital Camera manual allocation of isochronous resources
+ * 1394-Based Digital Camera Control Library
+ *
+ * Functions for the manual allocations of ISO ressources.
+ *
  * Written by David Moore <dcm@acm.org>
  *
  * This library is free software; you can redistribute it and/or

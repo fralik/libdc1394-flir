@@ -1,5 +1,8 @@
 /*
- * 1394-Based Digital Camera register access functions
+ * 1394-Based Digital Camera Control Library
+ *
+ * Low-level register access functions
+ *
  * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or

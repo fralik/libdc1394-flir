@@ -1,5 +1,8 @@
 /*
- * 1394-Based Digital Camera standard offsets
+ * 1394-Based Digital Camera Control Library
+ *
+ * Camera standard offsets
+ *
  * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or

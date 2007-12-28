@@ -1,5 +1,8 @@
 /*
- * MS Windows Support Code for 1394-Based Digital Camera Control Library
+ * 1394-Based Digital Camera Control Library
+ * 
+ * MS Windows Support Code
+ * 
  * Written by Vladimir Avdonin <vldmr@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or

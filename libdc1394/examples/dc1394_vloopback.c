@@ -1,26 +1,36 @@
-/**************************************************************************
-**       Title: Turn a Digital Camera into a V4L device using vloopback
-**    $RCSfile$
-**   $Revision$$Name$
-**       $Date$
-**   Copyright: LGPL $Author$
-** Description:
-**
-**    Sends format0 640x480 RGB to the vloopback input device so that it
-**    can be consumed by V4L applications on the vloopback output device.
-**    Get vloopback 0.90 from http://motion.technolust.cx/vloopback/
-**    Apply the patch from effectv http://effectv.sf.net/
-**    It has been tested with EffecTV (exciting!), GnomeMeeting, ffmpeg,
-**    camsource, Kino, and veejay.
-**
-** TODO:
-**    - Support video controls
-**    - do cropping on v4l window offset
-**    - supply audio from sound card?
-**
-**-------------------------------------------------------------------------
-**
-**************************************************************************/
+/*
+ * Turn a Digital Camera into a V4L device using vloopback
+ *
+ * Written by Dan Dennedy
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Description:
+ *
+ *    Sends format0 640x480 RGB to the vloopback input device so that it
+ *    can be consumed by V4L applications on the vloopback output device.
+ *    Get vloopback 0.90 from http://motion.technolust.cx/vloopback/
+ *    Apply the patch from effectv http://effectv.sf.net/
+ *    It has been tested with EffecTV (exciting!), GnomeMeeting, ffmpeg,
+ *    camsource, Kino, and veejay.
+ *
+ * TODO:
+ *    - Support video controls
+ *    - do cropping on v4l window offset
+ *    - supply audio from sound card?
+ */
 
 #define _GNU_SOURCE
 #include <stdio.h>

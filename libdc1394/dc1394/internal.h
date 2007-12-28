@@ -1,6 +1,9 @@
 /*
- * 1394-Based Digital Camera Control Library, internal functions
- * Copyright (C) Damien Douxchamps <ddouxchamps@users.sf.net>
+ * 1394-Based Digital Camera Control Library
+ *
+ * Internal functions
+ *
+ * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +19,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #ifndef __DC1394_INTERNAL_H__
 #define __DC1394_INTERNAL_H__
 

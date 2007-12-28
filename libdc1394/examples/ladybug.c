@@ -1,25 +1,44 @@
-// Capture program prototype for the spherical 6-CCD Ladybug
-// camera from Point Grey
-//
-// by Damien Douxchamps.
-//
-// Uses the first camera on the bus, then setup the camera
-// in JPEG mode (mode 7), and capture NFRAMES frames to the HDD.
-//
-// NOTE: the image size has to be set so that the 6 sub-images,
-//       encoded in JPEG, will fit in the total RAW image size.
-//       If less than 6 frames are written you should use a larger
-//       HEIGHT. Also, each color field is saved in an individual
-//       frame. This results in 24 images (512x384) being written
-//       for each (future) hemispherical image.
-//
-// Easy adaptation include:
-// - using 1394a instead of 1394b
-// - using RAW instead of JPEG
-// For more information have a look at the format specs in
-// "Ladybug Stream File Specification" that is included in the
-// Ladybug SDK.
-
+/*
+ * Capture program prototype for the spherical 6-CCD Ladybug
+ *     camera from Point Grey
+ *
+ * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Notes:
+ *
+ * - Uses the first camera on the bus, then setup the camera
+ *   in JPEG mode (mode 7), and capture NFRAMES frames to the HDD.
+ * 
+ * - the image size has to be set so that the 6 sub-images,
+ *   encoded in JPEG, will fit in the total RAW image size.
+ *   If less than 6 frames are written you should use a larger
+ *   HEIGHT. Also, each color field is saved in an individual
+ *   frame. This results in 24 images (512x384) being written
+ *   for each (future) hemispherical image.
+ *
+ * Easy adaptation include:
+ * - using 1394a instead of 1394b
+ * - using RAW instead of JPEG
+ * 
+ * For more information have a look at the format specs in
+ * "Ladybug Stream File Specification" that is included in the
+ * Ladybug SDK.
+ *
+ */
 
 #include <stdlib.h>
 #include <stdio.h>

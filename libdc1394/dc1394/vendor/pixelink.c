@@ -1,11 +1,13 @@
 /*
  * 1394-Based Digital Camera Control Library
- * Pixelink (PxL) specific extensions for Multi-camera control.
- * Copyright (C) 2006 Aravind Sundaresan, James Sherman
  *
- * Written by Aravind Sundaresan <a.sundaresan@gmail.com>
- *            James Sherman <shermanj@umd.edu>
- * Version : 10/05/2006
+ * Pixelink (PxL) specific extensions for Multi-camera control.
+ * 
+ * Written by
+ *     Aravind Sundaresan <a.sundaresan@gmail.com>
+ *     James Sherman <shermanj@umd.edu>
+ *
+ * Copyright (C) 2006 Tobii Technology AB, Stockholm Sweden
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +21,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "vendor/pixelink.h"

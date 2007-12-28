@@ -1,11 +1,13 @@
 /*
  * 1394-Based Digital Camera Control Library
- * Copyright (C) 2000 SMART Technologies Inc.
  *
- * Written by Gord Peters <GordPeters@smarttech.com>
- * Additions by Chris Urmson <curmson@ri.cmu.edu>
- * Additions by Damien Douxchamps <ddouxchamps@users.sf.net>
- * Additions by David Moore <dcm@acm.org>
+ * Camera Capture headers for Linux
+ *  
+ * Written by
+ *   Chris Urmson <curmson@ri.cmu.edu>
+ *   Damien Douxchamps <ddouxchamps@users.sf.net>
+ *   Dan Dennedy <ddennedy@users.sf.net>
+ *   David Moore <dcm@acm.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

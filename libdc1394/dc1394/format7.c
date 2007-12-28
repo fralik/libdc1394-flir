@@ -1,5 +1,8 @@
 /*
- * 1394-Based Digital Camera Format_7 functions for the Control Library
+ * 1394-Based Digital Camera Control Library
+ *
+ * Format_7 functions
+ *
  * Written by Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -16,6 +19,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  */
+
 #include <unistd.h>
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>

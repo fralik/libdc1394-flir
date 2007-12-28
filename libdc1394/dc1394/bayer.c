@@ -1,10 +1,9 @@
 /*
  * 1394-Based Digital Camera Control Library
+ *
  * Bayer pattern decoding functions
- * Copyright (C) Damien Douxchamps <ddouxchamps@users.sf.net>
  *
  * Written by Damien Douxchamps and Frederic Devernay
- *
  * The original VNG and AHD Bayer decoding are from Dave Coffin's DCRAW.
  *
  * This library is free software; you can redistribute it and/or
