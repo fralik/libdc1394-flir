@@ -1,3 +1,6 @@
+2008-01-04 David Moore  <dcm@acm.org>
+	* SVN 528: Fix newlines in some example status messages
+
 2007-12-28 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 527: Update GPL/author statements
 
