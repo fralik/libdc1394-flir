@@ -1,3 +1,6 @@
+2008-01-05 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 529: Update NEWS, README and AUTHORS. Release 2.0.0.
+
 2008-01-04 David Moore  <dcm@acm.org>
 	* SVN 528: Fix newlines in some example status messages
 
