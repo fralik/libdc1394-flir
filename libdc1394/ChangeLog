@@ -1,3 +1,6 @@
+2008-01-08 David Moore  <dcm@acm.org>
+	* SVN 530: Fix for iSight and other multi-unit cameras on Mac OS X.
+
 2008-01-05 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 529: Update NEWS, README and AUTHORS. Release 2.0.0.
 

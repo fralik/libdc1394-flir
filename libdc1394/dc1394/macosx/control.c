@@ -147,25 +147,78 @@ platform_camera_new (platform_t * p, platform_device_t * device,
 {
     kern_return_t res;
     platform_camera_t * camera;
-    IOCFPlugInInterface ** plugin_interface = NULL;
-    SInt32 score;
     IOFireWireLibDeviceRef iface = NULL;
+    io_iterator_t iterator;
+    io_object_t node;
 
-    res = IOCreatePlugInInterfaceForService (device->node, kIOFireWireLibTypeID,
-                                             kIOCFPlugInInterfaceID, &plugin_interface, &score);
+    res = IORegistryEntryGetChildIterator (device->node, kIOServicePlane,
+            &iterator);
     if (res != KERN_SUCCESS) {
-        dc1394_log_error("Failed to get plugin interface");
+        dc1394_log_error ("Failed to iterate device's children\n");
         return NULL;
     }
 
-    /* TODO: error check here */
-    (*plugin_interface)->QueryInterface (plugin_interface,
-                                         CFUUIDGetUUIDBytes (kIOFireWireDeviceInterfaceID),
-                                       (void**) &iface);
-    IODestroyPlugInInterface (plugin_interface);
+    while ((node = IOIteratorNext (iterator))) {
+        io_name_t name;
+        IOFireWireLibConfigDirectoryRef dir;
+        int entries;
+        int i;
+        UInt32 val;
+        IOCFPlugInInterface ** plugin_interface = NULL;
+        SInt32 score;
+
+        IORegistryEntryGetName (node, name);
+        if (strcmp (name, "IOFireWireUnit")) {
+            IOObjectRelease (node);
+            continue;
+        }
+
+        res = IOCreatePlugInInterfaceForService (node, kIOFireWireLibTypeID,
+                kIOCFPlugInInterfaceID, &plugin_interface, &score);
+        IOObjectRelease (node);
+        if (res != KERN_SUCCESS)
+            continue;
+
+        iface = NULL;
+        (*plugin_interface)->QueryInterface (plugin_interface,
+                CFUUIDGetUUIDBytes (kIOFireWireDeviceInterfaceID),
+                (void**) &iface);
+        IODestroyPlugInInterface (plugin_interface);
+        if (!iface)
+            continue;
+
+        dir = (*iface)->GetConfigDirectory (iface,
+                CFUUIDGetUUIDBytes (kIOFireWireConfigDirectoryInterfaceID));
+        if (!dir) {
+            (*iface)->Release (iface);
+            continue;
+        }
+
+        (*dir)->GetNumEntries (dir, &entries);
+        val = 0;
+        for (i = 0; i < entries; i++) {
+            int key;
+            (*dir)->GetIndexKey (dir, i, &key);
+            if (key == kConfigUnitDependentInfoKey) {
+                (*dir)->GetIndexOffset_UInt32 (dir, i, &val);
+                break;
+            }
+        }
+        (*dir)->Release (dir);
+        if (val && val == (unit_directory_offset - 0x400) / 4)
+            break;
+        (*iface)->Release (iface);
+    }
+    IOObjectRelease (iterator);
+    if (!node) {
+        dc1394_log_error ("Matching unit not found\n");
+        return NULL;
+    }
 
     res = (*iface)->Open (iface);
     if (res != kIOReturnSuccess) {
+        dc1394_log_error ("Failed to gain exclusive access on unit (err %d)\n",
+                res);
         (*iface)->Release (iface);
         return NULL;
     }
