@@ -63,6 +63,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <arpa/inet.h>
+#include "config.h"
 
 /* Include all public header files:*/
 #include <dc1394/types.h>

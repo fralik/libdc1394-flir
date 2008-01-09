@@ -1,3 +1,6 @@
+2008-01-09 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 531: add an option "--without-patents" to the configure script.
+
 2008-01-08 David Moore  <dcm@acm.org>
 	* SVN 530: Fix for iSight and other multi-unit cameras on Mac OS X.
 

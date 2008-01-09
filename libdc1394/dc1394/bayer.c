@@ -498,6 +498,7 @@ dc1394_bayer_HQLinear(const uint8_t *restrict bayer, uint8_t *restrict rgb, int 
 dc1394error_t
 dc1394_bayer_EdgeSense(const uint8_t *restrict bayer, uint8_t *restrict rgb, int sx, int sy, int tile)
 {
+#ifndef NO_PATENTS
     uint8_t *outR, *outG, *outB;
     register int i3, j3, base;
     int i, j;
@@ -766,6 +767,10 @@ dc1394_bayer_EdgeSense(const uint8_t *restrict bayer, uint8_t *restrict rgb, int
 
     return DC1394_SUCCESS;
 
+#else
+    /* Removed due to patent concerns */
+    return DC1394_FUNCTION_NOT_SUPPORTED;
+#endif
 }
 
 /* coriander's Bayer decoding */
@@ -1312,6 +1317,7 @@ dc1394_bayer_HQLinear_uint16(const uint16_t *restrict bayer, uint16_t *restrict 
 dc1394error_t
 dc1394_bayer_EdgeSense_uint16(const uint16_t *restrict bayer, uint16_t *restrict rgb, int sx, int sy, int tile, int bits)
 {
+#ifndef NO_PATENTS
     uint16_t *outR, *outG, *outB;
     register int i, j;
     int dh, dv;
@@ -1599,6 +1605,10 @@ dc1394_bayer_EdgeSense_uint16(const uint16_t *restrict bayer, uint16_t *restrict
     ClearBorders_uint16(rgb, sx, sy, 3);
 
     return DC1394_SUCCESS;
+#else
+    /* Removed due to patent concerns */
+    return DC1394_FUNCTION_NOT_SUPPORTED;
+#endif
 }
 
 /* coriander's Bayer decoding */

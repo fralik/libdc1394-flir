@@ -33,7 +33,7 @@ AC_C_RESTRICT
 
 AC_CHECK_LIB(m, pow, [ LIBS="-lm $LIBS" ], [])
 
-AC_ARG_WITH(juju-dir,[  --with-juju-dir=<dir>  Path to juju include files])
+AC_ARG_WITH(juju-dir,[AS_HELP_STRING([--with-juju-dir=<dir>],[Path to juju include files])])
 if ! test -z "$with_juju_dir" ; then
    JUJU_DIR="$with_juju_dir"
    dc1394platform=juju
@@ -55,12 +55,8 @@ else
     dc1394platform=macosx
     ;;
   *-*-cygwin* | *-*-mingw*)
-    AC_ARG_WITH(winddk,[  --with-winddk=<dir>  Path to WINDDK root dir (c:/WINDDK/2600.1106)])
-    if ! test -z "$with_winddk" ; then
-       WINDDK="$with_winddk"
-    else
-       WINDDK="c:/WINDDK/2600.1106"
-    fi
+    AC_ARG_WITH(winddk,[AS_HELP_STRING([--with-winddk=<dir>],[Path to WINDDK root dir (default: c:/WINDDK/2600.1106)])],["c:/WINDDK/2600.1106"])
+    WINDDK="$with_winddk"
     AC_SUBST(WINDDK)
     dc1394platform=msw
 	platform_LDFLAGS="-Wl,--export-all -no-undefined -lsetupapi -lws2_32"
@@ -73,6 +69,10 @@ AM_CONDITIONAL(USE_LINUX, test x$raw1394 = xtrue)
 AM_CONDITIONAL(USE_MACOSX, test x$iokit = xtrue)
 AC_SUBST(dc1394platform)
 
+AC_ARG_WITH(patents,[AS_HELP_STRING([--without-patents],[Build without patent-encumbered code])],[],[with_patents=yes])
+if test "x$with_patents" = xno; then
+  AC_DEFINE(NO_PATENTS,1,[Defined for building without patent-encumbered code])
+fi
 
 # check for Xv extensions (necessary for examples/dc1394_multiview)
 # imported from Coriander
