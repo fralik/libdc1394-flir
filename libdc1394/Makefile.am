@@ -3,7 +3,7 @@
 SUBDIRS = dc1394 examples
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config.h.in \
 	stamp-h.in
-EXTRA_DIST = libdc1394-2.pc.in
+EXTRA_DIST = libdc1394-2.pc.in Doxyfile.in
 # Doxygen part
 MOSTLYCLEANFILES = $(DX_CLEANFILES)
 include $(top_srcdir)/aminclude.am
