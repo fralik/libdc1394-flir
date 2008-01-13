@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -39,7 +40,6 @@
 
 #include "config.h"
 #include "internal.h"
-#include <dc1394/dc1394.h>
 #include "macosx/macosx.h"
 #include "macosx/capture.h"
 

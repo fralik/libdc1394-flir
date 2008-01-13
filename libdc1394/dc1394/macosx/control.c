@@ -21,6 +21,7 @@
  */
 
 #include <stdio.h>
+#include <sys/time.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/IOKitLib.h>
@@ -30,7 +31,6 @@
 #include "platform.h"
 #include "internal.h"
 #include "macosx.h"
-#include <dc1394/dc1394.h>
 
 platform_t *
 platform_new (void)
