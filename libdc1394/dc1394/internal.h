@@ -24,7 +24,6 @@
 #define __DC1394_INTERNAL_H__
 
 #include "config.h"
-#include <dc1394/dc1394.h>
 #include "offsets.h"
 #include "platform.h"
 

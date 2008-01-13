@@ -28,7 +28,18 @@
 #include <libraw1394/csr.h>
 
 #include "config.h"
-#include <dc1394/dc1394.h>
+
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <string.h>
+#include <errno.h>
+#if HAVE_SYS_MMAN_H
+#include <sys/mman.h>
+#endif
+#include <unistd.h>
+
 #include "kernel-video1394.h"
 #include "linux.h"
 #include "internal.h"

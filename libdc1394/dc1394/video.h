@@ -21,7 +21,6 @@
  */
 
 #include <dc1394/log.h>
-#include <dc1394/dc1394.h>
 
 /*! \file video.h
     \brief Functions related to video modes, formats, framerate and video flow.

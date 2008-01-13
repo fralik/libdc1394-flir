@@ -25,7 +25,10 @@
 #ifndef __DC1394_VENDOR_AVT_H__
 #define __DC1394_VENDOR_AVT_H__
 
-#include <dc1394/dc1394.h>
+#include <stdint.h>
+#include <dc1394/types.h>
+#include <dc1394/log.h>
+
 /**
  * No Docs
  */

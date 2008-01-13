@@ -23,6 +23,8 @@
 
 #include <limits.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 #include "conversions.h"
 
 #define CLIP(in, out)\

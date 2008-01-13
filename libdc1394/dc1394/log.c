@@ -23,6 +23,7 @@
 
 #include "log.h"
 #include <stdarg.h>
+#include <stdlib.h>
 
 static void default_errorlog_handler(dc1394log_t type, const char *message, void* user) {
     fprintf(stderr, "libdc1394 error: %s\n", message);

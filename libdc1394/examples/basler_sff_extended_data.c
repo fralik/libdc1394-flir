@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include <dc1394/dc1394.h>
 #include <dc1394/vendor/basler.h>

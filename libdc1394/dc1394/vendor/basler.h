@@ -25,7 +25,6 @@
 #ifndef __DC1394_VENDOR_BASLER_H__
 #define __DC1394_VENDOR_BASLER_H__
 
-#include <dc1394/dc1394.h>
 #include "basler_sff.h"
 
 #ifdef __cplusplus

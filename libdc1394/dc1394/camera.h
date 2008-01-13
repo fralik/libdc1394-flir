@@ -19,7 +19,7 @@
  */
 
 #include <dc1394/log.h>
-#include <dc1394/dc1394.h>
+#include <stdio.h>
 
 #ifndef __DC1394_CAMERA_H__
 #define __DC1394_CAMERA_H__

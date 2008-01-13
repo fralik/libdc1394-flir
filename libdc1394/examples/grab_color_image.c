@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     }
     dc1394_camera_free_list (list);
 
-    printf("Using camera with GUID %llx\n", camera->guid);
+    printf("Using camera with GUID %"PRIx64"\n", camera->guid);
 
     /*-----------------------------------------------------------------------
      *  setup capture

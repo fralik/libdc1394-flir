@@ -1,3 +1,7 @@
+2008-01-12 David Moore  <dcm@acm.org>
+	* SVN 533: Removed internal-only includes from dc1394.h and added
+		   missing includes to other source files.
+
 2008-01-09 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 532: added Doxyfile.in to the Makefile.am EXTRA_DIST for
 		inclussion in the packaging.

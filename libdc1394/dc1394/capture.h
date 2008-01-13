@@ -21,7 +21,6 @@
 
 #include <dc1394/log.h>
 #include <dc1394/video.h>
-#include <dc1394/dc1394.h>
 
 #ifndef __DC1394_CAPTURE_H__
 #define __DC1394_CAPTURE_H__

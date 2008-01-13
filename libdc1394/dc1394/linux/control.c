@@ -25,7 +25,14 @@
  */
 
 #include "config.h"
-#include <dc1394/dc1394.h>
+
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/time.h>
+#include <arpa/inet.h>
+
 #include "dc1394/internal.h"
 #include "linux.h"
 #include "offsets.h"

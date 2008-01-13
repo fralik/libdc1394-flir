@@ -24,7 +24,7 @@
 #define __DC1394_PLATFORM_H__
 
 #include <stdint.h>
-#include <dc1394/dc1394.h>
+#include <dc1394/camera.h>
 
 typedef struct _platform_t platform_t;
 

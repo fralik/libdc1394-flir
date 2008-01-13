@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -31,9 +32,9 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <poll.h>
+#include <inttypes.h>
 
 #include "juju/juju.h"
-#include <dc1394/dc1394.h>
 
 #define ptr_to_u64(p) ((__u64)(unsigned long)(p))
 #define u64_to_ptr(p) ((void *)(unsigned long)(p))
@@ -134,7 +135,8 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
 
     // allocate channel/bandwidth if requested
     if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
-        dc1394_log_warning ("Warning: iso allocation not implemented yet for juju drivers, using channel 0...");
+        dc1394_log_warning ("Warning: iso allocation not implemented yet for "
+                "juju drivers, using channel 0...");
         if (dc1394_video_set_iso_channel (camera, 0) != DC1394_SUCCESS)
             return DC1394_NO_ISO_CHANNEL;
     }
@@ -164,14 +166,16 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
         goto error_fd;
     }
 
-    if (dc1394_video_get_iso_channel (camera, &craw->iso_channel) != DC1394_SUCCESS)
+    if (dc1394_video_get_iso_channel (camera, &craw->iso_channel)
+            != DC1394_SUCCESS)
         goto error_fd;
 
     craw->num_frames = num_dma_buffers;
     craw->current = -1;
     craw->ready_frames = 0;
     craw->buffer_size = proto.total_bytes * num_dma_buffers;
-    craw->buffer = mmap(NULL, craw->buffer_size, PROT_READ, MAP_SHARED, craw->iso_fd, 0);
+    craw->buffer =
+        mmap(NULL, craw->buffer_size, PROT_READ, MAP_SHARED, craw->iso_fd, 0);
     err = DC1394_IOCTL_FAILURE;
     if (craw->buffer == MAP_FAILED)
         goto error_fd;
@@ -226,12 +230,12 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
 
     return DC1394_SUCCESS;
 
- error_frames:
+error_frames:
     for (i = 0; i < num_dma_buffers; i++)
         release_frame(craw, i);
- error_mmap:
+error_mmap:
     munmap(craw->buffer, craw->buffer_size);
- error_fd:
+error_fd:
     close(craw->iso_fd);
 
     return err;

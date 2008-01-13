@@ -27,7 +27,8 @@
 #ifndef __DC1394_VENDOR_PIXELINK_H__
 #define __DC1394_VENDOR_PIXELINK_H__
 
-#include <dc1394/dc1394.h>
+#include <dc1394/log.h>
+#include <dc1394/types.h>
 
 //#define PIXELINK_DEBUG_LOWEST_LEVEL
 //#define PIXELINK_DEBUG_DISPLAY

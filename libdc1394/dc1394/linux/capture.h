@@ -27,7 +27,6 @@
 #ifndef __DC1394_CAPTURE_LINUX_H__
 #define __DC1394_CAPTURE_LINUX_H__
 
-#include <dc1394/dc1394.h>
 #include "platform.h"
 #include "linux.h"
 

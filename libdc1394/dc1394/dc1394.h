@@ -41,30 +41,6 @@
     More details soon
 */
 
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#if HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-#if HAVE_SYS_MMAN_H
-#include <sys/mman.h>
-#endif
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#include <stdint.h>
-#include <inttypes.h>
-#include <arpa/inet.h>
-#include "config.h"
-
 /* Include all public header files:*/
 #include <dc1394/types.h>
 #include <dc1394/camera.h>

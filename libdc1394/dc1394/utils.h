@@ -20,8 +20,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <dc1394/dc1394.h>
-
 #ifndef __DC1394_UTILS_H__
 #define __DC1394_UTILS_H__
 

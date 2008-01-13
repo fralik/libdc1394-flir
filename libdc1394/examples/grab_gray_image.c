@@ -71,12 +71,12 @@ int main(int argc, char *argv[])
 
     camera = dc1394_camera_new (d, list->ids[0].guid);
     if (!camera) {
-        dc1394_log_error("Failed to initialize camera with guid %llx\n", list->ids[0].guid);
+        dc1394_log_error("Failed to initialize camera with guid %"PRIx64, list->ids[0].guid);
         return 1;
     }
     dc1394_camera_free_list (list);
 
-    printf("Using camera with GUID %llx\n", camera->guid);
+    printf("Using camera with GUID %"PRIx64"\n", camera->guid);
 
     /*-----------------------------------------------------------------------
      *  get the best video mode and highest framerate. This can be skipped

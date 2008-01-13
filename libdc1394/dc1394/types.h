@@ -29,6 +29,8 @@
     More details soon
 */
 
+#include <stdint.h>
+
 /**
  * Enumeration of video modes. Note that the notion of IIDC "format" is not present here, except in the format_7 name.
  */
