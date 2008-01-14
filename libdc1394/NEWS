@@ -1,6 +1,11 @@
 Release information and news:
 -----------------------------
 
+-- 2.0.1:
+   - Fixed broken dc1394/dc1394.h include file when compiling externally.
+   - Fix iSight camera under Mac OS X.
+   - Removed the "edge-sense" bayer demosaic algorithm out of patent concern.
+
 -- 2.0.0: THE release, ready for distribution. Documentation is still
    missing, but will eventually be completed.
 
