@@ -69,11 +69,6 @@ AM_CONDITIONAL(USE_LINUX, test x$raw1394 = xtrue)
 AM_CONDITIONAL(USE_MACOSX, test x$iokit = xtrue)
 AC_SUBST(dc1394platform)
 
-AC_ARG_WITH(patents,[AS_HELP_STRING([--without-patents],[Build without patent-encumbered code])],[],[with_patents=yes])
-if test "x$with_patents" = xno; then
-  AC_DEFINE(NO_PATENTS,1,[Defined for building without patent-encumbered code])
-fi
-
 # check for Xv extensions (necessary for examples/dc1394_multiview)
 # imported from Coriander
 AC_DEFUN([AC_CHECK_XV],[

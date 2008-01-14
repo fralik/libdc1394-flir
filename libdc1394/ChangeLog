@@ -1,3 +1,7 @@
+2008-01-14 David Moore  <dcm@acm.org>
+	* SVN 535: Removed edge-sense bayer algorithm.  Removed the
+		   now-obsolete --without-patents option.
+
 2008-01-12 David Moore  <dcm@acm.org>
 	* SVN 534: Fixed some Mac OS compile warnings.
 	* SVN 533: Removed internal-only includes from dc1394.h and added
