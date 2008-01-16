@@ -1,3 +1,6 @@
+2008-01-15 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 537: Release 2.0.1
+	
 2008-01-14 David Moore  <dcm@acm.org>
 	* SVN 536: Updated NEWS.
 	* SVN 535: Removed edge-sense bayer algorithm.  Removed the
