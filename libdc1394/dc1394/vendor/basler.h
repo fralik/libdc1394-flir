@@ -27,6 +27,13 @@
 
 #include "basler_sff.h"
 
+/*! \file dc1394/vendor/basler.h
+    \brief No docs yet
+
+    More details soon
+*/
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

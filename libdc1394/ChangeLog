@@ -1,5 +1,15 @@
+2008-02-06 Peter Antoniac http://sourceforge.net/users/theseinfeld
+	* SVN 538: Documentation problems with newer Doxygen package:
+		- Changed Doxygen.in to fit the new standards.
+		- Added man pages to the examples for easier packaging.
+		- Changed the Release number to 2.0.2 to make it ready
+		for the next release.
+		- Changes in *.h to fit the new documentation standards.
+		- Added Andrew Straw to the list of Authors for his
+		contribution to packaging, man pages, etc.
+
 2008-01-15 Damien Douxchamps http://damien.douxchamps.net/
-        * SVN 537: Release 2.0.1
+	* SVN 537: Release 2.0.1
 	
 2008-01-14 David Moore  <dcm@acm.org>
 	* SVN 536: Updated NEWS.

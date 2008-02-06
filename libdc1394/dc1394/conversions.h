@@ -25,8 +25,11 @@
 #ifndef __DC1394_CONVERSIONS_H__
 #define __DC1394_CONVERSIONS_H__
 
-/*! \file conversions.h
+/*! \file dc1394/conversions.h
     \brief functions to convert video formats
+    \author Damien Douxchamps: coding
+    \author Frederic Devernay: coding
+    \author Peter Antoniac: documentation maintainer
 
     More details soon
 */

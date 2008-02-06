@@ -25,8 +25,10 @@
 #ifndef __DC1394_CAPTURE_H__
 #define __DC1394_CAPTURE_H__
 
-/*! \file capture.h
+/*! \file dc1394/capture.h
     \brief Capture functions
+    \author Damien Douxchamps: coding
+    \author Peter Antoniac: documentation maintainer
 
     More details soon
 */

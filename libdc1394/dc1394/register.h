@@ -23,8 +23,10 @@
 #ifndef __DC1394_REGISTER_H__
 #define __DC1394_REGISTER_H__
 
-/*! \file register.h
+/*! \file dc1394/register.h
     \brief Functions to directly access camera registers.
+    \author Damien Douxchamps: coding
+    \author Peter Antoniac: documentation maintainer
 
     More details soon
 */

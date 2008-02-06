@@ -24,8 +24,10 @@
 #ifndef __DC1394_CAMERA_H__
 #define __DC1394_CAMERA_H__
 
-/*! \file camera.h
+/*! \file dc1394/camera.h
     \brief Basic system and camera functions
+    \author Damien Douxchamps: coding
+    \author Peter Antoniac: documentation maintainer
 
     More details soon
 */

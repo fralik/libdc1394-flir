@@ -26,8 +26,14 @@
 #define __DC1394_VENDOR_BASLER_SFF_H__
 
 #include <stdint.h>
+/*! \file dc1394/vendor/basler_sff.h
+    \brief No docs yet
+
+    More details soon
+*/
 
 /**
+ * \struct dc1394basler_sff_guid_t
  * Basler SFF Guid struct, this structure is used to identify chunks and to
  * request features from the camera, is basically just a normal GUID value
  */
@@ -38,6 +44,7 @@ typedef struct __dc1394basler_sff_guid_t {
 } dc1394basler_sff_guid_t;
 
 /**
+ * \struct dc1394basler_sff_chunk_tail_t
  * SFF chunks are read from the end to the beginning (that is backwards),
  * each chunk ends in a chunk-tail, which contains information about the
  * size of the chunk as well as the GUID used to identify which chunk this
@@ -159,6 +166,7 @@ typedef enum dc1394basler_sff_feature_t {
 } dc1394basler_sff_feature_t;
 
 /**
+ * \struct dc1394basler_sff_t
  * Data type used by this API to define SFFs and also when iterating
  */
 typedef struct __dc1394basler_sff_t {

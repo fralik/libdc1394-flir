@@ -23,8 +23,10 @@
 #ifndef __DC1394_UTILS_H__
 #define __DC1394_UTILS_H__
 
-/*! \file utils.h
+/*! \file dc1394/utils.h
     \brief Utility functions
+    \author Damien Douxchamps: coding
+    \author Peter Antoniac: documentation maintainer
 
     More details soon
 */

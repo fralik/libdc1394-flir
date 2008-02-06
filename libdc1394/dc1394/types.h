@@ -23,7 +23,7 @@
 #ifndef __DC1394_TYPES_H__
 #define __DC1394_TYPES_H__
 
-/*! \file types.h
+/*! \file dc1394/types.h
     \brief Various types that must be defined here
 
     More details soon

@@ -26,7 +26,7 @@
 #ifndef __DC1394_FORMAT7_H__
 #define __DC1394_FORMAT7_H__
 
-/*! \file format7.h
+/*! \file dc1394/format7.h
     \brief Functions to control Format_7 (aka scalable format, ROI)
 
     More details soon

@@ -35,7 +35,7 @@
 #define __DC1394_H__
 
 
-/*! \file dc1394.h
+/*! \file dc1394/dc1394.h
     \brief Main include file, which include all others.
 
     More details soon

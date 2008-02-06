@@ -22,7 +22,7 @@
 
 #include <dc1394/log.h>
 
-/*! \file video.h
+/*! \file dc1394/video.h
     \brief Functions related to video modes, formats, framerate and video flow.
 
     More details soon

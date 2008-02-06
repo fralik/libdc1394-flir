@@ -1,4 +1,5 @@
 MAINTAINERCLEANFILES = Makefile.in
+EXTRA_DIST = dc1394_reset_bus.1 dc1394_vloopback.1
 AM_CPPFLAGS = -I $(top_srcdir)
 
 A = grab_gray_image grab_partial_image grab_color_image \

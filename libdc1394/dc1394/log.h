@@ -47,8 +47,11 @@
 #ifndef __DC1394_LOG_H__
 #define __DC1394_LOG_H__
 
-/*! \file log.h
+/*! \file dc1394/log.h
     \brief Functions to log errors, warning and debug messages
+    \author Damien Douxchamps: coding
+    \author Rudolf Leitgeb: coding
+    \author Peter Antoniac: documentation maintainer
 
     More details soon
 */
@@ -204,6 +207,8 @@ extern "C" {
  * Passing NULL as argument turns off this log level.
  * @param [in] log_handler: pointer to a function which takes a character string as argument
  *             type: the type of log
+ * @param [in] type: message type (\a debug, \a err or \a warning)
+ * @param [in] message: log message
  */
 dc1394error_t dc1394_log_register_handler(dc1394log_t type, void(*log_handler)(dc1394log_t type,
                                           const char *message, void* user), void* user);

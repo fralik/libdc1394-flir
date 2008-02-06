@@ -27,9 +27,12 @@
 
 #include "basler_sff.h"
 
-/**
- * No Docs
- */
+/*! \file dc1394/vendor/basler_sff_registry.h
+    \brief No docs yet
+
+    More details soon
+*/
+
 typedef struct sff_feature {
   /** human-readable name of the feature */
   const char* name;

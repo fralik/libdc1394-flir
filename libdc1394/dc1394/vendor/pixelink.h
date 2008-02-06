@@ -30,6 +30,12 @@
 #include <dc1394/log.h>
 #include <dc1394/types.h>
 
+/*! \file dc1394/vendor/pixelink.h
+    \brief No docs yet
+
+    More details soon
+*/
+
 //#define PIXELINK_DEBUG_LOWEST_LEVEL
 //#define PIXELINK_DEBUG_DISPLAY
 

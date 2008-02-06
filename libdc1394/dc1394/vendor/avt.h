@@ -29,9 +29,11 @@
 #include <dc1394/types.h>
 #include <dc1394/log.h>
 
-/**
- * No Docs
- */
+/*! \file dc1394/vendor/avt.h
+    \brief No docs yet
+
+    More details soon
+*/
 typedef struct __dc1394_avt_adv_feature_info_struct
 {
     uint32_t feature_id;

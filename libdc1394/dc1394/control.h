@@ -25,10 +25,16 @@
 #ifndef __DC1394_CONTROL_H__
 #define __DC1394_CONTROL_H__
 
-/*! \file control.h
+/*! \file dc1394/control.h
     \brief Diverse controls of camera features
+    \author Gord Peters: main writer
+    \author Chris Urmson: some additions
+    \author Damien Douxchamps: some additions
+    \author Peter Antoniac: documentation maintainer
+    \author Rudolf Leitgeb: documentation writer
 
-    More details soon
+    This is the main include file of the library. It lists most of the library
+    functions, enumerations and data structures.
 */
 
 /**
