@@ -1,3 +1,6 @@
+2008-02-07 Peter Antoniac http://sourceforge.net/users/theseinfeld
+	* SVN 540: Added man pages to make install and to make dist
+
 2008-02-07 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 539: Add linux functions to get port and node. This is
 	           provided by a new header file linux/control.h
