@@ -390,3 +390,27 @@ platform_iso_release_bandwidth (platform_camera_t * cam, int bandwidth_units)
 
     return DC1394_SUCCESS;
 }
+
+dc1394error_t
+dc1394_camera_get_node(dc1394camera_t *camera, uint32_t *node)
+{
+
+    dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    platform_camera_t * craw = cpriv->pcam;
+
+    *node=craw->node;
+
+    return DC1394_SUCCESS;
+}
+
+dc1394error_t
+dc1394_camera_get_port(dc1394camera_t *camera, uint32_t *port)
+{
+
+    dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    platform_camera_t * craw = cpriv->pcam;
+
+    *port=craw->port;
+
+    return DC1394_SUCCESS;
+}

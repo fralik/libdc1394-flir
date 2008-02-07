@@ -12,5 +12,6 @@ libdc1394_linux_la_SOURCES =  \
 
 # headers to be installed
 pkglinuxinclude_HEADERS = \
-	capture.h
+	capture.h \
+	control.h
 
