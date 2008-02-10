@@ -1,4 +1,5 @@
-2008-02-07 Peter Antoniac http://sourceforge.net/users/theseinfeld
+2008-02-10 Peter Antoniac http://sourceforge.net/users/theseinfeld
+	* SVN 541: Corrections in the man pages white spaces
 	* SVN 540: Added man pages to make install and to make dist
 
 2008-02-07 Damien Douxchamps http://damien.douxchamps.net/
