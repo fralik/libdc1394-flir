@@ -231,7 +231,9 @@ refresh_enumeration (dc1394_t * d)
 dc1394error_t
 dc1394_camera_enumerate (dc1394_t * d, dc1394camera_list_t **list)
 {
-    refresh_enumeration (d);
+    if (refresh_enumeration (d)==-1)
+	return DC1394_FAILURE;
+
     dc1394camera_list_t * l;
 
     l = calloc (1, sizeof (dc1394camera_list_t));

@@ -1,3 +1,7 @@
+2008-02-12 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 542: Return an error if the camera enumeration fails (thanks to
+	           Jasper Leemans)
+
 2008-02-10 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 541: Corrections in the man pages white spaces
 	* SVN 540: Added man pages to make install and to make dist
@@ -11,10 +15,10 @@
 		- Changed Doxygen.in to fit the new standards.
 		- Added man pages to the examples for easier packaging.
 		- Changed the Release number to 2.0.2 to make it ready
-		for the next release.
+		  for the next release.
 		- Changes in *.h to fit the new documentation standards.
 		- Added Andrew Straw to the list of Authors for his
-		contribution to packaging, man pages, etc.
+		  contribution to packaging, man pages, etc.
 
 2008-01-15 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 537: Release 2.0.1
