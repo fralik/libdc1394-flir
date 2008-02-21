@@ -141,7 +141,15 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
             return DC1394_NO_ISO_CHANNEL;
     }
 
-    err = DC1394_FAILURE;
+    if (capture_basic_setup(camera, &proto) != DC1394_SUCCESS) {
+        dc1394_log_error("basic setup failed");
+        return DC1394_FAILURE;
+    }
+
+    if (dc1394_video_get_iso_channel (camera, &craw->iso_channel)
+            != DC1394_SUCCESS)
+        return DC1394_FAILURE;
+
     craw->iso_fd = open(craw->filename, O_RDWR);
     if (craw->iso_fd < 0) {
         dc1394_log_error("error opening file: %s", strerror (errno));
@@ -159,16 +167,6 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
     }
 
     craw->iso_handle = create.handle;
-
-    err = capture_basic_setup(camera, &proto);
-    if (err != DC1394_SUCCESS) {
-        dc1394_log_error("basic setup failed");
-        goto error_fd;
-    }
-
-    if (dc1394_video_get_iso_channel (camera, &craw->iso_channel)
-            != DC1394_SUCCESS)
-        goto error_fd;
 
     craw->num_frames = num_dma_buffers;
     craw->current = -1;
