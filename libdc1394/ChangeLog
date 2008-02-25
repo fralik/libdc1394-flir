@@ -1,4 +1,5 @@
 2008-02-25 David Moore  <dcm@acm.org>
+	* SVN 545: Do usleep(500) between read/write retries on juju.
 	* SVN 544: Fix the debug log handler so it produces output.
 
 2008-02-21 David Moore  <dcm@acm.org>

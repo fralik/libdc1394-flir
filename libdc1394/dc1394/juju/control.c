@@ -229,14 +229,13 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
         break;
 
     case FW_CDEV_EVENT_RESPONSE:
-#if 0
-        printf ("type %d rcode %d length %d", u.response.r.type,
-                u.response.r.rcode, u.response.r.length);
-#endif
         if (u.response.r.rcode == 4)
             return -2; // retry if we get "resp_conflict_error"
-        if (u.response.r.rcode != 0)
+        if (u.response.r.rcode != 0) {
+            dc1394_log_debug ("response error, rcode 0x%x",
+                    u.response.r.rcode);
             return -1;
+        }
         for (i = 0; i < u.response.r.length/4 && i < num_quads && out; i++)
             out[i] = ntohl (u.response.buffer[i]);
         return 1;
@@ -272,15 +271,19 @@ do_transaction(platform_camera_t * cam, int tcode, uint64_t offset, const uint32
 
         while ((retval = _juju_await_response (cam, out, num_quads)) == 0);
         if (retval > 0)
-            break;
+            return DC1394_SUCCESS;
         if (retval == -1)
             return DC1394_FAILURE;
 
         /* retry if we get "resp_conflict_error" */
+        dc1394_log_debug("retry tcode 0x%x offset %"PRIx64, tcode, offset);
+        usleep (500);
         retry--;
     }
 
-    return DC1394_SUCCESS;
+    dc1394_log_error("Max retries for tcode 0x%x, offset %"PRIx64,
+            tcode, offset);
+    return DC1394_FAILURE;
 }
 
 dc1394error_t
