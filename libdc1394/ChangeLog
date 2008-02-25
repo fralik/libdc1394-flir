@@ -1,3 +1,6 @@
+2008-02-25 David Moore  <dcm@acm.org>
+	* SVN 544: Fix the debug log handler so it produces output.
+
 2008-02-21 David Moore  <dcm@acm.org>
 	* SVN 543: Correct the order of operations at the start of juju
 	           capture so that any manual channel settings are preserved.

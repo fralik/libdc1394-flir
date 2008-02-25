@@ -25,19 +25,31 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-static void default_errorlog_handler(dc1394log_t type, const char *message, void* user) {
+static void
+default_errorlog_handler(dc1394log_t type, const char *message, void* user)
+{
     fprintf(stderr, "libdc1394 error: %s\n", message);
-    return;
 }
 
-static void default_warninglog_handler(dc1394log_t type, const char *message, void* user) {
+static void
+default_warninglog_handler(dc1394log_t type, const char *message, void* user)
+{
     fprintf(stderr, "libdc1394 warning: %s\n", message);
-    return;
 }
 
-static void default_debuglog_handler(dc1394log_t type, const char *message, void* user) {
-    fprintf(stderr, "libdc1394 debug: %s\n", message);
-    return;
+static void
+default_debuglog_handler(dc1394log_t type, const char *message, void* user)
+{
+    static int log_enabled = -1;
+    if (log_enabled == -1) {
+        if (getenv("DC1394_DEBUG") == NULL )
+            log_enabled = 0;
+        else
+            log_enabled = 1;
+    }
+
+    if (log_enabled == 1)
+        fprintf(stderr, "libdc1394 debug: %s\n", message);
 }
 
 static void(*system_errorlog_handler)(dc1394log_t type, const char *message, void* user) = default_errorlog_handler;
@@ -97,7 +109,6 @@ void dc1394_log_error(const char *format,...)
         vsnprintf(string, sizeof(string), format, args);
         system_errorlog_handler(DC1394_LOG_ERROR, string, errorlog_data);
     }
-    return;
 }
 
 
@@ -110,30 +121,17 @@ void dc1394_log_warning(const char *format,...)
         vsnprintf(string, sizeof(string), format, args);
         system_warninglog_handler(DC1394_LOG_WARNING, string, warninglog_data);
     }
-    return;
 }
 
 
 void dc1394_log_debug(const char *format,...)
 {
-    static int log_enabled=-1;
     char string[1024];
     if (system_debuglog_handler != NULL) {
-        if (log_enabled == -1) {
-            if (getenv("DC1394_DEBUG") == NULL ) {
-                log_enabled = 0;
-            }
-            else {
-                log_enabled = 1;
-            }
-            if (log_enabled == 1) {
-                va_list args;
-                va_start(args, format);
-                vsnprintf(string, sizeof(string), format, args);
-                system_debuglog_handler(DC1394_LOG_DEBUG, string, debuglog_data);
-            }
-        }
+        va_list args;
+        va_start(args, format);
+        vsnprintf(string, sizeof(string), format, args);
+        system_debuglog_handler(DC1394_LOG_DEBUG, string, debuglog_data);
     }
-    return;
 }
 
