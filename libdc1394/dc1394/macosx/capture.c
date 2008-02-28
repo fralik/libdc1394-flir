@@ -110,7 +110,6 @@ finalize_callback (dc1394capture_t * capture)
 #ifndef MIN
     #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
-#define DATA_SIZE 12
 
 static void
 callback (buffer_info * buffer, NuDCLRef dcl)
@@ -120,6 +119,7 @@ callback (buffer_info * buffer, NuDCLRef dcl)
     UInt32 bus, dma_time, sec, cycle, bus_time;
     int usec;
     int i;
+    int corrupt = 0;
 
     if (!buffer) {
         dc1394_log_error("callback buffer is null");
@@ -132,19 +132,39 @@ callback (buffer_info * buffer, NuDCLRef dcl)
     if (buffer->status != BUFFER_EMPTY)
         dc1394_log_error("buffer %d should have been empty",buffer->i);
 
+#if 0
     for (i = 0; i < buffer->num_dcls; i += 30) {
         (*capture->loc_port)->Notify (capture->loc_port,
                                       kFWNuDCLUpdateNotification,
                                       (void **) buffer->dcl_list + i,
                                       MIN (buffer->num_dcls - i, 30));
     }
+#endif
+
+    for (i = 0; i < buffer->num_dcls; i++) {
+        int packet_size = capture->frames[buffer->i].packet_size;
+        if ((buffer->pkts[i].status & 0x1F) != 0x11) {
+            dc1394_log_warning ("packet %d had error status %x",
+                    i, buffer->pkts[i].status);
+            corrupt = 1;
+        }
+        if ((buffer->pkts[i].header & 0x3) != 0 && i > 0) {
+            dc1394_log_warning ("packet %d had unexpected sync (%x)",
+                    i, buffer->pkts[i].header);
+            corrupt = 1;
+        }
+        if ((buffer->pkts[i].header >> 16) != packet_size) {
+            dc1394_log_warning ("packet %d had wrong length (%x)",
+                    i, buffer->pkts[i].header);
+            corrupt = 1;
+        }
+    }
 
     (*craw->iface)->GetBusCycleTime (craw->iface, &bus, &bus_time);
     gettimeofday (&buffer->filltime, NULL);
 
     /* Get the bus timestamp of when the packet was received */
-    dma_time = *(UInt32 *)(capture->databuf.address + buffer->i *
-                           DATA_SIZE + 8);
+    dma_time = buffer->pkts[0].timestamp;
     sec = (dma_time & 0xe000000) >> 25;
     cycle = (dma_time & 0x1fff000) >> 12;
 
@@ -171,8 +191,12 @@ callback (buffer_info * buffer, NuDCLRef dcl)
     buffer->filltime.tv_usec = usec;
 
     MPEnterCriticalRegion (capture->mutex, kDurationForever);
-    buffer->status = BUFFER_FILLED;
-    capture->frames_ready++;
+    if (corrupt)
+        buffer->status = BUFFER_CORRUPT;
+    else {
+        buffer->status = BUFFER_FILLED;
+        capture->frames_ready++;
+    }
     MPExitCriticalRegion (capture->mutex);
 
     write (capture->notify_pipe[1], "+", 1);
@@ -197,23 +221,25 @@ CreateDCLProgram (platform_camera_t * craw)
     NuDCLRef dcl = NULL;
     IOFireWireLibNuDCLPoolRef dcl_pool = capture->dcl_pool;
     int packet_size = capture->frames[0].packet_size;
-    int bytesperframe = capture->frames[0].total_bytes;
+    int ppf = capture->frames[0].packets_per_frame;
+    //int bytesperframe = capture->frames[0].total_bytes;
     int i;
 
-    databuf->length = (capture->num_frames *
-                       capture->frame_pages + 1) * getpagesize ();
-    databuf->address = (UInt32) mmap (NULL, databuf->length,
-                                      PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
-    if (!databuf->address || databuf->address == (UInt32)-1) {
+    databuf->length = (capture->num_frames + 1) * packet_size * ppf +
+        capture->num_frames * ppf * sizeof (packet_info);
+    databuf->address = (IOVirtualAddress) mmap (NULL, databuf->length,
+            PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
+    if (!databuf->address || databuf->address == (IOVirtualAddress)-1) {
         dc1394_log_error("mmap failed");
         return NULL;
     }
 
     for (i = 0; i < capture->num_frames; i++) {
-        UInt32 frame_address = databuf->address + (i * capture->frame_pages + 1) *
-            getpagesize();
-        UInt32 data_address = databuf->address + i * DATA_SIZE;
-        int num_dcls = (bytesperframe - 1) / packet_size + 1;
+        IOVirtualAddress frame_address = databuf->address +
+            i * packet_size * ppf;
+        IOVirtualAddress data_address = databuf->address +
+            (capture->num_frames + 1) * packet_size * ppf +
+            i * ppf * sizeof (packet_info);
         buffer_info * buffer = capture->buffers + i;
         dc1394video_frame_t * frame = capture->frames + i;
         int j;
@@ -221,13 +247,6 @@ CreateDCLProgram (platform_camera_t * craw)
             {data_address, 4},
             {frame_address, packet_size},
         };
-
-        dcl = (*dcl_pool)->AllocateReceivePacket (dcl_pool, NULL,
-                                                  4, 2, ranges);
-        (*dcl_pool)->SetDCLWaitControl (dcl, true);
-        (*dcl_pool)->SetDCLFlags (dcl, kNuDCLDynamic);
-        (*dcl_pool)->SetDCLStatusPtr (dcl, (UInt32 *)(data_address + 4));
-        (*dcl_pool)->SetDCLTimeStampPtr (dcl, (UInt32 *)(data_address + 8));
 
         if (i > 0)
             memcpy (frame, capture->frames, sizeof (dc1394video_frame_t));
@@ -237,18 +256,32 @@ CreateDCLProgram (platform_camera_t * craw)
         buffer->craw = craw;
         buffer->i = i;
         buffer->status = BUFFER_EMPTY;
-        buffer->num_dcls = num_dcls;
-        buffer->dcl_list = malloc (num_dcls * sizeof (NuDCLRef));
+        buffer->num_dcls = ppf;
+        buffer->dcl_list = malloc (ppf * sizeof (NuDCLRef));
+        buffer->pkts = (packet_info *) data_address;
+
+        dcl = (*dcl_pool)->AllocateReceivePacket (dcl_pool, NULL,
+                                                  4, 2, ranges);
+        (*dcl_pool)->SetDCLWaitControl (dcl, true);
+        (*dcl_pool)->SetDCLFlags (dcl, kNuDCLDynamic);
+        (*dcl_pool)->SetDCLStatusPtr (dcl, &buffer->pkts[0].status);
+        (*dcl_pool)->SetDCLTimeStampPtr (dcl, &buffer->pkts[0].timestamp);
 
         buffer->dcl_list[0] = dcl;
 
-        for (j = 1; j < num_dcls; j++) {
+        for (j = 1; j < ppf; j++) {
+            ranges[0].address = (IOVirtualAddress) &buffer->pkts[j].header;
             ranges[1].address += packet_size;
             dcl = (*dcl_pool)->AllocateReceivePacket (dcl_pool, NULL,
-                                                      0, 1, ranges+1);
+                                                      4, 2, ranges);
+            (*dcl_pool)->SetDCLFlags (dcl, kNuDCLDynamic);
+            (*dcl_pool)->SetDCLStatusPtr (dcl, &buffer->pkts[j].status);
+            (*dcl_pool)->SetDCLTimeStampPtr (dcl, &buffer->pkts[j].timestamp);
             buffer->dcl_list[j] = dcl;
         }
 
+        for (j = 0; j < ppf; j++)
+            (*dcl_pool)->AppendDCLUpdateList (dcl, buffer->dcl_list[j]);
         (*dcl_pool)->SetDCLRefcon (dcl, capture->buffers + i);
         (*dcl_pool)->SetDCLCallback (dcl, (NuDCLCallback) callback);
     }
@@ -387,9 +420,10 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     (*rem_port)->SetRefCon ((IOFireWireLibIsochPortRef)rem_port, craw);
 
     capture->buffers = malloc (capture->num_frames * sizeof (buffer_info));
-    capture->current = -1;
+    capture->last_dequeued = capture->num_frames - 1;
+    capture->last_enqueued = capture->num_frames - 1;
     frame_size = capture->frames[0].total_bytes;
-    capture->frame_pages = ((frame_size - 1) / getpagesize()) + 1;
+    //capture->frame_pages = ((frame_size - 1) / getpagesize()) + 1;
 
     numdcls = capture->frames[0].packets_per_frame * capture->num_frames;
 
@@ -557,7 +591,7 @@ platform_capture_stop(platform_camera_t *craw)
  CAPTURE
 *****************************************************/
 #define NEXT_BUFFER(c,i) (((i) == -1) ? 0 : ((i)+1)%(c)->num_frames)
-#define PREV_BUFFER(c,i) (((i) == 0) ? (c)->num_frames-1 : ((i)-1))
+//#define PREV_BUFFER(c,i) (((i) == 0) ? (c)->num_frames-1 : ((i)-1))
 
 dc1394error_t
 platform_capture_dequeue (platform_camera_t * craw,
@@ -565,10 +599,6 @@ platform_capture_dequeue (platform_camera_t * craw,
                         dc1394video_frame_t **frame)
 {
     dc1394capture_t * capture = &(craw->capture);
-    int next = NEXT_BUFFER (capture, capture->current);
-    buffer_info * buffer = capture->buffers + next;
-    dc1394video_frame_t * frame_tmp = capture->frames + next;
-    char ch;
 
     if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
         return DC1394_INVALID_CAPTURE_POLICY;
@@ -576,35 +606,51 @@ platform_capture_dequeue (platform_camera_t * craw,
     // default: return NULL in case of failures or lack of frames
     *frame=NULL;
 
-    if (policy == DC1394_CAPTURE_POLICY_POLL) {
+    while (1) {
+        int next = NEXT_BUFFER (capture, capture->last_dequeued);
+        buffer_info * buffer = capture->buffers + next;
+        dc1394video_frame_t * frame_tmp = capture->frames + next;
+        char ch;
         int status;
+
+        if (policy == DC1394_CAPTURE_POLICY_POLL) {
+            MPEnterCriticalRegion (capture->mutex, kDurationForever);
+            status = buffer->status;
+            MPExitCriticalRegion (capture->mutex);
+            if (status != BUFFER_FILLED && status != BUFFER_CORRUPT)
+                return DC1394_SUCCESS;
+        }
+
+        read (capture->notify_pipe[0], &ch, 1);
+
         MPEnterCriticalRegion (capture->mutex, kDurationForever);
+        if (buffer->status != BUFFER_FILLED &&
+                buffer->status != BUFFER_CORRUPT) {
+            dc1394_log_error("expected filled buffer");
+            MPExitCriticalRegion (capture->mutex);
+            return DC1394_SUCCESS;
+        }
+        if (buffer->status == BUFFER_FILLED) {
+            capture->frames_ready--;
+            frame_tmp->frames_behind = capture->frames_ready;
+        }
         status = buffer->status;
         MPExitCriticalRegion (capture->mutex);
-        if (status != BUFFER_FILLED)
-            return DC1394_SUCCESS;
-    }
 
-    read (capture->notify_pipe[0], &ch, 1);
+        capture->last_dequeued = next;
 
-    MPEnterCriticalRegion (capture->mutex, kDurationForever);
-    if (buffer->status != BUFFER_FILLED) {
-        dc1394_log_error("expected filled buffer");
-        MPExitCriticalRegion (capture->mutex);
+        if (status == BUFFER_CORRUPT) {
+            platform_capture_enqueue (craw, frame_tmp);
+            continue;
+        }
+
+        frame_tmp->timestamp = (uint64_t) buffer->filltime.tv_sec * 1000000 +
+            buffer->filltime.tv_usec;
+
+        *frame=frame_tmp;
+
         return DC1394_SUCCESS;
     }
-    capture->frames_ready--;
-    frame_tmp->frames_behind = capture->frames_ready;
-    MPExitCriticalRegion (capture->mutex);
-
-    capture->current = next;
-
-    frame_tmp->timestamp = (uint64_t) buffer->filltime.tv_sec * 1000000 +
-        buffer->filltime.tv_usec;
-
-    *frame=frame_tmp;
-
-    return DC1394_SUCCESS;
 }
 
 
@@ -614,9 +660,9 @@ platform_capture_enqueue (platform_camera_t * craw,
 {
     dc1394capture_t * capture = &(craw->capture);
     dc1394camera_t * camera = craw->camera;
-    int prev = PREV_BUFFER (capture, frame->id);
+    int last = capture->last_enqueued;
+    buffer_info * prev_buffer = capture->buffers + last;
     buffer_info * buffer = capture->buffers + frame->id;
-    buffer_info * prev_buffer = capture->buffers + prev;
     IOFireWireLibNuDCLPoolRef dcl_pool = capture->dcl_pool;
     IOFireWireLibLocalIsochPortRef loc_port = capture->loc_port;
     void * dcl_list[2];
@@ -626,16 +672,29 @@ platform_capture_enqueue (platform_camera_t * craw,
         return DC1394_INVALID_ARGUMENT_VALUE;
     }
 
-    if (buffer->status != BUFFER_FILLED)
+    if (buffer->status != BUFFER_FILLED && buffer->status != BUFFER_CORRUPT)
         return DC1394_FAILURE;
 
-    buffer->status = BUFFER_EMPTY;
-    (*dcl_pool)->SetDCLBranch (buffer->dcl_list[0], buffer->dcl_list[0]);
-    (*dcl_pool)->SetDCLBranch (prev_buffer->dcl_list[0], prev_buffer->dcl_list[1]);
-    dcl_list[0] = prev_buffer->dcl_list[0];
-    dcl_list[1] = buffer->dcl_list[0];
-    (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list, 1);
-    (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list+1, 1);
+    buffer->status = BUFFER_ENQUEUED;
+
+    buffer = NULL;
+    while (1) {
+        last = NEXT_BUFFER (capture, last);
+        if (capture->buffers[last].status != BUFFER_ENQUEUED)
+            break;
+        capture->last_enqueued = last;
+        buffer = capture->buffers + last;
+        buffer->status = BUFFER_EMPTY;
+    }
+
+    if (buffer) {
+        (*dcl_pool)->SetDCLBranch (buffer->dcl_list[0], buffer->dcl_list[0]);
+        (*dcl_pool)->SetDCLBranch (prev_buffer->dcl_list[0], prev_buffer->dcl_list[1]);
+        dcl_list[0] = prev_buffer->dcl_list[0];
+        dcl_list[1] = buffer->dcl_list[0];
+        (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list+1, 1);
+        (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list, 1);
+    }
     return DC1394_SUCCESS;
 }
 

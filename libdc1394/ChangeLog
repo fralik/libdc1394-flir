@@ -1,3 +1,7 @@
+2008-02-28 David Moore  <dcm@acm.org>
+	* SVN 546: On Mac OS, scan received iso packet headers and drop
+		   frames with any errors.
+
 2008-02-25 David Moore  <dcm@acm.org>
 	* SVN 545: Do usleep(500) between read/write retries on juju.
 	* SVN 544: Fix the debug log handler so it produces output.

@@ -33,7 +33,15 @@
 typedef enum {
     BUFFER_EMPTY = 0,
     BUFFER_FILLED = 1,
+    BUFFER_CORRUPT = 2,
+    BUFFER_ENQUEUED = 3,
 } buffer_status;
+
+typedef struct _packet_info {
+    UInt32 header;
+    UInt32 status;
+    UInt32 timestamp;
+} packet_info;
 
 typedef struct _buffer_info {
     platform_camera_t * craw;
@@ -42,6 +50,7 @@ typedef struct _buffer_info {
     struct timeval   filltime;
     int              num_dcls;
     NuDCLRef *       dcl_list;
+    packet_info *    pkts;
 } buffer_info;
 
 struct _platform_t {
@@ -51,8 +60,9 @@ struct _platform_t {
 typedef struct __dc1394_capture
 {
     unsigned int             num_frames;
-    int                      frame_pages;
-    int                      current;
+    //int                      frame_pages;
+    int                      last_dequeued;
+    int                      last_enqueued;
     /* components needed for the DMA based video capture */
     IOFireWireLibIsochChannelRef    chan;
     IOFireWireLibRemoteIsochPortRef rem_port;
