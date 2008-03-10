@@ -1,3 +1,7 @@
+2008-03-10 David Moore  <dcm@acm.org>
+	* SVN 547: On Linux, use a different DMA file descriptor for each
+		   camera on the same controller.
+
 2008-02-28 David Moore  <dcm@acm.org>
 	* SVN 546: On Mac OS, scan received iso packet headers and drop
 		   frames with any errors.

@@ -44,32 +44,10 @@
 #include "linux.h"
 #include "internal.h"
 
-#define MAX_NUM_PORTS 16
-
-/* variables to handle multiple cameras using a single fd. */
-int *_dc1394_dma_fd = NULL;
-int *_dc1394_num_using_fd = NULL;
-
 /**********************/
 /* Internal functions */
 /**********************/
 
-
-void
-capture_cleanup_alloc(void)
-{
-    // free allocated memory if no one is using the capture anymore:
-    int i, use=0;
-    for (i=0;i<MAX_NUM_PORTS;i++) {
-        use+=_dc1394_num_using_fd[i];
-    }
-    if (use==0) {
-        free(_dc1394_num_using_fd);
-        _dc1394_num_using_fd=NULL;
-        free(_dc1394_dma_fd);
-        _dc1394_dma_fd=NULL;
-    }
-}
 
 dc1394error_t
 open_dma_device(platform_camera_t * craw)
@@ -77,21 +55,12 @@ open_dma_device(platform_camera_t * craw)
     char filename[64];
     struct stat statbuf;
 
-    // if the file has already been opened: increment the number of uses and return
-    if (_dc1394_num_using_fd[craw->port] != 0) {
-        _dc1394_num_using_fd[craw->port]++;
-        craw->capture.dma_fd = _dc1394_dma_fd[craw->port];
-        return DC1394_SUCCESS;
-    }
-
     // if the dma device file has been set manually, use that device name
     if (craw->capture.dma_device_file!=NULL) {
         if ( (craw->capture.dma_fd = open(craw->capture.dma_device_file,O_RDWR)) < 0 ) {
             return DC1394_INVALID_VIDEO1394_DEVICE;
         }
         else {
-            _dc1394_dma_fd[craw->port] = craw->capture.dma_fd;
-            _dc1394_num_using_fd[craw->port]++;
             return DC1394_SUCCESS;
         }
     }
@@ -101,8 +70,6 @@ open_dma_device(platform_camera_t * craw)
     if ( stat (filename, &statbuf) == 0 &&
          S_ISCHR (statbuf.st_mode) &&
          (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
-        _dc1394_dma_fd[craw->port] = craw->capture.dma_fd;
-        _dc1394_num_using_fd[craw->port]++;
         return DC1394_SUCCESS;
     }
 
@@ -110,8 +77,6 @@ open_dma_device(platform_camera_t * craw)
     if ( stat (filename, &statbuf) == 0 &&
          S_ISCHR (statbuf.st_mode) &&
          (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
-        _dc1394_dma_fd[craw->port] = craw->capture.dma_fd;
-        _dc1394_num_using_fd[craw->port]++;
         return DC1394_SUCCESS;
     }
 
@@ -120,8 +85,6 @@ open_dma_device(platform_camera_t * craw)
         if ( stat (filename, &statbuf) == 0 &&
              S_ISCHR (statbuf.st_mode) &&
              (craw->capture.dma_fd = open(filename,O_RDWR)) >= 0 ) {
-            _dc1394_dma_fd[craw->port] = craw->capture.dma_fd;
-            _dc1394_num_using_fd[craw->port]++;
             return DC1394_SUCCESS;
         }
     }
@@ -147,15 +110,8 @@ capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
     memset(&vmmap, 0, sizeof(vmmap));
     memset(&vwait, 0, sizeof(vwait));
 
-    /* using_fd counter array NULL if not used yet -- initialize */
-    if ( _dc1394_num_using_fd == NULL ) {
-        _dc1394_num_using_fd = calloc( MAX_NUM_PORTS, sizeof(uint32_t) );
-        _dc1394_dma_fd = calloc( MAX_NUM_PORTS, sizeof(uint32_t) );
-    }
-
     if (open_dma_device(craw) != DC1394_SUCCESS) {
         dc1394_log_warning("Could not open video1394 device file in /dev");
-        capture_cleanup_alloc(); // free allocated memory if necessary
         return DC1394_INVALID_VIDEO1394_DEVICE;
     }
 
@@ -168,7 +124,7 @@ capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
     /* tell the video1394 system that we want to listen to the given channel */
     if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_LISTEN_CHANNEL, &vmmap) < 0) {
         dc1394_log_error("VIDEO1394_IOC_LISTEN_CHANNEL ioctl failed: %s", strerror(errno));
-        capture_cleanup_alloc(); // free allocated memory if necessary
+        close (craw->capture.dma_fd);
         return DC1394_IOCTL_FAILURE;
     }
     // starting from here we use the ISO channel so we set the flag in the camera struct:
@@ -187,7 +143,7 @@ capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
             dc1394_log_error("VIDEO1394_IOC_LISTEN_QUEUE_BUFFER ioctl failed");
             ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &(vwait.channel));
             craw->capture_is_set=0;
-            capture_cleanup_alloc(); // free allocated memory if necessary
+            close (craw->capture.dma_fd);
             return DC1394_IOCTL_FAILURE;
         }
 
@@ -201,7 +157,7 @@ capture_linux_setup(platform_camera_t * craw, uint32_t num_dma_buffers)
         dc1394_log_error("mmap failed!");
         ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL, &vmmap.channel);
         craw->capture_is_set=0;
-        capture_cleanup_alloc(); // free allocated memory if necessary
+        close (craw->capture.dma_fd);
 
         // This should be display if the user has low memory
         if (vmmap.nb_buffers * vmmap.buf_size > sysconf (_SC_PAGESIZE) * sysconf (_SC_AVPHYS_PAGES)) {
@@ -358,7 +314,7 @@ platform_capture_stop(platform_camera_t *craw)
     if (craw->capture_is_set>0) {
         // unlisten
         if (ioctl(craw->capture.dma_fd, VIDEO1394_IOC_UNLISTEN_CHANNEL,
-                  &(craw->iso_channel)) < 0)
+                    &(craw->iso_channel)) < 0)
             return DC1394_IOCTL_FAILURE;
 
         // release
@@ -366,16 +322,13 @@ platform_capture_stop(platform_camera_t *craw)
             munmap((void*)craw->capture.dma_ring_buffer,craw->capture.dma_buffer_size);
         }
 
-        _dc1394_num_using_fd[craw->port]--;
 
-        if (_dc1394_num_using_fd[craw->port] == 0) {
-
-            while (close(craw->capture.dma_fd) != 0) {
-                dc1394_log_debug("waiting for dma_fd to close");
-                sleep (1);
-            }
-
+        while (close(craw->capture.dma_fd) != 0) {
+            dc1394_log_debug("waiting for dma_fd to close");
+            sleep (1);
         }
+        craw->capture.dma_fd = -1;
+
         free (craw->capture.frames);
         craw->capture.frames = NULL;
 
@@ -389,12 +342,12 @@ platform_capture_stop(platform_camera_t *craw)
         // free ressources if they were allocated
         if (craw->allocated_channel >= 0) {
             if (dc1394_iso_release_channel (camera, craw->allocated_channel)
-                != DC1394_SUCCESS)
+                    != DC1394_SUCCESS)
                 dc1394_log_warning("Warning: Could not free ISO channel");
         }
         if (craw->allocated_bandwidth) {
             if (dc1394_iso_release_bandwidth (camera, craw->allocated_bandwidth)
-                != DC1394_SUCCESS)
+                    != DC1394_SUCCESS)
                 dc1394_log_warning("Warning: Could not free bandwidth");
         }
         craw->allocated_channel = -1;
@@ -409,9 +362,6 @@ platform_capture_stop(platform_camera_t *craw)
 
         // free the additional capture handle
         raw1394_destroy_handle(craw->capture.handle);
-
-        capture_cleanup_alloc();
-
     }
     else {
         return DC1394_CAPTURE_IS_NOT_SET;
