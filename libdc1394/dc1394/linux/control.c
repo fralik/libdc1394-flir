@@ -186,6 +186,7 @@ platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_d
     camera->handle = handle;
     camera->port = device->port;
     camera->node = device->node;
+    camera->generation = device->generation;
     return camera;
 }
 
@@ -392,19 +393,16 @@ platform_iso_release_bandwidth (platform_camera_t * cam, int bandwidth_units)
 }
 
 dc1394error_t
-dc1394_camera_get_node(dc1394camera_t *camera, uint32_t *node)
+platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
+        uint32_t * generation)
 {
-
-    dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
-    platform_camera_t * craw = cpriv->pcam;
-
-    *node=craw->node;
-
+    *node = cam->node;
+    *generation = cam->generation;
     return DC1394_SUCCESS;
 }
 
 dc1394error_t
-dc1394_camera_get_port(dc1394camera_t *camera, uint32_t *port)
+dc1394_camera_get_linux_port(dc1394camera_t *camera, uint32_t *port)
 {
 
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);

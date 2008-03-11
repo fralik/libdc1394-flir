@@ -54,6 +54,7 @@ typedef struct __dc1394_capture
 struct _platform_camera_t {
     raw1394handle_t handle;
     int node, port;
+    uint32_t generation;
 
     dc1394camera_t * camera;
 

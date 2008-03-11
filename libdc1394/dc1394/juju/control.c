@@ -182,6 +182,7 @@ platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_d
     camera = calloc (1, sizeof (platform_camera_t));
     camera->fd = fd;
     camera->generation = reset.generation;
+    camera->node_id = reset.node_id;
     strcpy (camera->filename, device->filename);
     return camera;
 }
@@ -226,6 +227,7 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
     switch (u.reset.type) {
     case FW_CDEV_EVENT_BUS_RESET:
         cam->generation = u.reset.generation;
+        cam->node_id = u.reset.node_id;
         break;
 
     case FW_CDEV_EVENT_RESPONSE:
@@ -372,3 +374,13 @@ platform_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
 {
     return DC1394_FUNCTION_NOT_SUPPORTED;
 }
+
+dc1394error_t
+platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
+        uint32_t * generation)
+{
+    *node = cam->node_id;
+    *generation = cam->generation;
+    return DC1394_SUCCESS;
+}
+

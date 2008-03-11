@@ -24,9 +24,6 @@
 #define __DC1394_CONTROL_LINUX_H__
 
 dc1394error_t
-dc1394_camera_get_node(dc1394camera_t *camera, uint32_t *node);
-
-dc1394error_t
-dc1394_camera_get_port(dc1394camera_t *camera, uint32_t *port);
+dc1394_camera_get_linux_port(dc1394camera_t *camera, uint32_t *port);
 
 #endif

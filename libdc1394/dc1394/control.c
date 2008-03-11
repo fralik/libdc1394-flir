@@ -57,6 +57,14 @@ dc1394_read_cycle_timer (dc1394camera_t * camera,
     return platform_read_cycle_timer (priv->pcam, cycle_timer, local_time);
 }
 
+dc1394error_t
+dc1394_camera_get_node (dc1394camera_t *camera, uint32_t *node,
+        uint32_t * generation)
+{
+    dc1394camera_priv_t * priv = DC1394_CAMERA_PRIV (camera);
+    return platform_camera_get_node (priv->pcam, node, generation);
+}
+
 static dc1394error_t
 update_camera_info (dc1394camera_t *camera)
 {

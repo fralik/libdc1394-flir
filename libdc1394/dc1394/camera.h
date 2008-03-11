@@ -197,6 +197,13 @@ dc1394error_t dc1394_reset_bus(dc1394camera_t *camera);
 dc1394error_t dc1394_read_cycle_timer (dc1394camera_t * camera,
         uint32_t * cycle_timer, uint64_t * local_time);
 
+/**
+ * Gets the IEEE 1394 node ID of the camera.
+ */
+dc1394error_t dc1394_camera_get_node(dc1394camera_t *camera, uint32_t *node,
+        uint32_t * generation);
+
+
 /***************************************************************************
      Camera functions
  ***************************************************************************/

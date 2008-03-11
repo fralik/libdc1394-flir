@@ -1,3 +1,10 @@
+2008-03-11 David Moore  <dcm@acm.org>
+	* SVN 548: Make linux-specific function dc1394_camera_get_node()
+	           globally available and implement stubs for other platforms.
+		   Add generation argument to dc1394_camera_get_node.
+		   Rename dc1394_camera_get_port to
+		   dc1394_camera_get_linux_port.
+
 2008-03-10 David Moore  <dcm@acm.org>
 	* SVN 547: On Linux, use a different DMA file descriptor for each
 		   camera on the same controller.

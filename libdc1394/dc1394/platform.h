@@ -74,6 +74,8 @@ platform_camera_write_quad (platform_camera_t * cam, uint64_t offset,
 dc1394error_t platform_reset_bus (platform_camera_t * cam);
 dc1394error_t platform_read_cycle_timer (platform_camera_t * cam,
         uint32_t * cycle_timer, uint64_t * local_time);
+dc1394error_t platform_camera_get_node (platform_camera_t *cam,
+        uint32_t *node, uint32_t * generation);
 
 dc1394error_t platform_capture_setup (platform_camera_t *cam,
         uint32_t num_dma_buffers, uint32_t flags);

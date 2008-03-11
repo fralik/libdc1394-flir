@@ -384,3 +384,10 @@ platform_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
 {
     return DC1394_FUNCTION_NOT_SUPPORTED;
 }
+
+dc1394error_t
+platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
+        uint32_t * generation)
+{
+    return DC1394_FUNCTION_NOT_SUPPORTED;
+}

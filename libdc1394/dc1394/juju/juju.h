@@ -37,6 +37,7 @@ struct _platform_camera_t {
     int fd;
     char filename[32];
     int generation;
+    uint32_t node_id;
 
     dc1394camera_t * camera;
 
