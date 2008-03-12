@@ -401,7 +401,12 @@ platform_capture_dequeue (platform_camera_t * craw,
         break;
     case DC1394_CAPTURE_POLICY_WAIT:
     default:
-        result=ioctl(capture->dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER, &vwait);
+        while (1) {
+            result=ioctl(capture->dma_fd, VIDEO1394_IOC_LISTEN_WAIT_BUFFER,
+                    &vwait);
+            if (result == 0 || errno != EINTR)
+                break;
+        }
         break;
     }
     if ( result != 0) {
