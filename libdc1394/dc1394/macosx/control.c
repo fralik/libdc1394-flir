@@ -389,5 +389,25 @@ dc1394error_t
 platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
         uint32_t * generation)
 {
-    return DC1394_FUNCTION_NOT_SUPPORTED;
+    IOFireWireLibDeviceRef d = cam->iface;
+    UInt32 gen;
+    UInt16 nodeid;
+    while (1) {
+        IOReturn ret;
+        if ((*d)->GetBusGeneration (d, &gen) != 0)
+            return DC1394_FAILURE;
+        ret = (*d)->GetRemoteNodeID (d, gen, &nodeid);
+        if (ret == kIOFireWireBusReset)
+            continue;
+        else if (ret == kIOReturnSuccess)
+            break;
+        else
+            return DC1394_FAILURE;
+    }
+
+    if (node)
+        *node = nodeid & 0x3f;
+    if (generation)
+        *generation = gen;
+    return DC1394_SUCCESS;
 }

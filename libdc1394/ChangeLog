@@ -1,3 +1,6 @@
+2008-03-12 David Moore  <dcm@acm.org>
+	* SVN 549: Implement dc1394_camera_get_node for Mac OS.
+
 2008-03-11 David Moore  <dcm@acm.org>
 	* SVN 548: Make linux-specific function dc1394_camera_get_node()
 	           globally available and implement stubs for other platforms.
