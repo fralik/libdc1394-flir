@@ -1,4 +1,5 @@
 2008-03-12 David Moore  <dcm@acm.org>
+	* SVN 550: Bug fix dc1394_camera_get_node on Juju and Linux.
 	* SVN 549: Implement dc1394_camera_get_node for Mac OS.
 
 2008-03-11 David Moore  <dcm@acm.org>

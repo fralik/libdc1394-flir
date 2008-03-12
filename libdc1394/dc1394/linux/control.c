@@ -396,8 +396,10 @@ dc1394error_t
 platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
         uint32_t * generation)
 {
-    *node = cam->node;
-    *generation = cam->generation;
+    if (node)
+        *node = cam->node;
+    if (generation)
+        *generation = cam->generation;
     return DC1394_SUCCESS;
 }
 
