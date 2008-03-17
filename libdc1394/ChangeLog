@@ -1,4 +1,5 @@
 2008-03-16 David Moore  <dcm@acm.org>
+	* SVN 553: Update NEWS
 	* SVN 552: Add function dc1394_capture_is_frame_corrupt() to test if
 		   a dequeued frame is corrupt.  Integrity checking code
 		   currently exists only on Mac OS.  Other platforms return

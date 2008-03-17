@@ -1,6 +1,24 @@
 Release information and news:
 -----------------------------
 
+-- 2.0.2:
+   - New functions on all platforms:
+         dc1394_camera_get_node
+         dc1394_capture_is_frame_corrupt
+   - New function on Linux video1394 only:
+         dc1394_camera_get_linux_port
+   - Bug fixes on Linux Juju:
+       - Better retry timeouts
+       - Fix manual isochronous channel allocation
+   - Bug fixes on Mac OS:
+       - Auto detection of bad or skipped packets (used for
+         dc1394_capture_is_frame_corrupt)
+   - Bug fixes on Linux video1394:
+       - Fix select() with multiple cameras on the same controller
+       - Handle EINTR return code properly in dc1394_capture_dequeue
+   - Better error detection if camera enumeration fails
+   - Documentation improvements
+
 -- 2.0.1:
    - Fixed broken dc1394/dc1394.h include file when compiling externally.
    - Fix iSight camera under Mac OS X.
