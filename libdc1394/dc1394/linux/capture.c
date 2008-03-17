@@ -461,3 +461,10 @@ platform_capture_get_fileno (platform_camera_t * craw)
     return craw->capture.dma_fd;
 }
 
+dc1394bool_t
+platform_capture_is_frame_corrupt (platform_camera_t * craw,
+        dc1394video_frame_t * frame)
+{
+    return DC1394_FALSE;
+}
+

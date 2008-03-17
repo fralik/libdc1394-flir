@@ -61,3 +61,12 @@ dc1394_capture_enqueue (dc1394camera_t * camera, dc1394video_frame_t * frame)
     return platform_capture_enqueue (cpriv->pcam, frame);
 }
 
+dc1394bool_t
+dc1394_capture_is_frame_corrupt (dc1394camera_t * camera,
+        dc1394video_frame_t * frame)
+{
+    dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    if (!frame)
+        return DC1394_TRUE;
+    return platform_capture_is_frame_corrupt (cpriv->pcam, frame);
+}

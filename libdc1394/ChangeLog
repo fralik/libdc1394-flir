@@ -1,3 +1,9 @@
+2008-03-16 David Moore  <dcm@acm.org>
+	* SVN 552: Add function dc1394_capture_is_frame_corrupt() to test if
+		   a dequeued frame is corrupt.  Integrity checking code
+		   currently exists only on Mac OS.  Other platforms return
+		   DC1394_FALSE.
+
 2008-03-12 David Moore  <dcm@acm.org>
 	* SVN 551: Automatically resume dequeue() if EINTR is encountered.
 	* SVN 550: Bug fix dc1394_camera_get_node on Juju and Linux.

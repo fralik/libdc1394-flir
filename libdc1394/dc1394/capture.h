@@ -89,6 +89,17 @@ dc1394error_t dc1394_capture_dequeue(dc1394camera_t * camera, dc1394capture_poli
  */
 dc1394error_t dc1394_capture_enqueue(dc1394camera_t * camera, dc1394video_frame_t * frame);
 
+/**
+ * Returns DC1394_TRUE if the given frame (previously dequeued) has been
+ * detected to be corrupt (missing data, corrupted data, overrun buffer, etc.).
+ * Note that certain types of corruption may go undetected in which case
+ * DC1394_FALSE will be returned.  The ability to detect corruption also
+ * varies between platforms.  Note that corrupt frames still need to be
+ * enqueued with dc1394_capture_enqueue() when no longer needed by the user.
+ */
+dc1394bool_t dc1394_capture_is_frame_corrupt (dc1394camera_t * camera,
+        dc1394video_frame_t * frame);
+
 #ifdef __cplusplus
 }
 #endif

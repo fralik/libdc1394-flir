@@ -191,12 +191,8 @@ callback (buffer_info * buffer, NuDCLRef dcl)
     buffer->filltime.tv_usec = usec;
 
     MPEnterCriticalRegion (capture->mutex, kDurationForever);
-    if (corrupt)
-        buffer->status = BUFFER_CORRUPT;
-    else {
-        buffer->status = BUFFER_FILLED;
-        capture->frames_ready++;
-    }
+    buffer->status = corrupt ? BUFFER_CORRUPT : BUFFER_FILLED;
+    capture->frames_ready++;
     MPExitCriticalRegion (capture->mutex);
 
     write (capture->notify_pipe[1], "+", 1);
@@ -599,6 +595,10 @@ platform_capture_dequeue (platform_camera_t * craw,
                         dc1394video_frame_t **frame)
 {
     dc1394capture_t * capture = &(craw->capture);
+    int next = NEXT_BUFFER (capture, capture->last_dequeued);
+    buffer_info * buffer = capture->buffers + next;
+    dc1394video_frame_t * frame_tmp = capture->frames + next;
+    char ch;
 
     if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
         return DC1394_INVALID_CAPTURE_POLICY;
@@ -606,51 +606,35 @@ platform_capture_dequeue (platform_camera_t * craw,
     // default: return NULL in case of failures or lack of frames
     *frame=NULL;
 
-    while (1) {
-        int next = NEXT_BUFFER (capture, capture->last_dequeued);
-        buffer_info * buffer = capture->buffers + next;
-        dc1394video_frame_t * frame_tmp = capture->frames + next;
-        char ch;
+    if (policy == DC1394_CAPTURE_POLICY_POLL) {
         int status;
-
-        if (policy == DC1394_CAPTURE_POLICY_POLL) {
-            MPEnterCriticalRegion (capture->mutex, kDurationForever);
-            status = buffer->status;
-            MPExitCriticalRegion (capture->mutex);
-            if (status != BUFFER_FILLED && status != BUFFER_CORRUPT)
-                return DC1394_SUCCESS;
-        }
-
-        read (capture->notify_pipe[0], &ch, 1);
-
         MPEnterCriticalRegion (capture->mutex, kDurationForever);
-        if (buffer->status != BUFFER_FILLED &&
-                buffer->status != BUFFER_CORRUPT) {
-            dc1394_log_error("expected filled buffer");
-            MPExitCriticalRegion (capture->mutex);
-            return DC1394_SUCCESS;
-        }
-        if (buffer->status == BUFFER_FILLED) {
-            capture->frames_ready--;
-            frame_tmp->frames_behind = capture->frames_ready;
-        }
         status = buffer->status;
         MPExitCriticalRegion (capture->mutex);
-
-        capture->last_dequeued = next;
-
-        if (status == BUFFER_CORRUPT) {
-            platform_capture_enqueue (craw, frame_tmp);
-            continue;
-        }
-
-        frame_tmp->timestamp = (uint64_t) buffer->filltime.tv_sec * 1000000 +
-            buffer->filltime.tv_usec;
-
-        *frame=frame_tmp;
-
-        return DC1394_SUCCESS;
+        if (status != BUFFER_FILLED && status != BUFFER_CORRUPT)
+            return DC1394_SUCCESS;
     }
+
+    read (capture->notify_pipe[0], &ch, 1);
+
+    MPEnterCriticalRegion (capture->mutex, kDurationForever);
+    if (buffer->status != BUFFER_FILLED && buffer->status != BUFFER_CORRUPT) {
+        dc1394_log_error("expected filled buffer");
+        MPExitCriticalRegion (capture->mutex);
+        return DC1394_FAILURE;
+    }
+    capture->frames_ready--;
+    frame_tmp->frames_behind = capture->frames_ready;
+    MPExitCriticalRegion (capture->mutex);
+
+    capture->last_dequeued = next;
+
+    frame_tmp->timestamp = (uint64_t) buffer->filltime.tv_sec * 1000000 +
+        buffer->filltime.tv_usec;
+
+    *frame=frame_tmp;
+
+    return DC1394_SUCCESS;
 }
 
 
@@ -696,6 +680,19 @@ platform_capture_enqueue (platform_camera_t * craw,
         (*loc_port)->Notify (loc_port, kFWNuDCLModifyJumpNotification, dcl_list, 1);
     }
     return DC1394_SUCCESS;
+}
+
+dc1394bool_t
+platform_capture_is_frame_corrupt (platform_camera_t * craw,
+        dc1394video_frame_t * frame)
+{
+    dc1394capture_t * capture = &(craw->capture);
+    buffer_info * buffer = capture->buffers + frame->id;
+
+    if (buffer->status == BUFFER_CORRUPT)
+        return DC1394_TRUE;
+
+    return DC1394_FALSE;
 }
 
 int

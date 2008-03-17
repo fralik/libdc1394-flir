@@ -86,6 +86,8 @@ dc1394error_t platform_capture_dequeue (platform_camera_t * cam,
                         dc1394video_frame_t **frame_return);
 dc1394error_t platform_capture_enqueue (platform_camera_t * cam,
                         dc1394video_frame_t * frame);
+dc1394bool_t platform_capture_is_frame_corrupt (platform_camera_t * craw,
+        dc1394video_frame_t * frame);
 int platform_capture_get_fileno (platform_camera_t * cam);
 
 dc1394error_t platform_iso_set_persist (platform_camera_t * cam);
