@@ -1,3 +1,6 @@
+2008-03-26 David Moore  <dcm@acm.org>
+	* SVN 554: Fix build of Juju when in separate dir
+
 2008-03-16 David Moore  <dcm@acm.org>
 	* SVN 553: Update NEWS
 	* SVN 552: Add function dc1394_capture_is_frame_corrupt() to test if

@@ -2,7 +2,7 @@ noinst_LTLIBRARIES = libdc1394-juju.la
 
 pkgjujuincludedir = $(pkgincludedir)/juju
 
-AM_CFLAGS = -I.. -I$(JUJU_DIR)
+AM_CFLAGS = -I$(top_srcdir)/dc1394 -I$(JUJU_DIR)
 libdc1394_juju_la_SOURCES =  \
 	control.c \
 	capture.c \
