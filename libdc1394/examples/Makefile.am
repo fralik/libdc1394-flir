@@ -3,7 +3,7 @@ dist_man_MANS = dc1394_reset_bus.1 dc1394_vloopback.1
 AM_CPPFLAGS = -I $(top_srcdir)
 
 A = grab_gray_image grab_partial_image grab_color_image \
-	grab_color_image2 helloworld ladybug \
+	grab_color_image2 helloworld ladybug grab_partial_pvn \
 	basler_sff_info basler_sff_extended_data
 B = dc1394_reset_bus
 
@@ -43,6 +43,9 @@ grab_color_image2_LDADD = $(LDADD) ../dc1394/libdc1394.la
 
 grab_partial_image_SOURCES = grab_partial_image.c
 grab_partial_image_LDADD = $(LDADD) ../dc1394/libdc1394.la
+
+grab_partial_pvn_SOURCES = grab_partial_pvn.c
+grab_partial_pvn_LDADD = $(LDADD) ../dc1394/libdc1394.la
 
 dc1394_vloopback_SOURCES = dc1394_vloopback.c affine.c affine.h
 dc1394_vloopback_LDADD = $(LDADD) -lm ../dc1394/libdc1394.la
