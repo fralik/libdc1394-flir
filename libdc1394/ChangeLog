@@ -1,4 +1,6 @@
 2008-05-08 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 557: Update the lt verions to 23,0,1. RELEASE 2.0.2
+	           (Note: the SOversion is 22.0.2)
 	* SVN 556: the wrong file was uploaded for the new example, fixed.
 	
 2008-05-02 Damien Douxchamps http://damien.douxchamps.net/

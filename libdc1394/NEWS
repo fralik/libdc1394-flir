@@ -7,6 +7,7 @@ Release information and news:
          dc1394_capture_is_frame_corrupt
    - New function on Linux video1394 only:
          dc1394_camera_get_linux_port
+   - New example program to capture PVN sequences.
    - Bug fixes on Linux Juju:
        - Better retry timeouts
        - Fix manual isochronous channel allocation
