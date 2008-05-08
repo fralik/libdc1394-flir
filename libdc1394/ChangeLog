@@ -1,3 +1,9 @@
+2008-05-08 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 556: the wrong file was uploaded for the new example, fixed.
+	
+2008-05-02 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 555: add a new example
+	
 2008-03-26 David Moore  <dcm@acm.org>
 	* SVN 554: Fix build of Juju when in separate dir
 
