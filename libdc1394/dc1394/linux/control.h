@@ -23,7 +23,15 @@
 #ifndef __DC1394_CONTROL_LINUX_H__
 #define __DC1394_CONTROL_LINUX_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 dc1394error_t
 dc1394_camera_get_linux_port(dc1394camera_t *camera, uint32_t *port);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

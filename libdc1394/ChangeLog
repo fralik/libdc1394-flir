@@ -1,3 +1,7 @@
+2008-05-17 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 558: applied patch from Olaf Kaehler (missing #ifdef cpluspluc)
+	           Corrected the email address of the list in the Readme.
+
 2008-05-08 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 557: Update the lt verions to 23,0,1. RELEASE 2.0.2
 	           (Note: the SOversion is 22.0.2)
