@@ -1,3 +1,7 @@
+2008-05-28 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 559: fixed wrong returned values for dc1394_trigger_get_polarity.
+	           Thanks to Clement Menier.
+	
 2008-05-17 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 558: applied patch from Olaf Kaehler (missing #ifdef cpluspluc)
 	           Corrected the email address of the list in the Readme.
