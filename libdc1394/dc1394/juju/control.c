@@ -239,7 +239,7 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
             return -1;
         }
         for (i = 0; i < u.response.r.length/4 && i < num_quads && out; i++)
-            out[i] = ntohl (u.response.buffer[i]);
+            out[i] = ntohl (u.response.r.data[i]);
         return 1;
     }
 
