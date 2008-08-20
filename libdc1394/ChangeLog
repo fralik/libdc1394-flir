@@ -1,4 +1,12 @@
 2008-05-28 Damien Douxchamps http://damien.douxchamps.net/
+
+	* SVN 561: attempt to fix incoherences in the msw port.
+	
+2008-03-26 David Moore  <dcm@acm.org>
+	* SVN 560: Fix alignment problem during reads on some platforms with
+	           juju
+
+2008-05-28 Damien Douxchamps http://damien.douxchamps.net/
         * SVN 559: fixed wrong returned values for dc1394_trigger_get_polarity.
 	           Thanks to Clement Menier.
 	

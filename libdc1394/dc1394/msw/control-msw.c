@@ -111,12 +111,14 @@ static msw1394error_t GrabSelfIds(dc1394camera_t **cams, int ncams)
         }
         free(top);
     }
+    /*
     for (k=0; k<ncams; k++) {
         cam = (dc1394camera_msw_t *) cams[k];
         cam->camera.phy_delay=cam->selfid.SID_Delay+DC1394_PHY_DELAY_MIN;
         cam->camera.phy_speed=cam->selfid.SID_Speed+DC1394_ISO_SPEED_MIN;
         cam->camera.power_class=cam->selfid.SID_Power_Class+DC1394_POWER_CLASS_MIN;
     }
+    */
     return res;
 }
 
