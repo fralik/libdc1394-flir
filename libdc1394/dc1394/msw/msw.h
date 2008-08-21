@@ -36,6 +36,13 @@ typedef struct __dc1394_camera_msw
         HANDLE bw_handle;
         msw1394_ISO ISO;
         dc1394video_frame_t *frames;
+
+  int                      capture_is_set;
+  int                      allocated_channel;
+  unsigned int             allocated_bandwidth;
+  int                      iso_auto_started;
+  unsigned int             iso_channel;
+
 } dc1394camera_msw_t;
 
 #endif

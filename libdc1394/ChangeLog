@@ -1,4 +1,11 @@
-2008-05-28 Damien Douxchamps http://damien.douxchamps.net/
+2008-08-21 Damien Douxchamps http://damien.douxchamps.net/
+
+	* SVN 562: attempt to fix incoherences in the msw port, part 2. There
+	           is still a lot of work to be done in camera detection and
+		   ISO channel/bandwidth allocation. For instance, the
+		   platform_* functions are inexistant in MSW.
+
+2008-08-20 Damien Douxchamps http://damien.douxchamps.net/
 
 	* SVN 561: attempt to fix incoherences in the msw port.
 	

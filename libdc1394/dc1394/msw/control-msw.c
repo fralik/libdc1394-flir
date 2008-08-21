@@ -79,6 +79,7 @@ static msw1394_speed_t dc1394_2_msw1394_speed(dc1394speed_t dc1394_speed)
     return res;
 }
 
+/*
 static msw1394error_t GrabSelfIds(dc1394camera_t **cams, int ncams)
 {
     msw1394error_t res = MSW1394_SUCCESS;
@@ -111,21 +112,22 @@ static msw1394error_t GrabSelfIds(dc1394camera_t **cams, int ncams)
         }
         free(top);
     }
-    /*
+    
     for (k=0; k<ncams; k++) {
         cam = (dc1394camera_msw_t *) cams[k];
         cam->camera.phy_delay=cam->selfid.SID_Delay+DC1394_PHY_DELAY_MIN;
         cam->camera.phy_speed=cam->selfid.SID_Speed+DC1394_ISO_SPEED_MIN;
         cam->camera.power_class=cam->selfid.SID_Power_Class+DC1394_POWER_CLASS_MIN;
     }
-    */
+    
     return res;
 }
+*/
 
 // ############# public ##################################
 
 dc1394camera_t*
-dc1394_new_camera_platform (uint32_t port, uint16_t node)
+dc1394_camera_new_platform (uint32_t port, uint16_t node)
 {
     dc1394camera_msw_t *cam;
 
@@ -133,12 +135,12 @@ dc1394_new_camera_platform (uint32_t port, uint16_t node)
     if (cam==NULL)
         return NULL;
 
-    cam->camera.port = (int) port;
+    cam->port = (int) port;
     return (dc1394camera_t *) cam;
 }
 
 void
-dc1394_free_camera_platform (dc1394camera_t *camera)
+dc1394_camera_free_platform (dc1394camera_t *camera)
 {
     DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
     if (cmsw == NULL)
@@ -196,7 +198,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
             if (node == local)
                 continue;
             int duplicate = 0;
-            tmpcam = dc1394_new_camera(port,node);
+            tmpcam = dc1394_camera_new(port,node);
             if (tmpcam == NULL) {
                 res = DC1394_MEMORY_ALLOCATION_FAILURE;
                 goto fail;
@@ -204,7 +206,7 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 
             err=dc1394_update_camera_info(tmpcam);
             if (err != DC1394_SUCCESS) {
-                dc1394_free_camera(tmpcam);
+                dc1394_camera_free(tmpcam);
                 tmpcam=NULL;
                 continue;
             }
@@ -213,9 +215,9 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 
             if (numCam > 0)
                 for (i=0; i<numCam && !duplicate; i++)
-                    duplicate = tmpcam->euid_64 == cameras[i]->euid_64;
+                    duplicate = tmpcam->guid == cameras[i]->guid;
             if (duplicate) {
-                dc1394_free_camera(tmpcam);
+                dc1394_camera_free(tmpcam);
                 tmpcam=NULL;
                 continue;
             }
@@ -242,16 +244,18 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
         res = DC1394_NO_CAMERA;
         free(cameras);
         *cameras_ptr = NULL;
-    } else {
+    }
+    /*
+ else {
         res = GrabSelfIds(cameras, numCam);
         if (res != DC1394_SUCCESS)
             goto fail;
     }
-
+    */
     return res;
  fail:
     for (i=0;i<numCam;i++) {
-        dc1394_free_camera(cameras[i]);
+        dc1394_camera_free(cameras[i]);
         cameras[i]=NULL;
     }
     free(cameras);
@@ -263,8 +267,8 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
 dc1394error_t
 dc1394_reset_bus_platform (dc1394camera_t * camera)
 {
-    int port = camera->port;
-    msw1394error_t err1394 = msw1394_ResetBus(port);
+    DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
+    msw1394error_t err1394 = msw1394_ResetBus(cmsw->port);
     dc1394error_t res = ConvertError(err1394);
     return res;
 }
@@ -273,8 +277,9 @@ dc1394_reset_bus_platform (dc1394camera_t * camera)
 dc1394error_t
 dc1394_read_cycle_timer_platform (dc1394camera_t * camera, uint32_t * cycle_timer, uint64_t * local_time)
 {
+    DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
     msw1394error_t err1394;
-    ULONG port = camera->port;
+    ULONG port = cmsw->port;
     FILETIME        ft;
     LARGE_INTEGER   li;
 
@@ -295,18 +300,19 @@ dc1394_read_cycle_timer_platform (dc1394camera_t * camera, uint32_t * cycle_time
 dc1394error_t
 GetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_quads)
 {
+    DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
     msw1394error_t err1394;
     int retry= DC1394_MAX_RETRIES;
-    int port = camera->port;
-    int node = camera->node;
+    int port = cmsw->port;
+    int node = cmsw->node;
 
     while (retry--) {
 #ifdef DC1394_DEBUG_LOWEST_LEVEL
         fprintf(stderr,"get %d regs at 0x%llx : ", num_quads, offset + CONFIG_ROM_BASE);
 #endif
         err1394 = msw1394_ReadSync(port,0xffc0 | node, offset + CONFIG_ROM_BASE, 4 * num_quads, value);
-        ifdef DC1394_DEBUG_LOWEST_LEVEL
-            fprintf(stderr,"0x%lx [...]\n", value[0]);
+#ifdef DC1394_DEBUG_LOWEST_LEVEL
+	fprintf(stderr,"0x%lx [...]\n", value[0]);
 #endif
         if (err1394 == MSW1394_SUCCESS)
             break;
@@ -345,18 +351,20 @@ SetCameraROMValues(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uin
 }
 
 dc1394error_t
-dc1394_allocate_iso_channel(dc1394camera_t *camera) {
+dc1394_allocate_iso_channel(dc1394camera_t *camera)
+{
+    DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
     dc1394error_t err;
     dc1394switch_t iso_was_on;
     char ch;
     msw1394error_t err1394;
 
-    if (camera->capture_is_set) {
+    if (cmsw->capture_is_set) {
         dc1394_log_error("capturing in progress, cannot allocate ISO channel");
         return DC1394_CAPTURE_IS_RUNNING;
     }
 
-    if (camera->iso_channel_is_set) {
+    if (cmsw->iso_channel_is_set) {
         dc1394_log_error("a channel is already allocated to this camera");
         return DC1394_FAILURE;
     }
@@ -371,36 +379,36 @@ dc1394_allocate_iso_channel(dc1394camera_t *camera) {
     }
 
     // first we need to assign an ISO channel:
-    if (camera->iso_channel >= 0) {
+    if (cmsw->allocated_channel >= 0) {
         // a specific channel is requested. try to book it.
-        ch = camera->iso_channel;
-        err1394 = msw1394_ISOAllocChan(camera->port,&ch);
+        ch = cmsw->allocated_channel;
+        err1394 = msw1394_ISOAllocChan(cmsw->port,&ch);
         if (err1394 == MSW1394_SUCCESS) {
             // channel allocated.
-            dc1394_log_debug("Allocated ISO channel %d as requested", camera->iso_channel);
+            dc1394_log_debug("Allocated ISO channel %d as requested", cmsw->allocated_channel);
 
-            camera->iso_channel_is_set=1;
-            err=dc1394_video_set_iso_channel(camera, camera->iso_channel);
+            cmsw->iso_channel_is_set=1;
+            err=dc1394_video_set_iso_channel(camera, cmsw->allocated_channel);
             DC1394_ERR_RTN(err, "Could not set ISO channel in the camera");
             return DC1394_SUCCESS;
         }
-        dc1394_log_warning("Channel %d already reserved. Trying other channels.", camera->iso_channel);
+        dc1394_log_warning("Channel %d already reserved. Trying other channels.", cmsw->allocated_channel);
     }
 
     ch = -1;
-    err1394 = msw1394_ISOAllocChan(camera->port,&ch);
+    err1394 = msw1394_ISOAllocChan(cmsw->port,&ch);
     if (err1394 == MSW1394_SUCCESS) {
         // channel allocated.
-        camera->iso_channel=ch;
-        camera->iso_channel_is_set=1;
+        cmsw->allocated_channel=ch;
+        cmsw->iso_channel_is_set=1;
     }
 
     // check if channel was allocated:
-    if (camera->iso_channel_is_set==0)
+    if (cmsw->iso_channel_is_set==0)
         return DC1394_NO_ISO_CHANNEL;
 
     // set channel in the camera
-    err=dc1394_video_set_iso_channel(camera, camera->iso_channel);
+    err=dc1394_video_set_iso_channel(camera, cmsw->allocated_channel);
     DC1394_ERR_RTN(err, "Could not set ISO channel in the camera");
 
     return DC1394_SUCCESS;
@@ -413,25 +421,25 @@ dc1394_allocate_bandwidth(dc1394camera_t *camera)
     dc1394error_t err;
     msw1394error_t err1394;
 
-    if (camera->capture_is_set) {
+    if (cmsw->capture_is_set) {
         dc1394_log_error("capturing in progress, cannot allocate ISO bandwidth");
         return DC1394_FAILURE;
     }
 
-    if (camera->iso_bandwidth) {
+    if (cmsw->allocated_bandwidth) {
         dc1394_log_error("bandwidth already allocated for this camera");
         return DC1394_FAILURE;
     }
 
-    err=dc1394_video_get_bandwidth_usage(camera, &camera->iso_bandwidth);
+    err=dc1394_video_get_bandwidth_usage(camera, &cmsw->allocated_bandwidth);
     DC1394_ERR_RTN(err, "Could not estimate ISO bandwidth");
-    err1394 = msw1394_ISOAllocBandwidth(camera->port, camera->iso_bandwidth, &cmsw->bw_handle);
+    err1394 = msw1394_ISOAllocBandwidth(cmsw->port, cmsw->allocated_bandwidth, &cmsw->bw_handle);
     if (err1394 != MSW1394_SUCCESS) {
-        camera->iso_bandwidth=0;
+        cmsw->allocated_bandwidth=0;
 
         return DC1394_NO_BANDWIDTH;
     }
-    dc1394_log_debug("Allocated %d bandwidth units",camera->iso_bandwidth);
+    dc1394_log_debug("Allocated %d bandwidth units",cmsw->allocated_bandwidth);
 
     return DC1394_SUCCESS;
 }
@@ -439,10 +447,11 @@ dc1394_allocate_bandwidth(dc1394camera_t *camera)
 dc1394error_t
 dc1394_free_iso_channel(dc1394camera_t *camera)
 {
+    DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
     dc1394error_t err;
     msw1394error_t err1394;
 
-    if (camera->capture_is_set) {
+    if (cmsw->capture_is_set) {
         dc1394_log_error("capturing in progress, cannot free ISO channel");
         return DC1394_FAILURE;
     }
@@ -453,21 +462,21 @@ dc1394_free_iso_channel(dc1394camera_t *camera)
         DC1394_ERR_RTN(err, "Could not stop ISO transmission");
     }
 
-    if (camera->iso_channel_is_set == 0) {
+    if (cmsw->iso_channel_is_set == 0) {
         dc1394_log_error("no ISO channel to free");
     return DC1394_FAILURE;
     }
 
-    err1394 = msw1394_ISOFreeChan(camera->port, camera->iso_channel);
+    err1394 = msw1394_ISOFreeChan(cmsw->port, cmsw->allocated_channel);
     if (err1394 != MSW1394_SUCCESS) {
-        dc1394_log_error("could not free iso channel %d!", camera->iso_channel);
+        dc1394_log_error("could not free iso channel %d!", cmsw->allocated_channel);
         return DC1394_RAW1394_FAILURE;
     }
 
-    dc1394_log_debug("Freed iso channel %d", camera->iso_channel);
+    dc1394_log_debug("Freed iso channel %d", cmsw->allocated_channel);
 
     //camera->iso_channel=-1; // we don't need this line anymore.
-    camera->iso_channel_is_set=0;
+    cmsw->iso_channel_is_set=0;
     return DC1394_SUCCESS;
 
 }
@@ -479,7 +488,7 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
     dc1394error_t err;
     msw1394error_t err1394;
 
-    if (camera->capture_is_set) {
+    if (cmsw->capture_is_set) {
         dc1394_log_error("capturing in progress, cannot free ISO bandwidth");
         return DC1394_FAILURE;
     }
@@ -490,20 +499,20 @@ dc1394_free_bandwidth(dc1394camera_t *camera)
         DC1394_ERR_RTN(err, "Could not stop ISO transmission");
     }
 
-    if (camera->iso_bandwidth == 0) {
+    if (cmsw->allocated_bandwidth == 0) {
         dc1394_log_error("no ISO bandwidth to free");
         return DC1394_FAILURE;
     }
 
-    err1394 = msw1394_ISOFreeBandwidth(camera->port, cmsw->bw_handle);
+    err1394 = msw1394_ISOFreeBandwidth(cmsw->port, cmsw->bw_handle);
     if (err1394 != MSW1394_SUCCESS) {
-        dc1394_log_error("could not free %d units of bandwidth!", camera->iso_bandwidth);
+        dc1394_log_error("could not free %d units of bandwidth!", cmsw->allocated__bandwidth);
         return DC1394_RAW1394_FAILURE;
     }
 
     dc1394_log_debug("Freed some bandwidth units");
 
-    camera->iso_bandwidth=0;
+    cmsw->allocated_bandwidth=0;
     cmsw->bw_handle = INVALID_HANDLE_VALUE;
     return DC1394_SUCCESS;
 }
@@ -520,7 +529,7 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
     dc1394video_frame_t* f;
 
     // if capture is already set, abort
-    if (camera->capture_is_set>0)
+    if (cmsw->capture_is_set>0)
         return DC1394_CAPTURE_IS_RUNNING;
 
     if (flags & DC1394_CAPTURE_FLAGS_DEFAULT)
@@ -560,8 +569,8 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
         goto fail;
 
     memset(&(cmsw->ISO),0,sizeof(cmsw->ISO));
-    cmsw->ISO.Port = camera->port;
-    cmsw->ISO.nChannel = camera->iso_channel;
+    cmsw->ISO.Port = cmsw->port;
+    cmsw->ISO.nChannel = cmsw->allocated_channel;
     cmsw->ISO.Speed = dc1394_2_msw1394_speed(camera->iso_speed);
     cmsw->ISO.nMaxBytesPerFrame = cmsw->frames[0].packet_size+4;
     cmsw->ISO.nNumberOfBuffers = num_dma_buffers;
@@ -582,13 +591,13 @@ dc1394_capture_setup(dc1394camera_t *camera, uint32_t num_dma_buffers, uint32_t 
         f->image = (unsigned char *) cmsw->ISO.Buffers[i];
         f->id = i;
     }
-    camera->capture_is_set = 1;
+    cmsw->capture_is_set = 1;
 
     // if auto iso is requested, start ISO
     if (flags & DC1394_CAPTURE_FLAGS_AUTO_ISO) {
         err=dc1394_video_set_transmission(camera, DC1394_ON);
         DC1394_ERR_RTN(err,"Could not start ISO!");
-        camera->iso_auto_started=1;
+        cmsw->iso_auto_started=1;
     }
 
     return DC1394_SUCCESS;
@@ -622,8 +631,8 @@ dc1394_capture_stop(dc1394camera_t *camera)
     DC1394_CAST_CAMERA_TO_MSW(cmsw, camera);
     msw1394error_t err1394 = MSW1394_SUCCESS;
 
-    if (camera->capture_is_set>0) {
-        switch (camera->capture_is_set) {
+    if (cmsw->capture_is_set>0) {
+        switch (cmsw->capture_is_set) {
         case 1: // RAW 1394 is obsolete
             return DC1394_INVALID_CAPTURE_MODE;
         case 2: // DMA (VIDEO1394)
@@ -639,7 +648,7 @@ dc1394_capture_stop(dc1394camera_t *camera)
         }
 
         // capture is not set anymore
-        camera->capture_is_set=0;
+        cmsw->capture_is_set=0;
 
         // free ressources if they were allocated
         if ((cmsw->capture_flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) >0) {
@@ -657,10 +666,10 @@ dc1394_capture_stop(dc1394camera_t *camera)
     }
 
     // stop ISO if it was started automatically
-    if (camera->iso_auto_started>0) {
+    if (cmsw->iso_auto_started>0) {
         dc1394error_t err=dc1394_video_set_transmission(camera, DC1394_OFF);
         DC1394_ERR_RTN(err,"Could not stop ISO!");
-        camera->iso_auto_started=0;
+        cmsw->iso_auto_started=0;
     }
 
     return DC1394_SUCCESS;
