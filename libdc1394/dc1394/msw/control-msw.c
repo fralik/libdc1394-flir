@@ -20,16 +20,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-
+#include "msw.h"
 #include "config.h"
 #include "internal.h"
 #include "register.h"
 #include "offsets.h"
 #include <dc1394/dc1394.h>
-#include "msw1394.h"
-
-#define DC1394_CAST_CAMERA_TO_MSW(cammsw, camera) dc1394camera_msw_t * cammsw = (dc1394camera_msw_t *) camera
 
 int usleep(long usec) {
     Sleep(usec/1000);
@@ -163,11 +159,11 @@ dc1394_find_cameras_platform(dc1394camera_t ***cameras_ptr, uint32_t* numCameras
     dc1394error_t res = DC1394_SUCCESS;
     msw1394error_t err1394 = MSW1394_SUCCESS;
     dc1394error_t err=DC1394_SUCCESS;
-    ULONG port_num, port;
+    uint32_t port_num, port;
     uint32_t allocated_size;
     dc1394camera_t **cameras, *tmpcam=NULL, **newcam;
     uint32_t numCam, i;
-    ULONG numNodes, node;
+    uint32_t numNodes, node;
 
     if (!msw1394_IsInited()) {
         err1394 = msw1394_Init();
