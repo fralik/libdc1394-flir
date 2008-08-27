@@ -20,12 +20,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "msw.h"
+#include <windows.h>
 #include "config.h"
 #include "internal.h"
 #include "register.h"
 #include "offsets.h"
 #include <dc1394/dc1394.h>
+#include "msw1394.h"
+#include "msw.h"
 
 int usleep(long usec) {
     Sleep(usec/1000);

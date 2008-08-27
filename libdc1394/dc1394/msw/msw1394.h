@@ -20,8 +20,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef msw1394_h
-#define msw1394_h
+#ifndef __MSW1394_H__
+#define __MSW1394_H__
 
 #if defined( _X86_ ) && defined (__GNUC__)
 #  undef _X86_
