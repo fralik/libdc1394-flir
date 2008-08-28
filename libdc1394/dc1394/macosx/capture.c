@@ -132,14 +132,21 @@ callback (buffer_info * buffer, NuDCLRef dcl)
     if (buffer->status != BUFFER_EMPTY)
         dc1394_log_error("buffer %d should have been empty",buffer->i);
 
-#if 0
+    /*
+     * We do this Notify() here in order to run the "update" step on the
+     * NuDCL program.  This is done instead of AppendDCLUpdateList() because
+     * that function does not work properly on Mac OS 10.4, as explained
+     * here:
+     *   http://lists.apple.com/archives/Firewire/2006/Aug/msg00002.html
+     *
+     * Also, the Notify() can only handle 30 DCLs at a time.
+     */
     for (i = 0; i < buffer->num_dcls; i += 30) {
         (*capture->loc_port)->Notify (capture->loc_port,
                                       kFWNuDCLUpdateNotification,
                                       (void **) buffer->dcl_list + i,
                                       MIN (buffer->num_dcls - i, 30));
     }
-#endif
 
     for (i = 0; i < buffer->num_dcls; i++) {
         int packet_size = capture->frames[buffer->i].packet_size;
@@ -276,8 +283,10 @@ CreateDCLProgram (platform_camera_t * craw)
             buffer->dcl_list[j] = dcl;
         }
 
+#if 0
         for (j = 0; j < ppf; j++)
             (*dcl_pool)->AppendDCLUpdateList (dcl, buffer->dcl_list[j]);
+#endif
         (*dcl_pool)->SetDCLRefcon (dcl, capture->buffers + i);
         (*dcl_pool)->SetDCLCallback (dcl, (NuDCLCallback) callback);
     }

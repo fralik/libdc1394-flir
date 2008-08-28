@@ -1,3 +1,7 @@
+2008-08-28 David Moore  <dcm@acm.org>
+	* SVN 565: Potential crash fix for Mac OS 10.4.  Thanks to Salvatore
+	           Desiano <sal@ri.cmu.edu> for tracking it down.
+
 2008-08-27 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 564: last set of blind changes.
 
