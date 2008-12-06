@@ -3,6 +3,8 @@ AC_PREREQ([2.6.0])
 AC_INIT([libdc1394],[2.0.2],[libdc1394-devel@lists.sf.net])
 AC_CONFIG_SRCDIR([dc1394/control.c])
 
+AC_CANONICAL_SYSTEM
+
 case "$host" in
 *-*-cygwin* | *-*-mingw*)
 AC_LIBTOOL_WIN32_DLL

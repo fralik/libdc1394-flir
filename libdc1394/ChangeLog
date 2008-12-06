@@ -1,7 +1,10 @@
 2008-12-05 David Moore  <dcm@acm.org>
+	* SVN 568: Added AC_CANONICAL_SYSTEM to configure.in.  Thanks to
+	           Tully Foote.
 	* SVN 567: Fix acinclude.m4 for newer versions of autoconf
 	* SVN 566: Fix image size bug in dc1394_deinterlace_stereo_frames.
-	           Thanks to Maya Cakmak <maya@cc.gatech.edu>.
+	           Thanks to Maya Cakmak <maya@cc.gatech.edu> and Jeremy
+	           Leibs <leibs@willowgarage.com>.
 
 2008-08-28 David Moore  <dcm@acm.org>
 	* SVN 565: Potential crash fix for Mac OS 10.4.  Thanks to Salvatore
