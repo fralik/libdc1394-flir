@@ -898,7 +898,7 @@ dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *o
         switch (method) {
         case DC1394_STEREO_METHOD_INTERLACED:
             err=Adapt_buffer_stereo(in,out);
-            dc1394_deinterlace_stereo(in->image, out->image, in->size[0], in->size[1]);
+            dc1394_deinterlace_stereo(in->image, out->image, out->size[0], out->size[1]);
             break;
         case DC1394_STEREO_METHOD_FIELD:
             err=Adapt_buffer_stereo(in,out);
