@@ -1,4 +1,5 @@
 2008-12-05 David Moore  <dcm@acm.org>
+	* SVN 567: Fix acinclude.m4 for newer versions of autoconf
 	* SVN 566: Fix image size bug in dc1394_deinterlace_stereo_frames.
 	           Thanks to Maya Cakmak <maya@cc.gatech.edu>.
 
