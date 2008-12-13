@@ -1,6 +1,14 @@
 Release information and news:
 -----------------------------
 
+-- 2.0.3:
+   - Bug fixes:
+       - Crash on Mac OS 10.4
+       - Bad data in mixed x86_64/i386 environments with Juju
+       - Wrong return value from dc1394_trigger_get_polarity()
+       - Incomplete results from dc1394_deinterlace_stereo_frames()
+   - Compilation fixes when downloading from SVN
+
 -- 2.0.2:
    - New functions on all platforms:
          dc1394_camera_get_node
