@@ -59,6 +59,8 @@ int main(int argn, char *argv[])
     nimages=atoi(argv[1]);
 
     d = dc1394_new ();
+    if (!d)
+        return 1;
     err=dc1394_camera_enumerate (d, &list);
     DC1394_ERR_RTN(err,"Failed to enumerate cameras");
 

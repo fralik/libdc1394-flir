@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
     dc1394camera_list_t * list;
 
     d = dc1394_new ();                                                     /* Initialize libdc1394 */
+    if (!d)
+        return 1;
 
     err=dc1394_camera_enumerate (d, &list);                                /* Find cameras */
     DC1394_ERR_RTN(err,"Failed to enumerate cameras");

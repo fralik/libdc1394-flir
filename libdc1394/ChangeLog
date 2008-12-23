@@ -1,3 +1,6 @@
+2008-12-23 David Moore  <dcm@acm.org>
+	* SVN 571: Add more error-checking to example programs
+
 2008-12-12 David Moore  <dcm@acm.org>
 	* SVN 570: Update NEWS
 	* SVN 569: Update version and AUTHORS for 2.0.3.  RELEASE 2.0.3.
