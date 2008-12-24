@@ -36,7 +36,6 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include <libraw1394/raw1394.h>
 #include "dc1394/dc1394.h"
 
 

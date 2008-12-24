@@ -1,11 +1,11 @@
 MAINTAINERCLEANFILES = Makefile.in
 lib_LTLIBRARIES = libdc1394.la
 
-SUBDIRS = $(dc1394platform) vendor
-DIST_SUBDIRS = linux macosx vendor juju msw
+SUBDIRS = linux juju macosx msw vendor
 AM_CFLAGS = $(platform_CFLAGS) -I$(top_srcdir)
 
-libdc1394_la_LDFLAGS = $(platform_LDFLAGS) -version-info @lt_current@:@lt_revision@:@lt_age@
+libdc1394_la_LDFLAGS = $(platform_LDFLAGS) \
+	-version-info @lt_current@:@lt_revision@:@lt_age@
 
 libdc1394_la_SOURCES =  \
 	control.c 	\
@@ -29,8 +29,24 @@ libdc1394_la_SOURCES =  \
 	iso.c 		\
 	iso.h
 
+if HAVE_LINUX
+if HAVE_LIBRAW1394
+  LINUX_LIBADD = linux/libdc1394-linux.la
+endif
+  JUJU_LIBADD = juju/libdc1394-juju.la
+endif
+if HAVE_MACOSX
+  MACOSX_LIBADD = macosx/libdc1394-macosx.la
+endif
+if HAVE_WINDOWS
+  MSW_LIBADD = msw/libdc1394-msw.la
+endif
+
 libdc1394_la_LIBADD = \
-	$(dc1394platform)/libdc1394-$(dc1394platform).la \
+	$(LINUX_LIBADD) \
+	$(JUJU_LIBADD) \
+	$(MACOSX_LIBADD) \
+	$(MSW_LIBADD) \
 	vendor/libdc1394-vendor.la
 
 # headers to be installed

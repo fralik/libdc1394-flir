@@ -28,8 +28,11 @@ dc1394error_t
 dc1394_iso_set_persist (dc1394camera_t * camera)
 {
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    const platform_dispatch_t * d = cpriv->platform->dispatch;
+    if (!d->iso_set_persist)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
     dc1394error_t err;
-    if ((err = platform_iso_set_persist (cpriv->pcam)) != DC1394_SUCCESS)
+    if ((err = d->iso_set_persist (cpriv->pcam)) != DC1394_SUCCESS)
         return err;
 
     cpriv->iso_persist = 1;
@@ -42,6 +45,9 @@ dc1394_iso_allocate_channel (dc1394camera_t * camera,
 {
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
     dc1394error_t err;
+    const platform_dispatch_t * d = cpriv->platform->dispatch;
+    if (!d->iso_allocate_channel)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
 
     if (channels_allowed == 0) {
         if (camera->bmode_capable)
@@ -50,7 +56,7 @@ dc1394_iso_allocate_channel (dc1394camera_t * camera,
             channels_allowed = 0xffff;
     }
 
-    if ((err = platform_iso_allocate_channel (cpriv->pcam, channels_allowed,
+    if ((err = d->iso_allocate_channel (cpriv->pcam, channels_allowed,
             channel)) != DC1394_SUCCESS)
         return err;
 
@@ -62,8 +68,11 @@ dc1394error_t
 dc1394_iso_release_channel (dc1394camera_t * camera, int channel)
 {
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    const platform_dispatch_t * d = cpriv->platform->dispatch;
+    if (!d->iso_release_channel)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
     dc1394error_t err;
-    if ((err = platform_iso_release_channel (cpriv->pcam, channel))
+    if ((err = d->iso_release_channel (cpriv->pcam, channel))
             != DC1394_SUCCESS)
         return err;
 
@@ -75,8 +84,11 @@ dc1394error_t
 dc1394_iso_allocate_bandwidth (dc1394camera_t * camera, int bandwidth_units)
 {
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    const platform_dispatch_t * d = cpriv->platform->dispatch;
+    if (!d->iso_allocate_bandwidth)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
     dc1394error_t err;
-    if ((err = platform_iso_allocate_bandwidth (cpriv->pcam, bandwidth_units))
+    if ((err = d->iso_allocate_bandwidth (cpriv->pcam, bandwidth_units))
             != DC1394_SUCCESS)
         return err;
 
@@ -88,8 +100,11 @@ dc1394error_t
 dc1394_iso_release_bandwidth (dc1394camera_t * camera, int bandwidth_units)
 {
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
+    const platform_dispatch_t * d = cpriv->platform->dispatch;
+    if (!d->iso_release_bandwidth)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
     dc1394error_t err;
-    if ((err = platform_iso_release_bandwidth (cpriv->pcam, bandwidth_units))
+    if ((err = d->iso_release_bandwidth (cpriv->pcam, bandwidth_units))
             != DC1394_SUCCESS)
         return err;
 

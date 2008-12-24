@@ -104,7 +104,8 @@ queue_frame (platform_camera_t *craw, int index)
 }
 
 dc1394error_t
-platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32_t flags)
+dc1394_juju_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
+        uint32_t flags)
 {
     struct fw_cdev_create_iso_context create;
     struct fw_cdev_start_iso start_iso;
@@ -135,7 +136,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers, uint32
 
     // allocate channel/bandwidth if requested
     if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
-        dc1394_log_warning ("Warning: iso allocation not implemented yet for "
+        dc1394_log_warning ("iso allocation not implemented yet for "
                 "juju drivers, using channel 0...");
         if (dc1394_video_set_iso_channel (camera, 0) != DC1394_SUCCESS)
             return DC1394_NO_ISO_CHANNEL;
@@ -240,7 +241,7 @@ error_fd:
 }
 
 dc1394error_t
-platform_capture_stop(platform_camera_t *craw)
+dc1394_juju_capture_stop(platform_camera_t *craw)
 {
     dc1394camera_t * camera = craw->camera;
     struct fw_cdev_stop_iso stop;
@@ -270,7 +271,8 @@ platform_capture_stop(platform_camera_t *craw)
 
 
 dc1394error_t
-platform_capture_dequeue (platform_camera_t * craw, dc1394capture_policy_t policy, dc1394video_frame_t **frame_return)
+dc1394_juju_capture_dequeue (platform_camera_t * craw,
+        dc1394capture_policy_t policy, dc1394video_frame_t **frame_return)
 {
     struct pollfd fds[1];
     struct juju_frame *f;
@@ -331,7 +333,8 @@ platform_capture_dequeue (platform_camera_t * craw, dc1394capture_policy_t polic
 }
 
 dc1394error_t
-platform_capture_enqueue (platform_camera_t * craw, dc1394video_frame_t * frame)
+dc1394_juju_capture_enqueue (platform_camera_t * craw,
+        dc1394video_frame_t * frame)
 {
     dc1394camera_t * camera = craw->camera;
     int err;
@@ -347,15 +350,8 @@ platform_capture_enqueue (platform_camera_t * craw, dc1394video_frame_t * frame)
 }
 
 int
-platform_capture_get_fileno (platform_camera_t * craw)
+dc1394_juju_capture_get_fileno (platform_camera_t * craw)
 {
     return craw->iso_fd;
-}
-
-dc1394bool_t
-platform_capture_is_frame_corrupt (platform_camera_t * craw,
-        dc1394video_frame_t * frame)
-{
-    return DC1394_FALSE;
 }
 

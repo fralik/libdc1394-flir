@@ -1,6 +1,6 @@
+if HAVE_WINDOWS
 noinst_LTLIBRARIES = libdc1394-msw.la
-
-pkglinuxincludedir = $(pkgincludedir)/linux
+endif
 
 AM_CFLAGS = -DDC1394_DLL_EXPORTS -I$(top_srcdir) -I$(srcdir)/.. -I$(WINDDK)/inc -I$(WINDDK)/src/wdm/1394/inc -I$(WINDDK)/src/wdm/1394
 libdc1394_msw_la_SOURCES =  \
@@ -9,7 +9,4 @@ libdc1394_msw_la_SOURCES =  \
 	msw1394.h \
 	msw.h
 
-# headers to be installed
-#pkglinuxinclude_HEADERS = \
-#	capture.h
 

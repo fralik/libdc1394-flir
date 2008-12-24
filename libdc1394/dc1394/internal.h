@@ -27,10 +27,18 @@
 #include "offsets.h"
 #include "platform.h"
 
+typedef struct _platform_info_t {
+    const platform_dispatch_t * dispatch;
+    const char * name;
+    platform_device_list_t * device_list;
+    platform_t * p;
+} platform_info_t;
+
 typedef struct _dc1394camera_priv_t {
     dc1394camera_t camera;
 
     platform_camera_t * pcam;
+    platform_info_t * platform;
 
     uint64_t allocated_channels;
     int allocated_bandwidth;
@@ -51,15 +59,24 @@ typedef struct _camera_info_t {
     uint32_t vendor_id;
     uint32_t model_id;
     platform_device_t * device;
+    platform_info_t * platform;
 } camera_info_t;
 
 struct __dc1394_t {
-    platform_t  * platform;
-    platform_device_list_t * device_list;
+    int num_platforms;
+    platform_info_t * platforms;
 
     int num_cameras;
     camera_info_t * cameras;
 };
+
+void juju_init(dc1394_t *d);
+void linux_init(dc1394_t *d);
+void macosx_init(dc1394_t *d);
+void windows_init(dc1394_t *d);
+
+void register_platform (dc1394_t * d, const platform_dispatch_t * dispatch,
+        const char * name);
 
 void free_enumeration (dc1394_t * d);
 int refresh_enumeration (dc1394_t * d);

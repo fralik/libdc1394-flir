@@ -31,22 +31,31 @@
 dc1394error_t
 dc1394_camera_set_broadcast(dc1394camera_t *camera, dc1394bool_t pwr)
 {
-    dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
-    return platform_set_broadcast (cpriv->pcam, pwr);
+    dc1394camera_priv_t * priv = DC1394_CAMERA_PRIV (camera);
+    const platform_dispatch_t * d = priv->platform->dispatch;
+    if (!d->set_broadcast)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
+    return d->set_broadcast (priv->pcam, pwr);
 }
 
 dc1394error_t
 dc1394_camera_get_broadcast(dc1394camera_t *camera, dc1394bool_t *pwr)
 {
-    dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
-    return platform_get_broadcast (cpriv->pcam, pwr);
+    dc1394camera_priv_t * priv = DC1394_CAMERA_PRIV (camera);
+    const platform_dispatch_t * d = priv->platform->dispatch;
+    if (!d->get_broadcast)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
+    return d->get_broadcast (priv->pcam, pwr);
 }
 
 dc1394error_t
 dc1394_reset_bus (dc1394camera_t * camera)
 {
     dc1394camera_priv_t * priv = DC1394_CAMERA_PRIV (camera);
-    return platform_reset_bus (priv->pcam);
+    const platform_dispatch_t * d = priv->platform->dispatch;
+    if (!d->reset_bus)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
+    return d->reset_bus (priv->pcam);
 }
 
 dc1394error_t
@@ -54,7 +63,10 @@ dc1394_read_cycle_timer (dc1394camera_t * camera,
                          uint32_t * cycle_timer, uint64_t * local_time)
 {
     dc1394camera_priv_t * priv = DC1394_CAMERA_PRIV (camera);
-    return platform_read_cycle_timer (priv->pcam, cycle_timer, local_time);
+    const platform_dispatch_t * d = priv->platform->dispatch;
+    if (!d->read_cycle_timer)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
+    return d->read_cycle_timer (priv->pcam, cycle_timer, local_time);
 }
 
 dc1394error_t
@@ -62,7 +74,10 @@ dc1394_camera_get_node (dc1394camera_t *camera, uint32_t *node,
         uint32_t * generation)
 {
     dc1394camera_priv_t * priv = DC1394_CAMERA_PRIV (camera);
-    return platform_camera_get_node (priv->pcam, node, generation);
+    const platform_dispatch_t * d = priv->platform->dispatch;
+    if (!d->camera_get_node)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
+    return d->camera_get_node (priv->pcam, node, generation);
 }
 
 static dc1394error_t
@@ -167,7 +182,11 @@ dc1394_camera_print_info(dc1394camera_t *camera, FILE* fd)
     else
         fprintf(fd,"No\n");
 
-    platform_camera_print_info (cpriv->pcam, fd);
+    fprintf(fd,"Platform backend                  :     %s\n",
+            cpriv->platform->name);
+    const platform_dispatch_t * d = cpriv->platform->dispatch;
+    if (d->camera_print_info)
+        d->camera_print_info (cpriv->pcam, fd);
 
     return DC1394_SUCCESS;
 }
@@ -1922,12 +1941,40 @@ dc1394_pio_get(dc1394camera_t *camera, uint32_t *value)
 dc1394_t *
 dc1394_new (void)
 {
-    platform_t * p = platform_new ();
-    if (!p)
-        return NULL;
-
     dc1394_t * d = calloc (1, sizeof (dc1394_t));
-    d->platform = p;
+#ifdef HAVE_LINUX
+#ifdef HAVE_LIBRAW1394
+    linux_init (d);
+#endif
+    juju_init (d);
+#endif
+#ifdef HAVE_MACOSX
+    macosx_init (d);
+#endif
+#ifdef HAVE_WINDOWS
+    windows_init (d);
+#endif
+
+    int i;
+    int initializations = 0;
+    for (i = 0; i < d->num_platforms; i++) {
+        dc1394_log_debug ("Initializing platform %d: %s",
+                i, d->platforms[i].name);
+        d->platforms[i].p = d->platforms[i].dispatch->platform_new ();
+        if (d->platforms[i].p) {
+            initializations++;
+            dc1394_log_debug ("Initialized platform %d", i);
+        }
+        else {
+            dc1394_log_debug ("Failed to initialize platform %d", i);
+        }
+    }
+
+    if (initializations == 0) {
+        dc1394_free (d);
+        dc1394_log_error ("Failed to initialize libdc1394");
+        return NULL;
+    }
     return d;
 }
 
@@ -1938,24 +1985,53 @@ void
 dc1394_free (dc1394_t * d)
 {
     free_enumeration (d);
-    platform_free (d->platform);
+    int i;
+    for (i = 0; i < d->num_platforms; i++) {
+        if (d->platforms[i].p)
+            d->platforms[i].dispatch->platform_free (d->platforms[i].p);
+        d->platforms[i].p = NULL;
+    }
+    free (d->platforms);
+    d->platforms = NULL;
     free (d);
 }
 
+void register_platform (dc1394_t * d, const platform_dispatch_t * dispatch,
+        const char * name)
+{
+    if (!dispatch->platform_new || !dispatch->platform_free ||
+            !dispatch->get_device_list || !dispatch->free_device_list ||
+            !dispatch->device_get_config_rom ||
+            !dispatch->camera_new || !dispatch->camera_free ||
+            !dispatch->camera_set_parent || !dispatch->camera_read ||
+            !dispatch->camera_write) {
+        dc1394_log_error ("Platform %s is missing required functions", name);
+        return;
+    }
+    int n = d->num_platforms;
+    d->platforms = realloc(d->platforms, (n+1)*sizeof(platform_info_t));
+    d->platforms[n].dispatch = dispatch;
+    d->platforms[n].name = name;
+    d->platforms[n].device_list = NULL;
+    d->platforms[n].p = NULL;
+    d->num_platforms++;
+}
+
 char *
-get_leaf_string (platform_camera_t * pcam, uint32_t offset)
+get_leaf_string (platform_camera_t * pcam, const platform_dispatch_t * disp,
+        uint32_t offset)
 {
     uint32_t quad;
     int len, i;
     char * str;
 
-    if (platform_camera_read_quad (pcam, offset, &quad) < 0)
+    if (disp->camera_read (pcam, offset, &quad, 1) < 0)
         return NULL;
 
     len = quad >> 16;
     str = malloc (4 * (len - 2) + 1);
     for (i = 0; i < len - 2; i++) {
-        if (platform_camera_read_quad (pcam, offset + 12 + 4 * i, &quad) < 0) {
+        if (disp->camera_read (pcam, offset + 12 + 4 * i, &quad, 1) < 0) {
             free (str);
             return NULL;
         }
@@ -1974,6 +2050,7 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
     int i;
     camera_info_t * info = NULL;
     platform_camera_t * pcam;
+    const platform_dispatch_t * disp;
     uint32_t command_regs_base = 0;
     uint32_t vendor_name_offset = 0;
     uint32_t model_name_offset = 0;
@@ -1983,7 +2060,7 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
     dc1394camera_t * camera;
     dc1394camera_priv_t * cpriv;
 
-    if (!d->device_list)
+    if (!d->num_cameras)
         refresh_enumeration (d);
 
     for (i = 0; i < d->num_cameras; i++) {
@@ -1996,40 +2073,44 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
     if (!info)
         return NULL;
 
-    pcam = platform_camera_new (d->platform, info->device, info->unit_dependent_directory);
+    disp = info->platform->dispatch;
+    pcam = disp->camera_new (info->platform->p, info->device,
+            info->unit_dependent_directory);
     if (!pcam)
         return NULL;
 
     /* Check to make sure the GUID still matches. */
-    if (platform_camera_read_quad (pcam, 0x40C, &ghigh) < 0 ||
-        platform_camera_read_quad (pcam, 0x410, &glow) < 0)
+    if (disp->camera_read (pcam, 0x40C, &ghigh, 1) < 0 ||
+        disp->camera_read (pcam, 0x410, &glow, 1) < 0)
         goto fail;
 
     if (ghigh != (info->guid >> 32) || glow != (info->guid & 0xffffffff))
         goto fail;
 
-    if (platform_camera_read_quad (pcam, info->unit_dependent_directory, &quad) < 0)
+    if (disp->camera_read (pcam, info->unit_dependent_directory,
+                &quad, 1) < 0)
         goto fail;
 
     num_entries = quad >> 16;
     offset = info->unit_dependent_directory + 4;
     for (i = 0; i < num_entries; i++) {
-        if (platform_camera_read_quad (pcam, offset + 4 * i, &quad) < 0)
+        if (disp->camera_read (pcam, offset + 4 * i, &quad, 1) < 0)
             goto fail;
         if ((quad >> 24) == 0x40)
             command_regs_base = quad & 0xffffff;
         else if ((quad >> 24) == 0x81) {
-	    /*
-	      The iSight version 1.0.3 has two 0x81 (vendor) leaves instead of a 0x81 and
-	      a 0x82 (model leaf). To go around this problem, we save the second vendor
-	      leaf as the model leaf. This is safe because if there is two 0x81 AND a 0x82,
-	      the real model leaf will overwrite the spurious second vendor string.
-	    */
-	    if (vendor_name_offset==0)
-		vendor_name_offset = offset + 4 * ((quad & 0xffffff) + i);
-	    else
-		model_name_offset = offset + 4 * ((quad & 0xffffff) + i);
-	}
+            /*
+               The iSight version 1.0.3 has two 0x81 (vendor) leaves instead
+               of a 0x81 and a 0x82 (model leaf). To go around this problem,
+               we save the second vendor leaf as the model leaf. This is safe
+               because if there is two 0x81 AND a 0x82, the real model leaf
+               will overwrite the spurious second vendor string.
+            */
+            if (vendor_name_offset==0)
+                vendor_name_offset = offset + 4 * ((quad & 0xffffff) + i);
+            else
+                model_name_offset = offset + 4 * ((quad & 0xffffff) + i);
+        }
         else if ((quad >> 24) == 0x82)
             model_name_offset = offset + 4 * ((quad & 0xffffff) + i);
         else if ((quad >> 24) == 0x38)
@@ -2043,6 +2124,7 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
     cpriv = DC1394_CAMERA_PRIV (camera);
 
     cpriv->pcam = pcam;
+    cpriv->platform = info->platform;
     camera->guid = info->guid;
     camera->unit = info->unit;
     camera->unit_spec_ID = info->unit_spec_ID;
@@ -2054,8 +2136,8 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
     camera->vendor_id = info->vendor_id;
     camera->model_id = info->model_id;
 
-    camera->vendor = get_leaf_string (pcam, vendor_name_offset);
-    camera->model = get_leaf_string (pcam, model_name_offset);
+    camera->vendor = get_leaf_string (pcam, disp, vendor_name_offset);
+    camera->model = get_leaf_string (pcam, disp, model_name_offset);
 
     if (camera->unit_spec_ID == 0xA02D) {
         if (info->unit_sw_version == 0x100)
@@ -2073,13 +2155,13 @@ dc1394_camera_new_unit (dc1394_t * d, uint64_t guid, int unit)
     else
         camera->iidc_version = DC1394_IIDC_VERSION_PTGREY;
 
-    platform_camera_set_parent (cpriv->pcam, camera);
+    disp->camera_set_parent (cpriv->pcam, camera);
     update_camera_info (camera);
 
     return camera;
 
  fail:
-    platform_camera_free (pcam);
+    disp->camera_free (pcam);
     return NULL;
 }
 
@@ -2101,7 +2183,7 @@ dc1394_camera_free(dc1394camera_t *camera)
     if (cpriv->iso_persist)
         dc1394_iso_release_all (camera);
 
-    platform_camera_free (cpriv->pcam);
+    cpriv->platform->dispatch->camera_free (cpriv->pcam);
     free (camera->vendor);
     free (camera->model);
     free (camera);

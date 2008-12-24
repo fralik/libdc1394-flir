@@ -208,7 +208,7 @@ dc1394_capture_set_device_filename(dc1394camera_t* camera, char *filename)
 }
 
 dc1394error_t
-platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
+dc1394_linux_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
                      uint32_t flags)
 {
     dc1394camera_t * camera = craw->camera;
@@ -306,7 +306,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 *****************************************************/
 
 dc1394error_t
-platform_capture_stop(platform_camera_t *craw)
+dc1394_linux_capture_stop(platform_camera_t *craw)
 {
     dc1394camera_t * camera = craw->camera;
     int err;
@@ -372,7 +372,7 @@ platform_capture_stop(platform_camera_t *craw)
 
 
 dc1394error_t
-platform_capture_dequeue (platform_camera_t * craw,
+dc1394_linux_capture_dequeue (platform_camera_t * craw,
                         dc1394capture_policy_t policy,
                         dc1394video_frame_t **frame)
 {
@@ -431,7 +431,7 @@ platform_capture_dequeue (platform_camera_t * craw,
 }
 
 dc1394error_t
-platform_capture_enqueue (platform_camera_t * craw,
+dc1394_linux_capture_enqueue (platform_camera_t * craw,
                         dc1394video_frame_t * frame)
 {
     dc1394camera_t * camera = craw->camera;
@@ -456,15 +456,8 @@ platform_capture_enqueue (platform_camera_t * craw,
 }
 
 int
-platform_capture_get_fileno (platform_camera_t * craw)
+dc1394_linux_capture_get_fileno (platform_camera_t * craw)
 {
     return craw->capture.dma_fd;
-}
-
-dc1394bool_t
-platform_capture_is_frame_corrupt (platform_camera_t * craw,
-        dc1394video_frame_t * frame)
-{
-    return DC1394_FALSE;
 }
 

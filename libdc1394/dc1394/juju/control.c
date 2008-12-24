@@ -41,14 +41,36 @@
 #define u64_to_ptr(p) ((void *)(unsigned long)(p))
 
 
-platform_t *
-platform_new (void)
+static platform_t *
+dc1394_juju_new (void)
 {
+    DIR * dir;
+    struct dirent * de;
+    int num_devices = 0;
+
+    dir = opendir("/dev");
+    if (!dir) {
+        dc1394_log_error("Failed to create juju: opendir: %m");
+        return NULL;
+    }
+    while ((de = readdir(dir))) {
+        if (strncmp(de->d_name, "fw", 2) != 0)
+            continue;
+        dc1394_log_debug("Juju: Found /dev/%s", de->d_name);
+        num_devices++;
+    }
+    closedir(dir);
+
+    if (num_devices == 0) {
+        dc1394_log_debug("Juju: Found no devices /dev/fw*");
+        return NULL;
+    }
+
     platform_t * p = calloc (1, sizeof (platform_t));
     return p;
 }
-void
-platform_free (platform_t * p)
+static void
+dc1394_juju_free (platform_t * p)
 {
     free (p);
 }
@@ -58,8 +80,8 @@ struct _platform_device_t {
     char filename[32];
 };
 
-platform_device_list_t *
-platform_get_device_list (platform_t * p)
+static platform_device_list_t *
+dc1394_juju_get_device_list (platform_t * p)
 {
     DIR * dir;
     struct dirent * de;
@@ -77,7 +99,7 @@ platform_get_device_list (platform_t * p)
 
     dir = opendir("/dev");
     if (dir == NULL) {
-        dc1394_log_debug("opendir: %m");
+        dc1394_log_error("opendir: %m");
         free (list->devices);
         free (list);
         return NULL;
@@ -96,9 +118,11 @@ platform_get_device_list (platform_t * p)
         snprintf(filename, sizeof filename, "/dev/%s", de->d_name);
         fd = open(filename, O_RDWR);
         if (fd < 0) {
-            dc1394_log_warning("Failed to open %s: %s", filename, strerror (errno));
+            dc1394_log_debug("Juju: Failed to open %s: %s", filename,
+                    strerror (errno));
             continue;
         }
+        dc1394_log_debug("Juju: Opened %s successfully", filename);
 
         device = malloc (sizeof (platform_device_t));
         if (!device) {
@@ -134,8 +158,8 @@ platform_get_device_list (platform_t * p)
     return list;
 }
 
-void
-platform_free_device_list (platform_device_list_t * d)
+static void
+dc1394_juju_free_device_list (platform_device_list_t * d)
 {
     int i;
     for (i = 0; i < d->num_devices; i++)
@@ -144,8 +168,8 @@ platform_free_device_list (platform_device_list_t * d)
     free (d);
 }
 
-int
-platform_device_get_config_rom (platform_device_t * device,
+static int
+dc1394_juju_device_get_config_rom (platform_device_t * device,
                                 uint32_t * quads, int * num_quads)
 {
     if (*num_quads > 256)
@@ -155,8 +179,8 @@ platform_device_get_config_rom (platform_device_t * device,
     return 0;
 }
 
-platform_camera_t *
-platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_directory_offset)
+static platform_camera_t *
+dc1394_juju_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_directory_offset)
 {
     int fd;
     platform_camera_t * camera;
@@ -187,23 +211,24 @@ platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_d
     return camera;
 }
 
-void platform_camera_free (platform_camera_t * cam)
+static void dc1394_juju_camera_free (platform_camera_t * cam)
 {
     close (cam->fd);
     free (cam);
 }
 
-void
-platform_camera_set_parent (platform_camera_t * cam, dc1394camera_t * parent)
+static void
+dc1394_juju_camera_set_parent (platform_camera_t * cam, dc1394camera_t * parent)
 {
     cam->camera = parent;
 }
 
-void
-platform_camera_print_info (platform_camera_t * camera, FILE *fd)
+static dc1394error_t
+dc1394_juju_camera_print_info (platform_camera_t * camera, FILE *fd)
 {
     fprintf(fd,"------ Camera platform-specific information ------\n");
     fprintf(fd,"Device filename                   :     %s\n", camera->filename);
+    return DC1394_SUCCESS;
 }
 
 int
@@ -234,7 +259,7 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
         if (u.response.r.rcode == 4)
             return -2; // retry if we get "resp_conflict_error"
         if (u.response.r.rcode != 0) {
-            dc1394_log_debug ("response error, rcode 0x%x",
+            dc1394_log_debug ("Juju: response error, rcode 0x%x",
                     u.response.r.rcode);
             return -1;
         }
@@ -278,7 +303,7 @@ do_transaction(platform_camera_t * cam, int tcode, uint64_t offset, const uint32
             return DC1394_FAILURE;
 
         /* retry if we get "resp_conflict_error" */
-        dc1394_log_debug("retry tcode 0x%x offset %"PRIx64, tcode, offset);
+        dc1394_log_debug("Juju: retry tcode 0x%x offset %"PRIx64, tcode, offset);
         usleep (500);
         retry--;
     }
@@ -288,8 +313,8 @@ do_transaction(platform_camera_t * cam, int tcode, uint64_t offset, const uint32
     return DC1394_FAILURE;
 }
 
-dc1394error_t
-platform_camera_read (platform_camera_t * cam, uint64_t offset, uint32_t * quads, int num_quads)
+static dc1394error_t
+dc1394_juju_camera_read (platform_camera_t * cam, uint64_t offset, uint32_t * quads, int num_quads)
 {
     int tcode;
 
@@ -302,8 +327,8 @@ platform_camera_read (platform_camera_t * cam, uint64_t offset, uint32_t * quads
     return err;
 }
 
-dc1394error_t
-platform_camera_write (platform_camera_t * cam, uint64_t offset, const uint32_t * quads, int num_quads)
+static dc1394error_t
+dc1394_juju_camera_write (platform_camera_t * cam, uint64_t offset, const uint32_t * quads, int num_quads)
 {
     int tcode;
 
@@ -315,8 +340,8 @@ platform_camera_write (platform_camera_t * cam, uint64_t offset, const uint32_t 
     return do_transaction(cam, tcode, offset, quads, NULL, num_quads);
 }
 
-dc1394error_t
-platform_reset_bus (platform_camera_t * cam)
+static dc1394error_t
+dc1394_juju_reset_bus (platform_camera_t * cam)
 {
     struct fw_cdev_initiate_bus_reset initiate;
 
@@ -327,56 +352,8 @@ platform_reset_bus (platform_camera_t * cam)
         return DC1394_FAILURE;
 }
 
-dc1394error_t
-platform_read_cycle_timer (platform_camera_t * cam, uint32_t * cycle_timer, uint64_t * local_time)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_set_persist (platform_camera_t * cam)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_allocate_channel (platform_camera_t * cam, uint64_t channels_allowed, int * channel)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_release_channel (platform_camera_t * cam, int channel)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_allocate_bandwidth (platform_camera_t * cam, int bandwidth_units)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_release_bandwidth (platform_camera_t * cam, int bandwidth_units)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
+static dc1394error_t
+dc1394_juju_camera_get_node(platform_camera_t *cam, uint32_t *node,
         uint32_t * generation)
 {
     if (node)
@@ -386,3 +363,35 @@ platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
     return DC1394_SUCCESS;
 }
 
+static platform_dispatch_t
+juju_dispatch = {
+    .platform_new = dc1394_juju_new,
+    .platform_free = dc1394_juju_free,
+
+    .get_device_list = dc1394_juju_get_device_list,
+    .free_device_list = dc1394_juju_free_device_list,
+    .device_get_config_rom = dc1394_juju_device_get_config_rom,
+
+    .camera_new = dc1394_juju_camera_new,
+    .camera_free = dc1394_juju_camera_free,
+    .camera_set_parent = dc1394_juju_camera_set_parent,
+
+    .camera_read = dc1394_juju_camera_read,
+    .camera_write = dc1394_juju_camera_write,
+
+    .reset_bus = dc1394_juju_reset_bus,
+    .camera_print_info = dc1394_juju_camera_print_info,
+    .camera_get_node = dc1394_juju_camera_get_node,
+
+    .capture_setup = dc1394_juju_capture_setup,
+    .capture_stop = dc1394_juju_capture_stop,
+    .capture_dequeue = dc1394_juju_capture_dequeue,
+    .capture_enqueue = dc1394_juju_capture_enqueue,
+    .capture_get_fileno = dc1394_juju_capture_get_fileno,
+};
+
+void
+juju_init(dc1394_t * d)
+{
+    register_platform (d, &juju_dispatch, "juju");
+}

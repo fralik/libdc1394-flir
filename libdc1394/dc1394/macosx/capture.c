@@ -321,7 +321,7 @@ servicing_thread (void * cam_ptr)
  CAPTURE SETUP
 **************************************************************/
 dc1394error_t
-platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
+dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
                      uint32_t flags)
 {
     dc1394capture_t * capture = &(craw->capture);
@@ -497,7 +497,7 @@ platform_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 *****************************************************/
 
 dc1394error_t
-platform_capture_stop(platform_camera_t *craw)
+dc1394_macosx_capture_stop(platform_camera_t *craw)
 {
     dc1394camera_t * camera = craw->camera;
     dc1394capture_t * capture = &(craw->capture);
@@ -599,7 +599,7 @@ platform_capture_stop(platform_camera_t *craw)
 //#define PREV_BUFFER(c,i) (((i) == 0) ? (c)->num_frames-1 : ((i)-1))
 
 dc1394error_t
-platform_capture_dequeue (platform_camera_t * craw,
+dc1394_macosx_capture_dequeue (platform_camera_t * craw,
                         dc1394capture_policy_t policy,
                         dc1394video_frame_t **frame)
 {
@@ -648,7 +648,7 @@ platform_capture_dequeue (platform_camera_t * craw,
 
 
 dc1394error_t
-platform_capture_enqueue (platform_camera_t * craw,
+dc1394_macosx_capture_enqueue (platform_camera_t * craw,
                         dc1394video_frame_t * frame)
 {
     dc1394capture_t * capture = &(craw->capture);
@@ -692,7 +692,7 @@ platform_capture_enqueue (platform_camera_t * craw,
 }
 
 dc1394bool_t
-platform_capture_is_frame_corrupt (platform_camera_t * craw,
+dc1394_macosx_capture_is_frame_corrupt (platform_camera_t * craw,
         dc1394video_frame_t * frame)
 {
     dc1394capture_t * capture = &(craw->capture);
@@ -705,7 +705,7 @@ platform_capture_is_frame_corrupt (platform_camera_t * craw,
 }
 
 int
-platform_capture_get_fileno (platform_camera_t * craw)
+dc1394_macosx_capture_get_fileno (platform_camera_t * craw)
 {
     dc1394capture_t * capture = &(craw->capture);
 

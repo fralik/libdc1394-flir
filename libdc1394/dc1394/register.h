@@ -39,13 +39,13 @@ extern "C" {
  * No Docs
  */
 dc1394error_t dc1394_get_registers (dc1394camera_t *camera,
-                                    uint64_t offset, uint32_t *value, uint32_t num_regs);
+        uint64_t offset, uint32_t *value, uint32_t num_regs);
 
 /**
  * No Docs
  */
 static inline dc1394error_t dc1394_get_register (dc1394camera_t *camera,
-                                                 uint64_t offset, uint32_t *value)
+        uint64_t offset, uint32_t *value)
 {
     return dc1394_get_registers (camera, offset, value, 1);
 }
@@ -54,7 +54,7 @@ static inline dc1394error_t dc1394_get_register (dc1394camera_t *camera,
  * No Docs
  */
 dc1394error_t dc1394_set_registers (dc1394camera_t *camera,
-                                    uint64_t offset, uint32_t *value, uint32_t num_regs);
+        uint64_t offset, const uint32_t *value, uint32_t num_regs);
 
 /**
  * No Docs
@@ -89,7 +89,7 @@ static inline dc1394error_t dc1394_get_control_register (dc1394camera_t *camera,
  * No Docs
  */
 dc1394error_t dc1394_set_control_registers (dc1394camera_t *camera,
-        uint64_t offset, uint32_t *value, uint32_t num_regs);
+        uint64_t offset, const uint32_t *value, uint32_t num_regs);
 
 /**
  * No Docs
@@ -124,7 +124,8 @@ dc1394_get_adv_control_register(dc1394camera_t *camera, uint64_t offset, uint32_
  * No Docs
  */
 dc1394error_t
-dc1394_set_adv_control_registers(dc1394camera_t *camera, uint64_t offset, uint32_t *value, uint32_t num_regs);
+dc1394_set_adv_control_registers(dc1394camera_t *camera, uint64_t offset,
+        const uint32_t *value, uint32_t num_regs);
 
 /**
  * No Docs

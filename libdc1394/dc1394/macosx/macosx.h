@@ -105,5 +105,22 @@ struct _platform_camera_t {
     int                     iso_auto_started;
 };
 
+dc1394error_t
+dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
+                     uint32_t flags);
+dc1394error_t
+dc1394_macosx_capture_stop(platform_camera_t *craw);
+dc1394error_t
+dc1394_macosx_capture_dequeue (platform_camera_t * craw,
+                        dc1394capture_policy_t policy,
+                        dc1394video_frame_t **frame);
+dc1394error_t
+dc1394_macosx_capture_enqueue (platform_camera_t * craw,
+                        dc1394video_frame_t * frame);
+dc1394bool_t
+dc1394_macosx_capture_is_frame_corrupt (platform_camera_t * craw,
+        dc1394video_frame_t * frame);
+int
+dc1394_macosx_capture_get_fileno (platform_camera_t * craw);
 
 #endif

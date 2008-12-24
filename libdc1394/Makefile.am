@@ -11,14 +11,3 @@ include $(top_srcdir)/aminclude.am
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdc1394-2.pc
 
-if USE_LINUX
-install-exec-hook:
-	@if [ ! -c /dev/raw1394 ]; then                                 \
-		echo;                                                   \
-		echo "***********************************************"; \
-		echo "Please install libraw1394 before installing    "; \
-		echo "the 1394-Based Digital Camera Control Library  "; \
-		echo "***********************************************"; \
-		echo;                                                   \
-	fi
-endif

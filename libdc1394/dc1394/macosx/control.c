@@ -32,14 +32,15 @@
 #include "internal.h"
 #include "macosx.h"
 
-platform_t *
-platform_new (void)
+static platform_t *
+dc1394_macosx_new (void)
 {
     platform_t * p = calloc (1, sizeof (platform_t));
     return p;
 }
-void
-platform_free (platform_t * p)
+
+static void
+dc1394_macosx_free (platform_t * p)
 {
     free (p);
 }
@@ -48,8 +49,8 @@ struct _platform_device_t {
     io_object_t node;
 };
 
-platform_device_list_t *
-platform_get_device_list (platform_t * p)
+static platform_device_list_t *
+dc1394_macosx_get_device_list (platform_t * p)
 {
     platform_device_list_t * list;
     uint32_t allocated_size = 64;
@@ -102,8 +103,8 @@ platform_get_device_list (platform_t * p)
     return list;
 }
 
-void
-platform_free_device_list (platform_device_list_t * d)
+static void
+dc1394_macosx_free_device_list (platform_device_list_t * d)
 {
     int i;
     for (i = 0; i < d->num_devices; i++) {
@@ -114,8 +115,8 @@ platform_free_device_list (platform_device_list_t * d)
     free (d);
 }
 
-int
-platform_device_get_config_rom (platform_device_t * device,
+static int
+dc1394_macosx_device_get_config_rom (platform_device_t * device,
     uint32_t * quads, int * num_quads)
 {
     CFTypeRef prop;
@@ -141,8 +142,8 @@ platform_device_get_config_rom (platform_device_t * device,
     return 0;
 }
 
-platform_camera_t *
-platform_camera_new (platform_t * p, platform_device_t * device,
+static platform_camera_t *
+dc1394_macosx_camera_new (platform_t * p, platform_device_t * device,
     uint32_t unit_directory_offset)
 {
     kern_return_t res;
@@ -230,30 +231,31 @@ platform_camera_new (platform_t * p, platform_device_t * device,
     return camera;
 }
 
-void platform_camera_free (platform_camera_t * cam)
+static void dc1394_macosx_camera_free (platform_camera_t * cam)
 {
     (*cam->iface)->Close (cam->iface);
     (*cam->iface)->Release (cam->iface);
     free (cam);
 }
 
-void
-platform_camera_set_parent (platform_camera_t * cam,
+static void
+dc1394_macosx_camera_set_parent (platform_camera_t * cam,
         dc1394camera_t * parent)
 {
     cam->camera = parent;
 }
 
-void
-platform_camera_print_info (platform_camera_t * camera, FILE *fd)
+static dc1394error_t
+dc1394_macosx_camera_print_info (platform_camera_t * camera, FILE *fd)
 {
     fprintf(fd,"------ Camera platform-specific information ------\n");
     fprintf(fd,"Interface                       :     %p\n", camera->iface);
     fprintf(fd,"Generation                      :     %lu\n", camera->generation);
+    return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_camera_read (platform_camera_t * cam, uint64_t offset,
+static dc1394error_t
+dc1394_macosx_camera_read (platform_camera_t * cam, uint64_t offset,
     uint32_t * quads, int num_quads)
 {
     IOFireWireLibDeviceRef d = cam->iface;
@@ -281,8 +283,8 @@ platform_camera_read (platform_camera_t * cam, uint64_t offset,
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_camera_write (platform_camera_t * cam, uint64_t offset,
+static dc1394error_t
+dc1394_macosx_camera_write (platform_camera_t * cam, uint64_t offset,
     const uint32_t * quads, int num_quads)
 {
     IOFireWireLibDeviceRef d = cam->iface;
@@ -312,8 +314,8 @@ platform_camera_write (platform_camera_t * cam, uint64_t offset,
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_reset_bus (platform_camera_t * cam)
+static dc1394error_t
+dc1394_macosx_reset_bus (platform_camera_t * cam)
 {
     IOFireWireLibDeviceRef d = cam->iface;
 
@@ -323,8 +325,8 @@ platform_reset_bus (platform_camera_t * cam)
         return DC1394_FAILURE;
 }
 
-dc1394error_t
-platform_read_cycle_timer (platform_camera_t * cam,
+static dc1394error_t
+dc1394_macosx_read_cycle_timer (platform_camera_t * cam,
         uint32_t * cycle_timer, uint64_t * local_time)
 {
     IOFireWireLibDeviceRef d = cam->iface;
@@ -338,55 +340,8 @@ platform_read_cycle_timer (platform_camera_t * cam,
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_iso_set_persist (platform_camera_t * cam)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_allocate_channel (platform_camera_t * cam,
-        uint64_t channels_allowed, int * channel)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_release_channel (platform_camera_t * cam,
-    int channel)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_allocate_bandwidth (platform_camera_t * cam,
-    int bandwidth_units)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_iso_release_bandwidth (platform_camera_t * cam,
-    int bandwidth_units)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-
-dc1394error_t
-platform_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
-{
-    return DC1394_FUNCTION_NOT_SUPPORTED;
-}
-
-dc1394error_t
-platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
+static dc1394error_t
+dc1394_macosx_camera_get_node(platform_camera_t *cam, uint32_t *node,
         uint32_t * generation)
 {
     IOFireWireLibDeviceRef d = cam->iface;
@@ -410,4 +365,39 @@ platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
     if (generation)
         *generation = gen;
     return DC1394_SUCCESS;
+}
+
+static platform_dispatch_t
+macosx_dispatch = {
+    .platform_new = dc1394_macosx_new,
+    .platform_free = dc1394_macosx_free,
+
+    .get_device_list = dc1394_macosx_get_device_list,
+    .free_device_list = dc1394_macosx_free_device_list,
+    .device_get_config_rom = dc1394_macosx_device_get_config_rom,
+
+    .camera_new = dc1394_macosx_camera_new,
+    .camera_free = dc1394_macosx_camera_free,
+    .camera_set_parent = dc1394_macosx_camera_set_parent,
+
+    .camera_read = dc1394_macosx_camera_read,
+    .camera_write = dc1394_macosx_camera_write,
+
+    .reset_bus = dc1394_macosx_reset_bus,
+    .camera_print_info = dc1394_macosx_camera_print_info,
+    .camera_get_node = dc1394_macosx_camera_get_node,
+    .read_cycle_timer = dc1394_macosx_read_cycle_timer,
+
+    .capture_setup = dc1394_macosx_capture_setup,
+    .capture_stop = dc1394_macosx_capture_stop,
+    .capture_dequeue = dc1394_macosx_capture_dequeue,
+    .capture_enqueue = dc1394_macosx_capture_enqueue,
+    .capture_get_fileno = dc1394_macosx_capture_get_fileno,
+    .capture_is_frame_corrupt = dc1394_macosx_capture_is_frame_corrupt,
+};
+
+void
+macosx_init(dc1394_t * d)
+{
+    register_platform (d, &macosx_dispatch, "macosx");
 }

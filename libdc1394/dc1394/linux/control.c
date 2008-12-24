@@ -29,6 +29,9 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
@@ -38,15 +41,38 @@
 #include "offsets.h"
 #include "types.h"
 
-
-platform_t *
-platform_new (void)
+static int
+is_device_available (const char * filename)
 {
+    int fd;
+    struct stat sbuf;
+    if (!filename)
+        return 0;
+    if (stat (filename, &sbuf) < 0)
+        return 0;
+    fd = open (filename, O_RDWR);
+    if (fd < 0)
+        return 0;
+    close (fd);
+    dc1394_log_debug("linux: Found %s", filename);
+    return 1;
+}
+
+static platform_t *
+dc1394_linux_new (void)
+{
+    if (!is_device_available (getenv("RAW1394DEV")) &&
+            !is_device_available ("/dev/raw1394")) {
+        dc1394_log_debug("linux: Failed to open RAW1394DEV or /dev/raw1394");
+        return NULL;
+    }
+
     platform_t * p = calloc (1, sizeof (platform_t));
     return p;
 }
-void
-platform_free (platform_t * p)
+
+static void
+dc1394_linux_free (platform_t * p)
 {
     free (p);
 }
@@ -74,8 +100,8 @@ read_retry (struct raw1394_handle * handle, nodeid_t node, nodeaddr_t addr,
     return -1;
 }
 
-platform_device_list_t *
-platform_get_device_list (platform_t * p)
+static platform_device_list_t *
+dc1394_linux_get_device_list (platform_t * p)
 {
     platform_device_list_t * list;
     uint32_t allocated_size = 64;
@@ -87,6 +113,7 @@ platform_get_device_list (platform_t * p)
         return NULL;
 
     num_ports = raw1394_get_port_info (handle, NULL, 0);
+    dc1394_log_debug ("linux: Found %d port(s)", num_ports);
     raw1394_destroy_handle (handle);
 
     list = calloc (1, sizeof (platform_device_list_t));
@@ -106,6 +133,8 @@ platform_get_device_list (platform_t * p)
             continue;
 
         num_nodes = raw1394_get_nodecount (handle);
+        dc1394_log_debug ("linux: Port %d opened with %d node(s)",
+                i, num_nodes);
         for (j = 0; j < num_nodes; j++) {
             platform_device_t * device;
             uint32_t quad;
@@ -145,8 +174,8 @@ platform_get_device_list (platform_t * p)
     return list;
 }
 
-void
-platform_free_device_list (platform_device_list_t * d)
+static void
+dc1394_linux_free_device_list (platform_device_list_t * d)
 {
     int i;
     for (i = 0; i < d->num_devices; i++)
@@ -155,8 +184,8 @@ platform_free_device_list (platform_device_list_t * d)
     free (d);
 }
 
-int
-platform_device_get_config_rom (platform_device_t * device,
+static int
+dc1394_linux_device_get_config_rom (platform_device_t * device,
     uint32_t * quads, int * num_quads)
 {
     if (*num_quads > device->num_quads)
@@ -166,8 +195,8 @@ platform_device_get_config_rom (platform_device_t * device,
     return 0;
 }
 
-platform_camera_t *
-platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_directory_offset)
+static platform_camera_t *
+dc1394_linux_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_directory_offset)
 {
     platform_camera_t * camera;
     raw1394handle_t handle;
@@ -190,7 +219,8 @@ platform_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_d
     return camera;
 }
 
-void platform_camera_free (platform_camera_t * cam)
+static void
+dc1394_linux_camera_free (platform_camera_t * cam)
 {
     if (cam->capture.dma_device_file != NULL) {
         free (cam->capture.dma_device_file);
@@ -201,24 +231,26 @@ void platform_camera_free (platform_camera_t * cam)
     free (cam);
 }
 
-void
-platform_camera_set_parent (platform_camera_t * cam,
+static void
+dc1394_linux_camera_set_parent (platform_camera_t * cam,
         dc1394camera_t * parent)
 {
     cam->camera = parent;
 }
 
-void
-platform_camera_print_info (platform_camera_t * cam, FILE *fd)
+static dc1394error_t
+dc1394_linux_camera_print_info (platform_camera_t * cam, FILE *fd)
 {
     fprintf(fd,"------ Camera platform-specific information ------\n");
     fprintf(fd,"Handle                            :     %p\n", cam->handle);
     fprintf(fd,"Port                              :     %d\n", cam->port);
     fprintf(fd,"Node                              :     %d\n", cam->node);
+    return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_camera_read (platform_camera_t * cam, uint64_t offset, uint32_t * quads, int num_quads)
+static dc1394error_t
+dc1394_linux_camera_read (platform_camera_t * cam, uint64_t offset,
+        uint32_t * quads, int num_quads)
 {
     int i, retval, retry = DC1394_MAX_RETRIES;
 
@@ -249,8 +281,9 @@ platform_camera_read (platform_camera_t * cam, uint64_t offset, uint32_t * quads
     return ( retval ? DC1394_RAW1394_FAILURE : DC1394_SUCCESS );
 }
 
-dc1394error_t
-platform_camera_write (platform_camera_t * cam, uint64_t offset, const uint32_t * quads, int num_quads)
+static dc1394error_t
+dc1394_linux_camera_write (platform_camera_t * cam, uint64_t offset,
+        const uint32_t * quads, int num_quads)
 {
     int i, retval, retry= DC1394_MAX_RETRIES;
     uint32_t value[num_quads];
@@ -277,8 +310,8 @@ platform_camera_write (platform_camera_t * cam, uint64_t offset, const uint32_t 
     return DC1394_RAW1394_FAILURE;
 }
 
-dc1394error_t
-platform_reset_bus (platform_camera_t * cam)
+static dc1394error_t
+dc1394_linux_reset_bus (platform_camera_t * cam)
 {
     if (raw1394_reset_bus (cam->handle) == 0)
         return DC1394_SUCCESS;
@@ -286,8 +319,9 @@ platform_reset_bus (platform_camera_t * cam)
         return DC1394_FAILURE;
 }
 
-dc1394error_t
-platform_read_cycle_timer (platform_camera_t * cam, uint32_t * cycle_timer, uint64_t * local_time)
+static dc1394error_t
+dc1394_linux_read_cycle_timer (platform_camera_t * cam,
+        uint32_t * cycle_timer, uint64_t * local_time)
 {
     quadlet_t quad;
     struct timeval tv;
@@ -302,8 +336,8 @@ platform_read_cycle_timer (platform_camera_t * cam, uint32_t * cycle_timer, uint
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
+static dc1394error_t
+dc1394_linux_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
 {
     if (pwr==DC1394_TRUE) {
         if (craw->broadcast_is_set==DC1394_FALSE) {
@@ -324,22 +358,22 @@ platform_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
+static dc1394error_t
+dc1394_linux_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
 {
     *pwr=craw->broadcast_is_set;
 
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_iso_set_persist (platform_camera_t * cam)
+static dc1394error_t
+dc1394_linux_iso_set_persist (platform_camera_t * cam)
 {
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_iso_allocate_channel (platform_camera_t * cam,  uint64_t channels_allowed, int * channel)
+static dc1394error_t
+dc1394_linux_iso_allocate_channel (platform_camera_t * cam,  uint64_t channels_allowed, int * channel)
 {
     int i;
 
@@ -359,8 +393,8 @@ platform_iso_allocate_channel (platform_camera_t * cam,  uint64_t channels_allow
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_iso_release_channel (platform_camera_t * cam, int channel)
+static dc1394error_t
+dc1394_linux_iso_release_channel (platform_camera_t * cam, int channel)
 {
     if (raw1394_channel_modify (cam->handle, channel, RAW1394_MODIFY_FREE) < 0) {
         dc1394_log_error("Error: Could not free iso channel");
@@ -370,8 +404,9 @@ platform_iso_release_channel (platform_camera_t * cam, int channel)
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_iso_allocate_bandwidth (platform_camera_t * cam, int bandwidth_units)
+static dc1394error_t
+dc1394_linux_iso_allocate_bandwidth (platform_camera_t * cam,
+        int bandwidth_units)
 {
     if (raw1394_bandwidth_modify (cam->handle, bandwidth_units, RAW1394_MODIFY_ALLOC) < 0) {
         dc1394_log_error ("Error: Failed to allocate iso bandwidth");
@@ -381,8 +416,9 @@ platform_iso_allocate_bandwidth (platform_camera_t * cam, int bandwidth_units)
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_iso_release_bandwidth (platform_camera_t * cam, int bandwidth_units)
+static dc1394error_t
+dc1394_linux_iso_release_bandwidth (platform_camera_t * cam,
+        int bandwidth_units)
 {
     if (raw1394_bandwidth_modify (cam->handle, bandwidth_units, RAW1394_MODIFY_FREE) < 0) {
         dc1394_log_error ("Error: Failed to free iso bandwidth");
@@ -392,8 +428,8 @@ platform_iso_release_bandwidth (platform_camera_t * cam, int bandwidth_units)
     return DC1394_SUCCESS;
 }
 
-dc1394error_t
-platform_camera_get_node(platform_camera_t *cam, uint32_t *node,
+static dc1394error_t
+dc1394_linux_camera_get_node(platform_camera_t *cam, uint32_t *node,
         uint32_t * generation)
 {
     if (node)
@@ -413,4 +449,46 @@ dc1394_camera_get_linux_port(dc1394camera_t *camera, uint32_t *port)
     *port=craw->port;
 
     return DC1394_SUCCESS;
+}
+
+static platform_dispatch_t
+linux_dispatch = {
+    .platform_new = dc1394_linux_new,
+    .platform_free = dc1394_linux_free,
+
+    .get_device_list = dc1394_linux_get_device_list,
+    .free_device_list = dc1394_linux_free_device_list,
+    .device_get_config_rom = dc1394_linux_device_get_config_rom,
+
+    .camera_new = dc1394_linux_camera_new,
+    .camera_free = dc1394_linux_camera_free,
+    .camera_set_parent = dc1394_linux_camera_set_parent,
+
+    .camera_read = dc1394_linux_camera_read,
+    .camera_write = dc1394_linux_camera_write,
+
+    .reset_bus = dc1394_linux_reset_bus,
+    .camera_print_info = dc1394_linux_camera_print_info,
+    .camera_get_node = dc1394_linux_camera_get_node,
+    .set_broadcast = dc1394_linux_set_broadcast,
+    .get_broadcast = dc1394_linux_get_broadcast,
+    .read_cycle_timer = dc1394_linux_read_cycle_timer,
+
+    .capture_setup = dc1394_linux_capture_setup,
+    .capture_stop = dc1394_linux_capture_stop,
+    .capture_dequeue = dc1394_linux_capture_dequeue,
+    .capture_enqueue = dc1394_linux_capture_enqueue,
+    .capture_get_fileno = dc1394_linux_capture_get_fileno,
+
+    .iso_set_persist = dc1394_linux_iso_set_persist,
+    .iso_allocate_channel = dc1394_linux_iso_allocate_channel,
+    .iso_release_channel = dc1394_linux_iso_release_channel,
+    .iso_allocate_bandwidth = dc1394_linux_iso_allocate_bandwidth,
+    .iso_release_bandwidth = dc1394_linux_iso_release_bandwidth,
+};
+
+void
+linux_init(dc1394_t * d)
+{
+    register_platform (d, &linux_dispatch, "linux");
 }

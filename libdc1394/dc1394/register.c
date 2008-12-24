@@ -69,19 +69,21 @@ dc1394_get_registers (dc1394camera_t *camera, uint64_t offset,
     if (camera == NULL)
         return DC1394_CAMERA_NOT_INITIALIZED;
 
-    return platform_camera_read (cp->pcam, offset, value, num_regs);
+    return cp->platform->dispatch->camera_read (cp->pcam, offset, value,
+            num_regs);
 }
 
 dc1394error_t
 dc1394_set_registers (dc1394camera_t *camera, uint64_t offset,
-                      uint32_t *value, uint32_t num_regs)
+                      const uint32_t *value, uint32_t num_regs)
 {
     dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
 
     if (camera == NULL)
         return DC1394_CAMERA_NOT_INITIALIZED;
 
-    return platform_camera_write (cp->pcam, offset, value, num_regs);
+    return cp->platform->dispatch->camera_write (cp->pcam, offset, value,
+            num_regs);
 }
 
 
@@ -92,25 +94,15 @@ dc1394error_t
 dc1394_get_control_registers (dc1394camera_t *camera, uint64_t offset,
                               uint32_t *value, uint32_t num_regs)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_read (cp->pcam,
+    return dc1394_get_registers (camera,
         camera->command_registers_base + offset, value, num_regs);
 }
 
 dc1394error_t
 dc1394_set_control_registers (dc1394camera_t *camera, uint64_t offset,
-                              uint32_t *value, uint32_t num_regs)
+                              const uint32_t *value, uint32_t num_regs)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_write (cp->pcam,
+    return dc1394_set_registers (camera,
         camera->command_registers_base + offset, value, num_regs);
 }
 
@@ -121,25 +113,15 @@ dc1394error_t
 dc1394_get_adv_control_registers (dc1394camera_t *camera, uint64_t offset,
                                   uint32_t *value, uint32_t num_regs)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_read (cp->pcam,
+    return dc1394_get_registers (camera,
         camera->advanced_features_csr + offset, value, num_regs);
 }
 
 dc1394error_t
 dc1394_set_adv_control_registers (dc1394camera_t *camera, uint64_t offset,
-                                  uint32_t *value, uint32_t num_regs)
+                                  const uint32_t *value, uint32_t num_regs)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_write (cp->pcam,
+    return dc1394_set_registers (camera,
         camera->advanced_features_csr + offset, value, num_regs);
 }
 
@@ -169,42 +151,43 @@ QueryFormat7CSROffset(dc1394camera_t *camera, dc1394video_mode_t mode, uint64_t 
 dc1394error_t
 dc1394_get_format7_register(dc1394camera_t *camera, unsigned int mode, uint64_t offset, uint32_t *value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-    if (camera == NULL) {
+    if (camera == NULL)
         return DC1394_CAMERA_NOT_INITIALIZED;
-    }
 
     if (!dc1394_is_video_mode_scalable(mode))
         return DC1394_INVALID_VIDEO_FORMAT;
 
     if (camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]==0) {
-        if (QueryFormat7CSROffset(camera, mode, &camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]) != DC1394_SUCCESS) {
+        if (QueryFormat7CSROffset(camera, mode,
+                    &camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN])
+                != DC1394_SUCCESS) {
             return DC1394_FAILURE;
         }
     }
 
-    return platform_camera_read_quad(cp->pcam,
-        camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset, value);
+    return dc1394_get_registers (camera,
+        camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset,
+        value, 1);
 }
 
 
 dc1394error_t
 dc1394_set_format7_register(dc1394camera_t *camera, unsigned int mode, uint64_t offset, uint32_t value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-    if (camera == NULL) {
+    if (camera == NULL)
         return DC1394_CAMERA_NOT_INITIALIZED;
-    }
 
     if (!dc1394_is_video_mode_scalable(mode))
         return DC1394_INVALID_VIDEO_FORMAT;;
 
     if (camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]==0) {
-        QueryFormat7CSROffset(camera, mode, &camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]);
+        QueryFormat7CSROffset(camera, mode,
+                &camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]);
     }
 
-    return platform_camera_write_quad(cp->pcam,
-        camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset, value);
+    return dc1394_set_registers (camera,
+        camera->format7_csr[mode-DC1394_VIDEO_MODE_FORMAT7_MIN]+offset,
+        &value, 1);
 }
 
 /********************************************************************************/
@@ -217,49 +200,41 @@ QueryAbsoluteCSROffset(dc1394camera_t *camera, dc1394feature_t feature, uint64_t
     int absoffset, retval;
     uint32_t quadlet=0;
 
-    if (camera == NULL) {
+    if (camera == NULL)
         return DC1394_CAMERA_NOT_INITIALIZED;
-    }
 
     FEATURE_TO_ABS_VALUE_OFFSET(feature, absoffset);
-
     retval=dc1394_get_control_register(camera, absoffset, &quadlet);
 
     *offset=quadlet * 0x04;
-
     return retval;
 
 }
 
 dc1394error_t
-dc1394_get_absolute_register(dc1394camera_t *camera, unsigned int feature, uint64_t offset, uint32_t *value)
+dc1394_get_absolute_register(dc1394camera_t *camera, unsigned int feature,
+        uint64_t offset, uint32_t *value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
     uint64_t absoffset;
-
-    if (camera == NULL) {
+    if (camera == NULL)
         return DC1394_CAMERA_NOT_INITIALIZED;
-    }
 
     QueryAbsoluteCSROffset(camera, feature, &absoffset);
 
-    return platform_camera_read_quad(cp->pcam, absoffset+offset, value);
-
+    return dc1394_get_registers (camera, absoffset + offset, value, 1);
 }
 
 dc1394error_t
-dc1394_set_absolute_register(dc1394camera_t *camera, unsigned int feature, uint64_t offset, uint32_t value)
+dc1394_set_absolute_register(dc1394camera_t *camera, unsigned int feature,
+        uint64_t offset, uint32_t value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
     uint64_t absoffset;
-
-    if (camera == NULL) {
+    if (camera == NULL)
         return DC1394_CAMERA_NOT_INITIALIZED;
-    }
 
     QueryAbsoluteCSROffset(camera, feature, &absoffset);
 
-    return platform_camera_write_quad(cp->pcam, absoffset+offset, value);
+    return dc1394_set_registers (camera, absoffset + offset, &value, 1);
 }
 
 /********************************************************************************/
@@ -269,21 +244,15 @@ dc1394_set_absolute_register(dc1394camera_t *camera, unsigned int feature, uint6
 dc1394error_t
 dc1394_get_PIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_read_quad(cp->pcam, camera->PIO_control_csr+offset, value);
+    return dc1394_get_registers (camera, camera->PIO_control_csr + offset,
+            value, 1);
 }
 
 dc1394error_t
 dc1394_set_PIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_write_quad(cp->pcam, camera->PIO_control_csr+offset, value);
+    return dc1394_set_registers (camera, camera->PIO_control_csr + offset,
+            &value, 1);
 }
 
 
@@ -294,21 +263,15 @@ dc1394_set_PIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 dc1394error_t
 dc1394_get_SIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-    if (camera == NULL)
-    return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_read_quad(cp->pcam, camera->SIO_control_csr+offset, value);
+    return dc1394_get_registers (camera, camera->SIO_control_csr + offset,
+            value, 1);
 }
 
 dc1394error_t
 dc1394_set_SIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_write_quad(cp->pcam, camera->SIO_control_csr+offset, value);
+    return dc1394_set_registers (camera, camera->SIO_control_csr + offset,
+            &value, 1);
 }
 
 
@@ -316,21 +279,17 @@ dc1394_set_SIO_register(dc1394camera_t *camera, uint64_t offset, uint32_t value)
 /* Get/Set Strobe Feature Registers                                             */
 /********************************************************************************/
 dc1394error_t
-dc1394_get_strobe_register(dc1394camera_t *camera, uint64_t offset, uint32_t *value)
+dc1394_get_strobe_register(dc1394camera_t *camera, uint64_t offset,
+        uint32_t *value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_read_quad(cp->pcam, camera->strobe_control_csr+offset, value);
+    return dc1394_get_registers (camera, camera->strobe_control_csr + offset,
+            value, 1);
 }
 
 dc1394error_t
-dc1394_set_strobe_register(dc1394camera_t *camera, uint64_t offset, uint32_t value)
+dc1394_set_strobe_register(dc1394camera_t *camera, uint64_t offset,
+        uint32_t value)
 {
-    dc1394camera_priv_t * cp = DC1394_CAMERA_PRIV (camera);
-    if (camera == NULL)
-        return DC1394_CAMERA_NOT_INITIALIZED;
-
-    return platform_camera_write_quad(cp->pcam, camera->strobe_control_csr+offset, value);
+    return dc1394_set_registers (camera, camera->strobe_control_csr + offset,
+            &value, 1);
 }

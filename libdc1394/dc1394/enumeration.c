@@ -28,10 +28,35 @@
 #include "platform.h"
 #include "log.h"
 
+static void
+destroy_camera_info (camera_info_t * info)
+{
+    free (info->vendor);
+    free (info->model);
+}
+
 static int
 add_camera (dc1394_t * d, camera_info_t * info)
 {
     int n = d->num_cameras;
+    dc1394_log_debug ("Adding camera %"PRIx64":%d %x:%x (%s:%s)",
+            info->guid, info->unit, info->vendor_id, info->model_id,
+            info->vendor, info->model);
+
+    /* For now, exclude duplicate cameras caused by seeing the same camera
+     * on different busses.  A better solution is to let the user choose
+     * between these different versions of the same camera, which will require
+     * a new API in the future. */
+    int i;
+    for (i = 0; i < n; i++) {
+        if (d->cameras[i].guid == info->guid
+                && d->cameras[i].unit == info->unit) {
+            dc1394_log_debug ("Rejected camera %"PRIx64" as duplicate",
+                    info->unit);
+            destroy_camera_info (info);
+            return 0;
+        }
+    }
     d->cameras = realloc (d->cameras, (n + 1) * sizeof (camera_info_t));
     memcpy (d->cameras + n, info, sizeof (camera_info_t));
     d->num_cameras = n + 1;
@@ -62,7 +87,8 @@ parse_leaf (uint32_t offset, uint32_t * quads, int num_quads)
 }
 
 static int
-identify_unit (dc1394_t * d, platform_device_t * dev, uint64_t guid,
+identify_unit (dc1394_t * d, platform_info_t * platform,
+        platform_device_t * dev, uint64_t guid,
         uint32_t offset, uint32_t * quads, int num_quads, int unit_num,
         uint32_t vendor_id)
 {
@@ -80,6 +106,7 @@ identify_unit (dc1394_t * d, platform_device_t * dev, uint64_t guid,
     info.device = dev;
     info.vendor_id = vendor_id;
     info.unit_directory = offset;
+    info.platform = platform;
 
     uint32_t * dquads = quads + offset + 1;
     int i;
@@ -147,12 +174,13 @@ done:
 }
 
 static int
-identify_camera (dc1394_t * d, platform_device_t * dev)
+identify_camera (dc1394_t * d, platform_info_t * platform,
+        platform_device_t * dev)
 {
     uint64_t guid;
     uint32_t quads[256];
     int num_quads = 256;
-    if (platform_device_get_config_rom (dev, quads, &num_quads) < 0)
+    if (platform->dispatch->device_get_config_rom (dev, quads, &num_quads) < 0)
         return -1;
 
     if (num_quads < 7)
@@ -180,28 +208,24 @@ identify_camera (dc1394_t * d, platform_device_t * dev)
             vendor_id = q & 0xffffff;
         if ((q >> 24) == 0xD1) {
             uint32_t offset = (q & 0xffffff) + 6 + i;
-            identify_unit (d, dev, guid, offset, quads, num_quads, unit++,
-                    vendor_id);
+            identify_unit (d, platform, dev, guid, offset, quads, num_quads,
+                    unit++, vendor_id);
         }
     }
     return 0;
 }
 
-static void
-destroy_camera_info (camera_info_t * info)
-{
-    free (info->vendor);
-    free (info->model);
-}
-
 void
 free_enumeration (dc1394_t * d)
 {
-    if (d->device_list)
-        platform_free_device_list (d->device_list);
-    d->device_list = NULL;
-
     int i;
+    for (i = 0; i < d->num_platforms; i++) {
+        platform_info_t * p = d->platforms + i;
+        if (p->device_list)
+            p->dispatch->free_device_list (p->device_list);
+        p->device_list = NULL;
+    }
+
     for (i = 0; i < d->num_cameras; i++)
         destroy_camera_info (d->cameras + i);
     free (d->cameras);
@@ -214,16 +238,26 @@ refresh_enumeration (dc1394_t * d)
 {
     free_enumeration (d);
 
-    d->device_list = platform_get_device_list (d->platform);
-    if (!d->device_list) {
-      dc1394_log_error("Platform failed to get device list");
-        return -1;
-    }
-
-    platform_device_t ** list = d->device_list->devices;
+    dc1394_log_debug ("Enumerating cameras...");
     int i;
-    for (i = 0; i < d->device_list->num_devices; i++)
-        identify_camera (d, list[i]);
+    for (i = 0; i < d->num_platforms; i++) {
+        platform_info_t * p = d->platforms + i;
+        if (!p->p)
+            continue;
+        p->device_list = p->dispatch->get_device_list (p->p);
+        if (!p->device_list) {
+            dc1394_log_warning("Platform %s failed to get device list",
+                    p->name);
+            continue;
+        }
+
+        platform_device_t ** list = p->device_list->devices;
+        int j;
+        dc1394_log_debug ("Platform %s has %d devices",
+                p->name, p->device_list->num_devices);
+        for (j = 0; j < p->device_list->num_devices; j++)
+            identify_camera (d, p, list[j]);
+    }
 
     return 0;
 }
@@ -231,8 +265,8 @@ refresh_enumeration (dc1394_t * d)
 dc1394error_t
 dc1394_camera_enumerate (dc1394_t * d, dc1394camera_list_t **list)
 {
-    if (refresh_enumeration (d)==-1)
-	return DC1394_FAILURE;
+    if (refresh_enumeration (d) < 0)
+        return DC1394_FAILURE;
 
     dc1394camera_list_t * l;
 
@@ -244,19 +278,11 @@ dc1394_camera_enumerate (dc1394_t * d, dc1394camera_list_t **list)
     l->ids = malloc (d->num_cameras * sizeof (dc1394camera_id_t));
     l->num = 0;
 
-    int i,j;
+    int i;
     for (i = 0; i < d->num_cameras; i++) {
-	// verify that the camera has not appeared yet.
-	for (j = 0; j < i; j++) {
-	    if ((d->cameras[i].guid==d->cameras[j].guid)&&
-		(d->cameras[i].unit==d->cameras[j].unit))
-		break;
-	}
-	if (j==i) {
-	    l->ids[i].guid = d->cameras[i].guid;
-	    l->ids[i].unit = d->cameras[i].unit;
-	    l->num++;
-	}
+        l->ids[i].guid = d->cameras[i].guid;
+        l->ids[i].unit = d->cameras[i].unit;
+        l->num++;
     }
     return DC1394_SUCCESS;
 }
@@ -269,6 +295,7 @@ dc1394_camera_free_list (dc1394camera_list_t *list)
 {
     if (list)
         free (list->ids);
+    list->ids = NULL;
     free (list);
 }
 
