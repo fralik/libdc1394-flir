@@ -2,8 +2,9 @@
  * 1394-Based Digital Camera Control Library
  *
  * Juju backend for dc1394
- * 
+ *
  * Written by Kristian Hoegsberg <krh@bitplanet.net>
+ * Maintained by David Moore <dcm@acm.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +24,7 @@
 #ifndef __DC1394_JUJU_H__
 #define __DC1394_JUJU_H__
 
-#include <linux/firewire-cdev.h>
+#include "firewire-cdev.h"
 #include "config.h"
 #include "internal.h"
 #include "register.h"

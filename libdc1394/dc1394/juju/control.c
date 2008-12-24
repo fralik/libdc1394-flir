@@ -28,7 +28,6 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <linux/firewire-cdev.h>
 #include <inttypes.h>
 #include <arpa/inet.h>
 

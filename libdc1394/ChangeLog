@@ -1,4 +1,6 @@
 2008-12-23 David Moore  <dcm@acm.org>
+	* SVN 573: Package a local copy of the juju headers so there are no
+	           versioning problems with different Linux configurations.
 	* SVN 572: Choose platform at run-time, not compile-time.  This
 	           eliminates the --with-juju-dir configure option.
 	* SVN 571: Add more error-checking to example programs
