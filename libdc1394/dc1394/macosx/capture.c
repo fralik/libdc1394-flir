@@ -407,7 +407,7 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
                                      capture->frames[0].packet_size, speed,
                                      CFUUIDGetUUIDBytes (kIOFireWireIsochChannelInterfaceID));
     if (!chan) {
-        platform_capture_stop (craw);
+        dc1394_macosx_capture_stop (craw);
         dc1394_log_error("Could not create IsochChannelInterface");
         return DC1394_FAILURE;
     }
@@ -416,7 +416,7 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     rem_port = (*d)->CreateRemoteIsochPort (d, true,
                                             CFUUIDGetUUIDBytes (kIOFireWireRemoteIsochPortInterfaceID));
     if (!rem_port) {
-        platform_capture_stop (craw);
+        dc1394_macosx_capture_stop (craw);
         dc1394_log_error("Could not create RemoteIsochPortInterface");
         return DC1394_FAILURE;
     }
@@ -436,7 +436,7 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     dcl_pool = (*d)->CreateNuDCLPool (d, numdcls,
                                       CFUUIDGetUUIDBytes (kIOFireWireNuDCLPoolInterfaceID));
     if (!dcl_pool) {
-        platform_capture_stop (craw);
+        dc1394_macosx_capture_stop (craw);
         dc1394_log_error("Could not create NuDCLPoolInterface");
         return DC1394_FAILURE;
     }
@@ -444,7 +444,7 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
     dcl_program = CreateDCLProgram (craw);
     if (!dcl_program) {
-        platform_capture_stop (craw);
+        dc1394_macosx_capture_stop (craw);
         dc1394_log_error("Could not create DCL Program");
         return DC1394_FAILURE;
     }
@@ -453,7 +453,7 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
                                            kFWDCLSyBitsEvent, 1, 1, nil, 0, &(capture->databuf), 1,
                                            CFUUIDGetUUIDBytes (kIOFireWireLocalIsochPortInterfaceID));
     if (!loc_port) {
-        platform_capture_stop (craw);
+        dc1394_macosx_capture_stop (craw);
         dc1394_log_error("Could not create LocalIsochPortInterface");
         return DC1394_FAILURE;
     }
@@ -467,7 +467,7 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     (*chan)->SetTalker (chan, (IOFireWireLibIsochPortRef) rem_port);
 
     if ((ret = (*chan)->AllocateChannel (chan)) != kIOReturnSuccess) {
-        platform_capture_stop (craw);
+        dc1394_macosx_capture_stop (craw);
         if (ret == kIOReturnNoSpace)
             dc1394_log_error("Not enough iso bandwidth or channels are "
                     "available to begin capture");
@@ -478,7 +478,7 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     capture->iso_is_allocated = 1;
 
     if ((*chan)->Start (chan) != kIOReturnSuccess) {
-        platform_capture_stop (craw);
+        dc1394_macosx_capture_stop (craw);
         dc1394_log_error("Could not start channel");
         return DC1394_FAILURE;
     }

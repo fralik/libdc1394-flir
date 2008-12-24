@@ -1,4 +1,5 @@
 2008-12-23 David Moore  <dcm@acm.org>
+	* SVN 576: Fix Mac OS build.
 	* SVN 575: Improve Mac OS error message when iso bandwidth is depleted.
 	* SVN 574: Fix Mac OS build.
 	* SVN 573: Package a local copy of the juju headers so there are no
