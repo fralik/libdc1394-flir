@@ -327,6 +327,7 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     dc1394capture_t * capture = &(craw->capture);
     dc1394camera_t * camera = craw->camera;
     dc1394error_t err;
+    IOReturn ret;
     IOFireWireLibDeviceRef d = craw->iface;
     IOFWSpeed speed;
     IOFireWireLibIsochChannelRef chan;
@@ -465,9 +466,13 @@ dc1394_macosx_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     (*chan)->AddListener (chan, (IOFireWireLibIsochPortRef) loc_port);
     (*chan)->SetTalker (chan, (IOFireWireLibIsochPortRef) rem_port);
 
-    if ((*chan)->AllocateChannel (chan) != kIOReturnSuccess) {
+    if ((ret = (*chan)->AllocateChannel (chan)) != kIOReturnSuccess) {
         platform_capture_stop (craw);
-        dc1394_log_error("Could not allocate channel");
+        if (ret == kIOReturnNoSpace)
+            dc1394_log_error("Not enough iso bandwidth or channels are "
+                    "available to begin capture");
+        else
+            dc1394_log_error("Could not allocate channel");
         return DC1394_FAILURE;
     }
     capture->iso_is_allocated = 1;
