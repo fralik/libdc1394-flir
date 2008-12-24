@@ -1,4 +1,5 @@
 2008-12-23 David Moore  <dcm@acm.org>
+	* SVN 574: Fix Mac OS build.
 	* SVN 573: Package a local copy of the juju headers so there are no
 	           versioning problems with different Linux configurations.
 	* SVN 572: Choose platform at run-time, not compile-time.  This

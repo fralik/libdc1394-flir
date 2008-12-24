@@ -14,6 +14,10 @@ A += dc1394_multiview
 endif
 endif
 
+if HAVE_MACOSX
+AM_LDFLAGS = -framework CoreFoundation -framework Carbon
+endif
+
 noinst_PROGRAMS = $(A)
 bin_PROGRAMS = $(B)
 
