@@ -255,8 +255,10 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
         break;
 
     case FW_CDEV_EVENT_RESPONSE:
-        if (u.response.r.rcode == 4)
-            return -2; // retry if we get "resp_conflict_error"
+        if (u.response.r.rcode == RCODE_CONFLICT_ERROR)
+            return -RCODE_CONFLICT_ERROR; // retry
+        if (u.response.r.rcode == RCODE_BUSY)
+            return -RCODE_BUSY; // retry
         if (u.response.r.rcode != 0) {
             dc1394_log_debug ("Juju: response error, rcode 0x%x",
                     u.response.r.rcode);
@@ -302,7 +304,8 @@ do_transaction(platform_camera_t * cam, int tcode, uint64_t offset, const uint32
             return DC1394_FAILURE;
 
         /* retry if we get "resp_conflict_error" */
-        dc1394_log_debug("Juju: retry tcode 0x%x offset %"PRIx64, tcode, offset);
+        dc1394_log_debug("Juju: retry %x tcode 0x%x offset %"PRIx64,
+                -retval, tcode, offset);
         usleep (500);
         retry--;
     }

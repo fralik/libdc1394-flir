@@ -1,3 +1,6 @@
+2008-12-30 David Moore  <dcm@acm.org>
+	* SVN 577: Juju: Retry busy transactions
+
 2008-12-23 David Moore  <dcm@acm.org>
 	* SVN 576: Fix Mac OS build.
 	* SVN 575: Improve Mac OS error message when iso bandwidth is depleted.
