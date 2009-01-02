@@ -180,15 +180,24 @@ identify_camera (dc1394_t * d, platform_info_t * platform,
     uint64_t guid;
     uint32_t quads[256];
     int num_quads = 256;
-    if (platform->dispatch->device_get_config_rom (dev, quads, &num_quads) < 0)
+    if (platform->dispatch->device_get_config_rom (dev, quads,
+                &num_quads) < 0) {
+        dc1394_log_warning ("Failed to get config ROM from %s device",
+                platform->name);
         return -1;
+    }
+
+    dc1394_log_debug ("Got %d quads of config ROM", num_quads);
 
     if (num_quads < 7)
         return -1;
 
     /* Require 4 quadlets in the bus info block */
-    if ((quads[0] >> 24) != 0x4)
+    if ((quads[0] >> 24) != 0x4) {
+        dc1394_log_debug ("Expected 4 quadlets in bus info block, got %d",
+                quads[0] >> 24);
         return -1;
+    }
 
     /* Require "1394" as the bus identity */
     if (quads[1] != 0x31333934)
@@ -244,6 +253,7 @@ refresh_enumeration (dc1394_t * d)
         platform_info_t * p = d->platforms + i;
         if (!p->p)
             continue;
+        dc1394_log_debug("Enumerating platform %s", p->name);
         p->device_list = p->dispatch->get_device_list (p->p);
         if (!p->device_list) {
             dc1394_log_warning("Platform %s failed to get device list",
@@ -253,10 +263,12 @@ refresh_enumeration (dc1394_t * d)
 
         platform_device_t ** list = p->device_list->devices;
         int j;
-        dc1394_log_debug ("Platform %s has %d devices",
+        dc1394_log_debug ("Platform %s has %d device(s)",
                 p->name, p->device_list->num_devices);
         for (j = 0; j < p->device_list->num_devices; j++)
-            identify_camera (d, p, list[j]);
+            if (identify_camera (d, p, list[j]) < 0)
+                dc1394_log_debug ("Failed to identify %s device %d",
+                        p->name, j);
     }
 
     return 0;

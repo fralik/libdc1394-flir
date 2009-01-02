@@ -1,3 +1,9 @@
+2009-01-02 David Moore  <dcm@acm.org>
+	* SVN 578: Add the "usb" platform, for support of devices that do
+	           IIDC-over-USB such as the Point Grey Chameleon and
+	           Firefly MV cameras.  Support will be automatically
+	           enabled if libusb 1.0 is found at configure-time.
+
 2008-12-30 David Moore  <dcm@acm.org>
 	* SVN 577: Juju: Retry busy transactions
 

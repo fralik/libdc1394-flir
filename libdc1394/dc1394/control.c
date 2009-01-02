@@ -1954,6 +1954,9 @@ dc1394_new (void)
 #ifdef HAVE_WINDOWS
     windows_init (d);
 #endif
+#ifdef HAVE_LIBUSB
+    usb_init (d);
+#endif
 
     int i;
     int initializations = 0;

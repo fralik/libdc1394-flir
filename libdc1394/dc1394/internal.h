@@ -74,6 +74,7 @@ void juju_init(dc1394_t *d);
 void linux_init(dc1394_t *d);
 void macosx_init(dc1394_t *d);
 void windows_init(dc1394_t *d);
+void usb_init(dc1394_t *d);
 
 void register_platform (dc1394_t * d, const platform_dispatch_t * dispatch,
         const char * name);

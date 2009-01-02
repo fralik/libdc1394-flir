@@ -1,7 +1,7 @@
 MAINTAINERCLEANFILES = Makefile.in
 lib_LTLIBRARIES = libdc1394.la
 
-SUBDIRS = linux juju macosx msw vendor
+SUBDIRS = linux juju macosx msw usb vendor
 AM_CFLAGS = $(platform_CFLAGS) -I$(top_srcdir)
 
 libdc1394_la_LDFLAGS = $(platform_LDFLAGS) \
@@ -41,12 +41,16 @@ endif
 if HAVE_WINDOWS
   MSW_LIBADD = msw/libdc1394-msw.la
 endif
+if HAVE_LIBUSB
+  USB_LIBADD = usb/libdc1394-usb.la
+endif
 
 libdc1394_la_LIBADD = \
 	$(LINUX_LIBADD) \
 	$(JUJU_LIBADD) \
 	$(MACOSX_LIBADD) \
 	$(MSW_LIBADD) \
+	$(USB_LIBADD) \
 	vendor/libdc1394-vendor.la
 
 # headers to be installed

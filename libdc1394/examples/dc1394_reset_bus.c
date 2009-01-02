@@ -53,7 +53,8 @@ int main(int argc, char *argv[])
     printf("Using camera with GUID %"PRIx64"\n", camera->guid);
 
     printf ("Reseting bus...\n");
-    dc1394_reset_bus (camera);
+    if (dc1394_reset_bus (camera) != DC1394_SUCCESS)
+        printf ("Warning: reset reported error\n");
 
     dc1394_camera_free (camera);
     dc1394_free (d);
