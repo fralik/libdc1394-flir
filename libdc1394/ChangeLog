@@ -1,3 +1,6 @@
+2009-01-04 David Moore  <dcm@acm.org>
+	* SVN 579: Don't let configure fail if libusb-1.0 is not present
+
 2009-01-02 David Moore  <dcm@acm.org>
 	* SVN 578: Add the "usb" platform, for support of devices that do
 	           IIDC-over-USB such as the Point Grey Chameleon and

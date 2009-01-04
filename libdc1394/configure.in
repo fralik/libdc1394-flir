@@ -38,7 +38,8 @@ AC_C_RESTRICT
 AC_CHECK_LIB(m, pow, [ LIBS="-lm $LIBS" ], [])
 
 PKG_CHECK_MODULES(LIBUSB, [libusb-1.0],
-    [AC_DEFINE(HAVE_LIBUSB,[],[Defined if libusb is present])])
+    [AC_DEFINE(HAVE_LIBUSB,[],[Defined if libusb is present])],
+    [AC_MSG_WARN([libusb-1.0 not found])])
 
 case "$host" in
 *-*-linux*)
