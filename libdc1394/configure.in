@@ -71,7 +71,7 @@ AM_CONDITIONAL(HAVE_LINUX, test x$have_linux = xtrue)
 AM_CONDITIONAL(HAVE_MACOSX, test x$have_macosx = xtrue)
 AM_CONDITIONAL(HAVE_WINDOWS, test x$have_windows = xtrue)
 AM_CONDITIONAL(HAVE_LIBRAW1394, test x$libraw1394 = xtrue)
-AM_CONDITIONAL(HAVE_LIBUSB, test x$LIBUSB_LIBS != x)
+AM_CONDITIONAL(HAVE_LIBUSB, test "x$LIBUSB_LIBS" != "x")
 
 # check for Xv extensions (necessary for examples/dc1394_multiview)
 # imported from Coriander
@@ -163,7 +163,7 @@ else
   MSWMSG="Disabled (Windows not detected)"
 fi
 
-if test x$LIBUSB_LIBS != x; then
+if test "x$LIBUSB_LIBS" != "x"; then
   USBMSG="Enabled"
 else
   USBMSG="Disabled (libusb-1.0 not found)"
