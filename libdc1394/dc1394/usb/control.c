@@ -261,6 +261,12 @@ dc1394_usb_camera_new (platform_t * p, platform_device_t * device,
         return NULL;
     }
 
+    if (libusb_set_configuration (handle, 1) < 0) {
+        dc1394_log_error ("usb: Failed to set configuration 1 after open");
+        libusb_close (handle);
+        return NULL;
+    }
+
     camera = calloc (1, sizeof (platform_camera_t));
     camera->handle = handle;
     return camera;

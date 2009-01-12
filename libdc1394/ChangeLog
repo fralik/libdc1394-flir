@@ -1,8 +1,12 @@
+2009-01-12 David Moore  <dcm@acm.org>
+	* SVN 582: Add missing libusb_set_configuration() and
+	           libusb_release_interface() calls to usb backend.
+
 2009-01-05 Damien Douxchamps http://damien.douxchamps.net/
-        * SVN 581: configure.in: add quotes around args that use
+	* SVN 581: configure.in: add quotes around args that use
 	           $LIBUSB_LIBS as there may be more than one lib (which
-		   leads to a "too many arguments" error)
-	
+	           leads to a "too many arguments" error)
+
 2009-01-04 David Moore  <dcm@acm.org>
 	* SVN 580: Include pkgconfig macros in acinclude.m4 for the benefit
 	           of SVN users that don't have pkgconfig installed.

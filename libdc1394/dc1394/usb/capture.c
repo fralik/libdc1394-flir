@@ -257,6 +257,7 @@ dc1394_usb_capture_stop(platform_camera_t *craw)
     }
 
     if (craw->thread_handle) {
+        libusb_release_interface (craw->thread_handle, 0);
         libusb_close (craw->thread_handle);
         craw->thread_handle = NULL;
     }
