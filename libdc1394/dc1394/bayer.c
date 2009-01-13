@@ -2051,7 +2051,8 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
     }
 
     // the destination color coding is ALWAYS RGB. Set this.
-    if (in->color_coding==DC1394_COLOR_CODING_RAW16)
+    if ( (in->color_coding==DC1394_COLOR_CODING_RAW16) || 
+	 (in->color_coding==DC1394_COLOR_CODING_MONO16) )
         out->color_coding=DC1394_COLOR_CODING_RGB16;
     else
         out->color_coding=DC1394_COLOR_CODING_RGB8;
@@ -2062,7 +2063,8 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
     // The output is never YUV, hence nothing to do about YUV byte order
 
     // bit depth is conserved for 16 bit and set to 8bit for 8bit:
-    if (in->color_coding==DC1394_COLOR_CODING_RAW16)
+    if ( (in->color_coding==DC1394_COLOR_CODING_RAW16) || 
+	 (in->color_coding==DC1394_COLOR_CODING_MONO16) )
         out->data_depth=in->data_depth;
     else
         out->data_depth=8;
@@ -2097,6 +2099,11 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
     if (out->total_bytes>out->allocated_image_bytes) {
         free(out->image);
         out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
+	out->allocated_image_bytes=out->total_bytes;
+        if (out->image)
+            out->allocated_image_bytes = out->total_bytes*sizeof(uint8_t);
+        else
+            out->allocated_image_bytes = 0;
     }
 
     // Copy padding bytes:
