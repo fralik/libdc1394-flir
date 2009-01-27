@@ -1,8 +1,11 @@
+2009-01-26 David Moore  <dcm@acm.org>
+	* SVN 584: Remove private includes from dc1394/linux/capture.h
+
 2009-01-13 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 583: - fix allocation errors in conversions.c and bayer.c
 	           - fix bayer conversion problem with cameras sending
-		     16bit RAW over MONO16 format.
-		   Both fixes thanks to Damien Dusha.
+	             16bit RAW over MONO16 format.
+	           Both fixes thanks to Damien Dusha.
 	
 2009-01-12 David Moore  <dcm@acm.org>
 	* SVN 582: Add missing libusb_set_configuration() and

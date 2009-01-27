@@ -27,10 +27,6 @@
 #ifndef __DC1394_CAPTURE_LINUX_H__
 #define __DC1394_CAPTURE_LINUX_H__
 
-#include "platform.h"
-#include "linux.h"
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
