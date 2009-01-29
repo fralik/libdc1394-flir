@@ -1,3 +1,6 @@
+2009-01-29 David Moore  <dcm@acm.org>
+	* SVN 585: Update version and AUTHORS for 2.1.0.  RELEASE 2.1.0.
+
 2009-01-26 David Moore  <dcm@acm.org>
 	* SVN 584: Remove private includes from dc1394/linux/capture.h
 
