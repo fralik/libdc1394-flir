@@ -194,6 +194,11 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out);
  * De-mosaicing of a Bayer-encoded video frame
  *
  * To set the format of the output, simply set the values of the corresponding fields in the output frame
+ * @param in is a pointer to the bayer video frame that is to be converted
+ * @param out is a pointer to the frame to be converted to.  If there is memory allocated to the image field, 
+ *      then it will be adjusted accordingly by this function.  If there is no memory allocated to the image
+ *      field, then ensure that out->image == NULL and out->allocated_image_bytes == 0
+ * @param method is the bayer method to interpolate the frame.
  */
 dc1394error_t
 dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method);

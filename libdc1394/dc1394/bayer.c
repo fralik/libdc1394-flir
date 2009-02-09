@@ -2029,7 +2029,7 @@ dc1394_bayer_decoding_16bit(const uint16_t *restrict bayer, uint16_t *restrict r
 
 }
 
-void
+dc1394error_t
 Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394bayer_method_t method)
 {
     uint32_t bpp;
@@ -2099,7 +2099,6 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
     if (out->total_bytes>out->allocated_image_bytes) {
         free(out->image);
         out->image=(uint8_t*)malloc(out->total_bytes*sizeof(uint8_t));
-	out->allocated_image_bytes=out->total_bytes;
         if (out->image)
             out->allocated_image_bytes = out->total_bytes*sizeof(uint8_t);
         else
@@ -2107,10 +2106,16 @@ Adapt_buffer_bayer(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394baye
     }
 
     // Copy padding bytes:
-    memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
+    if(out->image)
+        memcpy(&(out->image[out->image_bytes]),&(in->image[in->image_bytes]),out->padding_bytes);
 
     out->little_endian=0; // not used before 1.32 is out.
     out->data_in_padding=0; // not used before 1.32 is out.
+    
+    if(out->image)
+        return DC1394_SUCCESS;
+        
+    return DC1394_MEMORY_ALLOCATION_FAILURE;
 }
 
 dc1394error_t
@@ -2122,7 +2127,10 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
     switch (in->color_coding) {
     case DC1394_COLOR_CODING_RAW8:
     case DC1394_COLOR_CODING_MONO8:
-        Adapt_buffer_bayer(in,out,method);
+        
+        if(DC1394_SUCCESS != Adapt_buffer_bayer(in,out,method))
+            return DC1394_MEMORY_ALLOCATION_FAILURE;
+            
         switch (method) {
         case DC1394_BAYER_METHOD_NEAREST:
             return dc1394_bayer_NearestNeighbor(in->image, out->image, in->size[0], in->size[1], in->color_filter);
@@ -2144,7 +2152,10 @@ dc1394_debayer_frames(dc1394video_frame_t *in, dc1394video_frame_t *out, dc1394b
         break;
     case DC1394_COLOR_CODING_MONO16:
     case DC1394_COLOR_CODING_RAW16:
-        Adapt_buffer_bayer(in,out,method);
+    
+        if(DC1394_SUCCESS != Adapt_buffer_bayer(in,out,method))
+            return DC1394_MEMORY_ALLOCATION_FAILURE;
+            
         switch (method) {
         case DC1394_BAYER_METHOD_NEAREST:
             return dc1394_bayer_NearestNeighbor_uint16((uint16_t*)in->image, (uint16_t*)out->image, in->size[0], in->size[1], in->color_filter, in->data_depth);

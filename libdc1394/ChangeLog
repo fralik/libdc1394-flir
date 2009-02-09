@@ -1,3 +1,7 @@
+2009-02-09 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 586: Apply a patch from Damien Dusha that adds proper memory
+	           allocation verifications in AdaptBuffer functions.
+	
 2009-01-29 David Moore  <dcm@acm.org>
 	* SVN 585: Update version and AUTHORS for 2.1.0.  RELEASE 2.1.0.
 
