@@ -1,5 +1,9 @@
+2009-02-18 David Moore  <dcm@acm.org>
+	* SVN 587: Juju: Fix missing frames when host controller is OHCI 1.0
+	           and packets-per-frame is not a multiple of 8.
+
 2009-02-09 Damien Douxchamps http://damien.douxchamps.net/
-        * SVN 586: Apply a patch from Damien Dusha that adds proper memory
+	* SVN 586: Apply a patch from Damien Dusha that adds proper memory
 	           allocation verifications in AdaptBuffer functions.
 	
 2009-01-29 David Moore  <dcm@acm.org>

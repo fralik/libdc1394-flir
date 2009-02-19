@@ -42,9 +42,9 @@
 static dc1394error_t
 init_frame(platform_camera_t *craw, int index, dc1394video_frame_t *proto)
 {
-    const int N = 8;        /* Number of iso packets per fw_cdev_iso_packet. */
+    int N = 8;        /* Number of iso packets per fw_cdev_iso_packet. */
     struct juju_frame *f = craw->frames + index;
-    size_t total, payload_length;
+    size_t total;
     int i, count;
 
     memcpy (&f->frame, proto, sizeof f->frame);
@@ -58,15 +58,13 @@ init_frame(platform_camera_t *craw, int index, dc1394video_frame_t *proto)
 
     memset(f->packets, 0, f->size);
 
-    total = proto->packets_per_frame * proto->packet_size;
+    total = proto->packets_per_frame;
     for (i = 0; i < count; i++) {
-        payload_length = proto->packet_size * N;
-        if (payload_length < total)
-            f->packets[i].control = FW_CDEV_ISO_PAYLOAD_LENGTH(payload_length);
-        else
-            f->packets[i].control = FW_CDEV_ISO_PAYLOAD_LENGTH(total);
-        f->packets[i].control |= FW_CDEV_ISO_HEADER_LENGTH(4 * N);
-        total -= payload_length;
+        if (total < N)
+            N = total;
+        f->packets[i].control = FW_CDEV_ISO_HEADER_LENGTH(4 * N)
+            | FW_CDEV_ISO_PAYLOAD_LENGTH(proto->packet_size * N);
+        total -= N;
     }
     f->packets[0].control |= FW_CDEV_ISO_SKIP;
     f->packets[i - 1].control |= FW_CDEV_ISO_INTERRUPT;
