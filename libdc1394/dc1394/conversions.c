@@ -563,27 +563,27 @@ dc1394_convert_to_YUV422(uint8_t *src, uint8_t *dest, uint32_t width, uint32_t h
 {
     switch(source_coding) {
     case DC1394_COLOR_CODING_YUV422:
-        dc1394_YUV422_to_YUV422(src, dest, width, height, byte_order);
+        return dc1394_YUV422_to_YUV422(src, dest, width, height, byte_order);
         break;
     case DC1394_COLOR_CODING_YUV411:
-        dc1394_YUV411_to_YUV422(src, dest, width, height, byte_order);
+        return dc1394_YUV411_to_YUV422(src, dest, width, height, byte_order);
         break;
     case DC1394_COLOR_CODING_YUV444:
-        dc1394_YUV444_to_YUV422(src, dest, width, height, byte_order);
+        return dc1394_YUV444_to_YUV422(src, dest, width, height, byte_order);
         break;
     case DC1394_COLOR_CODING_RGB8:
-        dc1394_RGB8_to_YUV422(src, dest, width, height, byte_order);
+        return dc1394_RGB8_to_YUV422(src, dest, width, height, byte_order);
         break;
     case DC1394_COLOR_CODING_MONO8:
     case DC1394_COLOR_CODING_RAW8:
-        dc1394_MONO8_to_YUV422(src, dest, width, height, byte_order);
+        return dc1394_MONO8_to_YUV422(src, dest, width, height, byte_order);
         break;
     case DC1394_COLOR_CODING_MONO16:
     case DC1394_COLOR_CODING_RAW16:
-        dc1394_MONO16_to_YUV422(src, dest, width, height, byte_order, bits);
+        return dc1394_MONO16_to_YUV422(src, dest, width, height, byte_order, bits);
         break;
     case DC1394_COLOR_CODING_RGB16:
-        dc1394_RGB16_to_YUV422(src, dest, width, height, byte_order, bits);
+        return dc1394_RGB16_to_YUV422(src, dest, width, height, byte_order, bits);
         break;
     default:
         return DC1394_FUNCTION_NOT_SUPPORTED;
@@ -600,7 +600,7 @@ dc1394_convert_to_MONO8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t 
 {
     switch(source_coding) {
     case DC1394_COLOR_CODING_MONO16:
-        dc1394_MONO16_to_MONO8(src, dest, width, height, bits);
+        return dc1394_MONO16_to_MONO8(src, dest, width, height, bits);
         break;
     case DC1394_COLOR_CODING_MONO8:
         memcpy(dest, src, width*height);
@@ -619,24 +619,24 @@ dc1394_convert_to_RGB8(uint8_t *restrict src, uint8_t *restrict dest, uint32_t w
 {
     switch(source_coding) {
     case DC1394_COLOR_CODING_RGB16:
-        dc1394_RGB16_to_RGB8 (src, dest, width, height, bits);
+        return dc1394_RGB16_to_RGB8 (src, dest, width, height, bits);
         break;
     case DC1394_COLOR_CODING_YUV444:
-        dc1394_YUV444_to_RGB8 (src, dest, width, height);
+        return dc1394_YUV444_to_RGB8 (src, dest, width, height);
         break;
     case DC1394_COLOR_CODING_YUV422:
-        dc1394_YUV422_to_RGB8 (src, dest, width, height, byte_order);
+        return dc1394_YUV422_to_RGB8 (src, dest, width, height, byte_order);
         break;
     case DC1394_COLOR_CODING_YUV411:
-        dc1394_YUV411_to_RGB8 (src, dest, width, height);
+        return dc1394_YUV411_to_RGB8 (src, dest, width, height);
         break;
     case DC1394_COLOR_CODING_MONO8:
     case DC1394_COLOR_CODING_RAW8:
-        dc1394_MONO8_to_RGB8 (src, dest, width, height);
+        return dc1394_MONO8_to_RGB8 (src, dest, width, height);
         break;
     case DC1394_COLOR_CODING_MONO16:
     case DC1394_COLOR_CODING_RAW16:
-        dc1394_MONO16_to_RGB8 (src, dest, width, height,bits);
+        return dc1394_MONO16_to_RGB8 (src, dest, width, height,bits);
         break;
     case DC1394_COLOR_CODING_RGB8:
       memcpy(dest, src, width*height*3);
@@ -732,7 +732,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_YUV422_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+            return dc1394_YUV422_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
             break;
             
         case DC1394_COLOR_CODING_YUV411:
@@ -740,7 +740,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_YUV411_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+            return dc1394_YUV411_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
             break;
             
         case DC1394_COLOR_CODING_YUV444:
@@ -748,7 +748,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_YUV444_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+            return dc1394_YUV444_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
             break;
             
         case DC1394_COLOR_CODING_RGB8:
@@ -756,7 +756,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_RGB8_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+            return dc1394_RGB8_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
             break;
             
         case DC1394_COLOR_CODING_MONO8:
@@ -765,7 +765,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_MONO8_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
+            return dc1394_MONO8_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order);
             break;
             
         case DC1394_COLOR_CODING_MONO16:
@@ -774,7 +774,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_MONO16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->data_depth);
+            return dc1394_MONO16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->data_depth);
             break;
             
         case DC1394_COLOR_CODING_RGB16:
@@ -782,7 +782,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_RGB16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->data_depth);
+            return dc1394_RGB16_to_YUV422(in->image, out->image, in->size[0], in->size[1], out->yuv_byte_order, in->data_depth);
             break;
             
         default:
@@ -796,7 +796,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_MONO16_to_MONO8(in->image, out->image, in->size[0], in->size[1], in->data_depth);
+            return dc1394_MONO16_to_MONO8(in->image, out->image, in->size[0], in->size[1], in->data_depth);
             break;
             
         case DC1394_COLOR_CODING_MONO8:
@@ -818,7 +818,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_RGB16_to_RGB8 (in->image, out->image, in->size[0], in->size[1], in->data_depth);
+            return dc1394_RGB16_to_RGB8 (in->image, out->image, in->size[0], in->size[1], in->data_depth);
             break;
             
         case DC1394_COLOR_CODING_YUV444:
@@ -826,7 +826,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_YUV444_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
+            return dc1394_YUV444_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
             break;
             
         case DC1394_COLOR_CODING_YUV422:
@@ -834,7 +834,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_YUV422_to_RGB8 (in->image, out->image, in->size[0], in->size[1], in->yuv_byte_order);
+            return dc1394_YUV422_to_RGB8 (in->image, out->image, in->size[0], in->size[1], in->yuv_byte_order);
             break;
             
         case DC1394_COLOR_CODING_YUV411:
@@ -842,7 +842,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_YUV411_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
+            return dc1394_YUV411_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
             break;
             
         case DC1394_COLOR_CODING_MONO8:
@@ -851,7 +851,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_MONO8_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
+            return dc1394_MONO8_to_RGB8 (in->image, out->image, in->size[0], in->size[1]);
             break;
             
         case DC1394_COLOR_CODING_MONO16:
@@ -860,7 +860,7 @@ dc1394_convert_frames(dc1394video_frame_t *in, dc1394video_frame_t *out)
             if(DC1394_SUCCESS != Adapt_buffer_convert(in,out))
                 return DC1394_MEMORY_ALLOCATION_FAILURE;
                 
-            dc1394_MONO16_to_RGB8 (in->image, out->image, in->size[0], in->size[1],in->data_depth);
+            return dc1394_MONO16_to_RGB8 (in->image, out->image, in->size[0], in->size[1],in->data_depth);
             break;
             
         case DC1394_COLOR_CODING_RGB8:
@@ -981,7 +981,7 @@ dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *o
             if(err != DC1394_SUCCESS)
                 return err;
                 
-            dc1394_deinterlace_stereo(in->image, out->image, out->size[0], out->size[1]);
+            return dc1394_deinterlace_stereo(in->image, out->image, out->size[0], out->size[1]);
             break;
             
         case DC1394_STEREO_METHOD_FIELD:
@@ -990,6 +990,7 @@ dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *o
                 return err;
                 
             memcpy(out->image,in->image,out->image_bytes);
+	    return DC1394_SUCCESS;
             break;
         }
         return DC1394_INVALID_STEREO_METHOD;
