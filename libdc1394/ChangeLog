@@ -1,3 +1,7 @@
+2009-04-12 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 588: Apply patch 1 from Mike Lundy: disable option for not
+	           building example programs.
+	
 2009-02-18 David Moore  <dcm@acm.org>
 	* SVN 587: Juju: Fix missing frames when host controller is OHCI 1.0
 	           and packets-per-frame is not a multiple of 8.
