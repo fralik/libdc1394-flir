@@ -126,7 +126,7 @@ pkgincludedir='$(includedir)/dc1394'
 AC_SUBST(pkgincludedir)
 
 dnl AX_CFLAGS_WARN_ALL(CFLAGS)
-CFLAGS="$CFLAGS -Wall -Wunused -std=gnu99"
+CFLAGS="-Wall -Wunused -std=gnu99 $CFLAGS"
 dnl for pedantic compilation, try to add "-pedantic" to the above string
 
 AC_CONFIG_FILES([ \

@@ -1,4 +1,6 @@
 2009-04-12 Damien Douxchamps http://damien.douxchamps.net/
+	* SVN 590: Apply patch 3 from Mike Lundy: prepend CFLAGS instead of
+	           appending them (thus allowing user-specific override)
 	* SVN 589: Apply patch 2 from Mike Lundy: properly initialize
 	           Basler-specific structs.
         * SVN 588: Apply patch 1 from Mike Lundy: disable option for not
