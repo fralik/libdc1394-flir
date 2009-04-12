@@ -507,6 +507,7 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
     dc1394error_t err;
     uint32_t value, sup_formats;
     dc1394video_mode_t mode;
+    uint32_t limit;
 
     // get supported formats
     err=dc1394_get_control_register(camera, REG_CAMERA_V_FORMAT_INQ, &sup_formats);
@@ -568,7 +569,12 @@ dc1394_video_get_supported_modes(dc1394camera_t *camera, dc1394video_modes_t *mo
         err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT7-DC1394_FORMAT_MIN) * 0x04U), &value);
         DC1394_ERR_RTN(err, "Could not get supported modes for Format_4");
 
-        for (mode=DC1394_VIDEO_MODE_FORMAT7_MIN;mode<=DC1394_VIDEO_MODE_FORMAT7_MAX;mode++) {
+	if (camera->iidc_version<=DC1394_IIDC_VERSION_1_31)
+	    limit=DC1394_VIDEO_MODE_FORMAT7_7;
+	else
+	    limit=DC1394_VIDEO_MODE_FORMAT7_MAX;
+
+        for (mode=DC1394_VIDEO_MODE_FORMAT7_MIN;mode<=limit;mode++) {
             if ((value & (0x1<<(31-(mode-DC1394_VIDEO_MODE_FORMAT7_MIN))))>0) {
                 modes->modes[modes->num]=mode;
                 modes->num++;

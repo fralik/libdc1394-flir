@@ -1,4 +1,5 @@
 2009-04-12 Damien Douxchamps http://damien.douxchamps.net/
+        * SVN 592: [IIDC 1.32] support 32 Format7 video modes
 	* SVN 591: Apply patch 6 from Mike Lundy: return errors from
 	           delegates for some conversion functions.
 	* SVN 590: Apply patch 3 from Mike Lundy: prepend CFLAGS instead of
