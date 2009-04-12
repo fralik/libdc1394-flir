@@ -78,7 +78,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "CRC Checksum",
         /* feature_id */ DC1394_BASLER_SFF_CRC_CHECKSUM,
         /* csr_guid   */ {0x3b34004e, 0x1b84, 0x11d8, {0x83, 0xb3, 0x00, 0x10, 0x5a, 0x5b, 0xae, 0x55}},
-        /* chunk_guid */ { 0 /* not used */ },
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_TRUE,
         /* data_size  */ 0
@@ -89,7 +89,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "Test Images",
         /* feature_id */ DC1394_BASLER_SFF_TEST_IMAGES,
         /* csr_guid   */ {0x2a411342, 0xc0ca, 0x4368, {0xb4, 0x6e, 0xee, 0x5d, 0xee, 0xbf, 0x05, 0x48}},
-        /* chunk_guid */ { 0 /* not used */},
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_FALSE,
         /* data_size  */ 0
@@ -100,7 +100,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "Extended Version Info",
         /* feature_id */ DC1394_BASLER_SFF_EXTENDED_VERSION_INFO,
         /* csr_guid   */ {0x2b2d8714, 0xc15e, 0x4176, {0xa2, 0x35, 0x6e, 0xf8, 0x43, 0xd7, 0x47, 0xb4}},
-        /* chunk_guid */ { 0 /* not used */},
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_FALSE,
         /* data_size  */ 0
@@ -111,7 +111,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "Lookup Table",
         /* feature_id */ DC1394_BASLER_SFF_LOOKUP_TABLE,
         /* csr_guid   */ {0xb28c667c, 0xdf9d, 0x11d7, {0x86, 0x93, 0x00, 0x0c, 0x6e, 0x0b, 0xd1, 0xb0}},
-        /* chunk_guid */ { 0 /* not used */},
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_TRUE,
         /* data_size  */ 0
@@ -122,7 +122,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "Trigger Flag and Counter",
         /* feature_id */ DC1394_BASLER_SFF_TRIGGER_FLAG_AND_COUNTER,
         /* csr_guid   */ {0x16c31a78, 0x3f75, 0x11d8, {0x94, 0xec, 0x00, 0x10, 0x5a, 0x5b, 0xae, 0x55}},
-        /* chunk_guid */ { 0 /* not used */},
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_FALSE,
         /* data_size  */ 0
@@ -133,7 +133,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "Output Port 0 Configuration",
         /* feature_id */ DC1394_BASLER_SFF_OUTPUT_PORT_0_CONFIGURATION,
         /* csr_guid   */ {0x5a889d7e, 0x41e5, 0x11d8, {0x84, 0x5b, 0x00, 0x10, 0x5a, 0x5b, 0xae, 0x55}},
-        /* chunk_guid */ { 0 /* not used */},
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_FALSE,
         /* data_size  */ 0
@@ -144,7 +144,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "Output Port 1 Configuration",
         /* feature_id */ DC1394_BASLER_SFF_OUTPUT_PORT_1_CONFIGURATION,
         /* csr_guid   */ {0x949d820a, 0x4513, 0x11d8, {0x9e, 0xb1, 0x00, 0x10, 0x5a, 0x5b, 0xae, 0x55}},
-        /* chunk_guid */ { 0 /* not used */},
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_FALSE,
         /* data_size  */ 0
@@ -155,7 +155,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "Output Port 2 Configuration",
         /* feature_id */ DC1394_BASLER_SFF_OUTPUT_PORT_2_CONFIGURATION,
         /* csr_guid   */ {0xc14e5072, 0x4513, 0x11d8, {0x81, 0xf3, 0x00, 0x10, 0x5a, 0x5b, 0xae, 0x55}},
-        /* chunk_guid */ { 0 /* not used */},
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_FALSE,
         /* data_size  */ 0
@@ -166,7 +166,7 @@ const struct sff_feature const sff_feature_registry[] = {
         /* name       */ "Output Port 3 Configuration",
         /* feature_id */ DC1394_BASLER_SFF_OUTPUT_PORT_3_CONFIGURATION,
         /* csr_guid   */ {0x949d820a, 0x4513, 0x11d8, {0x9e, 0xb1, 0x00, 0x10, 0x5a, 0x5b, 0xae, 0x55}},
-        /* chunk_guid */ { 0 /* not used */},
+        /* chunk_guid */ {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} /* not used */ },
         /* has_chunk  */ DC1394_FALSE,
         /* generic    */ DC1394_FALSE,
         /* data_size  */ 0
