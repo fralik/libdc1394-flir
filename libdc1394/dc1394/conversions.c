@@ -992,8 +992,10 @@ dc1394_deinterlace_stereo_frames(dc1394video_frame_t *in, dc1394video_frame_t *o
             memcpy(out->image,in->image,out->image_bytes);
 	    return DC1394_SUCCESS;
             break;
+        default:
+            return DC1394_INVALID_STEREO_METHOD;
         }
-        return DC1394_INVALID_STEREO_METHOD;
+// Never reached:  return DC1394_INVALID_STEREO_METHOD;
     }
     else
         return DC1394_FUNCTION_NOT_SUPPORTED;

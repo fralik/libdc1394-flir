@@ -1,22 +1,31 @@
+2009-04-14 Peter Antoniac http://sourceforge.net/users/theseinfeld
+	* SVN 594: Fixed the bug from error reporting [LP bug #360520]
+		   https://bugs.edge.launchpad.net/libdc1394/+bug/360520 for
+		   dc1394_deinterlace_stereo_frames return wrong value on
+		   success
+	* SVN 593: Documentation: added missing manual files for the examples
+	directory. These files existed in the packaging but were missing in 
+	our upstream.
+
 2009-04-12 Damien Douxchamps http://damien.douxchamps.net/
-        * SVN 592: [IIDC 1.32] support 32 Format7 video modes
+	* SVN 592: [IIDC 1.32] support 32 Format7 video modes
 	* SVN 591: Apply patch 6 from Mike Lundy: return errors from
-	           delegates for some conversion functions.
+		   delegates for some conversion functions.
 	* SVN 590: Apply patch 3 from Mike Lundy: prepend CFLAGS instead of
-	           appending them (thus allowing user-specific override)
+		   appending them (thus allowing user-specific override)
 	* SVN 589: Apply patch 2 from Mike Lundy: properly initialize
-	           Basler-specific structs.
-        * SVN 588: Apply patch 1 from Mike Lundy: disable option for not
-	           building example programs.
-	
+		   Basler-specific structs.
+	* SVN 588: Apply patch 1 from Mike Lundy: disable option for not
+		   building example programs.
+
 2009-02-18 David Moore  <dcm@acm.org>
 	* SVN 587: Juju: Fix missing frames when host controller is OHCI 1.0
-	           and packets-per-frame is not a multiple of 8.
+		   and packets-per-frame is not a multiple of 8.
 
 2009-02-09 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 586: Apply a patch from Damien Dusha that adds proper memory
-	           allocation verifications in AdaptBuffer functions.
-	
+		   allocation verifications in AdaptBuffer functions.
+
 2009-01-29 David Moore  <dcm@acm.org>
 	* SVN 585: Update version and AUTHORS for 2.1.0.  RELEASE 2.1.0.
 
@@ -25,29 +34,29 @@
 
 2009-01-13 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 583: - fix allocation errors in conversions.c and bayer.c
-	           - fix bayer conversion problem with cameras sending
-	             16bit RAW over MONO16 format.
-	           Both fixes thanks to Damien Dusha.
-	
+		   - fix bayer conversion problem with cameras sending
+		     16bit RAW over MONO16 format.
+		   Both fixes thanks to Damien Dusha.
+
 2009-01-12 David Moore  <dcm@acm.org>
 	* SVN 582: Add missing libusb_set_configuration() and
-	           libusb_release_interface() calls to usb backend.
+		   libusb_release_interface() calls to usb backend.
 
 2009-01-05 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 581: configure.in: add quotes around args that use
-	           $LIBUSB_LIBS as there may be more than one lib (which
-	           leads to a "too many arguments" error)
+		   $LIBUSB_LIBS as there may be more than one lib (which
+		   leads to a "too many arguments" error)
 
 2009-01-04 David Moore  <dcm@acm.org>
 	* SVN 580: Include pkgconfig macros in acinclude.m4 for the benefit
-	           of SVN users that don't have pkgconfig installed.
+		   of SVN users that don't have pkgconfig installed.
 	* SVN 579: Don't let configure fail if libusb-1.0 is not present
 
 2009-01-02 David Moore  <dcm@acm.org>
 	* SVN 578: Add the "usb" platform, for support of devices that do
-	           IIDC-over-USB such as the Point Grey Chameleon and
-	           Firefly MV cameras.  Support will be automatically
-	           enabled if libusb 1.0 is found at configure-time.
+		   IIDC-over-USB such as the Point Grey Chameleon and
+		   Firefly MV cameras.  Support will be automatically
+		   enabled if libusb 1.0 is found at configure-time.
 
 2008-12-30 David Moore  <dcm@acm.org>
 	* SVN 577: Juju: Retry busy transactions
@@ -57,9 +66,9 @@
 	* SVN 575: Improve Mac OS error message when iso bandwidth is depleted.
 	* SVN 574: Fix Mac OS build.
 	* SVN 573: Package a local copy of the juju headers so there are no
-	           versioning problems with different Linux configurations.
+		   versioning problems with different Linux configurations.
 	* SVN 572: Choose platform at run-time, not compile-time.  This
-	           eliminates the --with-juju-dir configure option.
+		   eliminates the --with-juju-dir configure option.
 	* SVN 571: Add more error-checking to example programs
 
 2008-12-12 David Moore  <dcm@acm.org>
@@ -68,14 +77,14 @@
 
 2008-12-05 David Moore  <dcm@acm.org>
 	* SVN 568: Added AC_CANONICAL_SYSTEM to configure.in.  Thanks to
-	           Tully Foote.
+		   Tully Foote.
 	* SVN 567: Fix acinclude.m4 for newer versions of autoconf
 	* SVN 566: Fix image size bug in dc1394_deinterlace_stereo_frames.
-	           Thanks to Maya Cakmak and Jeremy Leibs.
+		   Thanks to Maya Cakmak and Jeremy Leibs.
 
 2008-08-28 David Moore  <dcm@acm.org>
 	* SVN 565: Potential crash fix for Mac OS 10.4.  Thanks to Salvatore
-	           Desiano for tracking it down.
+		   Desiano for tracking it down.
 
 2008-08-27 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 564: last set of blind changes.
@@ -85,33 +94,33 @@
 
 2008-08-21 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 562: attempt to fix incoherences in the msw port, part 2. There
-	           is still a lot of work to be done in camera detection and
+		   is still a lot of work to be done in camera detection and
 		   ISO channel/bandwidth allocation. For instance, the
 		   platform_* functions are inexistant in MSW.
 
 2008-08-20 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 561: attempt to fix incoherences in the msw port.
-	
+
 2008-03-26 David Moore  <dcm@acm.org>
 	* SVN 560: Fix alignment problem during reads on some platforms with
-	           juju
+		   juju
 
 2008-05-28 Damien Douxchamps http://damien.douxchamps.net/
-        * SVN 559: fixed wrong returned values for dc1394_trigger_get_polarity.
-	           Thanks to Clement Menier.
-	
+	* SVN 559: fixed wrong returned values for dc1394_trigger_get_polarity.
+		   Thanks to Clement Menier.
+
 2008-05-17 Damien Douxchamps http://damien.douxchamps.net/
-        * SVN 558: applied patch from Olaf Kaehler (missing #ifdef cpluspluc)
-	           Corrected the email address of the list in the Readme.
+	* SVN 558: applied patch from Olaf Kaehler (missing #ifdef cpluspluc)
+		   Corrected the email address of the list in the Readme.
 
 2008-05-08 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 557: Update the lt verions to 23,0,1. RELEASE 2.0.2
-	           (Note: the SOversion is 22.0.2)
+		   (Note: the SOversion is 22.0.2)
 	* SVN 556: the wrong file was uploaded for the new example, fixed.
-	
+
 2008-05-02 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 555: add a new example
-	
+
 2008-03-26 David Moore  <dcm@acm.org>
 	* SVN 554: Fix build of Juju when in separate dir
 
@@ -129,7 +138,7 @@
 
 2008-03-11 David Moore  <dcm@acm.org>
 	* SVN 548: Make linux-specific function dc1394_camera_get_node()
-	           globally available and implement stubs for other platforms.
+		   globally available and implement stubs for other platforms.
 		   Add generation argument to dc1394_camera_get_node.
 		   Rename dc1394_camera_get_port to
 		   dc1394_camera_get_linux_port.
@@ -148,11 +157,11 @@
 
 2008-02-21 David Moore  <dcm@acm.org>
 	* SVN 543: Correct the order of operations at the start of juju
-	           capture so that any manual channel settings are preserved.
+		   capture so that any manual channel settings are preserved.
 
 2008-02-12 Damien Douxchamps http://damien.douxchamps.net/
-        * SVN 542: Return an error if the camera enumeration fails (thanks to
-	           Jasper Leemans)
+	* SVN 542: Return an error if the camera enumeration fails (thanks to
+		   Jasper Leemans)
 
 2008-02-10 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 541: Corrections in the man pages white spaces
@@ -160,8 +169,8 @@
 
 2008-02-07 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 539: Add linux functions to get port and node. This is
-	           provided by a new header file linux/control.h
-	
+		   provided by a new header file linux/control.h
+
 2008-02-06 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 538: Documentation problems with newer Doxygen package:
 		- Changed Doxygen.in to fit the new standards.
@@ -174,7 +183,7 @@
 
 2008-01-15 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 537: Release 2.0.1
-	
+
 2008-01-14 David Moore  <dcm@acm.org>
 	* SVN 536: Updated NEWS.
 	* SVN 535: Removed edge-sense bayer algorithm.  Removed the
@@ -220,7 +229,7 @@
 	* SVN 523: Go around a firmware problem in the iSight (v1.0.3): two
 		   vendor leaves are present but there's no model leaf, even
 		   though the second 'vendor' leaf is clearly the model leaf.
-	
+
 2007-12-17 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 522: Write a very basic, one-line description of (almost) every
 		   function.
@@ -305,7 +314,7 @@
 	* SVN 487: - Applied a consistant naming scheme for all functions.
 		   - Temporary (?) implementation of a DC1394_DEBUG
 		     compiler flag
-	
+
 2007-12-05 David Moore  <dcm@acm.org>
 	* SVN 486: Allow retries when reading config ROMs under linux to
 		   deal with sluggish cameras.
@@ -319,7 +328,7 @@
 	* SVN 481: Updated logging mechanism to auto-print __LINE__, __FILE__
 		   and __FUNCTION__. log.h was re-created for that purpose.
 	* SVN 480: Fix leftover DC1394_NO_FRAME in OSX (Josh Rooke-Ley)
-	
+
 2007-12-03 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 479: Error codes are now negative.
 	* SVN 478: capture_dequeue returns success if no frame is available
@@ -333,13 +342,13 @@
 
 2007-12-02 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 472-4: better error code returned by register access functions
-	
+
 2007-12-01 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 471: fix missing declarations of "err" introduced in SVN 466
 		   (thanks to Chris Rankin)
 	* SVN 470: perform byte_per_packet name changes in juju, osx and msw
 		   too (thanks to Chris Rankin)
-	
+
 2007-11-30 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 469: Rename byte_per_packet to packet_size everywhere. Perform a
 		   few cleanups rearding that too.
@@ -437,7 +446,7 @@
 
 2007-09-26 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 435: Updated the AUTHORS file.
-	
+
 2007-09-20 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 434: Updated the definition of DC1394_BAYER_METHOD_MAX
 		   (Johann Schoonees)
@@ -450,7 +459,7 @@
 2007-09-18 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 432: Removed spurious comma in the declaration of
 		   dc1394trigger_source_t (Johann Schoonees)
-	
+
 2007-09-17 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 431: Add a "flags" member (uint32_t) to dc1394camera_t struct.
 	* SVN 430: Change the name dc1394id_t to dc1394camera_id_t to avoid
@@ -472,7 +481,7 @@
 
 2007-09-03 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 426: don't display warnings if a node is not a camera.
-	
+
 2007-08-28 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 425: Image data returned in the dc1394_video_frame_t struct was
 		   read-only (Linux). It doesn't cost anything to make it
@@ -500,7 +509,7 @@
 2007-08-16 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 419: more changes on the new camera detection API.
 	* SVN 418: first changes on the new camera detection API.
-	
+
 2007-08-15 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 417: First alpha implementation of the new API for camera
 		   detection. It consists in wrappers around existing
@@ -510,7 +519,7 @@
 		   GPL files that were tainting the library license. Thanks to
 		   Olaf Hering for spoting this. The topology data is now only
 		   available on MSW (not in OSX and Linux).
-	
+
 2007-08-14 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 415: basler_cff.h needed <string.h>
 	* SVN 414: Merged patch from Vladimir Avdonin for the compilation and
@@ -522,7 +531,7 @@
 
 2007-07-20 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 411: Applied AVT patch from Seemant Kulleen
-	
+
 2007-07-11 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 410: execute a "SLOW_DOWN" only if the ROM read or write fails,
 		   not everytime. This makes much more sense and also makes
@@ -573,21 +582,21 @@
 2007-06-05 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 399: Forgot to change some version numbers. This is 2.0.0-rc6.
 	* SVN 398: Version 2.0.0-rc6
-	
+
 2007-06-04 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 397: get optional function registers only if the IIDC version is
 		   > 1.30 (not >= 1.30). Thanks to Etienne Bieber.
-	
+
 2007-05-08 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 396: added an example program to capture video from a Ladybug
 		   camera (Point Grey).
-	
+
 2007-04-26 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 395: add memset's in linux/capture.c to avoid valgrind errors
 		   (thanks to Jon Schewe)
 	* SVN 394: changed "min_bytes" to "unit_bytes" in
 		   dc1394_format7_get_packet_para()
-	
+
 2007-03-18 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 393: Add a "juju" directory for the new kernel stack from Kristian
 		   Hogsberg. Thanks to... Kristian Hogsberg for the big patch ;)
@@ -605,7 +614,7 @@
 	* SVN 391: change the function returning the number of bytes per pixel
 		   to a function that returns bits per pixel. That way we stay
 		   with int's and avoid round-off errors.
-	
+
 2007-02-23 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 390: rewrite the ROI setting function. This fixes a serious issue
 		   that occured when changing F7 parameters (color coding,
@@ -614,7 +623,7 @@
 2007-02-21 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 389: rewite the expression defining the stride; cosmetic changes
 		   to the latest changelog entries
-	
+
 2007-02-20 David Moore http://davemoore.org/
 	* SVN 388: Improvements to error handling in channel/bandwidth
 		   allocation.
@@ -636,11 +645,11 @@
 		   Adding an extra "DC1394_CAPTURE_FLAGS_DEFAULT" to every call
 		   to dc1394_capture_setup() will yield the same behaviour as
 		   before. Also removed old "_dma" examples.
-	
+
 2007-02-11 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 381: fix camera detection that failed if probing for optional
 		   capabilities returned an error. Thanks to Mark Munte.
-	
+
 2007-02-13 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 380: changed libdc1394.pc to libdc1394-2.pc to avoid pkg-config
 		   conflicts when using both versions (v1 - v2) of libdc1394.
@@ -651,7 +660,7 @@
 
 2007-02-08 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 378: removed two extra handshakes in format7 functions.
-	
+
 2007-02-07 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 377: comment spurious debug message
 	* SVN 376: Allow changing format7 properties while capture is
@@ -701,7 +710,7 @@
 	* SVN 359: don't require cameras (>=1.31) to have a data depth
 		   register. Thanks to Matthias Hanel.
 	* SVN 358: fixed YUV422 byte order. Thanks to Thomas Woellert.
-	
+
 2007-01-22 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 357: use only format7mode0 in the example program
 		   grab_partial_image. Remove the unused definition of
@@ -811,10 +820,10 @@
 	  1. new functions that write/read more than one register at a time
 	  2. correct shading control and fully implement it
 	  3. read/write shading images
-	
+
 2006-11-03 Damien Douxchamps http://damien.douxchamps.net/
 	* Release 2.0.0-pre4
-	
+
 2006-11-03 Damien Douxchamps http://damien.douxchamps.net/
 	* Create more handles to avoid conflicts in the grabselfid function
 	  (thanks to Irv Elshoff)
@@ -1040,7 +1049,7 @@
 2006-01-25 Damien Douxchamps http://damien.douxchamps.net/
 	* trigger modes > 3 added (4, 5, 14 and 15)
 	* trigger source selection implemented
-	
+
 2006-02-07 Damien Douxchamps http://damien.douxchamps.net/
 	* force a DC1394_SLOW_DOWN delay even when the transaction returns
 	  successfuly Otherwise we can have too many requests following each
@@ -1105,7 +1114,7 @@
 	* start implementation of automatic ISO channel/bandwidth  allocation
 	* updated configure script (we now require libraw1394 >= 1.2.0)
 	* removed the old libraw1394 code since we need new stuff anyway.
-	
+
 2005-12-21 Damien Douxchamps http://damien.douxchamps.net/
 	* Added VNG bayer decoding, thanks to Frederic Devernay. The trunk of
 	  the original code is from dcraw. It's very, very slow but looks nice.
@@ -1172,14 +1181,14 @@
 	  bug in Apple iSight rev 1.03 about this: two tags 0x81 are present but
 	  no 0x82 can be found)
 	* Thanks to 'danalien' for the debug inputs.
-	
+
 2005-08-18 Damien Douxchamps http://damien.douxchamps.net/	
 	* fixed memory leak in capture functions (dma device name not freed)
 	* fixed trigger capabilities detection (Markus Niebel)
 
 2005-08-31 Damien Douxchamps http://damien.douxchamps.net/
 	* set several debug statements for testing with the iSight
-	
+
 2005-08-30 Damien Douxchamps http://damien.douxchamps.net/
 	* fixed invalid definition
 
