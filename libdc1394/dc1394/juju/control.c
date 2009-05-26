@@ -178,6 +178,31 @@ dc1394_juju_device_get_config_rom (platform_device_t * device,
     return 0;
 }
 
+static juju_iso_info *
+add_iso_resource (platform_camera_t *cam)
+{
+    juju_iso_info *res = calloc (1, sizeof (juju_iso_info));
+    if (!res)
+        return NULL;
+    res->next = cam->iso_resources;
+    cam->iso_resources = res;
+    return res;
+}
+
+static void
+remove_iso_resource (platform_camera_t *cam, juju_iso_info * res)
+{
+    juju_iso_info **ptr = &cam->iso_resources;
+    while (*ptr) {
+        if (*ptr == res) {
+            *ptr = res->next;
+            free (res);
+            return;
+        }
+        ptr = &(*ptr)->next;
+    }
+}
+
 static platform_camera_t *
 dc1394_juju_camera_new (platform_t * p, platform_device_t * device, uint32_t unit_directory_offset)
 {
@@ -212,6 +237,8 @@ dc1394_juju_camera_new (platform_t * p, platform_device_t * device, uint32_t uni
 
 static void dc1394_juju_camera_free (platform_camera_t * cam)
 {
+    while (cam->iso_resources)
+        remove_iso_resource (cam, cam->iso_resources);
     close (cam->fd);
     free (cam);
 }
@@ -230,21 +257,34 @@ dc1394_juju_camera_print_info (platform_camera_t * camera, FILE *fd)
     return DC1394_SUCCESS;
 }
 
-int
-_juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
+typedef struct _juju_response_info {
+    int got_response;
+    uint32_t rcode;
+    uint32_t *data;
+    int num_quads;
+    int actual_num_quads;
+} juju_response_info;
+
+static int
+juju_handle_event (platform_camera_t * cam)
 {
     union {
         struct {
             struct fw_cdev_event_response r;
-            __u32 buffer[out ? num_quads : 0];
+            __u32 buffer[cam->max_response_quads];
         } response;
         struct fw_cdev_event_bus_reset reset;
+        struct fw_cdev_event_iso_resource resource;
     } u;
     int len, i;
+    juju_response_info *resp_info;
+    juju_iso_info *iso_info;
 
     len = read (cam->fd, &u, sizeof u);
     if (len < 0) {
-        dc1394_log_error("failed to read response for %s: %m",cam->filename);
+        dc1394_log_error("juju: Read failed: %m");
         return -1;
     }
 
@@ -252,30 +292,84 @@ _juju_await_response (platform_camera_t * cam, uint32_t * out, int num_quads)
     case FW_CDEV_EVENT_BUS_RESET:
         cam->generation = u.reset.generation;
         cam->node_id = u.reset.node_id;
+        dc1394_log_debug ("juju: Bus reset, gen %d, node 0x%x",
+                cam->generation, cam->node_id);
         break;
 
     case FW_CDEV_EVENT_RESPONSE:
-        if (u.response.r.rcode == RCODE_CONFLICT_ERROR)
-            return -RCODE_CONFLICT_ERROR; // retry
-        if (u.response.r.rcode == RCODE_BUSY)
-            return -RCODE_BUSY; // retry
-        if (u.response.r.rcode != 0) {
-            dc1394_log_debug ("Juju: response error, rcode 0x%x",
-                    u.response.r.rcode);
-            return -1;
+        if (!u.response.r.closure) {
+            dc1394_log_warning ("juju: Unsolicited response, rcode %x len %d",
+                    u.response.r.rcode, u.response.r.length);
+            break;
         }
-        for (i = 0; i < u.response.r.length/4 && i < num_quads && out; i++)
-            out[i] = ntohl (u.response.r.data[i]);
-        return 1;
+        resp_info = u64_to_ptr(u.response.r.closure);
+        resp_info->rcode = u.response.r.rcode;
+        resp_info->actual_num_quads = u.response.r.length/4;
+        resp_info->got_response = 1;
+        if (resp_info->rcode || !resp_info->data)
+            break;
+        if (cam->max_response_quads < resp_info->actual_num_quads) {
+            dc1394_log_error ("juju: read buffer too small, have %d needed %d",
+                    cam->max_response_quads, resp_info->actual_num_quads);
+            break;
+        }
+
+        len = MIN(resp_info->actual_num_quads, resp_info->num_quads);
+        for (i = 0; i < len; i++)
+            resp_info->data[i] = ntohl (u.response.r.data[i]);
+        break;
+
+    case FW_CDEV_EVENT_ISO_RESOURCE_ALLOCATED:
+        if (!u.resource.closure) {
+            dc1394_log_warning ("juju: Spurious ISO allocation event: "
+                    "handle %d, chan %d, bw %d", u.resource.handle,
+                    u.resource.channel, u.resource.bandwidth);
+            break;
+        }
+        iso_info = u64_to_ptr(u.resource.closure);
+        if (iso_info->handle != u.resource.handle)
+            dc1394_log_warning ("juju: ISO alloc handle was %d, expected %d",
+                    u.resource.handle, iso_info->handle);
+        dc1394_log_debug ("juju: Allocated handle %d: chan %d bw %d",
+                u.resource.handle, u.resource.channel, u.resource.bandwidth);
+        iso_info->got_alloc = 1;
+        iso_info->channel = u.resource.channel;
+        iso_info->bandwidth = u.resource.bandwidth;
+        break;
+
+    case FW_CDEV_EVENT_ISO_RESOURCE_DEALLOCATED:
+        if (!u.resource.closure) {
+            dc1394_log_warning ("juju: Spurious ISO deallocation event: "
+                    "handle %d, chan %d, bw %d", u.resource.handle,
+                    u.resource.channel, u.resource.bandwidth);
+            break;
+        }
+        iso_info = u64_to_ptr(u.resource.closure);
+        if (iso_info->handle != u.resource.handle)
+            dc1394_log_warning ("juju: ISO dealloc handle was %d, expected %d",
+                    u.resource.handle, iso_info->handle);
+        dc1394_log_debug ("juju: Deallocated handle %d: chan %d bw %d",
+                u.resource.handle, u.resource.channel, u.resource.bandwidth);
+        iso_info->got_dealloc = 1;
+        iso_info->channel = u.resource.channel;
+        iso_info->bandwidth = u.resource.bandwidth;
+        break;
+
+    default:
+        dc1394_log_warning ("juju: Unhandled event type %d",
+                u.reset.type);
+        break;
     }
 
     return 0;
 }
 
 static dc1394error_t
-do_transaction(platform_camera_t * cam, int tcode, uint64_t offset, const uint32_t * in, uint32_t * out, uint32_t num_quads)
+do_transaction(platform_camera_t * cam, int tcode, uint64_t offset,
+        const uint32_t * in, uint32_t * out, uint32_t num_quads)
 {
     struct fw_cdev_send_request request;
+    juju_response_info resp;
     int i, len;
     uint32_t in_buffer[in ? num_quads : 0];
     int retry = 300;
@@ -283,34 +377,54 @@ do_transaction(platform_camera_t * cam, int tcode, uint64_t offset, const uint32
     for (i = 0; in && i < num_quads; i++)
         in_buffer[i] = htonl (in[i]);
 
+    resp.data = out;
+    resp.num_quads = out ? num_quads : 0;
+    cam->max_response_quads = resp.num_quads;
+
+    request.closure = ptr_to_u64(&resp);
     request.offset = CONFIG_ROM_BASE + offset;
     request.data = ptr_to_u64(in_buffer);
     request.length = num_quads * 4;
     request.tcode = tcode;
-    request.generation = cam->generation;
 
     while (retry > 0) {
         int retval;
+
+        request.generation = cam->generation;
         len = ioctl (cam->fd, FW_CDEV_IOC_SEND_REQUEST, &request);
         if (len < 0) {
-            dc1394_log_error("failed to write request: %m");
+            dc1394_log_error("juju: Send request failed: %m");
             return DC1394_FAILURE;
         }
 
-        while ((retval = _juju_await_response (cam, out, num_quads)) == 0);
-        if (retval > 0)
-            return DC1394_SUCCESS;
-        if (retval == -1)
-            return DC1394_FAILURE;
+        resp.got_response = 0;
+        while (!resp.got_response)
+            if ((retval = juju_handle_event (cam)) < 0)
+                return retval;
 
-        /* retry if we get "resp_conflict_error" */
-        dc1394_log_debug("Juju: retry %x tcode 0x%x offset %"PRIx64,
-                -retval, tcode, offset);
+        if (resp.rcode == 0) {
+            if (resp.num_quads != resp.actual_num_quads)
+                dc1394_log_warning("juju: Expected response len %d, got %d",
+                        resp.num_quads, resp.actual_num_quads);
+            return DC1394_SUCCESS;
+        }
+
+        if (resp.rcode != RCODE_BUSY
+                && resp.rcode != RCODE_CONFLICT_ERROR
+                && resp.rcode != RCODE_GENERATION) {
+            dc1394_log_debug ("juju: Response error, rcode 0x%x",
+                    resp.rcode);
+            return DC1394_FAILURE;
+        }
+
+        /* retry if we get any of the rcodes listed above */
+        dc1394_log_debug("juju: retry rcode 0x%x tcode 0x%x offset %"PRIx64,
+                resp.rcode, tcode, offset);
         usleep (500);
         retry--;
     }
 
-    dc1394_log_error("Max retries for tcode 0x%x, offset %"PRIx64,
+    dc1394_log_error("juju: Max retries for tcode 0x%x, offset %"PRIx64,
             tcode, offset);
     return DC1394_FAILURE;
 }
@@ -365,6 +479,99 @@ dc1394_juju_camera_get_node(platform_camera_t *cam, uint32_t *node,
     return DC1394_SUCCESS;
 }
 
+dc1394error_t
+juju_iso_allocate (platform_camera_t *cam, uint64_t allowed_channels,
+        int bandwidth_units, juju_iso_info **out)
+{
+    juju_iso_info *res = add_iso_resource (cam);
+    if (!res)
+        return DC1394_MEMORY_ALLOCATION_FAILURE;
+
+    struct fw_cdev_allocate_iso_resource request = {
+        .closure = ptr_to_u64(res),
+        .channels = allowed_channels,
+        .bandwidth = bandwidth_units,
+    };
+    if (ioctl (cam->fd, FW_CDEV_IOC_ALLOCATE_ISO_RESOURCE, &request) < 0) {
+        remove_iso_resource (cam, res);
+        if (errno == EINVAL)
+            return DC1394_FUNCTION_NOT_SUPPORTED;
+        return DC1394_FAILURE;
+    }
+    res->handle = request.handle;
+    dc1394_log_debug ("juju: Attempting iso allocation: "
+            "handle %d, chan 0x%"PRIx64", bw %d", request.handle,
+            request.channels, request.bandwidth);
+
+    int ret;
+    while (!res->got_alloc)
+        if ((ret = juju_handle_event (cam)) < 0)
+            return ret;
+
+    if (allowed_channels && res->channel < 0) {
+        remove_iso_resource (cam, res);
+        return DC1394_NO_ISO_CHANNEL;
+    }
+    if (bandwidth_units && !res->bandwidth) {
+        remove_iso_resource (cam, res);
+        return DC1394_NO_BANDWIDTH;
+    }
+
+    if (out)
+        *out = res;
+    return DC1394_SUCCESS;
+}
+
+dc1394error_t
+juju_iso_deallocate (platform_camera_t *cam, juju_iso_info * res)
+{
+    if (res->got_dealloc) {
+        dc1394_log_warning ("juju: ISO resource was already released");
+        remove_iso_resource (cam, res);
+        return DC1394_SUCCESS;
+    }
+
+    struct fw_cdev_allocate_iso_resource request = {
+        .handle = res->handle,
+    };
+    if (ioctl (cam->fd, FW_CDEV_IOC_DEALLOCATE_ISO_RESOURCE, &request) < 0) {
+        if (errno == EINVAL)
+            return DC1394_FUNCTION_NOT_SUPPORTED;
+        return DC1394_FAILURE;
+    }
+
+    int ret;
+    while (!res->got_dealloc)
+        if ((ret = juju_handle_event (cam)) < 0)
+            return ret;
+
+    remove_iso_resource (cam, res);
+    return DC1394_SUCCESS;
+}
+
+#if 0
+static dc1394error_t
+dc1394_juju_iso_allocate_channel(platform_camera_t *cam, uint64_t allowed,
+            int *out_channel)
+{
+}
+
+static dc1394error_t
+dc1394_juju_iso_release_channel(platform_camera_t *cam, int channel)
+{
+}
+
+static dc1394error_t
+dc1394_juju_iso_allocate_bandwidth(platform_camera_t *cam, int units)
+{
+}
+
+static dc1394error_t
+dc1394_juju_iso_release_bandwidth(platform_camera_t *cam, int units)
+{
+}
+#endif
+
 static platform_dispatch_t
 juju_dispatch = {
     .platform_new = dc1394_juju_new,
@@ -390,6 +597,8 @@ juju_dispatch = {
     .capture_dequeue = dc1394_juju_capture_dequeue,
     .capture_enqueue = dc1394_juju_capture_enqueue,
     .capture_get_fileno = dc1394_juju_capture_get_fileno,
+
+    //.iso_allocate_channel = dc1394_juju_iso_allocate_channel,
 };
 
 void

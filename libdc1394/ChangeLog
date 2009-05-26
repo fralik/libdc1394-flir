@@ -1,11 +1,16 @@
+2009-05-25  David Moore  <dcm@acm.org>
+	* Added automatic iso allocation to juju using the new support
+	  in kernel 2.6.30.  Older kernels fall back to guessing a good
+	  channel number.
+
 2009-04-14 Peter Antoniac http://sourceforge.net/users/theseinfeld
 	* SVN 594: Fixed the bug from error reporting [LP bug #360520]
 		   https://bugs.edge.launchpad.net/libdc1394/+bug/360520 for
 		   dc1394_deinterlace_stereo_frames return wrong value on
 		   success
 	* SVN 593: Documentation: added missing manual files for the examples
-	directory. These files existed in the packaging but were missing in 
-	our upstream.
+		   directory. These files existed in the packaging but were
+		   missing in our upstream.
 
 2009-04-12 Damien Douxchamps http://damien.douxchamps.net/
 	* SVN 592: [IIDC 1.32] support 32 Format7 video modes

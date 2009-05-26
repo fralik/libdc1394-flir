@@ -34,11 +34,22 @@ struct _platform_t {
     int dummy;
 };
 
+typedef struct _juju_iso_info {
+    int got_alloc;
+    int got_dealloc;
+    int handle;
+    int channel;
+    int bandwidth;
+    struct _juju_iso_info *next;
+} juju_iso_info;
+
 struct _platform_camera_t {
     int fd;
     char filename[32];
     int generation;
     uint32_t node_id;
+    int max_response_quads;
+    juju_iso_info *iso_resources;
 
     dc1394camera_t * camera;
 
@@ -55,6 +66,7 @@ struct _platform_camera_t {
     unsigned int iso_channel;
     int capture_is_set;
     int iso_auto_started;
+    juju_iso_info *capture_iso_resource;
 };
 
 
@@ -63,9 +75,6 @@ struct juju_frame {
     size_t                         size;
     struct fw_cdev_iso_packet        *packets;
 };
-
-dc1394error_t
-_juju_iterate(dc1394camera_t *camera);
 
 dc1394error_t
 dc1394_juju_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
@@ -84,5 +93,12 @@ dc1394_juju_capture_enqueue (platform_camera_t * craw,
 
 int
 dc1394_juju_capture_get_fileno (platform_camera_t * craw);
+
+dc1394error_t
+juju_iso_allocate (platform_camera_t *cam, uint64_t allowed_channels,
+        int bandwidth_units, juju_iso_info **out);
+
+dc1394error_t
+juju_iso_deallocate (platform_camera_t *cam, juju_iso_info * res);
 
 #endif

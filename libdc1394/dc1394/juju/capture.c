@@ -132,22 +132,41 @@ dc1394_juju_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
         }
     }
 
-    // allocate channel/bandwidth if requested
-    if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
-        dc1394_log_warning ("iso allocation not implemented yet for "
-                "juju drivers, using channel 0...");
-        if (dc1394_video_set_iso_channel (camera, 0) != DC1394_SUCCESS)
-            return DC1394_NO_ISO_CHANNEL;
-    }
-
     if (capture_basic_setup(camera, &proto) != DC1394_SUCCESS) {
         dc1394_log_error("basic setup failed");
         return DC1394_FAILURE;
     }
 
+    if (flags & (DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC |
+                DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC)) {
+        uint64_t channels_allowed = 0;
+        unsigned int bandwidth_units = 0;
+        int channel;
+        if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC)
+            channels_allowed = 0xffff;
+        if (flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC)
+            dc1394_video_get_bandwidth_usage (camera, &bandwidth_units);
+        err = juju_iso_allocate (craw, channels_allowed,
+                bandwidth_units, &craw->capture_iso_resource);
+        if (err == DC1394_SUCCESS) {
+            channel = craw->capture_iso_resource->channel;
+        } else if (err == DC1394_FUNCTION_NOT_SUPPORTED) {
+            channel = craw->node_id & 0x3f;
+            dc1394_log_warning ("iso allocation not available in this kernel, "
+                    "using channel %d...", channel);
+        } else {
+            dc1394_log_error ("juju: Failed to allocate iso resources");
+            return err;
+        }
+
+        if (dc1394_video_set_iso_channel (camera, channel) != DC1394_SUCCESS)
+            return DC1394_NO_ISO_CHANNEL;
+    }
+
     if (dc1394_video_get_iso_channel (camera, &craw->iso_channel)
             != DC1394_SUCCESS)
         return DC1394_FAILURE;
+    dc1394_log_debug ("juju: Receiving from iso channel %d", craw->iso_channel);
 
     craw->iso_fd = open(craw->filename, O_RDWR);
     if (craw->iso_fd < 0) {
@@ -256,6 +275,12 @@ dc1394_juju_capture_stop(platform_camera_t *craw)
     free (craw->frames);
     craw->frames = NULL;
     craw->capture_is_set = 0;
+
+    if (craw->capture_iso_resource) {
+        if (juju_iso_deallocate (craw, craw->capture_iso_resource) < 0)
+            dc1394_log_warning ("juju: Failed to deallocate iso resources");
+        craw->capture_iso_resource = NULL;
+    }
 
     // stop ISO if it was started automatically
     if (craw->iso_auto_started>0) {
