@@ -227,11 +227,18 @@ dc1394_juju_camera_new (platform_t * p, platform_device_t * device, uint32_t uni
         return NULL;
     }
 
+    dc1394_log_debug("Juju: kernel API has version %d", get_info.version);
+
     camera = calloc (1, sizeof (platform_camera_t));
     camera->fd = fd;
     camera->generation = reset.generation;
     camera->node_id = reset.node_id;
     strcpy (camera->filename, device->filename);
+
+    camera->header_size = 4;
+    if (get_info.version >= 2)
+        camera->header_size = 8;
+
     return camera;
 }
 

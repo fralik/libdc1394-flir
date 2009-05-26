@@ -50,6 +50,7 @@ struct _platform_camera_t {
     uint32_t node_id;
     int max_response_quads;
     juju_iso_info *iso_resources;
+    uint8_t header_size;
 
     dc1394camera_t * camera;
 
@@ -61,7 +62,6 @@ struct _platform_camera_t {
     uint32_t flags;
     unsigned int num_frames;
     int current;
-    int ready_frames;
 
     unsigned int iso_channel;
     int capture_is_set;

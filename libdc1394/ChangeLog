@@ -1,4 +1,5 @@
 2009-05-25  David Moore  <dcm@acm.org>
+	* Added timestamp support to the juju platform.
 	* Added automatic iso allocation to juju using the new support
 	  in kernel 2.6.30.  Older kernels fall back to guessing a good
 	  channel number.

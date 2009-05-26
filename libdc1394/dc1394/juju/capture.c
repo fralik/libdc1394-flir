@@ -62,7 +62,7 @@ init_frame(platform_camera_t *craw, int index, dc1394video_frame_t *proto)
     for (i = 0; i < count; i++) {
         if (total < N)
             N = total;
-        f->packets[i].control = FW_CDEV_ISO_HEADER_LENGTH(4 * N)
+        f->packets[i].control = FW_CDEV_ISO_HEADER_LENGTH(craw->header_size * N)
             | FW_CDEV_ISO_PAYLOAD_LENGTH(proto->packet_size * N);
         total -= N;
     }
@@ -175,7 +175,7 @@ dc1394_juju_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     }
 
     create.type = FW_CDEV_ISO_CONTEXT_RECEIVE;
-    create.header_size = 4;
+    create.header_size = craw->header_size;
     create.channel = craw->iso_channel;
     create.speed = SCODE_400;
     err = DC1394_IOCTL_FAILURE;
@@ -188,7 +188,6 @@ dc1394_juju_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
 
     craw->num_frames = num_dma_buffers;
     craw->current = -1;
-    craw->ready_frames = 0;
     craw->buffer_size = proto.total_bytes * num_dma_buffers;
     craw->buffer =
         mmap(NULL, craw->buffer_size, PROT_READ, MAP_SHARED, craw->iso_fd, 0);
@@ -292,6 +291,14 @@ dc1394_juju_capture_stop(platform_camera_t *craw)
     return DC1394_SUCCESS;
 }
 
+static uint32_t
+bus_time_to_usec (uint32_t bus)
+{
+    uint32_t sec      = (bus & 0xe000000) >> 25;
+    uint32_t cycles   = (bus & 0x1fff000) >> 12;
+    uint32_t subcycle = (bus & 0x0000fff);
+    return sec * 1000000 + cycles * 125 + subcycle * 125 / 3072;
+}
 
 dc1394error_t
 dc1394_juju_capture_dequeue (platform_camera_t * craw,
@@ -299,10 +306,11 @@ dc1394_juju_capture_dequeue (platform_camera_t * craw,
 {
     struct pollfd fds[1];
     struct juju_frame *f;
-    int err, timeout, len;
+    int err, len;
+    struct fw_cdev_get_cycle_timer tm;
     struct {
         struct fw_cdev_event_iso_interrupt i;
-        __u32 headers[256];
+        __u32 headers[craw->frames[0].frame.packets_per_frame*2 + 16];
     } iso;
 
     if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
@@ -314,19 +322,11 @@ dc1394_juju_capture_dequeue (platform_camera_t * craw,
     fds[0].fd = craw->iso_fd;
     fds[0].events = POLLIN;
 
-    switch (policy) {
-    case DC1394_CAPTURE_POLICY_POLL:
-        timeout = 0;
-        break;
-    case DC1394_CAPTURE_POLICY_WAIT:
-    default:
-        timeout = -1;
-        break;
-    }
-
-    while (craw->ready_frames == 0) {
-        err = poll(fds, 1, timeout);
+    while (1) {
+        err = poll(fds, 1, (policy == DC1394_CAPTURE_POLICY_POLL) ? 0 : -1);
         if (err < 0) {
+            if (errno == EINTR)
+                continue;
             dc1394_log_error("poll() failed for device %s.", craw->filename);
             return DC1394_FAILURE;
         } else if (err == 0) {
@@ -335,20 +335,51 @@ dc1394_juju_capture_dequeue (platform_camera_t * craw,
 
         len = read (craw->iso_fd, &iso, sizeof iso);
         if (len < 0) {
-            dc1394_log_error("failed to read a response: %m");
+            dc1394_log_error("Juju: dequeue failed to read a response: %m");
             return DC1394_FAILURE;
         }
 
         if (iso.i.type == FW_CDEV_EVENT_ISO_INTERRUPT)
-            craw->ready_frames++;
+            break;
     }
 
     craw->current = (craw->current + 1) % craw->num_frames;
     f = craw->frames + craw->current;
-    craw->ready_frames--;
 
-    f->frame.frames_behind = craw->ready_frames;
+    dc1394_log_debug("Juju: got iso event, cycle 0x%04x, header_len %d",
+            iso.i.cycle, iso.i.header_length);
+
+    f->frame.frames_behind = 0;
     f->frame.timestamp = 0;
+
+    /* Compute timestamp */
+    if (ioctl(craw->iso_fd, FW_CDEV_IOC_GET_CYCLE_TIMER, &tm) == 0) {
+        /* Current bus time in usec as retrieved by the ioctl */
+        uint32_t bus_time = bus_time_to_usec(tm.cycle_timer);
+        /* Bus time of the interrupt packet (end of frame) */
+        uint32_t dma_time = iso.i.cycle;
+        /* Estimated usec between start of frame and end of frame */
+        uint32_t diff =
+            (craw->frames[0].frame.packets_per_frame - 1) * 125;
+
+        /* If per-packet timestamps are available in the headers use them */
+        if (craw->header_size >= 8) {
+            uint8_t * b = (uint8_t *)(iso.i.header + 1);
+            /* Bus time of the first frame in the packet */
+            dma_time = (b[2] << 8) | b[3];
+            dc1394_log_debug("Juju: using cycle 0x%04x (diff was %d)",
+                    dma_time, diff);
+            diff = 0;
+        }
+        /* Convert to usec */
+        dma_time = bus_time_to_usec(dma_time << 12);
+
+        /* Amount to subtract from local_time to get frame start time */
+        diff += (bus_time + 8000000 - dma_time) % 8000000;
+        dc1394_log_debug("Juju: frame latency %d us", diff);
+
+        f->frame.timestamp = tm.local_time - diff;
+    }
 
     *frame_return = &f->frame;
 
