@@ -486,6 +486,26 @@ dc1394_juju_camera_get_node(platform_camera_t *cam, uint32_t *node,
     return DC1394_SUCCESS;
 }
 
+static dc1394error_t
+dc1394_juju_read_cycle_timer (platform_camera_t * cam,
+        uint32_t * cycle_timer, uint64_t * local_time)
+{
+    struct fw_cdev_get_cycle_timer tm;
+
+    if (ioctl(cam->fd, FW_CDEV_IOC_GET_CYCLE_TIMER, &tm) < 0) {
+        if (errno == EINVAL)
+            return DC1394_FUNCTION_NOT_SUPPORTED;
+        dc1394_log_error("Juju: get_cycle_timer ioctl failed: %m");
+        return DC1394_FAILURE;
+    }
+
+    if (cycle_timer)
+        *cycle_timer = tm.cycle_timer;
+    if (local_time)
+        *local_time = tm.local_time;
+    return DC1394_SUCCESS;
+}
+
 dc1394error_t
 juju_iso_allocate (platform_camera_t *cam, uint64_t allowed_channels,
         int bandwidth_units, juju_iso_info **out)
@@ -598,6 +618,7 @@ juju_dispatch = {
     .reset_bus = dc1394_juju_reset_bus,
     .camera_print_info = dc1394_juju_camera_print_info,
     .camera_get_node = dc1394_juju_camera_get_node,
+    .read_cycle_timer = dc1394_juju_read_cycle_timer,
 
     .capture_setup = dc1394_juju_capture_setup,
     .capture_stop = dc1394_juju_capture_stop,

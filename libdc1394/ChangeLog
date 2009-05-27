@@ -1,3 +1,6 @@
+2009-05-26  David Moore  <dcm@acm.org>
+	* Implemented dc1394_read_cycle_timer function for Juju.
+
 2009-05-25  David Moore  <dcm@acm.org>
 	* Added timestamp support to the juju platform.
 	* Added automatic iso allocation to juju using the new support
