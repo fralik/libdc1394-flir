@@ -51,6 +51,7 @@ struct _platform_camera_t {
     int max_response_quads;
     juju_iso_info *iso_resources;
     uint8_t header_size;
+    uint8_t broadcast_enabled;
 
     dc1394camera_t * camera;
 

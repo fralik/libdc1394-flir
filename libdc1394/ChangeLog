@@ -1,3 +1,7 @@
+2009-05-29  David Moore  <dcm@acm.org>
+	* Implemented dc1394_camera_set_broadcast and
+	  dc1394_camera_get_broadcast for Juju.  Requires kernel 2.6.30.
+
 2009-05-26  David Moore  <dcm@acm.org>
 	* Implemented dc1394_read_cycle_timer function for Juju.
 

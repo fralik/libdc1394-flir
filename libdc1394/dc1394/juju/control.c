@@ -398,7 +398,13 @@ do_transaction(platform_camera_t * cam, int tcode, uint64_t offset,
         int retval;
 
         request.generation = cam->generation;
-        len = ioctl (cam->fd, FW_CDEV_IOC_SEND_REQUEST, &request);
+
+        int iotype = FW_CDEV_IOC_SEND_REQUEST;
+        if (cam->broadcast_enabled && (tcode == TCODE_WRITE_BLOCK_REQUEST ||
+                    tcode == TCODE_WRITE_QUADLET_REQUEST))
+            iotype = FW_CDEV_IOC_SEND_BROADCAST_REQUEST;
+
+        len = ioctl (cam->fd, iotype, &request);
         if (len < 0) {
             dc1394_log_error("juju: Send request failed: %m");
             return DC1394_FAILURE;
@@ -503,6 +509,45 @@ dc1394_juju_read_cycle_timer (platform_camera_t * cam,
         *cycle_timer = tm.cycle_timer;
     if (local_time)
         *local_time = tm.local_time;
+    return DC1394_SUCCESS;
+}
+
+static dc1394error_t
+dc1394_juju_set_broadcast(platform_camera_t * craw, dc1394bool_t pwr)
+{
+    if (pwr == DC1394_FALSE) {
+        craw->broadcast_enabled = 0;
+        return DC1394_SUCCESS;
+    }
+
+    if (craw->broadcast_enabled)
+        return DC1394_SUCCESS;
+
+    /* Test if the ioctl is available by sending a broadcast write to
+     * offset 0 that the kernel will always reject with EACCES if it is. */
+    struct fw_cdev_send_request request;
+    memset(&request, 0, sizeof(struct fw_cdev_send_request));
+    request.tcode = TCODE_WRITE_BLOCK_REQUEST;
+
+    if (ioctl(craw->fd, FW_CDEV_IOC_SEND_BROADCAST_REQUEST, &request) != -1) {
+        dc1394_log_error("Juju: broadcast test succeeded unexpectedly\n");
+        return DC1394_FUNCTION_NOT_SUPPORTED;
+    }
+    if (errno == EINVAL)
+        return DC1394_FUNCTION_NOT_SUPPORTED;
+
+    craw->broadcast_enabled = 1;
+    return DC1394_SUCCESS;
+}
+
+static dc1394error_t
+dc1394_juju_get_broadcast(platform_camera_t * craw, dc1394bool_t *pwr)
+{
+    if (craw->broadcast_enabled)
+        *pwr = DC1394_TRUE;
+    else
+        *pwr = DC1394_FALSE;
+
     return DC1394_SUCCESS;
 }
 
@@ -619,6 +664,8 @@ juju_dispatch = {
     .camera_print_info = dc1394_juju_camera_print_info,
     .camera_get_node = dc1394_juju_camera_get_node,
     .read_cycle_timer = dc1394_juju_read_cycle_timer,
+    .set_broadcast = dc1394_juju_set_broadcast,
+    .get_broadcast = dc1394_juju_get_broadcast,
 
     .capture_setup = dc1394_juju_capture_setup,
     .capture_stop = dc1394_juju_capture_stop,
