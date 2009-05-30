@@ -254,6 +254,11 @@ capture_basic_setup (dc1394camera_t * camera, dc1394video_frame_t * frame)
         frame->color_filter = 0;
     }
 
+    dc1394_log_debug("Mode %d, %dx%d, packet size %d, "
+            "packets per frame %d\n",
+            frame->video_mode, frame->size[0], frame->size[1],
+            frame->packet_size, frame->packets_per_frame);
+
     if ((frame->packet_size <=0 )||
         (frame->packets_per_frame <= 0)) {
         return DC1394_FAILURE;
