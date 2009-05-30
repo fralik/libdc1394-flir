@@ -111,7 +111,8 @@ dc1394_juju_get_device_list (platform_t * p)
         struct fw_cdev_get_info get_info;
         struct fw_cdev_event_bus_reset reset;
 
-        if (strncmp(de->d_name, "fw", 2) != 0)
+        if (strncmp(de->d_name, "fw", 2) != 0 ||
+                de->d_name[2] < '0' || de->d_name[2] > '9')
             continue;
 
         snprintf(filename, sizeof filename, "/dev/%s", de->d_name);
