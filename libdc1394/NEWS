@@ -1,6 +1,24 @@
 Release information and news:
 -----------------------------
 
+-- 2.1.1:
+   - New features on Juju platform:
+       - Added timestamp support and implemented dc1394_read_cycle_timer
+         function (requires kernel 2.6.24+).
+       - Implemented dc1394_camera_set_broadcast, dc1394_camera_get_broadcast,
+         and automatic isochronous channel/bandwidth allocation (requires
+         kernel 2.6.30+).
+   - New features for all platforms:
+       - Added new Format7 modes for IIDC 1.32
+   - Added missing documentation
+   - Bug fixes:
+       - Fix missing frames on Juju when host controller is OHCI 1.0
+         and packets-per-frame is not a multiple of 8.
+       - Fix wrong return value of dc1394_deinterlace_stereo_frames
+       - Fixed bad initializations and build options (from Mike Lundy)
+       - More robust /dev/fw* detection (from Stefan Richter)
+       - Fixed memory allocation in AdaptBuffer functions (from Damien Dusha)
+
 -- 2.1.0:
    - New features:
        - USB support for Point Grey Chameleon and Firefly MV
