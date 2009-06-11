@@ -1,6 +1,10 @@
 Release information and news:
 -----------------------------
 
+-- 2.1.2:
+   - Fix broken ABI caused by new Format7 modes in release 2.1.1.
+     Reverted for now.
+
 -- 2.1.1:
    - New features on Juju platform:
        - Added timestamp support and implemented dc1394_read_cycle_timer
