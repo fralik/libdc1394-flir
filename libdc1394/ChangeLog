@@ -1,3 +1,8 @@
+2009-06-10  David Moore  <dcm@acm.org>
+	* Revert 5cf24a2051fc77b35dacb6bf33bc500acd533488,
+	  "support for 32 Format7 video modes" since it breaks v2 ABI.
+	  Will reintroduce later in a backwards compatible way.
+
 2009-05-31  David Moore  <dcm@acm.org>
 	* Update NEWS, AUTHORS and version for release 2.1.1.
 
