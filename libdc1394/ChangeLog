@@ -1,3 +1,6 @@
+2009-09-19  David Moore  <dcm@acm.org>
+	* Fix for usb writes larger than 1 quadlet found by Shane Anderson.
+
 2009-06-10  David Moore  <dcm@acm.org>
 	* Update NEWS and version for release 2.1.2.
 	* Revert 5cf24a2051fc77b35dacb6bf33bc500acd533488,

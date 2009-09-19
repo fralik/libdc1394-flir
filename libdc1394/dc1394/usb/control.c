@@ -200,10 +200,10 @@ do_write (libusb_device_handle * handle, uint64_t address,
     int i;
     /* Convert from host-endian to little-endian */
     for (i = 0; i < num_quads; i++) {
-        buf[4*i]   = quads[0] & 0xff;
-        buf[4*i+1] = (quads[0] >> 8) & 0xff;
-        buf[4*i+2] = (quads[0] >> 16) & 0xff;
-        buf[4*i+3] = (quads[0] >> 24) & 0xff;
+        buf[4*i]   = quads[i] & 0xff;
+        buf[4*i+1] = (quads[i] >> 8) & 0xff;
+        buf[4*i+2] = (quads[i] >> 16) & 0xff;
+        buf[4*i+3] = (quads[i] >> 24) & 0xff;
     }
     /* IEEE 1394 address writes are mapped to USB control transfers as
      * shown here. */
