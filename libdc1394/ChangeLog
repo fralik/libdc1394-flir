@@ -1,3 +1,6 @@
+2010-04-18  David Moore  <david.moore@gmail.com>
+	* Change dequeue/enqueue to return error code if usb transfer has error.
+
 2010-04-17  David Moore  <david.moore@gmail.com>
 	* Updated firewire-{cdev,constants}.h to latest version and MIT license.
 	* On Mac OS, add needed frameworks to link line (found by Holger Rapp)

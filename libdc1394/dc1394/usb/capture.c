@@ -41,15 +41,18 @@ callback (struct libusb_transfer * transfer)
         return;
     }
 
-    if (transfer->status != LIBUSB_TRANSFER_COMPLETED)
-        dc1394_log_error ("usb: Bulk transfer %d failed with code %d",
-                f->frame.id, transfer->status);
-
     dc1394_log_debug ("usb: Bulk transfer %d complete, %d of %d bytes",
             f->frame.id, transfer->actual_length, transfer->length);
     int status = BUFFER_FILLED;
     if (transfer->actual_length < transfer->length)
         status = BUFFER_CORRUPT;
+
+    if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
+        dc1394_log_error ("usb: Bulk transfer %d failed with code %d",
+                f->frame.id, transfer->status);
+        status = BUFFER_ERROR;
+    }
+
     pthread_mutex_lock (&craw->mutex);
     f->status = status;
     craw->frames_ready++;
@@ -131,6 +134,7 @@ dc1394_usb_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     craw->num_frames = num_dma_buffers;
     craw->current = -1;
     craw->frames_ready = 0;
+    craw->queue_broken = 0;
     craw->buffer_size = proto.total_bytes * num_dma_buffers;
     craw->buffer = malloc (craw->buffer_size);
     if (craw->buffer == NULL) {
@@ -311,15 +315,18 @@ dc1394_usb_capture_dequeue (platform_camera_t * craw,
         pthread_mutex_lock (&craw->mutex);
         status = f->status;
         pthread_mutex_unlock (&craw->mutex);
-        if (status != BUFFER_FILLED && status != BUFFER_CORRUPT)
+        if (status == BUFFER_EMPTY)
             return DC1394_SUCCESS;
     }
+
+    if (craw->queue_broken)
+        return DC1394_FAILURE;
 
     char ch;
     read (craw->notify_pipe[0], &ch, 1);
 
     pthread_mutex_lock (&craw->mutex);
-    if (f->status != BUFFER_FILLED && f->status != BUFFER_CORRUPT) {
+    if (f->status == BUFFER_EMPTY) {
         dc1394_log_error ("usb: Expected filled buffer");
         pthread_mutex_unlock (&craw->mutex);
         return DC1394_FAILURE;
@@ -331,6 +338,9 @@ dc1394_usb_capture_dequeue (platform_camera_t * craw,
     craw->current = next;
 
     *frame_return = &f->frame;
+
+    if (f->status == BUFFER_ERROR)
+        return DC1394_FAILURE;
 
     return DC1394_SUCCESS;
 }
@@ -347,13 +357,16 @@ dc1394_usb_capture_enqueue (platform_camera_t * craw,
         return DC1394_INVALID_ARGUMENT_VALUE;
     }
 
-    if (f->status != BUFFER_FILLED && f->status != BUFFER_CORRUPT) {
+    if (f->status == BUFFER_EMPTY) {
         dc1394_log_error ("usb: Frame is not enqueuable");
         return DC1394_FAILURE;
     }
 
     f->status = BUFFER_EMPTY;
-    libusb_submit_transfer (f->transfer);
+    if (libusb_submit_transfer (f->transfer) != LIBUSB_SUCCESS) {
+        craw->queue_broken = 1;
+        return DC1394_FAILURE;
+    }
 
     return DC1394_SUCCESS;
 }
@@ -373,7 +386,7 @@ dc1394_usb_capture_is_frame_corrupt (platform_camera_t * craw,
 {
     struct usb_frame * f = (struct usb_frame *) frame;
 
-    if (f->status == BUFFER_CORRUPT)
+    if (f->status == BUFFER_CORRUPT || f->status == BUFFER_ERROR)
         return DC1394_TRUE;
 
     return DC1394_FALSE;

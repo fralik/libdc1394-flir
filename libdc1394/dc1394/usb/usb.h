@@ -44,6 +44,7 @@ struct _platform_camera_t {
     unsigned int num_frames;
     int current;
     int frames_ready;
+    int queue_broken;
 
     uint8_t bus;
     uint8_t addr;
@@ -64,6 +65,7 @@ typedef enum {
     BUFFER_EMPTY,
     BUFFER_FILLED,
     BUFFER_CORRUPT,
+    BUFFER_ERROR,
 } usb_frame_status;
 
 struct usb_frame {
