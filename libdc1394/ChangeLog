@@ -1,3 +1,7 @@
+2010-04-17  David Moore  <david.moore@gmail.com>
+
+	* On Mac OS, add needed frameworks to link line (found by Holger Rapp)
+
 2009-09-19  David Moore  <dcm@acm.org>
 	* Fix for usb writes larger than 1 quadlet found by Shane Anderson.
 
