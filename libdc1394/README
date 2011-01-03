@@ -57,7 +57,7 @@ make
 make install
 
 Obviously, you need to be root when executing the last statement if you wish to
-do a system-wide installation. To compile and install libdc1394 from an SVN
+do a system-wide installation. To compile and install libdc1394 from a git
 source tree do the following:
 
 autoreconf -i -s
@@ -65,11 +65,10 @@ autoreconf -i -s
 make
 make install
 
-Details on getting a source tree from the SVN repository is beyond the scope of
+Details on getting a source tree from the git repository is beyond the scope of
 this small readme but the following command should give you the latest trunk:
 
-svn co https://libdc1394.svn.sourceforge.net/svnroot/libdc1394/trunk/libdc1394/
-
+git clone git://libdc1394.git.sourceforge.net/gitroot/libdc1394/libdc1394
 
 --
 2000-01-13  Gord Peters

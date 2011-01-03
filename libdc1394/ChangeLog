@@ -1,5 +1,6 @@
 2011-01-02  David Moore  <david.moore@gmail.com>
 	* dc1394/conversions.h: Fix typo in DC1394_STEREO_METHOD_MIN
+	* Update NEWS, README, AUTHORS and version for release 2.1.3.
 
 2010-04-18  David Moore  <david.moore@gmail.com>
 	* Change dequeue/enqueue to return error code if usb transfer has error.

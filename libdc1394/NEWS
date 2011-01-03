@@ -1,6 +1,14 @@
 Release information and news:
 -----------------------------
 
+-- 2.1.3:
+   - Bug fixes:
+       - Fix for usb writes larger than 1 quadlet
+       - On MAC OS, add needed frameworks to link line
+       - Update firewire-{cdev,constants}.h to latest version and license
+       - Change dequeue/enqueue to return error code if usb transfer has error
+       - dc1394/conversions.h: Fix typo in DC1394_STEREO_METHOD_MIN define
+
 -- 2.1.2:
    - Fix broken ABI caused by new Format7 modes in release 2.1.1.
      Reverted for now.
