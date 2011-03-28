@@ -8,7 +8,9 @@ A = grab_gray_image grab_partial_image grab_color_image \
 B = dc1394_reset_bus
 
 if HAVE_LINUX
+if HAVE_VIDEODEV
 B += dc1394_vloopback
+endif
 if HAVE_XV
 A += dc1394_multiview
 endif

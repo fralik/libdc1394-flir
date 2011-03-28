@@ -1,3 +1,6 @@
+2011-03-27  David Moore  <david.moore@gmail.com>
+	* Conditionally compile dc1394_vloopback only when linux/video.h exists
+
 2011-01-02  David Moore  <david.moore@gmail.com>
 	* dc1394/conversions.h: Fix typo in DC1394_STEREO_METHOD_MIN
 	* Update NEWS, README, AUTHORS and version for release 2.1.3.

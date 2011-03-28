@@ -75,6 +75,9 @@ AM_CONDITIONAL(HAVE_WINDOWS, test x$have_windows = xtrue)
 AM_CONDITIONAL(HAVE_LIBRAW1394, test x$libraw1394 = xtrue)
 AM_CONDITIONAL(HAVE_LIBUSB, test "x$LIBUSB_LIBS" != "x")
 
+AC_CHECK_HEADER([linux/videodev.h], [have_videodev=true])
+AM_CONDITIONAL(HAVE_VIDEODEV, test x$have_videodev = xtrue)
+
 AC_ARG_ENABLE([examples], [AS_HELP_STRING([--disable-examples], [don't build example programs])], [build_examples=$enableval], [build_examples=true])
 
 AM_CONDITIONAL(MAKE_EXAMPLES, test x$build_examples = xtrue)
