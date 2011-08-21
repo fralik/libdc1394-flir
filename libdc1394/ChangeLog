@@ -1,6 +1,7 @@
 2011-08-21  Damien Douxchamps  http://damien.douxchamps.net/
 	* Fix SF patch 3298986 (downsample bayer function error)
 	* Fix usb_init function name (-> dc1394_usb_init)
+	* Fix missing "#ifdef __cplusplus". (SF patch 2655785)
 
 2011-03-27  David Moore  <david.moore@gmail.com>
 	* Conditionally compile dc1394_vloopback only when linux/video.h exists
