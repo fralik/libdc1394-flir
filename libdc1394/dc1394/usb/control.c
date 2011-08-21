@@ -378,7 +378,7 @@ usb_dispatch = {
 };
 
 void
-usb_init(dc1394_t * d)
+dc1394_usb_init(dc1394_t * d)
 {
     register_platform (d, &usb_dispatch, "usb");
 }

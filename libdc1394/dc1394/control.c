@@ -1955,7 +1955,7 @@ dc1394_new (void)
     windows_init (d);
 #endif
 #ifdef HAVE_LIBUSB
-    usb_init (d);
+    dc1394_usb_init (d);
 #endif
 
     int i;
