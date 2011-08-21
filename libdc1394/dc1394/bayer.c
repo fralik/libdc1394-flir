@@ -536,7 +536,7 @@ dc1394_bayer_Downsample(const uint8_t *restrict bayer, uint8_t *restrict rgb, in
             for (j = 0; j < sx; j += 2) {
                 tmp = ((bayer[i + j] + bayer[i + sx + j + 1]) >> 1);
                 CLIP(tmp, outG[((i >> 2) + (j >> 1)) * 3]);
-                tmp = bayer[i + sx + j + 1];
+                tmp = bayer[i + j + 1];
                 CLIP(tmp, outR[((i >> 2) + (j >> 1)) * 3]);
                 tmp = bayer[i + sx + j];
                 CLIP(tmp, outB[((i >> 2) + (j >> 1)) * 3]);

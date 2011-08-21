@@ -1,3 +1,6 @@
+2011-08-21  Damien Douxchamps  http://damien.douxchamps.net/
+	* Fix SF patch 3298986 (downsample bayer function error)
+
 2011-03-27  David Moore  <david.moore@gmail.com>
 	* Conditionally compile dc1394_vloopback only when linux/video.h exists
 
