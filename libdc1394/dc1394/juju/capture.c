@@ -190,7 +190,7 @@ dc1394_juju_capture_setup(platform_camera_t *craw, uint32_t num_dma_buffers,
     craw->current = -1;
     craw->buffer_size = proto.total_bytes * num_dma_buffers;
     craw->buffer =
-        mmap(NULL, craw->buffer_size, PROT_READ, MAP_SHARED, craw->iso_fd, 0);
+        mmap(NULL, craw->buffer_size, PROT_READ | PROT_WRITE , MAP_SHARED, craw->iso_fd, 0);
     err = DC1394_IOCTL_FAILURE;
     if (craw->buffer == MAP_FAILED)
         goto error_fd;

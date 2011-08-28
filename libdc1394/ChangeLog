@@ -1,3 +1,6 @@
+2011-08-28  Damien Douxchamps  http://damien.douxchamps.net/
+	* Add PROT_WRITE for DMA buffers under juju.
+
 2011-08-21  Damien Douxchamps  http://damien.douxchamps.net/
 	* Fix SF patch 3298986 (downsample bayer function error)
 	* Fix usb_init function name (-> dc1394_usb_init)
