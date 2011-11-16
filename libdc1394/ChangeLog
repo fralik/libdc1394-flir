@@ -1,3 +1,6 @@
+2011-11-15  David Moore  <david.moore@gmail.com>
+	* Update NEWS and version for release 2.1.4.
+
 2011-08-28  Damien Douxchamps  http://damien.douxchamps.net/
 	* Add PROT_WRITE for DMA buffers under juju.
 

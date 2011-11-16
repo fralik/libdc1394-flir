@@ -1,6 +1,13 @@
 Release information and news:
 -----------------------------
 
+-- 2.1.4
+   - Bug fixes:
+       - Allow image buffers to be editable by client apps on Linux juju
+       - Correct error in downsample bayer function
+       - Rename poorly named externally-visible symbol usb_init
+       - Fix misc. compilation errors
+
 -- 2.1.3:
    - Bug fixes:
        - Fix for usb writes larger than 1 quadlet
