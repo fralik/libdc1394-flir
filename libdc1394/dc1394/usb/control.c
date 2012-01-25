@@ -69,6 +69,8 @@ static struct _vendor_product_t {
 } usb_products[] = {
     { 0x1e10, 0x2000 }, // Point Grey Firefly MV Color
     { 0x1e10, 0x2001 }, // Point Grey Firefly MV Mono
+    { 0x1e10, 0x2002 }, // Point Grey High Res Firefly MV Color
+    { 0x1e10, 0x2003 }, // Point Grey High Res Firefly MV Mono
     { 0x1e10, 0x2004 }, // Point Grey Chameleon Color
     { 0x1e10, 0x2005 }, // Point Grey Chameleon Mono
     { 0, 0 },
