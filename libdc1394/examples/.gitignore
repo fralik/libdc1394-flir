@@ -10,3 +10,4 @@ dc1394_reset_bus
 dc1394_vloopback
 basler_sff_extended_data
 basler_sff_info
+dc1394_iso

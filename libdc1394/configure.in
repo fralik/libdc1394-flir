@@ -2,6 +2,7 @@
 AC_PREREQ([2.6.0])
 AC_INIT([libdc1394],[2.1.4],[libdc1394-devel@lists.sf.net])
 AC_CONFIG_SRCDIR([dc1394/control.c])
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_SYSTEM
 
@@ -41,6 +42,15 @@ PKG_CHECK_MODULES(LIBUSB, [libusb-1.0],
     [AC_DEFINE(HAVE_LIBUSB,[],[Defined if libusb is present])],
     [AC_MSG_WARN([libusb-1.0 not found])])
 
+SDL_VERSION=1.2.4
+AH_TEMPLATE(HAVE_LIBSDL, [SDL library])
+AM_PATH_SDL($SDL_VERSION, [AC_DEFINE(HAVE_LIBSDL) HAVE_LIBSDL="yes"])
+AC_SUBST(SDL_CFLAGS)
+AC_SUBST(SDL_LIBS)
+
+AH_TEMPLATE(HAVE_OPENGL, [OpenGL library])
+AC_CHECK_LIB(GL,main, [AC_DEFINE(HAVE_OPENGL) have_opengl="yes"])
+
 case "$host" in
 *-*-linux*)
     have_linux=true
@@ -61,11 +71,10 @@ case "$host" in
 *-*-cygwin* | *-*-mingw*)
     have_windows=true
     AC_DEFINE(HAVE_WINDOWS,[],[Defined if compiled for Windows])
-    AC_ARG_WITH(winddk,[AS_HELP_STRING([--with-winddk=<dir>],[Path to WINDDK root dir (default: c:/WINDDK/2600.1106)])],["c:/WINDDK/2600.1106"])
-    WINDDK="$with_winddk"
-    AC_SUBST(WINDDK)
-    platform_LDFLAGS="-Wl,--export-all -no-undefined -lsetupapi -lws2_32"
-        platform_CFLAGS="-DDC1394_DLL_EXPORTS -include \${top_srcdir}/dc1394/msw/compat.h"
+    AC_CHECK_LIB(1394camera, GetCmdrVersion,
+      [AC_DEFINE(HAVE_LIB1394CAMERA,[],[Defined if lib1394camera present]) lib1394camera=true],
+      [AC_MSG_ERROR(lib1394camera not found or too old. Please upgrade to 6.4.5 or a more recent version.)])
+    platform_LDFLAGS="-Wl,--export-all -no-undefined -l1394camera -lsetupapi -lws2_32"
     AC_SUBST(platform_LDFLAGS)
     ;;
 esac
@@ -77,6 +86,8 @@ AM_CONDITIONAL(HAVE_LIBUSB, test "x$LIBUSB_LIBS" != "x")
 
 AC_CHECK_HEADER([linux/videodev.h], [have_videodev=true])
 AM_CONDITIONAL(HAVE_VIDEODEV, test x$have_videodev = xtrue)
+AM_CONDITIONAL(HAVE_LIBSDL, test "x$SDL_LIBS" != "x")
+AM_CONDITIONAL(HAVE_OPENGL, test "x$have_opengl" != "x")
 
 AC_ARG_ENABLE([examples], [AS_HELP_STRING([--disable-examples], [don't build example programs])], [build_examples=$enableval], [build_examples=true])
 
@@ -141,7 +152,7 @@ AC_CONFIG_FILES([ \
     dc1394/linux/Makefile \
     dc1394/juju/Makefile \
     dc1394/macosx/Makefile \
-    dc1394/msw/Makefile \
+    dc1394/windows/Makefile \
     dc1394/usb/Makefile \
     dc1394/vendor/Makefile \
     examples/Makefile \
@@ -167,9 +178,9 @@ else
 fi
 
 if test x$have_windows = xtrue; then
-  MSWMSG="Enabled"
+  WINDOWSMSG="Enabled"
 else
-  MSWMSG="Disabled (Windows not detected)"
+  WINDOWSMSG="Disabled (Windows not detected)"
 fi
 
 if test "x$LIBUSB_LIBS" != "x"; then
@@ -185,6 +196,6 @@ Configuration (libdc1394):
     libraw1394 support (Linux legacy):  ${RAW1394MSG}
     Juju support (Linux new):           ${JUJUMSG}
     Mac OS X support:                   ${MACOSXMSG}
-    Windows support:                    ${MSWMSG}
+    Windows support:                    ${WINDOWSMSG}
     IIDC-over-USB support:              ${USBMSG}
 "

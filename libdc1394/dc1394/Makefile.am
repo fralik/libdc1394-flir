@@ -1,7 +1,7 @@
 MAINTAINERCLEANFILES = Makefile.in
 lib_LTLIBRARIES = libdc1394.la
 
-SUBDIRS = linux juju macosx msw usb vendor
+SUBDIRS = linux juju macosx windows usb vendor
 AM_CFLAGS = $(platform_CFLAGS) -I$(top_srcdir)
 
 libdc1394_la_LDFLAGS = $(platform_LDFLAGS) \
@@ -39,7 +39,7 @@ if HAVE_MACOSX
   MACOSX_LIBADD = macosx/libdc1394-macosx.la
 endif
 if HAVE_WINDOWS
-  MSW_LIBADD = msw/libdc1394-msw.la
+  WINDOWS_LIBADD = windows/libdc1394-windows.la
 endif
 if HAVE_LIBUSB
   USB_LIBADD = usb/libdc1394-usb.la
@@ -49,7 +49,7 @@ libdc1394_la_LIBADD = \
 	$(LINUX_LIBADD) \
 	$(JUJU_LIBADD) \
 	$(MACOSX_LIBADD) \
-	$(MSW_LIBADD) \
+	$(WINDOWS_LIBADD) \
 	$(USB_LIBADD) \
 	vendor/libdc1394-vendor.la
 
