@@ -14,21 +14,17 @@
 #include <SDL/SDL_opengl.h>
 #include <sys/time.h>
 
-//#define HALF_RESOLUTION
+#define HALF_RESOLUTION
 
 #ifdef HALF_RESOLUTION
-//#define SX 376
-//#define SY 240
-#define SX 320
+#define SX 376
 #define SY 240
 #define PKT 1504
 #define MODE DC1394_VIDEO_MODE_FORMAT7_1
 #define DEF_BIN_MAX  125.0
 #define DEF_BIN_MIN  109.0
 #else
-//#define SX 752
-//#define SY 480
-#define SX 640
+#define SX 752
 #define SY 480
 #define PKT 3008
 #define MODE DC1394_VIDEO_MODE_FORMAT7_0
@@ -167,44 +163,26 @@ int main(int argc, char *argv[])
     double fps;
     double ntime=0, ptime=0, tmp;
     int index;
-    float time;
     dc1394video_frame_t *frame;
     dc1394error_t err;
     GLuint texture;
     TimeLapse_t timer;
+    int cam_id=0;
 
-    if ( argc!=2 && argc!=4 && argc!=5 && argc!=1 ) {
-    err:
-        fprintf(stderr,"Usage:\n\tdc1394_iso <optional running time in seconds> <optional histogram min, max and n_bins>\n");
+    if ( argc!=1 && argc!=2) {
+        fprintf(stderr,"Usage:\n\tdc1394_iso <optional camera_ID>\n");
         fprintf(stderr,"\t\tDefault values for histogram are min=%.0f, max=%.0f and %d bins\n\n",DEF_BIN_MIN, DEF_BIN_MAX, (int)DEF_BIN_N);
         exit(0);
     }
 
     signal(SIGINT, DisplayStatsAndExit);
 
-    //fprintf(stderr,"\33[2J"); // clear screen
-    if (argc==2 || argc==5)
-        time=atof(argv[1]);
-    else
-        time=0;
+    if (argc==2)
+        cam_id=atoi(argv[1]);
 
-    if (argc==4 || argc==5) {
-        bin_min=atof(argv[argc-3]);
-        if (bin_min<0)
-            goto err;
-        bin_max=atof(argv[argc-2]);
-        if (bin_max<1)
-            goto err;
-        bin_n=atoi(argv[argc-1]);
-        if (bin_n<2)
-            goto err;
-    }
-    else {
-        bin_n=DEF_BIN_N;
-        bin_max=DEF_BIN_MAX;
-        bin_min=DEF_BIN_MIN;
-    }
-
+    bin_n=DEF_BIN_N;
+    bin_max=DEF_BIN_MAX;
+    bin_min=DEF_BIN_MIN;
     bins = calloc(bin_n,sizeof(unsigned int));
 
     // init 1394
@@ -215,13 +193,19 @@ int main(int argc, char *argv[])
     err=dc1394_camera_enumerate (d, &list);
     DC1394_ERR_RTN(err,"Failed to enumerate cameras");
     if (list->num == 0) {
-        dc1394_log_error("No cameras found");
+        fprintf(stderr,"No cameras found\n");
         return 1;
     }
-    // use first camera
-    camera = dc1394_camera_new (d, list->ids[0].guid);
+    else {
+        if (list->num<cam_id+1) {
+            fprintf(stderr,"Not enough cameras found for id\n");
+            return 1;
+        }
+    }
+    // use selected camera
+    camera = dc1394_camera_new (d, list->ids[cam_id].guid);
     if (!camera) {
-        dc1394_log_error("Failed to initialize camera with guid %llx", list->ids[0].guid);
+        dc1394_log_error("Failed to initialize camera with guid %llx", list->ids[cam_id].guid);
         return 1;
     }
     dc1394_camera_free_list (list);
@@ -241,7 +225,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    fps_min=1e20;
+    fps_min=9e6;
     fps_max=0;
 
     fprintf(stderr,"\t\t\t\t------------- FPS --------------        \n");
@@ -320,10 +304,6 @@ int main(int argc, char *argv[])
                 fps_min=fps;
             if (fps_max<fps)
                 fps_max=fps;
-        }
-
-        if (lapse>=time && stabilized==1 && time!=0) {
-            break;
         }
 
         SDL_Event event;
