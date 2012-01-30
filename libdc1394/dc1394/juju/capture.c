@@ -261,6 +261,7 @@ dc1394_juju_capture_stop(platform_camera_t *craw)
 {
     dc1394camera_t * camera = craw->camera;
     struct fw_cdev_stop_iso stop;
+    int i;
 
     if (craw->capture_is_set == 0)
         return DC1394_CAPTURE_IS_NOT_SET;
@@ -271,6 +272,8 @@ dc1394_juju_capture_stop(platform_camera_t *craw)
 
     munmap(craw->buffer, craw->buffer_size);
     close(craw->iso_fd);
+    for (i = 0; i<craw->num_frames; i++)
+        release_frame(craw, i);
     free (craw->frames);
     craw->frames = NULL;
     craw->capture_is_set = 0;
