@@ -58,7 +58,10 @@ callback (struct libusb_transfer * transfer)
     craw->frames_ready++;
     pthread_mutex_unlock (&craw->mutex);
 
-    write (craw->notify_pipe[1], "+", 1);
+    if (write (craw->notify_pipe[1], "+", 1)!=1) {
+        dc1394_log_error ("usb: Failed to write to notify pipe");
+        // we may need to set the status to BUFFER_ERROR here
+    }
 }
 
 static void *
@@ -323,7 +326,10 @@ dc1394_usb_capture_dequeue (platform_camera_t * craw,
         return DC1394_FAILURE;
 
     char ch;
-    read (craw->notify_pipe[0], &ch, 1);
+    if (read (craw->notify_pipe[0], &ch, 1)!=1) {
+        dc1394_log_error ("usb: Failed to read from notify pipe");
+        return DC1394_FAILURE;
+    }
 
     pthread_mutex_lock (&craw->mutex);
     if (f->status == BUFFER_EMPTY) {

@@ -515,10 +515,12 @@ int v4l_open(char *device)
             return -1;
         }
         /* Read vloopback version */
-        fgets(buffer, 255, vloopbacks);
+        if (fgets(buffer, 255, vloopbacks)==NULL)
+            perror("Failed to read");
         printf("%s", buffer);
         /* Read explanation line */
-        fgets(buffer, 255, vloopbacks);
+        if (fgets(buffer, 255, vloopbacks)==NULL)
+            perror("Failed to read");
         while (fgets(buffer, 255, vloopbacks)) {
             if (strlen(buffer)>1) {
                 buffer[strlen(buffer)-1]=0;
