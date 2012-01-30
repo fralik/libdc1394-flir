@@ -17,3 +17,4 @@ libdc1394-2.pc
 aclocal.m4
 compile
 autom4te.cache/
+m4
