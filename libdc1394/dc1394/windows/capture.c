@@ -45,8 +45,7 @@ dc1394error_t
 dc1394_windows_iso_allocate_channel (platform_camera_t * cam,
                                      uint64_t channels_allowed, int * channel)
 {
-    // \todo implement
-    return DC1394_FAILURE;
+    return DC1394_SUCCESS;
 }
 
 dc1394error_t
@@ -57,7 +56,7 @@ dc1394_windows_iso_release_channel (platform_camera_t * cam, int channel)
 }
 
 static dc1394error_t
-windows_capture_setup (platform_camera_t * craw, uint32_t num_dma_buffers)
+windows_capture_setup (platform_camera_t * craw, uint32_t num_dma_buffers, uint32_t flags)
 {
     int i;
 
@@ -102,10 +101,39 @@ windows_capture_setup (platform_camera_t * craw, uint32_t num_dma_buffers)
 
     DWORD ret = t1394IsochSetupStream(craw->device->device_path,
                                       &stream_params);
+    craw->allocated_channel = stream_params.nChannel;
     if (ret != ERROR_SUCCESS) {
         dc1394_log_error("windows_capture_setup: Error on IsochSetupStream: %d\n", ret);
         return DC1394_FAILURE;
     }
+
+#if 1
+    // allocate channel/bandwidth if requested
+    if (flags & DC1394_CAPTURE_FLAGS_CHANNEL_ALLOC) {
+        if (dc1394_iso_allocate_channel (craw->camera, 0, &craw->allocated_channel)
+            != DC1394_SUCCESS) {
+            return DC1394_FAILURE;
+        }
+        if (dc1394_video_set_iso_channel (craw->camera, craw->allocated_channel)
+            != DC1394_SUCCESS) {
+            return DC1394_FAILURE;
+        }
+    }
+#endif
+#if 1
+    if (flags & DC1394_CAPTURE_FLAGS_BANDWIDTH_ALLOC) {
+        unsigned int bandwidth_usage;
+        if (dc1394_video_get_bandwidth_usage (craw->camera, &bandwidth_usage)
+            != DC1394_SUCCESS) {
+            return DC1394_FAILURE;
+        }
+        if (dc1394_iso_allocate_bandwidth (craw->camera, bandwidth_usage)
+            != DC1394_SUCCESS) {
+            return DC1394_FAILURE;
+        }
+        craw->allocated_bandwidth = bandwidth_usage;
+    }
+#endif
 
     /* QUEUE the buffers */
     for (i = 0; i < num_dma_buffers; ++i) {
@@ -234,7 +262,7 @@ dc1394_windows_capture_setup(platform_camera_t * craw, uint32_t num_dma_buffers,
         goto fail;
     }
 
-    err = windows_capture_setup (craw, num_dma_buffers);
+    err = windows_capture_setup (craw, num_dma_buffers, flags);
     if (err != DC1394_SUCCESS) {
         goto fail;
     }
