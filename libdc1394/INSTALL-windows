@@ -104,7 +104,7 @@ again:
 
 tar -xvzf libdc1394.tar.gz
 cd libdc1394
-./configure --prefix=/mingw/ (TODO: verify this prefix)
+./configure --prefix=/mingw/
 make
 make install
 
