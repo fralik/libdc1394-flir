@@ -1,6 +1,6 @@
 # process this file with autoconf to get a configure script
 AC_PREREQ([2.6.0])
-AC_INIT([libdc1394],[2.1.4],[libdc1394-devel@lists.sf.net])
+AC_INIT([libdc1394],[2.2.0],[libdc1394-devel@lists.sf.net])
 AC_CONFIG_SRCDIR([dc1394/control.c])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -42,14 +42,11 @@ PKG_CHECK_MODULES(LIBUSB, [libusb-1.0],
     [AC_DEFINE(HAVE_LIBUSB,[],[Defined if libusb is present])],
     [AC_MSG_WARN([libusb-1.0 not found])])
 
-SDL_VERSION=1.2.4
+MIN_SDL_VERSION=1.2.4
 AH_TEMPLATE(HAVE_LIBSDL, [SDL library])
-AM_PATH_SDL($SDL_VERSION, [AC_DEFINE(HAVE_LIBSDL) HAVE_LIBSDL="yes"])
+AM_PATH_SDL($MIN_SDL_VERSION, [AC_DEFINE(HAVE_LIBSDL) HAVE_LIBSDL="yes"])
 AC_SUBST(SDL_CFLAGS)
 AC_SUBST(SDL_LIBS)
-
-AH_TEMPLATE(HAVE_OPENGL, [OpenGL library])
-AC_CHECK_LIB(GL,main, [AC_DEFINE(HAVE_OPENGL) have_opengl="yes"])
 
 case "$host" in
 *-*-linux*)
@@ -78,19 +75,29 @@ case "$host" in
     AC_SUBST(platform_LDFLAGS)
     ;;
 esac
+
+AH_TEMPLATE(HAVE_OPENGL, [OpenGL library])
+case "$host" in
+*-*-linux* | *-*-darwin*)
+    AC_CHECK_LIB(GL, main, [AC_DEFINE(HAVE_OPENGL) have_opengl="yes"])
+    ;;
+*-*-cygwin* | *-*-mingw*)
+    AC_CHECK_LIB(opengl32, main, [AC_DEFINE(HAVE_OPENGL) have_opengl="yes"])
+    ;;
+esac
+
 AM_CONDITIONAL(HAVE_LINUX, test x$have_linux = xtrue)
 AM_CONDITIONAL(HAVE_MACOSX, test x$have_macosx = xtrue)
 AM_CONDITIONAL(HAVE_WINDOWS, test x$have_windows = xtrue)
 AM_CONDITIONAL(HAVE_LIBRAW1394, test x$libraw1394 = xtrue)
 AM_CONDITIONAL(HAVE_LIBUSB, test "x$LIBUSB_LIBS" != "x")
 
-AC_CHECK_HEADER([linux/videodev.h], [have_videodev=true])
-AM_CONDITIONAL(HAVE_VIDEODEV, test x$have_videodev = xtrue)
 AM_CONDITIONAL(HAVE_LIBSDL, test "x$SDL_LIBS" != "x")
 AM_CONDITIONAL(HAVE_OPENGL, test "x$have_opengl" != "x")
+AC_CHECK_HEADER([linux/videodev.h], [have_videodev=true])
+AM_CONDITIONAL(HAVE_VIDEODEV, test x$have_videodev = xtrue)
 
 AC_ARG_ENABLE([examples], [AS_HELP_STRING([--disable-examples], [don't build example programs])], [build_examples=$enableval], [build_examples=true])
-
 AM_CONDITIONAL(MAKE_EXAMPLES, test x$build_examples = xtrue)
 
 # check for Xv extensions (necessary for examples/dc1394_multiview)
@@ -131,7 +138,7 @@ dnl  3. If the interface changes consist solely of additions, increment AGE.
 dnl  4. If the interface has removed or changed elements, set AGE to 0.
 dnl ---------------------------------------------------------------------------
 lt_current=23
-lt_revision=6
+lt_revision=7
 lt_age=1
 
 AC_SUBST(lt_current)
@@ -159,43 +166,66 @@ AC_CONFIG_FILES([ \
 ])
 AC_OUTPUT
 
+LINUXMSG="Disabled (Linux not detected)"
+RAW1394MSG="Disabled (libraw1394 not found)"
+MACOSXMSG="Disabled (Mac OS not detected)"
+WINDOWSMSG="Disabled (Windows not detected)"
+USBMSG="Disabled (libusb-1.0 not found)"
+
 if test x$have_linux = xtrue; then
   if test x$libraw1394 = xtrue; then
     RAW1394MSG="Enabled"
-  else
-    RAW1394MSG="Disabled (libraw1394 not found)"
   fi
-  JUJUMSG="Enabled"
-else
-  RAW1394MSG="Disabled (Linux not detected)"
-  JUJUMSG="Disabled (Linux not detected)"
+  LINUXMSG="Enabled"
 fi
 
 if test x$have_macosx = xtrue; then
   MACOSXMSG="Enabled"
-else
-  MACOSXMSG="Disabled (Mac OS not detected)"
 fi
 
 if test x$have_windows = xtrue; then
   WINDOWSMSG="Enabled"
-else
-  WINDOWSMSG="Disabled (Windows not detected)"
 fi
 
 if test "x$LIBUSB_LIBS" != "x"; then
   USBMSG="Enabled"
-else
-  USBMSG="Disabled (libusb-1.0 not found)"
+fi
+
+EXAMPLESMSG="No"
+SDLEXAMPLESMSG="No"
+XVEXAMPLESMSG="No"
+VIDEXAMPLESMSG="No"
+
+if test x$build_examples = xtrue; then
+  EXAMPLESMSG="Yes"
+  if test x$have_opengl = xyes; then
+    if test "x$SDL_LIBS" != "x"; then
+      SDLEXAMPLESMSG="Yes"
+    fi
+  fi
+  if test x$xv = xyes; then
+    XVEXAMPLESMSG="Yes"
+  fi
+  if test x$have_videodev = xtrue; then
+    VIDEXAMPLESMSG="Yes"
+  fi
 fi
 
 echo "
-
 Configuration (libdc1394):
 
-    libraw1394 support (Linux legacy):  ${RAW1394MSG}
-    Juju support (Linux new):           ${JUJUMSG}
-    Mac OS X support:                   ${MACOSXMSG}
+    Linux support:                      ${LINUXMSG}"
+if test "x$LINUXMSG" = "xEnabled"; then
+echo "      Legacy drivers (libraw1394):      ${RAW1394MSG}"
+fi
+echo "    Mac OS X support:                   ${MACOSXMSG}
     Windows support:                    ${WINDOWSMSG}
     IIDC-over-USB support:              ${USBMSG}
-"
+    Build examples:                     ${EXAMPLESMSG}"
+if test "x$EXAMPLESMSG" = xYes; then
+   echo "      Build SDL/OpenGL examples:        ${SDLEXAMPLESMSG}
+      Build XV examples:                ${XVEXAMPLESMSG}
+      Build V4L examples:               ${VIDEXAMPLESMSG}"
+fi
+dnl extra newline:
+echo ""

@@ -8,7 +8,9 @@ A = grab_gray_image grab_partial_image grab_color_image \
 B = dc1394_reset_bus
 
 if HAVE_LIBSDL
+if HAVE_OPENGL
 A += dc1394_iso
+endif
 endif
 
 if HAVE_LINUX
@@ -24,7 +26,9 @@ endif
 endif
 
 if HAVE_WINDOWS
+if HAVE_OPENGL
 GL_LIBS = -lopengl32
+endif
 endif
 
 
