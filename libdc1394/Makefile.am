@@ -7,7 +7,7 @@ endif
 
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config.h.in \
 	stamp-h.in
-EXTRA_DIST = libdc1394-2.pc.in Doxyfile.in
+EXTRA_DIST = libdc1394-2.pc.in Doxyfile.in INSTALL-windows README-windows
 # Doxygen part
 MOSTLYCLEANFILES = $(DX_CLEANFILES)
 include $(top_srcdir)/aminclude.am
