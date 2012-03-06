@@ -1,6 +1,12 @@
 Release information and news:
 -----------------------------
 
+-- 2.2.0
+   - Bug fixes:
+       - minor memory leak in Juju
+   - New Windows stack
+   - Add two USB cameras from Point Grey
+
 -- 2.1.4
    - Bug fixes:
        - Allow image buffers to be editable by client apps on Linux juju
