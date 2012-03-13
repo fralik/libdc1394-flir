@@ -5,7 +5,8 @@ SUBDIRS = linux juju macosx windows usb vendor
 AM_CFLAGS = $(platform_CFLAGS) -I$(top_srcdir)
 
 libdc1394_la_LDFLAGS = $(platform_LDFLAGS) \
-	-version-info @lt_current@:@lt_revision@:@lt_age@
+	-version-info @lt_current@:@lt_revision@:@lt_age@ \
+	-export-symbols-regex '^dc1394_'
 
 libdc1394_la_SOURCES =  \
 	control.c 	\
