@@ -376,16 +376,31 @@ dc1394_windows_capture_dequeue (platform_camera_t * craw,
 
     LPOVERLAPPED pOverlapped = &(craw->pLastBuffer->subBuffers[craw->pLastBuffer->nSubBuffers - 1].overLapped);
     DWORD dwBytesRet = 0;
-    BOOL ready = GetOverlappedResult(craw->device_acquisition, pOverlapped, &dwBytesRet, FALSE);
 
+    BOOL ready = 0;
+	
+    // default: return NULL frame if no new frames/error/etc.
+    *frame=NULL;
+    
+    switch (policy) {
+    case DC1394_CAPTURE_POLICY_WAIT:
+        ready=GetOverlappedResult(craw->device_acquisition, pOverlapped, &dwBytesRet, TRUE);
+        break;
+    case DC1394_CAPTURE_POLICY_POLL:
+        ready=GetOverlappedResult(craw->device_acquisition, pOverlapped, &dwBytesRet, FALSE);
+        break;
+    }
+
+/*
+    // wait a little more... NOT NECESSARY (?)
     if (!ready) {
         //crb: is INFINITE ever a good idea here?
         dwRet = WaitForSingleObject(pOverlapped->hEvent, 100);
         if (dwRet == WAIT_OBJECT_0) {
-            ready = GetOverlappedResult(craw->device_acquisition,
-                                        pOverlapped, &dwBytesRet, FALSE);
+            ready = GetOverlappedResult(craw->device_acquisition, pOverlapped, &dwBytesRet, FALSE);
         }
     }
+*/
 
     if (ready) {
         craw->pCurrentBuffer = craw->pLastBuffer;
@@ -399,6 +414,8 @@ dc1394_windows_capture_dequeue (platform_camera_t * craw,
             craw->pFirstBuffer = NULL;
         }
     }
+    else if (policy==DC1394_CAPTURE_POLICY_POLL)
+        return DC1394_SUCCESS;
 
     if (!craw->pCurrentBuffer) {
         return DC1394_FAILURE;

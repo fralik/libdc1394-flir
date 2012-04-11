@@ -97,7 +97,7 @@ read_retry (const char * device_path, ULONG offset, PULONG data)
         if (ret != ERROR_SEM_TIMEOUT && ret != ERROR_BUSY) {
             break;
         }
-        Sleep (10);
+        usleep (DC1394_SLOW_DOWN);
         retry--;
     }
     return -1;
@@ -116,7 +116,7 @@ write_retry (const char * device_path, ULONG offset, ULONG data)
         if (ret != ERROR_SEM_TIMEOUT && ret != ERROR_BUSY) {
             break;
         }
-        Sleep (10);
+        usleep (DC1394_SLOW_DOWN);
         retry--;
     }
     return -1;
