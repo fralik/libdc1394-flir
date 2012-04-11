@@ -94,7 +94,7 @@ read_retry (struct raw1394_handle * handle, nodeid_t node, nodeaddr_t addr,
         if (errno != EAGAIN)
             return -1;
 
-        usleep (100);
+        usleep (DC1394_SLOW_DOWN);
         retry--;
     }
     return -1;

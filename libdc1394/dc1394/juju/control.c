@@ -434,7 +434,7 @@ do_transaction(platform_camera_t * cam, int tcode, uint64_t offset,
         /* retry if we get any of the rcodes listed above */
         dc1394_log_debug("juju: retry rcode 0x%x tcode 0x%x offset %"PRIx64,
                 resp.rcode, tcode, offset);
-        usleep (500);
+        usleep (DC1394_SLOW_DOWN);
         retry--;
     }
 
