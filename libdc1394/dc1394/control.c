@@ -2183,13 +2183,11 @@ dc1394_camera_free(dc1394camera_t *camera)
 {
     dc1394camera_priv_t * cpriv = DC1394_CAMERA_PRIV (camera);
 
-    if (cpriv->iso_persist)
-        dc1394_iso_release_all (camera);
+    if (cpriv->iso_persist!=1)
+        dc1394_iso_release_all(camera);
 
     cpriv->platform->dispatch->camera_free (cpriv->pcam);
     free (camera->vendor);
     free (camera->model);
     free (camera);
 }
-
-
