@@ -372,8 +372,6 @@ dc1394_windows_capture_dequeue (platform_camera_t * craw,
                                 dc1394capture_policy_t policy,
                                 dc1394video_frame_t **frame)
 {
-    DWORD dwRet = 0;
-
     LPOVERLAPPED pOverlapped = &(craw->pLastBuffer->subBuffers[craw->pLastBuffer->nSubBuffers - 1].overLapped);
     DWORD dwBytesRet = 0;
 
@@ -390,17 +388,6 @@ dc1394_windows_capture_dequeue (platform_camera_t * craw,
         ready=GetOverlappedResult(craw->device_acquisition, pOverlapped, &dwBytesRet, FALSE);
         break;
     }
-
-/*
-    // wait a little more... NOT NECESSARY (?)
-    if (!ready) {
-        //crb: is INFINITE ever a good idea here?
-        dwRet = WaitForSingleObject(pOverlapped->hEvent, 100);
-        if (dwRet == WAIT_OBJECT_0) {
-            ready = GetOverlappedResult(craw->device_acquisition, pOverlapped, &dwBytesRet, FALSE);
-        }
-    }
-*/
 
     if (ready) {
         craw->pCurrentBuffer = craw->pLastBuffer;
