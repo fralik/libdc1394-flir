@@ -360,7 +360,7 @@ dc1394_windows_capture_stop(platform_camera_t *craw)
     }
 
     craw->pFirstBuffer = craw->pLastBuffer = craw->pCurrentBuffer = NULL;
-    free (&craw->capture.frames);
+    free (craw->capture.frames);
 
     craw->capture_is_set = 0;
 
