@@ -1,0 +1,543 @@
+diff -crB ../distrib/libdc1394-2.1.2/dc1394/camera.h libdc1394-2.1.2-flir/dc1394/camera.h
+*** ../distrib/libdc1394-2.1.2/dc1394/camera.h	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/dc1394/camera.h	2009-09-30 18:06:59.000000000 +0200
+***************
+*** 33,38 ****
+--- 33,45 ----
+  */
+  
+  /**
++  * FLIR A40 camera unit spec ID
++  *
++  * It is used to verify that we have a FLIR camera
++  */
++ #define FLIR_A40_MAGIC 0x407F
++ 
++ /**
+   * List of IIDC versions
+   *
+   * Currently, the following versions exist: 1.04, 1.20, PTGREY, 1.30 and 1.31 (1.32 coming soon)
+diff -crB ../distrib/libdc1394-2.1.2/dc1394/control.c libdc1394-2.1.2-flir/dc1394/control.c
+*** ../distrib/libdc1394-2.1.2/dc1394/control.c	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/dc1394/control.c	2009-11-16 11:20:17.000000000 +0100
+***************
+*** 84,89 ****
+--- 84,90 ----
+  update_camera_info (dc1394camera_t *camera)
+  {
+      uint32_t value=0, quadval = 0; // set to zero to avoid valgrind errors
++     uint32_t flir_value = 1;
+  
+      dc1394_get_control_register(camera, REG_CAMERA_BASIC_FUNC_INQ, &value);
+  
+***************
+*** 512,517 ****
+--- 513,530 ----
+      err=dc1394_get_control_register(camera, REG_CAMERA_V_FORMAT_INQ, &sup_formats);
+      DC1394_ERR_RTN(err, "Could not get supported formats");
+  
++     if (camera->unit_spec_ID == FLIR_A40_MAGIC)
++     {
++     	/*
++     	 * FLIR has 0 in REG_CAMERA_V_FORMAT_INQ and in corresponding modes. One
++     	 * can find out formats examing REG_CAMERA_V_MODE_INQ_BASE + i. It returns 0
++     	 * for supported formats and 'Error' for unsupported. To find modes
++     	 * one should inquiry framerates. Supported modes will have meaningfull
++     	 * values for framerates.
++     	 */
++     	sup_formats = 0x81000000; // Format_0 & Format_7
++     }
++ 
+      // for each format check supported modes and add them as we find them.
+  
+      modes->num=0;
+***************
+*** 520,525 ****
+--- 533,542 ----
+          err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT0-DC1394_FORMAT_MIN) * 0x04U), &value);
+          DC1394_ERR_RTN(err, "Could not get supported modes for Format_0");
+  
++         if (camera->unit_spec_ID == FLIR_A40_MAGIC)
++         {
++         	value = 0x10000000;
++         }
+          for (mode=DC1394_VIDEO_MODE_FORMAT0_MIN;mode<=DC1394_VIDEO_MODE_FORMAT0_MAX;mode++) {
+              if ((value & (0x1<<(31-(mode-DC1394_VIDEO_MODE_FORMAT0_MIN)))) > 0) {
+                  modes->modes[modes->num]=mode;
+***************
+*** 568,573 ****
+--- 585,594 ----
+          err=dc1394_get_control_register(camera, REG_CAMERA_V_MODE_INQ_BASE + ((DC1394_FORMAT7-DC1394_FORMAT_MIN) * 0x04U), &value);
+          DC1394_ERR_RTN(err, "Could not get supported modes for Format_4");
+  
++         if (camera->unit_spec_ID == FLIR_A40_MAGIC)
++         {
++         	value = 0xE0000000;
++         }
+          for (mode=DC1394_VIDEO_MODE_FORMAT7_MIN;mode<=DC1394_VIDEO_MODE_FORMAT7_MAX;mode++) {
+              if ((value & (0x1<<(31-(mode-DC1394_VIDEO_MODE_FORMAT7_MIN))))>0) {
+                  modes->modes[modes->num]=mode;
+***************
+*** 2100,2106 ****
+--- 2121,2129 ----
+          if (disp->camera_read (pcam, offset + 4 * i, &quad, 1) < 0)
+              goto fail;
+          if ((quad >> 24) == 0x40)
++         {
+              command_regs_base = quad & 0xffffff;
++         }
+          else if ((quad >> 24) == 0x81) {
+              /*
+                 The iSight version 1.0.3 has two 0x81 (vendor) leaves instead
+***************
+*** 2142,2159 ****
+      camera->vendor = get_leaf_string (pcam, disp, vendor_name_offset);
+      camera->model = get_leaf_string (pcam, disp, model_name_offset);
+  
+!     if (camera->unit_spec_ID == 0xA02D) {
+          if (info->unit_sw_version == 0x100)
+              camera->iidc_version = DC1394_IIDC_VERSION_1_04;
+          else if (info->unit_sw_version == 0x101)
+              camera->iidc_version = DC1394_IIDC_VERSION_1_20;
+!         else if (info->unit_sw_version == 0x102) {
+              camera->iidc_version = DC1394_IIDC_VERSION_1_30;
+              // only add sub_sw_version if it is valid. Otherwise
+              // consider that it's IIDC 1.30 (hence add nothing)
+              if ((unit_sub_sw_version >> 4)<=9)
+                  camera->iidc_version += unit_sub_sw_version >> 4;
+          }
+      }
+      else
+          camera->iidc_version = DC1394_IIDC_VERSION_PTGREY;
+--- 2165,2194 ----
+      camera->vendor = get_leaf_string (pcam, disp, vendor_name_offset);
+      camera->model = get_leaf_string (pcam, disp, model_name_offset);
+  
+!     if (camera->unit_spec_ID == 0xA02D || camera->unit_spec_ID == FLIR_A40_MAGIC) // FLIR check
+! 	{
+          if (info->unit_sw_version == 0x100)
+              camera->iidc_version = DC1394_IIDC_VERSION_1_04;
+          else if (info->unit_sw_version == 0x101)
+              camera->iidc_version = DC1394_IIDC_VERSION_1_20;
+!         else if (info->unit_sw_version == 0x102)
+! 	{
+! 	    printf("IIDC 1.30, %d\n", DC1394_IIDC_VERSION_1_30);
+              camera->iidc_version = DC1394_IIDC_VERSION_1_30;
+              // only add sub_sw_version if it is valid. Otherwise
+              // consider that it's IIDC 1.30 (hence add nothing)
+              if ((unit_sub_sw_version >> 4)<=9)
+                  camera->iidc_version += unit_sub_sw_version >> 4;
+          }
++ 	else if (info->unit_sw_version == 0x1002)
++ 	{
++ 		// FLIR, IIDC 1.30
++ 		camera->iidc_version = DC1394_IIDC_VERSION_1_30;
++             // only add sub_sw_version if it is valid. Otherwise
++             // consider that it's IIDC 1.30 (hence add nothing)
++             if ((unit_sub_sw_version >> 4)<=9)
++                 camera->iidc_version += unit_sub_sw_version >> 4;
++         }
+      }
+      else
+          camera->iidc_version = DC1394_IIDC_VERSION_PTGREY;
+Only in libdc1394-2.1.2-flir/dc1394: control.c~
+diff -crB ../distrib/libdc1394-2.1.2/dc1394/enumeration.c libdc1394-2.1.2-flir/dc1394/enumeration.c
+*** ../distrib/libdc1394-2.1.2/dc1394/enumeration.c	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/dc1394/enumeration.c	2009-10-01 10:41:22.000000000 +0200
+***************
+*** 57,62 ****
+--- 57,64 ----
+              return 0;
+          }
+      }
++     //printf("unit_sw of added camera is 0x%X\n", info->unit_sw_version);
++ 
+      d->cameras = realloc (d->cameras, (n + 1) * sizeof (camera_info_t));
+      memcpy (d->cameras + n, info, sizeof (camera_info_t));
+      d->num_cameras = n + 1;
+***************
+*** 94,99 ****
+--- 96,102 ----
+  {
+      if (offset >= num_quads)
+          return -1;
++     //printf("Offset is 0x%X\n", offset);
+      int num_entries = quads[offset] >> 16;
+      if (offset + num_entries >= num_quads)
+          return -1;
+***************
+*** 110,123 ****
+--- 113,136 ----
+  
+      uint32_t * dquads = quads + offset + 1;
+      int i;
++ 	//dc1394_log_debug("Looking into unit directory for %d entries", num_entries);
+      for (i = 0; i < num_entries; i++) {
+          uint32_t q = dquads[i];
+          if ((q >> 24) == 0x12)
++ 	{
+              info.unit_spec_ID = q & 0xffffff;
++ 	//	printf("Got unit_spec id: 0x%X\n", info.unit_spec_ID);
++ 	}
+          if ((q >> 24) == 0x13)
++ 	{
+              info.unit_sw_version = q & 0xffffff;
++ 		//printf("Got unit_sw 0x%X\n", info.unit_sw_version);
++ 	}
+          if ((q >> 24) == 0xD4)
++ 	{
++ 	    //printf("Found unit_dependet_directory pointer: 0x%X\n", offset);
+              info.unit_dependent_directory = (q & 0xffffff) + offset + i + 1;
++ 	}
+          if ((q >> 24) == 0x17)
+              info.model_id = q & 0xffffff;
+      }
+***************
+*** 142,151 ****
+  
+       (updated 2005-04-30)
+    */
+  
+      if ((info.unit_spec_ID != 0xA02D) &&
+!             (info.unit_spec_ID != 0xB09D))
+          return -1;
+      if (!info.unit_dependent_directory)
+          return -1;
+  
+--- 155,178 ----
+  
+       (updated 2005-04-30)
+    */
++   /*
++      Note on FLIR cameras:
++      FLIR is not fully compatible with IIDC specs, though it is possible
++      to work with these cameras. The following modification have been
++      tested with FLIR A40 camera.
++ 
++      Vadim Frolov
++ 
++      (updated 2009-10-01)
++    */
+  
+      if ((info.unit_spec_ID != 0xA02D) &&
+!             (info.unit_spec_ID != 0xB09D) &&
+!             (info.unit_spec_ID != FLIR_A40_MAGIC))
+! 	{
+!     	dc1394_log_debug("Not a IIDC compilant, not a PG camera and not a FLIR");
+          return -1;
++ 	}
+      if (!info.unit_dependent_directory)
+          return -1;
+  
+***************
+*** 156,162 ****
+          goto done;
+  
+      dquads = quads + info.unit_dependent_directory + 1;
+!     for (i = 0; i < num_entries; i++) {
+          uint32_t q = dquads[i];
+          if ((q >> 24) == 0x81)
+              info.vendor = parse_leaf ((q & 0xffffff) +
+--- 183,190 ----
+          goto done;
+  
+      dquads = quads + info.unit_dependent_directory + 1;
+!     for (i = 0; i < num_entries; i++) 
+!     {
+          uint32_t q = dquads[i];
+          if ((q >> 24) == 0x81)
+              info.vendor = parse_leaf ((q & 0xffffff) +
+diff -crB ../distrib/libdc1394-2.1.2/dc1394/internal.c libdc1394-2.1.2-flir/dc1394/internal.c
+*** ../distrib/libdc1394-2.1.2/dc1394/internal.c	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/dc1394/internal.c	2009-10-01 10:09:39.000000000 +0200
+***************
+*** 266,271 ****
+--- 266,278 ----
+  
+      frame->yuv_byte_order = DC1394_BYTE_ORDER_UYVY;
+  
++     if (camera->unit_spec_ID == FLIR_A40_MAGIC)
++     {
++     	// increase packet size on 40 bytes
++     	frame->packet_size += 40;
++     	printf("FLIR: set packet size to %d\n", frame->packet_size);
++     }
++ 
+      frame->total_bytes = frame->packets_per_frame * frame->packet_size;
+  
+      err = dc1394_get_color_coding_from_video_mode (camera, video_mode, &frame->color_coding);
+diff -crB ../distrib/libdc1394-2.1.2/dc1394/linux/capture.c libdc1394-2.1.2-flir/dc1394/linux/capture.c
+*** ../distrib/libdc1394-2.1.2/dc1394/linux/capture.c	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/dc1394/linux/capture.c	2009-11-16 11:16:33.000000000 +0100
+***************
+*** 2,8 ****
+   * 1394-Based Digital Camera Control Library
+   *
+   * Camera Capture Code for Linux
+!  *  
+   * Written by
+   *   Chris Urmson <curmson@ri.cmu.edu>
+   *   Damien Douxchamps <ddouxchamps@users.sf.net>
+--- 2,8 ----
+   * 1394-Based Digital Camera Control Library
+   *
+   * Camera Capture Code for Linux
+!  *
+   * Written by
+   *   Chris Urmson <curmson@ri.cmu.edu>
+   *   Damien Douxchamps <ddouxchamps@users.sf.net>
+***************
+*** 381,386 ****
+--- 381,389 ----
+      dc1394video_frame_t * frame_tmp;
+      int cb;
+      int result=-1;
++     unsigned long i = 0;
++     unsigned char* cur_packet = NULL;
++     unsigned long cur_offset = 0;
+  
+      if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
+          return DC1394_INVALID_CAPTURE_POLICY;
+***************
+*** 425,430 ****
+--- 428,446 ----
+      frame_tmp->frames_behind = vwait.buffer;
+      frame_tmp->timestamp = (uint64_t) vwait.filltime.tv_sec * 1000000 + vwait.filltime.tv_usec;
+  
++     /* FLIR A40 modifications */
++     if (craw->camera->unit_spec_ID == FLIR_A40_MAGIC)
++     {
++     	/* we need to process each packet and remove first 40 bytes from it.
++     	 * Remove header from each packet and make continuous frame. */
++     	for (i=0; i < frame_tmp->packets_per_frame; i++)
++     	{
++     		cur_packet = frame_tmp->image + (frame_tmp->packet_size*i);
++     		memmove(frame_tmp->image + cur_offset, cur_packet + 40, frame_tmp->packet_size-40);
++     		cur_offset += (frame_tmp->packet_size-40);
++     	}
++     }
++ 
+      *frame=frame_tmp;
+  
+      return DC1394_SUCCESS;
+diff -crB ../distrib/libdc1394-2.1.2/dc1394/register.c libdc1394-2.1.2-flir/dc1394/register.c
+*** ../distrib/libdc1394-2.1.2/dc1394/register.c	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/dc1394/register.c	2009-09-07 19:41:54.000000000 +0200
+***************
+*** 94,99 ****
+--- 94,100 ----
+  dc1394_get_control_registers (dc1394camera_t *camera, uint64_t offset,
+                                uint32_t *value, uint32_t num_regs)
+  {
++ 	//dc1394_log_debug("Camera command registers base is 0x%X", camera->command_registers_base);
+      return dc1394_get_registers (camera,
+          camera->command_registers_base + offset, value, num_regs);
+  }
+Only in libdc1394-2.1.2-flir/examples: 1
+diff -crB ../distrib/libdc1394-2.1.2/examples/grab_color_image2.c libdc1394-2.1.2-flir/examples/grab_color_image2.c
+*** ../distrib/libdc1394-2.1.2/examples/grab_color_image2.c	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/examples/grab_color_image2.c	2009-09-28 19:44:22.000000000 +0200
+***************
+*** 207,212 ****
+--- 207,213 ----
+      DC1394_ERR_RTN(err,"Could not get list of modes");
+  
+      uint32_t selected_mode = modes.modes[modes.num-1];
++     selected_mode = DC1394_VIDEO_MODE_640x480_YUV422;
+  
+      /*-----------------------------------------------------------------------
+       *  setup capture
+diff -crB ../distrib/libdc1394-2.1.2/examples/grab_color_image.c libdc1394-2.1.2-flir/examples/grab_color_image.c
+*** ../distrib/libdc1394-2.1.2/examples/grab_color_image.c	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/examples/grab_color_image.c	2009-09-28 18:16:29.000000000 +0200
+***************
+*** 80,86 ****
+      err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set iso speed");
+  
+!     err=dc1394_video_set_mode(camera, DC1394_VIDEO_MODE_640x480_RGB8);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set video mode\n");
+  
+      err=dc1394_video_set_framerate(camera, DC1394_FRAMERATE_7_5);
+--- 80,86 ----
+      err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set iso speed");
+  
+!     err=dc1394_video_set_mode(camera, DC1394_VIDEO_MODE_640x480_YUV422);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set video mode\n");
+  
+      err=dc1394_video_set_framerate(camera, DC1394_FRAMERATE_7_5);
+diff -crB ../distrib/libdc1394-2.1.2/examples/grab_gray_image.c libdc1394-2.1.2-flir/examples/grab_gray_image.c
+*** ../distrib/libdc1394-2.1.2/examples/grab_gray_image.c	2009-06-11 06:05:47.000000000 +0200
+--- libdc1394-2.1.2-flir/examples/grab_gray_image.c	2009-10-01 10:03:09.000000000 +0200
+***************
+*** 26,32 ****
+  #include <inttypes.h>
+  
+  #ifndef _WIN32
+! #include <unistd.h>
+  #endif
+  
+  #define IMAGE_FILE_NAME "image.pgm"
+--- 26,32 ----
+  #include <inttypes.h>
+  
+  #ifndef _WIN32
+! //#include <unistd.r>
+  #endif
+  
+  #define IMAGE_FILE_NAME "image.pgm"
+***************
+*** 57,62 ****
+--- 57,65 ----
+      dc1394video_frame_t *frame;
+      dc1394_t * d;
+      dc1394camera_list_t * list;
++     long q = 0;
++     long p = 0;
++     unsigned char *cur_frame;
+  
+      dc1394error_t err;
+  
+***************
+*** 98,115 ****
+              }
+          }
+      }
+!     if (i < 0) {
+!         dc1394_log_error("Could not get a valid MONO8 mode");
+!         cleanup_and_exit(camera);
+!     }
+  
+!     err=dc1394_get_color_coding_from_video_mode(camera, video_mode,&coding);
+!     DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not get color coding");
+  
+      // get highest framerate
+!     err=dc1394_video_get_supported_framerates(camera,video_mode,&framerates);
+!     DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not get framrates");
+!     framerate=framerates.framerates[framerates.num-1];
+  
+      /*-----------------------------------------------------------------------
+       *  setup capture
+--- 101,119 ----
+              }
+          }
+      }
+!     //if (i < 0) {
+!       //  dc1394_log_error("Could not get a valid MONO8 mode");
+!         //cleanup_and_exit(camera);
+!     //}
+  
+!     //err=dc1394_get_color_coding_from_video_mode(camera, video_mode,&coding);
+!     //DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not get color coding");
+  
+      // get highest framerate
+!     //err=dc1394_video_get_supported_framerates(camera,video_mode,&framerates);
+!     //DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not get framrates");
+!     //framerate=framerates.framerates[framerates.num-1];
+!     printf("spec id 0x%llX\n", camera->unit_spec_ID);
+  
+      /*-----------------------------------------------------------------------
+       *  setup capture
+***************
+*** 118,127 ****
+      err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set iso speed");
+  
+!     err=dc1394_video_set_mode(camera, video_mode);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set video mode");
+  
+!     err=dc1394_video_set_framerate(camera, framerate);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set framerate");
+  
+      err=dc1394_capture_setup(camera,4, DC1394_CAPTURE_FLAGS_DEFAULT);
+--- 122,134 ----
+      err=dc1394_video_set_iso_speed(camera, DC1394_ISO_SPEED_400);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set iso speed");
+  
+!     //err=dc1394_video_set_mode(camera, video_mode);
+!     video_mode = DC1394_VIDEO_MODE_640x480_YUV422;
+!     err = dc1394_video_set_mode(camera, DC1394_VIDEO_MODE_640x480_YUV422);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set video mode");
+  
+!     //err=dc1394_video_set_framerate(camera, framerate);
+!     err = dc1394_video_set_framerate(camera, DC1394_FRAMERATE_7_5);
+      DC1394_ERR_CLN_RTN(err,cleanup_and_exit(camera),"Could not set framerate");
+  
+      err=dc1394_capture_setup(camera,4, DC1394_CAPTURE_FLAGS_DEFAULT);
+***************
+*** 130,142 ****
+      /*-----------------------------------------------------------------------
+       *  report camera's features
+       *-----------------------------------------------------------------------*/
+!     err=dc1394_feature_get_all(camera,&features);
+!     if (err!=DC1394_SUCCESS) {
+!         dc1394_log_warning("Could not get feature set");
+!     }
+!     else {
+!         dc1394_feature_print_all(&features, stdout);
+!     }
+  
+      /*-----------------------------------------------------------------------
+       *  have the camera start sending us data
+--- 137,149 ----
+      /*-----------------------------------------------------------------------
+       *  report camera's features
+       *-----------------------------------------------------------------------*/
+!     //err=dc1394_feature_get_all(camera,&features);
+!     //if (err!=DC1394_SUCCESS) {
+! //        dc1394_log_warning("Could not get feature set");
+! //    }
+! //    else {
+! //        dc1394_feature_print_all(&features, stdout);
+! //    }
+  
+      /*-----------------------------------------------------------------------
+       *  have the camera start sending us data
+***************
+*** 166,175 ****
+          cleanup_and_exit(camera);
+      }
+  
+      dc1394_get_image_size_from_video_mode(camera, video_mode, &width, &height);
+      fprintf(imagefile,"P5\n%u %u 255\n", width, height);
+!     fwrite(frame->image, 1, height*width, imagefile);
+!     fclose(imagefile);
+      printf("wrote: " IMAGE_FILE_NAME "\n");
+  
+      /*-----------------------------------------------------------------------
+--- 173,202 ----
+          cleanup_and_exit(camera);
+      }
+  
++     printf("Total bytes: %d, image bytes %d, padding bytes %d, packet size %d\n \
++     		packets_per_frame %d, allocated %d\n", frame->total_bytes, frame->image_bytes, frame->padding_bytes, frame->packet_size,
++ 						frame->packets_per_frame, frame->allocated_image_bytes);
++ 
++ 
++     //unsigned int data[320*240];
+      dc1394_get_image_size_from_video_mode(camera, video_mode, &width, &height);
++     printf("Image size is %dx%d\n", width, height);
++ //    for (long q=0; q < (height/2); q++)
++ //    {
++ //        for (long p=0; p < (width/2); p++)
++ //        {
++ ////            printf("Writing to index %d, from %d\n", 320*q+p, (640*4*q) + (4*p) + 1);
++ //            data[320*q + p] = frame->image[ (640*q) + (p) + 1];
++ //        }
++ //    }
++ //
++ //    width = 320;
++ //    height = 240;
++ 
++     printf("Total bytes %d\n", frame->total_bytes);
+      fprintf(imagefile,"P5\n%u %u 255\n", width, height);
+!     fwrite(frame->image, 1, frame->total_bytes, imagefile);
+!     fclose(imagefile); //tahrung
+      printf("wrote: " IMAGE_FILE_NAME "\n");
+  
+      /*-----------------------------------------------------------------------
+Only in libdc1394-2.1.2-flir/examples: grab_gray_image.c~
+Only in libdc1394-2.1.2-flir/examples: image.pgm
+Only in libdc1394-2.1.2-flir/examples: image.ppm
+Only in libdc1394-2.1.2-flir/examples: ImageRGB.ppm
